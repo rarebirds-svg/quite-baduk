@@ -1,0 +1,23 @@
+{
+  "app": { "title": "AI Go" },
+  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "settings": "Settings", "login": "Log in", "signup": "Sign up", "logout": "Log out" },
+  "home": { "heading": "Play Go vs. AI", "sub": "Choose a rank (18k-7d) and handicap (2-9 stones).", "startButton": "Start a game" },
+  "auth": { "email": "Email", "password": "Password", "displayName": "Display name", "signup": "Sign up", "login": "Log in", "mustBeLongerPassword": "Password must be 8+ chars" },
+  "game": { "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Color", "colorBlack": "Black", "colorWhite": "White", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "aiThinking": "AI thinking...", "downloadSgf": "Download SGF", "resultLabel": "Result" },
+  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "analyze": "Analyze", "winrate": "Winrate" },
+  "history": { "total": "Total", "wins": "Wins", "losses": "Losses", "empty": "No games yet" },
+  "settings": { "heading": "Settings", "preferredRank": "Preferred rank", "language": "Language", "theme": "Theme", "themeLight": "Light", "themeDark": "Dark", "saved": "Saved" },
+  "errors": {
+    "NOT_YOUR_TURN": "Not your turn", "OCCUPIED": "Already occupied",
+    "ILLEGAL_SUICIDE": "Suicide move is illegal", "ILLEGAL_KO": "Ko — same board position",
+    "OUT_OF_BOUNDS": "Out of board", "GAME_NOT_ACTIVE": "Game is not active",
+    "FORBIDDEN": "Forbidden", "SESSION_REPLACED": "Session replaced (opened in another tab)",
+    "invalid_credentials": "Invalid email or password",
+    "email_already_registered": "Email is already registered",
+    "rate_limited": "Too many requests. Try again later.",
+    "NO_MOVES_TO_UNDO": "Nothing to undo",
+    "validation": "Invalid input",
+    "game_not_found": "Game not found",
+    "UNKNOWN_MESSAGE": "Unknown message"
+  }
+}

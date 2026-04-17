@@ -1,0 +1,23 @@
+{
+  "app": { "title": "AI 바둑" },
+  "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "settings": "설정", "login": "로그인", "signup": "가입", "logout": "로그아웃" },
+  "home": { "heading": "AI 바둑과 대국", "sub": "급수(18급~7단)와 접바둑(2~9점)을 선택하세요.", "startButton": "대국 시작" },
+  "auth": { "email": "이메일", "password": "비밀번호", "displayName": "표시 이름", "signup": "가입", "login": "로그인", "mustBeLongerPassword": "비밀번호는 최소 8자" },
+  "game": { "rank": "급수", "handicap": "접바둑", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "색", "colorBlack": "흑", "colorWhite": "백", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "aiThinking": "AI 생각 중...", "downloadSgf": "기보(SGF) 다운로드", "resultLabel": "결과" },
+  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "analyze": "분석", "winrate": "승률" },
+  "history": { "total": "총", "wins": "승", "losses": "패", "empty": "아직 대국이 없습니다" },
+  "settings": { "heading": "설정", "preferredRank": "선호 급수", "language": "언어", "theme": "테마", "themeLight": "밝게", "themeDark": "어둡게", "saved": "저장됨" },
+  "errors": {
+    "NOT_YOUR_TURN": "당신 차례가 아닙니다", "OCCUPIED": "이미 돌이 있는 자리입니다",
+    "ILLEGAL_SUICIDE": "자살수는 금지됩니다", "ILLEGAL_KO": "패(Ko) — 같은 수를 둘 수 없습니다",
+    "OUT_OF_BOUNDS": "바둑판 범위를 벗어났습니다", "GAME_NOT_ACTIVE": "진행 중인 대국이 아닙니다",
+    "FORBIDDEN": "권한이 없습니다", "SESSION_REPLACED": "다른 곳에서 접속되어 세션이 종료됐습니다",
+    "invalid_credentials": "이메일 또는 비밀번호가 맞지 않습니다",
+    "email_already_registered": "이미 등록된 이메일입니다",
+    "rate_limited": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요",
+    "NO_MOVES_TO_UNDO": "무를 수가 없습니다",
+    "validation": "입력값이 올바르지 않습니다",
+    "game_not_found": "대국을 찾을 수 없습니다",
+    "UNKNOWN_MESSAGE": "알 수 없는 메시지"
+  }
+}
