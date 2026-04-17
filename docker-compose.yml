@@ -1,0 +1,45 @@
+services:
+  web:
+    build: ./web
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DB_PATH: /data/baduk.db
+      JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
+      KATAGO_BIN_PATH: /usr/local/bin/katago
+      KATAGO_MODEL_PATH: /katago/models/b18c384nbt-humanv0.bin.gz
+      KATAGO_CONFIG_PATH: /katago/config.cfg
+      CORS_ORIGINS: http://localhost:3000
+      KATAGO_MOCK: ${KATAGO_MOCK:-false}
+    volumes:
+      - baduk_data:/data
+      - baduk_backups:/backups
+
+  backup:
+    image: alpine:3.19
+    depends_on:
+      - backend
+    volumes:
+      - baduk_data:/data:ro
+      - baduk_backups:/backups
+    entrypoint: |
+      sh -c "while true; do
+        sleep 86400
+        BACKUP=/backups/baduk-$$(date +%Y-%m-%d).db
+        cp /data/baduk.db $$BACKUP 2>/dev/null || true
+        find /backups -name 'baduk-*.db' -mtime +30 -delete
+      done"
+    restart: unless-stopped
+
+volumes:
+  baduk_data:
+  baduk_backups:
