@@ -1,57 +1,196 @@
 # AI 바둑 (AI Go)
 
-A web application to play the game of Go against the KataGo AI engine. Supports rank selection from 18k to 7d and handicap games with 2–9 stones.
+Play the game of Go (Baduk) against the **KataGo** AI in your browser.
+Rank selection from **18k to 7d** (Human-SL model), handicap games **2–9 stones**, Korean rules territory scoring, SGF export, hint, undo, review + analysis, per-user history, Korean/English UI with dark mode.
+
+![stack: Next.js + FastAPI + SQLite + KataGo](https://img.shields.io/badge/stack-Next.js%20%2B%20FastAPI%20%2B%20KataGo-blue)
+
+## Features
+
+- 🎯 **Rank picker** — 12 preset strength levels from 18-kyu (beginner) to 7-dan (strong amateur)
+- 🪨 **Handicap games** — standard Korean handicap positions (2 to 9 stones)
+- 🧠 **KataGo Human-SL model** — AI plays *like a human* at the chosen rank, not just weaker
+- 📋 **SGF import/export** — download your games, load any SGF
+- 🔁 **Undo** — take back the last two plies (your move + AI response)
+- 💡 **Hint** — ask KataGo for the top-3 recommended moves with winrate
+- 🔬 **Review + analysis** — replay any finished game move by move with winrate overlay
+- 📊 **Personal stats** — win/loss by rank and handicap
+- 🌐 **i18n** — Korean and English, instant switching
+- 🌗 **Dark mode**
+- 🔒 **Accounts** — email + password with bcrypt-hashed storage, JWT cookies
+
+## Architecture
+
+```
+┌─ Next.js 14 (React) ──────┐      HTTPS REST + WebSocket
+│  SVG board, i18n, theme   │────────────────┐
+└───────────────────────────┘                │
+                                             ▼
+┌─ FastAPI (Python 3.11) ──────────────────────────┐
+│  Auth · Games · Analysis · WS                    │
+│  Rules Engine (pure) · KataGo Adapter (async)    │
+└─────────────────────────────────────────────────┘
+       │                               │ stdin/stdout (GTP)
+       ▼                               ▼
+┌─ SQLite (WAL) ─┐          ┌─ KataGo binary ─┐
+│ baduk.db        │          │ b18c384nbt-     │
+│ + backups/       │          │   humanv0 model │
+└────────────────┘          └────────────────┘
+```
+
+- **Rules engine** (`backend/app/core/rules/`): pure-Python implementation of Go rules, 100% test coverage
+- **KataGo adapter** (`backend/app/core/katago/`): async subprocess with GTP protocol, auto-restart, state replay
+- **Mock mode**: set `KATAGO_MOCK=true` to run without the KataGo binary (for local dev / tests)
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+- ~2 GB of disk space for the Docker images + KataGo model
 
 ## Quick Start
 
 ```bash
+git clone <your-fork> baduk && cd baduk
 cp .env.example .env
+# For development without downloading the KataGo model:
+echo "KATAGO_MOCK=true" >> .env
+
 docker-compose up --build
 ```
 
-## Access
+First boot downloads the KataGo binary (~10 MB) and the Human-SL model (~200 MB) unless `KATAGO_MOCK=true`.
+
+### Access
 
 | Service  | URL                      |
 |----------|--------------------------|
 | Frontend | http://localhost:3000    |
 | API      | http://localhost:8000    |
+| Health   | http://localhost:8000/api/health |
 
-## First Time
+### First Game
 
-1. Sign up at [/signup](http://localhost:3000/signup)
-2. Go to [/game/new](http://localhost:3000/game/new) to start a game
+1. Visit http://localhost:3000/signup and create an account
+2. Go to **새 대국 / New Game** — pick your rank and handicap
+3. Click the board to place stones
+4. Use **힌트 / Hint** to ask KataGo for suggestions
+5. After the game ends, find it under **전적 / History** and click **Review** to replay with analysis
 
 ## Environment Variables
 
-| Variable       | Required in prod | Default                    | Description                                      |
-|----------------|-----------------|----------------------------|--------------------------------------------------|
-| `JWT_SECRET`   | Yes             | `changeme-in-production`   | Secret key used to sign JWT tokens               |
-| `KATAGO_MOCK`  | No              | `false`                    | Set to `true` for local dev without KataGo binary |
+Copy `.env.example` → `.env` and override as needed.
 
-Copy `.env.example` to `.env` and update values before deploying to production.
+| Variable        | Default                             | Description                                                 |
+|-----------------|-------------------------------------|-------------------------------------------------------------|
+| `JWT_SECRET`    | `changeme-in-production`            | **REQUIRED in prod.** 32+ byte random string.              |
+| `KATAGO_MOCK`   | `false`                             | `true` skips model download and uses a deterministic mock.  |
+| `CORS_ORIGINS`  | `http://localhost:3000`             | Comma-separated allowed origins.                            |
 
-## Backup
+Backend-only env vars (configure inside the backend container):
 
-Game data is automatically backed up daily to the `backups/` Docker volume with 30-day retention. Backup files are named `baduk-YYYY-MM-DD.db`.
+| Variable              | Default                                             |
+|-----------------------|-----------------------------------------------------|
+| `DB_PATH`             | `/data/baduk.db`                                    |
+| `KATAGO_BIN_PATH`     | `/usr/local/bin/katago`                             |
+| `KATAGO_MODEL_PATH`   | `/katago/models/b18c384nbt-humanv0.bin.gz`          |
+| `KATAGO_CONFIG_PATH`  | `/katago/config.cfg`                                |
+| `KATAGO_TIMEOUT_SEC`  | `60`                                                |
+
+## Backup & Restore
+
+The `backup` service in `docker-compose.yml` writes a dated copy of the SQLite DB to the `baduk_backups` volume every 24 hours and prunes files older than 30 days.
+
+**Manual backup:**
+
+```bash
+docker-compose exec backend sqlite3 /data/baduk.db ".backup '/backups/manual.db'"
+```
+
+**Restore:**
+
+```bash
+docker-compose stop backend
+docker cp <backup.db> $(docker-compose ps -q backend):/data/baduk.db
+docker-compose start backend
+```
+
+## Development
+
+### Local backend (no Docker)
+
+```bash
+cd backend
+python3.11 -m venv .venv311 && source .venv311/bin/activate
+pip install -e ".[dev]"
+cp .env.example .env  # set KATAGO_MOCK=true
+uvicorn app.main:app --reload
+```
+
+### Local frontend
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+### Tests
+
+```bash
+# Backend (170 tests, Rules Engine 100% coverage)
+cd backend && source .venv311/bin/activate && pytest
+
+# Frontend (Vitest)
+cd web && npm run test -- --run
+
+# End-to-end (requires running docker-compose)
+cd e2e && npm install && npm run install-browsers && npm test
+```
 
 ## Troubleshooting
 
-**KataGo model download failure**
-
-If the KataGo model fails to download at startup, set `KATAGO_MOCK=true` in your `.env` file to run with a mock AI engine for local development:
-
-```bash
-echo "KATAGO_MOCK=true" >> .env
-docker-compose up --build
-```
+**KataGo model download fails**
+Set `KATAGO_MOCK=true` in `.env` and rebuild. The mock adapter plays deterministic moves, enough to exercise the UI.
 
 **Port conflicts**
+Edit `docker-compose.yml` port mappings, e.g. `"3001:3000"` and `"8001:8000"`.
 
-If ports 3000 or 8000 are already in use, stop the conflicting services or edit `docker-compose.yml` to map to different host ports (e.g., `"3001:3000"`).
+**"SESSION_REPLACED" error**
+You opened the same game in another tab or window. The backend enforces a single WebSocket per game to keep state consistent.
+
+**KataGo CPU usage / slow response**
+Higher ranks (5d/7d) use more visits (256/512) and take longer per move. For CPU-only hardware, use 18k–3k for responsive play.
+
+## Production Checklist
+
+Before deploying publicly:
+
+- [ ] Generate a strong `JWT_SECRET` (32+ random bytes)
+- [ ] Put an HTTPS-terminating reverse proxy (Caddy, Nginx, Cloudflare Tunnel) in front
+- [ ] Set cookie `secure=True` (requires code change — see `docs/QUALITY_REPORT.md` item H2)
+- [ ] Update `CORS_ORIGINS` to your production domain
+- [ ] Run `bandit`, `pip-audit`, `npm audit` in CI and fix any `high` findings
+- [ ] Ensure the `backup` service is scheduled or swap for off-host backup storage
+
+## Quality Report
+
+A full audit from five specialized review agents (Rules, KataGo, API, Frontend, Security) lives at [docs/QUALITY_REPORT.md](docs/QUALITY_REPORT.md).
+
+## Project Layout
+
+```
+baduk/
+├── backend/              FastAPI + Rules Engine + KataGo adapter
+├── web/                  Next.js 14 (App Router, TS, Tailwind)
+├── e2e/                  Playwright end-to-end tests
+├── docs/
+│   ├── superpowers/
+│   │   ├── specs/        Design spec
+│   │   └── plans/        Implementation plan
+│   ├── reviews/          Individual review-agent reports
+│   └── QUALITY_REPORT.md
+└── docker-compose.yml
+```
 
 ## License
 
