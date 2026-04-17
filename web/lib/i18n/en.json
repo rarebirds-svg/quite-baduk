@@ -18,6 +18,13 @@
     "NO_MOVES_TO_UNDO": "Nothing to undo",
     "validation": "Invalid input",
     "game_not_found": "Game not found",
-    "UNKNOWN_MESSAGE": "Unknown message"
+    "UNKNOWN_MESSAGE": "Unknown message",
+    "forbidden": "Forbidden",
+    "INVALID_HANDICAP": "Invalid handicap count",
+    "INVALID_COLOR": "Invalid color selection",
+    "INVALID_COORD": "Invalid coordinate",
+    "INVALID_UNDO_STEPS": "Invalid undo steps",
+    "AI_ILLEGAL_MOVE": "The AI attempted an illegal move. Please contact the admin.",
+    "validation_error": "Invalid input"
   }
 }

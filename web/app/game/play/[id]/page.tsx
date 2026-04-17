@@ -68,7 +68,7 @@ export default function PlayPage() {
         }).filter((x): x is { x: number; y: number; color: string; label: string } => x !== null)}
       />
       <ScorePanel captures={g.captures} />
-      <GameControls onPass={pass} onResign={resign} onUndo={undo} onHint={hintMe} disabled={g.gameOver} />
+      <GameControls onPass={pass} onResign={resign} onUndo={undo} onHint={hintMe} disabled={g.gameOver || g.aiThinking} />
       {g.aiThinking && <div className="text-sm text-gray-500">{t("game.aiThinking")}</div>}
       {g.error && <div className="text-sm text-red-600">{t(`errors.${g.error}`)}</div>}
       {g.gameOver && (

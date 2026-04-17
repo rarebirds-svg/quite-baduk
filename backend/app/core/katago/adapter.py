@@ -114,25 +114,26 @@ class KataGoAdapter:
         )
 
     async def stop(self) -> None:
-        if not self._proc:
-            return
-        try:
-            if self._proc.returncode is None:
-                try:
-                    await self._send_raw("quit")
-                except Exception:
-                    pass
-                try:
-                    await asyncio.wait_for(self._proc.wait(), timeout=3.0)
-                except asyncio.TimeoutError:
-                    self._proc.terminate()
+        async with self._lock:
+            if not self._proc:
+                return
+            try:
+                if self._proc.returncode is None:
                     try:
-                        await asyncio.wait_for(self._proc.wait(), timeout=2.0)
+                        await self._send_raw("quit")
+                    except Exception:
+                        pass
+                    try:
+                        await asyncio.wait_for(self._proc.wait(), timeout=3.0)
                     except asyncio.TimeoutError:
-                        self._proc.kill()
-                        await self._proc.wait()
-        finally:
-            self._proc = None
+                        self._proc.terminate()
+                        try:
+                            await asyncio.wait_for(self._proc.wait(), timeout=2.0)
+                        except asyncio.TimeoutError:
+                            self._proc.kill()
+                            await self._proc.wait()
+            finally:
+                self._proc = None
 
     async def _ensure_alive(self) -> None:
         if self.is_alive or self._starting:
@@ -253,12 +254,59 @@ class KataGoAdapter:
         return r.body.strip()
 
     async def analyze(self, max_visits: int = 100) -> AnalysisResult:
-        # kata-analyze is async/streaming; use a single snapshot via lz-analyze-like call
-        # Use 'kata-analyze interval 0 maxmoves 10' then stop manually.
-        # Simpler: use 'kata-genmove_analyze' is complex. Instead, send kata-raw analysis.
-        # We fall back to: playouts via kata-analyze with minimal time.
-        r = await self.send(f"kata-analyze interval 1000 maxmoves 5 ownership true", timeout=self.timeout)
-        return parse_analysis(r.body)
+        """Run a one-shot analysis and return best moves + ownership.
+
+        kata-analyze is a streaming command that does not naturally return a
+        `\\n\\n` terminator, so we cannot use the standard send() path. Instead
+        we collect info lines for up to ~2s, then send a blank line / `name` to
+        interrupt and drain the final response.
+        """
+        async with self._lock:
+            await self._ensure_alive()
+            if self._proc is None or self._proc.stdin is None or self._proc.stdout is None:
+                return AnalysisResult()
+
+            # Start streaming analysis
+            cmd = f"kata-analyze interval 200 maxmoves 5 ownership true\n"
+            self._proc.stdin.write(cmd.encode())
+            await self._proc.stdin.drain()
+
+            collected: list[str] = []
+            deadline = asyncio.get_event_loop().time() + 2.0
+            try:
+                while asyncio.get_event_loop().time() < deadline:
+                    remaining = max(0.05, deadline - asyncio.get_event_loop().time())
+                    try:
+                        line = await asyncio.wait_for(
+                            self._proc.stdout.readline(), timeout=remaining
+                        )
+                    except asyncio.TimeoutError:
+                        break
+                    if not line:
+                        break
+                    text = line.decode("utf-8", errors="replace")
+                    if text.strip().startswith("info move"):
+                        collected.append(text)
+            finally:
+                # Interrupt the analysis by sending a no-op GTP command.
+                # KataGo stops the analyze loop and answers the next command.
+                try:
+                    self._proc.stdin.write(b"name\n")
+                    await self._proc.stdin.drain()
+                except Exception:
+                    pass
+                # Drain until blank line so subsequent sends are in-sync
+                try:
+                    while True:
+                        line = await asyncio.wait_for(
+                            self._proc.stdout.readline(), timeout=1.0
+                        )
+                        if not line or line in (b"\n", b"\r\n"):
+                            break
+                except asyncio.TimeoutError:
+                    pass
+
+            return parse_analysis("".join(collected))
 
     async def load_sgf_text(self, sgf: str) -> None:
         # loadsgf requires a file path; a simpler approach is clear_board + replay moves.
