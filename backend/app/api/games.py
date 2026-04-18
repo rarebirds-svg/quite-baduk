@@ -47,7 +47,12 @@ async def create(
 ) -> GameSummary:
     try:
         game = await create_game(
-            db, user=user, ai_rank=body.ai_rank, handicap=body.handicap, user_color=body.user_color
+            db,
+            user=user,
+            ai_rank=body.ai_rank,
+            handicap=body.handicap,
+            user_color=body.user_color,
+            board_size=body.board_size,
         )
     except GameError as e:
         raise HTTPException(status_code=400, detail=e.code)

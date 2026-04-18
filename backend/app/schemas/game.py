@@ -14,12 +14,14 @@ class CreateGameRequest(BaseModel):
     ai_rank: Rank
     handicap: int = Field(ge=0, le=9)
     user_color: Literal["black", "white"] = "black"
+    board_size: Literal[9, 13, 19] = 19
 
 
 class GameSummary(BaseModel):
     id: int
     ai_rank: str
     handicap: int
+    board_size: int
     komi: float
     user_color: str
     status: str

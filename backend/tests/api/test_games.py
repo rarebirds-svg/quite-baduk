@@ -10,37 +10,70 @@ async def _signup(client: AsyncClient, email: str = "p@example.com") -> None:
 
 
 @pytest.mark.asyncio
-async def test_create_game(client: AsyncClient) -> None:
+@pytest.mark.parametrize("size", [9, 13, 19])
+async def test_create_game_each_size(client: AsyncClient, size: int) -> None:
+    await _signup(client, email=f"u{size}@example.com")
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black", "board_size": size},
+    )
+    assert r.status_code == 201, r.text
+    g = r.json()
+    assert g["board_size"] == size
+    assert g["komi"] == 6.5
+
+
+@pytest.mark.asyncio
+async def test_create_game_default_board_size_is_19(client: AsyncClient) -> None:
     await _signup(client)
     r = await client.post(
         "/api/games",
         json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
     )
-    assert r.status_code == 201
-    g = r.json()
-    assert g["ai_rank"] == "5k"
-    assert g["handicap"] == 0
-    assert g["komi"] == 6.5
+    assert r.status_code == 201, r.text
+    assert r.json()["board_size"] == 19
 
 
 @pytest.mark.asyncio
-async def test_create_handicap_game(client: AsyncClient) -> None:
+async def test_create_game_rejects_invalid_size(client: AsyncClient) -> None:
     await _signup(client)
     r = await client.post(
         "/api/games",
-        json={"ai_rank": "1d", "handicap": 4, "user_color": "black"},
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black", "board_size": 7},
+    )
+    assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_9x9_rejects_handicap_6(client: AsyncClient) -> None:
+    await _signup(client)
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "1d", "handicap": 6, "user_color": "black", "board_size": 9},
+    )
+    assert r.status_code == 400
+    assert r.json()["error"]["code"] == "INVALID_HANDICAP"
+
+
+@pytest.mark.asyncio
+async def test_create_handicap_game_13(client: AsyncClient) -> None:
+    await _signup(client)
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "1d", "handicap": 4, "user_color": "black", "board_size": 13},
     )
     assert r.status_code == 201
     g = r.json()
     assert g["handicap"] == 4
     assert g["komi"] == 0.5
+    assert g["board_size"] == 13
 
 
 @pytest.mark.asyncio
 async def test_list_games(client: AsyncClient) -> None:
     await _signup(client)
     await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
-    await client.post("/api/games", json={"ai_rank": "1k", "handicap": 2, "user_color": "black"})
+    await client.post("/api/games", json={"ai_rank": "1k", "handicap": 2, "user_color": "black", "board_size": 9})
     r = await client.get("/api/games")
     assert r.status_code == 200
     assert len(r.json()) == 2
@@ -51,7 +84,6 @@ async def test_cannot_access_other_users_game(client: AsyncClient) -> None:
     await _signup(client, email="u1@example.com")
     r = await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
     game_id = r.json()["id"]
-    # New user
     await client.post("/api/auth/logout")
     await _signup(client, email="u2@example.com")
     r2 = await client.get(f"/api/games/{game_id}")
