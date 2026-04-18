@@ -23,7 +23,7 @@ class MoveHint:
 @dataclass
 class AnalysisResult:
     top_moves: list[MoveHint] = field(default_factory=list)
-    ownership: list[float] = field(default_factory=list)  # length 361 for 19x19
+    ownership: list[float] = field(default_factory=list)  # length size*size
     winrate: float = 0.5  # overall winrate for side to move
 
 
