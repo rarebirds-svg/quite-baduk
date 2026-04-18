@@ -101,4 +101,4 @@ Backend reads from `backend/.env` (see `.env.example`). Root `.env` is consumed 
 
 - `docs/QUALITY_REPORT.md` — outstanding security/quality items from the 5-agent review (referenced by README's Production Checklist; consult before shipping changes in those areas).
 - `docs/superpowers/specs/` and `docs/superpowers/plans/` — original design spec and implementation plan.
-- `CHANGELOG.md` — what shipped in 0.1.0 and what was explicitly deferred (9x9/13x13, time controls, user-vs-user, OAuth).
+- `CHANGELOG.md` — versioned history. 0.2.0 added 9×9/13×13 board sizes; time controls, user-vs-user, OAuth still deferred.

@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0] - 2026-04-18
+
+### Added
+- 9×9 and 13×13 board sizes selectable at new-game time (default 19×19).
+- Handicap tables extended to 9×9 (2–5 stones) and 13×13 (2–9 stones).
+
+### Changed
+- `Board` now carries its `size` as an instance attribute; `BOARD_SIZE` module constant removed from public API.
+- `games.board_size` column added; `sgf_coord.gtp_to_xy` / `xy_to_gtp` take an explicit `size` argument.
+
+### Removed
+- Legacy 19×19-only DB schema. The 0002 migration drops and recreates `games`, `moves`, `analyses`.
+
 ## [0.1.0] - 2026-04-17
 
 Initial release — MVP.
@@ -37,7 +50,6 @@ Initial release — MVP.
 - 5-agent parallel code review — see `docs/QUALITY_REPORT.md`
 
 ### Known Limitations
-- 19x19 only (9x9/13x13 deferred to V2)
 - No time controls (byoyomi, Fischer)
 - No user-vs-user games
 - No social login / OAuth
