@@ -1,23 +1,21 @@
 """GTP coordinate <-> (x, y) conversion.
 
 GTP coordinate format: letter (A-T, skipping I) + row number (1=bottom).
-Internal format: (x, y) where x=column (0=A), y=row (0=top/row 19 in GTP).
+Internal format: (x, y) where x=column (0=A), y=row (0=top).
 
-Examples:
+Examples (size=19):
   A1  -> (0, 18)   # bottom-left
   A19 -> (0,  0)   # top-left
   T19 -> (18, 0)   # top-right
-  Q16 -> (15, 3)   # column Q (0-indexed, skipping I): A=0,B=1,...,H=7,J=8,...,Q=15
 """
 
-COLS = "ABCDEFGHJKLMNOPQRST"  # 19 letters, I omitted
-BOARD_SIZE = 19
+COLS = "ABCDEFGHJKLMNOPQRST"  # 19 letters, I omitted; sliced by `size`
 
 
-def gtp_to_xy(coord: str) -> tuple[int, int] | None:
-    """Convert GTP coordinate string to (x, y) tuple.
+def gtp_to_xy(coord: str, size: int) -> tuple[int, int] | None:
+    """Convert GTP coordinate string to (x, y).
 
-    Returns None for 'pass'. Raises ValueError for invalid input.
+    Returns None for 'pass'. Raises ValueError for invalid input or out-of-range.
     """
     if coord.lower() == "pass":
         return None
@@ -25,20 +23,22 @@ def gtp_to_xy(coord: str) -> tuple[int, int] | None:
     if len(coord) < 2:
         raise ValueError(f"Invalid GTP coordinate: {coord!r}")
     col_letter = coord[0]
-    if col_letter not in COLS:
+    cols = COLS[:size]
+    if col_letter not in cols:
         raise ValueError(f"Invalid column letter: {col_letter!r}")
-    x = COLS.index(col_letter)
-    row_num = int(coord[1:])  # 1-based from bottom
-    if not (1 <= row_num <= BOARD_SIZE):
+    x = cols.index(col_letter)
+    row_num = int(coord[1:])
+    if not (1 <= row_num <= size):
         raise ValueError(f"Row number out of range: {row_num}")
-    y = BOARD_SIZE - row_num  # convert to 0-based from top
+    y = size - row_num
     return (x, y)
 
 
-def xy_to_gtp(x: int, y: int) -> str:
+def xy_to_gtp(x: int, y: int, size: int) -> str:
     """Convert (x, y) to GTP coordinate string."""
-    if not (0 <= x < BOARD_SIZE and 0 <= y < BOARD_SIZE):
+    if not (0 <= x < size and 0 <= y < size):
         raise ValueError(f"Coordinates out of range: ({x}, {y})")
-    col_letter = COLS[x]
-    row_num = BOARD_SIZE - y  # 1-based from bottom
+    cols = COLS[:size]
+    col_letter = cols[x]
+    row_num = size - y
     return f"{col_letter}{row_num}"
