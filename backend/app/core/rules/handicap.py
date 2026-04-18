@@ -77,10 +77,3 @@ def apply_handicap(board: Board, stones: int) -> Board:
 def supported_handicaps(size: int) -> list[int]:
     """Return sorted list of valid handicap stone counts for a given size (excludes 0)."""
     return sorted(HANDICAP_TABLES.get(size, {}).keys())
-
-
-# ---------------------------------------------------------------------------
-# Backward-compat alias — Task 9 will remove this once game_service.py and
-# __init__.py are updated to use HANDICAP_TABLES directly.
-# ---------------------------------------------------------------------------
-HANDICAP_COORDS: dict[int, list[str]] = HANDICAP_TABLES[19]

@@ -19,7 +19,8 @@ from app.core.rules.engine import (
     play,
     score as score_engine,
 )
-from app.core.rules.handicap import apply_handicap, HANDICAP_COORDS
+from app.core.rules.board import Board
+from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap
 from app.engine_pool import (
     cache_state,
     drop_state,
@@ -56,14 +57,22 @@ def _ai_side(game: Game) -> str:
 
 
 async def create_game(
-    db: AsyncSession, *, user: User, ai_rank: str, handicap: int, user_color: str
+    db: AsyncSession,
+    *,
+    user: User,
+    ai_rank: str,
+    handicap: int,
+    user_color: str,
+    board_size: int,
 ) -> Game:
-    if handicap not in (0,) + tuple(HANDICAP_COORDS.keys()):
+    if board_size not in HANDICAP_TABLES:
+        raise GameError("INVALID_BOARD_SIZE", str(board_size))
+    valid_handicaps = (0,) + tuple(HANDICAP_TABLES[board_size].keys())
+    if handicap not in valid_handicaps:
         raise GameError("INVALID_HANDICAP", str(handicap))
     if user_color not in ("black", "white"):
         raise GameError("INVALID_COLOR", user_color)
     komi = 0.5 if handicap > 0 else 6.5
-    # Handicap forces user to play black
     if handicap > 0:
         user_color = "black"
 
@@ -71,6 +80,7 @@ async def create_game(
         user_id=user.id,
         ai_rank=ai_rank,
         handicap=handicap,
+        board_size=board_size,
         komi=komi,
         user_color=user_color,
         status="active",
@@ -79,21 +89,17 @@ async def create_game(
     await db.commit()
     await db.refresh(game)
 
-    # Set up KataGo
     adapter = get_adapter()
     await adapter.start()
-    await adapter.clear_board()
-    await adapter.set_boardsize(19)
+    await adapter.set_boardsize(board_size)
     await adapter.set_komi(komi)
     cfg = rank_to_config(ai_rank)
     await adapter.set_profile(cfg)
 
-    # Build initial GameState
-    state = GameState(komi=komi)
+    state = GameState(board=Board(board_size), komi=komi)
     if handicap > 0:
         state.board = apply_handicap(state.board, handicap)
-        # In Korean handicap, white plays first; record stones in KataGo
-        for coord in HANDICAP_COORDS[handicap]:
+        for coord in HANDICAP_TABLES[board_size][handicap]:
             await adapter.play(BLACK, coord)
         state.to_move = WHITE
 
@@ -275,7 +281,7 @@ async def _finalize_game(db: AsyncSession, game: Game, state: GameState) -> None
 
 async def _replay_state(db: AsyncSession, game: Game) -> GameState:
     """Rebuild GameState by replaying non-undone moves."""
-    state = GameState(komi=game.komi)
+    state = GameState(board=Board(game.board_size), komi=game.komi)
     if game.handicap > 0:
         state.board = apply_handicap(state.board, game.handicap)
         state.to_move = WHITE
