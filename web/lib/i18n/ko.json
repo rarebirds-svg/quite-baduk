@@ -25,6 +25,9 @@
     "INVALID_COORD": "좌표가 올바르지 않습니다",
     "INVALID_UNDO_STEPS": "무르기 수가 올바르지 않습니다",
     "AI_ILLEGAL_MOVE": "AI가 잘못된 수를 두려 했습니다. 관리자에게 문의하세요",
-    "validation_error": "입력값이 올바르지 않습니다"
+    "validation_error": "입력값이 올바르지 않습니다",
+    "not_authenticated": "먼저 로그인하세요",
+    "invalid_token": "세션이 만료되었습니다. 다시 로그인하세요",
+    "user_not_found": "사용자를 찾을 수 없습니다"
   }
 }

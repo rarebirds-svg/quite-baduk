@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import RankPicker, { type Rank } from "@/components/RankPicker";
 import HandicapPicker from "@/components/HandicapPicker";
@@ -13,6 +13,16 @@ export default function NewGamePage() {
   const [handicap, setHandicap] = useState<number>(0);
   const [userColor, setUserColor] = useState<"black" | "white">("black");
   const [err, setErr] = useState<string | null>(null);
+  const [authed, setAuthed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    api("/api/auth/me")
+      .then(() => setAuthed(true))
+      .catch(() => {
+        setAuthed(false);
+        router.replace("/login?next=/game/new");
+      });
+  }, [router]);
 
   async function create() {
     setErr(null);
@@ -21,8 +31,17 @@ export default function NewGamePage() {
       const game = await api<{ id: number }>("/api/games", { method: "POST", body });
       router.push(`/game/play/${game.id}`);
     } catch (e: unknown) {
-      setErr(t(`errors.${(e as ApiError).code || "validation"}`));
+      const code = (e as ApiError).code || "validation";
+      if ((e as ApiError).status === 401) {
+        router.replace("/login?next=/game/new");
+        return;
+      }
+      setErr(t(`errors.${code}`));
     }
+  }
+
+  if (authed === null) {
+    return <div className="mt-6 text-sm text-gray-500">...</div>;
   }
 
   return (

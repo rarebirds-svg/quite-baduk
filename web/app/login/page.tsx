@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
@@ -10,13 +10,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/game/new";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
     try {
       await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
-      router.push("/game/new");
+      router.push(next);
     } catch (e: unknown) {
       setErr(t(`errors.${(e as ApiError).code || "validation"}`));
     }

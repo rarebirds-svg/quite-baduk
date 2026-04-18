@@ -80,11 +80,15 @@ class KataGoAdapter:
         bin_path: str | None = None,
         model_path: str | None = None,
         config_path: str | None = None,
+        human_model_path: str | None = None,
         timeout_sec: float | None = None,
     ) -> None:
         self.bin_path = bin_path or settings.katago_bin_path
         self.model_path = model_path or settings.katago_model_path
         self.config_path = config_path or settings.katago_config_path
+        self.human_model_path = (
+            human_model_path if human_model_path is not None else settings.katago_human_model_path
+        )
         self.timeout = float(timeout_sec or settings.katago_timeout_sec)
 
         self._proc: asyncio.subprocess.Process | None = None
@@ -106,6 +110,8 @@ class KataGoAdapter:
             "-model", self.model_path,
             "-config", self.config_path,
         ]
+        if self.human_model_path:
+            args.extend(["-human-model", self.human_model_path])
         self._proc = await asyncio.create_subprocess_exec(
             *args,
             stdin=asyncio.subprocess.PIPE,
@@ -222,7 +228,12 @@ class KataGoAdapter:
             profile = profile_or_config
             assert max_visits is not None
             visits = max_visits
-        await self.send(f"kata-set-param humanSLProfile {profile}")
+        # humanSLProfile only works when the Human-SL model is loaded.
+        # On standard models KataGo rejects the parameter — tolerate that
+        # and still fall back to visit-count strength control.
+        r = await self.send(f"kata-set-param humanSLProfile {profile}")
+        if not r.ok:
+            pass  # standard model without human-SL support — visits only
         await self.send(f"kata-set-param maxVisits {visits}")
         self._replay.profile = (profile, visits)
 

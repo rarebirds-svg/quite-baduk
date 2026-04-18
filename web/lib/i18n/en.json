@@ -25,6 +25,9 @@
     "INVALID_COORD": "Invalid coordinate",
     "INVALID_UNDO_STEPS": "Invalid undo steps",
     "AI_ILLEGAL_MOVE": "The AI attempted an illegal move. Please contact the admin.",
-    "validation_error": "Invalid input"
+    "validation_error": "Invalid input",
+    "not_authenticated": "Please log in first",
+    "invalid_token": "Session expired. Please log in again",
+    "user_not_found": "User not found"
   }
 }

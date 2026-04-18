@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     katago_bin_path: str = "/usr/local/bin/katago"
     katago_model_path: str = "/katago/models/b18c384nbt-humanv0.bin.gz"
     katago_config_path: str = "/katago/config.cfg"
+    katago_human_model_path: str = ""  # optional; when set, adapter passes -human-model
     katago_timeout_sec: int = 60
     katago_mock: bool = False
     cors_origins: str = "http://localhost:3000"
