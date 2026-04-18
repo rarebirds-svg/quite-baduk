@@ -19,11 +19,11 @@ _connections: dict[int, WebSocket] = {}
 
 
 def _serialize_board(state: GameState) -> str:
-    # 361-char: '.', 'B', 'W'
+    """Flatten to a size*size char string of '.', 'B', 'W'."""
     cells: list[str] = []
     b = state.board
-    for y in range(19):
-        for x in range(19):
+    for y in range(b.size):
+        for x in range(b.size):
             cells.append(b.get(x, y))
     return "".join(cells)
 
@@ -32,6 +32,7 @@ async def _state_payload(state: GameState, move_count: int) -> dict[str, Any]:
     return {
         "type": "state",
         "board": _serialize_board(state),
+        "board_size": state.board.size,
         "to_move": state.to_move,
         "move_count": move_count,
         "captures": state.captures,
