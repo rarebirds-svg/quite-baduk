@@ -1,5 +1,5 @@
 export type WSMessage =
-  | { type: "state"; board: string; to_move: string; move_count: number; captures: Record<string, number> }
+  | { type: "state"; board: string; board_size: number; to_move: string; move_count: number; captures: Record<string, number> }
   | { type: "ai_move"; coord: string; captures: number }
   | { type: "game_over"; result: string; winner: string }
   | { type: "error"; code: string; detail?: string };

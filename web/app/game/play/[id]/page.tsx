@@ -7,7 +7,7 @@ import ScorePanel from "@/components/ScorePanel";
 import { openGameWS, type WSMessage, type GameWS } from "@/lib/ws";
 import { useGameStore } from "@/store/gameStore";
 import { api } from "@/lib/api";
-import { gtpToXy, xyToGtp, BOARD } from "@/lib/board";
+import { gtpToXy, xyToGtp } from "@/lib/board";
 import { useT } from "@/lib/i18n";
 
 export default function PlayPage() {
@@ -16,18 +16,20 @@ export default function PlayPage() {
   const gameId = parseInt(params.id, 10);
   const g = useGameStore();
   const wsRef = useRef<GameWS | null>(null);
-  // Snapshot of the server-authoritative board right before we optimistically
-  // place a user stone — so we can roll back on error.
   const preOptimisticBoard = useRef<string | null>(null);
   const optimisticUserMove = useRef<{ x: number; y: number } | null>(null);
   const [hint, setHint] = useState<{ move: string; winrate: number; visits: number }[]>([]);
 
   useEffect(() => {
+    api<{ board_size: number }>(`/api/games/${gameId}`).then((detail) => {
+      g.reset(detail.board_size);
+    });
+
     const ws = openGameWS(gameId, (msg: WSMessage) => {
       if (msg.type === "state") {
-        // Server-authoritative state arrived; discard snapshot
         preOptimisticBoard.current = null;
         g.set({
+          boardSize: msg.board_size,
           board: msg.board,
           toMove: msg.to_move,
           moveCount: msg.move_count,
@@ -39,7 +41,6 @@ export default function PlayPage() {
       } else if (msg.type === "game_over") {
         g.set({ gameOver: true, result: msg.result, aiThinking: false });
       } else if (msg.type === "error") {
-        // Rollback optimistic user move
         if (preOptimisticBoard.current !== null) {
           g.set({ board: preOptimisticBoard.current });
           preOptimisticBoard.current = null;
@@ -55,16 +56,14 @@ export default function PlayPage() {
 
   const sendMove = (x: number, y: number) => {
     if (g.gameOver || g.aiThinking) return;
-    const coord = xyToGtp(x, y);
-    // Optimistic update: immediately paint the user stone at the clicked intersection.
-    // The server may reject (ko, suicide, occupied) in which case we restore from snapshot.
-    const idx = y * BOARD + x;
+    const coord = xyToGtp(x, y, g.boardSize);
+    const idx = y * g.boardSize + x;
     if (g.board[idx] !== ".") {
       g.set({ error: "OCCUPIED" });
       return;
     }
     preOptimisticBoard.current = g.board;
-    const userColor = g.toMove; // whose turn it is right now
+    const userColor = g.toMove;
     const newBoard = g.board.substring(0, idx) + userColor + g.board.substring(idx + 1);
     optimisticUserMove.current = { x, y };
     g.set({
@@ -93,10 +92,8 @@ export default function PlayPage() {
     setHint(r.hints);
   };
 
-  // Prefer AI's last move for the marker; if no AI move yet but we have a
-  // pending optimistic user move, highlight that instead.
   const lastMoveXy = g.lastAiMove
-    ? gtpToXy(g.lastAiMove)
+    ? gtpToXy(g.lastAiMove, g.boardSize)
     : optimisticUserMove.current
       ? [optimisticUserMove.current.x, optimisticUserMove.current.y] as [number, number]
       : null;
@@ -104,12 +101,13 @@ export default function PlayPage() {
   return (
     <div className="mt-4 space-y-4">
       <Board
+        size={g.boardSize}
         board={g.board}
         lastMove={lastMoveXy ? { x: lastMoveXy[0], y: lastMoveXy[1] } : null}
         onClick={sendMove}
         disabled={g.aiThinking || g.gameOver}
         overlay={hint.map((h) => {
-          const xy = gtpToXy(h.move);
+          const xy = gtpToXy(h.move, g.boardSize);
           return xy ? { x: xy[0], y: xy[1], color: "rgba(0,200,0,0.6)", label: `${Math.round(h.winrate * 100)}` } : null;
         }).filter((x): x is { x: number; y: number; color: string; label: string } => x !== null)}
       />
