@@ -88,3 +88,25 @@ async def test_final_score():
     await adapter.start()
     s = await adapter.final_score()
     assert s.startswith("B+") or s.startswith("W+")
+
+
+@pytest.mark.asyncio
+async def test_mock_boardsize_resets_and_uses_size_for_genmove():
+    a = MockKataGoAdapter()
+    await a.start()
+    await a.set_boardsize(9)
+    assert a.board.size == 9
+    # genmove should pick first empty on 9x9 (A9 = top-left), not out-of-range for 9x9
+    m = await a.genmove("B")
+    assert m == "A9"
+
+
+@pytest.mark.asyncio
+async def test_mock_switches_size_between_games():
+    a = MockKataGoAdapter()
+    await a.start()
+    await a.set_boardsize(19)
+    await a.set_boardsize(13)
+    assert a.board.size == 13
+    m = await a.genmove("B")
+    assert m == "A13"
