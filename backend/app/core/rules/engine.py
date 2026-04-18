@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-from app.core.rules.board import BLACK, EMPTY, WHITE, Board, BOARD_SIZE
+from app.core.rules.board import BLACK, EMPTY, WHITE, Board
 from app.core.rules.captures import is_suicide, place_with_captures
 from app.core.rules.ko import KoState, is_ko_violation
 from app.core.rules.scoring import ScoreResult, score_game
@@ -29,7 +29,7 @@ class IllegalMoveError(Exception):
 
 @dataclass
 class GameState:
-    board: Board = field(default_factory=Board)
+    board: Board = field(default_factory=lambda: Board(19))
     to_move: Color = BLACK
     captures: dict[str, int] = field(default_factory=lambda: {BLACK: 0, WHITE: 0})
     ko_state: KoState = field(default_factory=KoState)
@@ -75,7 +75,7 @@ def play(state: GameState, move: Move) -> GameState:
         )
 
     try:
-        xy = gtp_to_xy(move.coord)
+        xy = gtp_to_xy(move.coord, state.board.size)
     except ValueError as e:
         raise IllegalMoveError("OUT_OF_BOUNDS", move.coord) from e
     if xy is None:  # pragma: no cover — pass already handled above
@@ -128,7 +128,7 @@ def score(state: GameState, dead_stones: set[tuple[int, int]] | None = None) -> 
     )
 
 
-def build_sgf(state: GameState, board_size: int = BOARD_SIZE, result: str = "") -> str:
+def build_sgf(state: GameState, result: str = "") -> str:
     """Build a minimal SGF string from the game state."""
     komi_str = str(state.komi)
     moves_sgf = ""
@@ -138,7 +138,7 @@ def build_sgf(state: GameState, board_size: int = BOARD_SIZE, result: str = "") 
         if move.coord.lower() == "pass":
             moves_sgf += f";{move.color}[]"
         else:
-            xy = gtp_to_xy(move.coord)
+            xy = gtp_to_xy(move.coord, state.board.size)
             if xy is None:  # pragma: no cover — pass already handled above
                 continue
             x, y = xy
@@ -147,4 +147,4 @@ def build_sgf(state: GameState, board_size: int = BOARD_SIZE, result: str = "") 
             row = chr(ord("a") + y)
             moves_sgf += f";{move.color}[{col}{row}]"
     result_prop = f"RE[{result}]" if result else ""
-    return f"(;GM[1]FF[4]SZ[{board_size}]KM[{komi_str}]{result_prop}{moves_sgf})"
+    return f"(;GM[1]FF[4]SZ[{state.board.size}]KM[{komi_str}]{result_prop}{moves_sgf})"
