@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        board: { bg: "#DCB35C", dark: "#2B1E0E" }
+        board: { bg: "#E8C572", dark: "#C49A54" }
       }
     }
   },
