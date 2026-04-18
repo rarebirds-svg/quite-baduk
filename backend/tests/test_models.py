@@ -1,5 +1,6 @@
 """Test that ORM models can be created and queried in-memory SQLite."""
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db import Base
@@ -35,7 +36,7 @@ async def test_create_game(session: AsyncSession) -> None:
     session.add(user)
     await session.commit()
 
-    game = Game(user_id=user.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black")
+    game = Game(user_id=user.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black", board_size=19)
     session.add(game)
     await session.commit()
     await session.refresh(game)
@@ -50,7 +51,7 @@ async def test_create_move(session: AsyncSession) -> None:
     session.add(user)
     await session.commit()
 
-    game = Game(user_id=user.id, ai_rank="1d", handicap=0, komi=6.5, user_color="black")
+    game = Game(user_id=user.id, ai_rank="1d", handicap=0, komi=6.5, user_color="black", board_size=19)
     session.add(game)
     await session.commit()
 
@@ -68,7 +69,7 @@ async def test_create_analysis_cache(session: AsyncSession) -> None:
     session.add(user)
     await session.commit()
 
-    game = Game(user_id=user.id, ai_rank="3k", handicap=4, komi=0.5, user_color="black")
+    game = Game(user_id=user.id, ai_rank="3k", handicap=4, komi=0.5, user_color="black", board_size=19)
     session.add(game)
     await session.commit()
 
@@ -77,3 +78,25 @@ async def test_create_analysis_cache(session: AsyncSession) -> None:
     await session.commit()
     await session.refresh(cache)
     assert cache.id is not None
+
+
+@pytest.mark.asyncio
+async def test_game_persists_board_size(session: AsyncSession) -> None:
+    user = User(email="bs@example.com", password_hash="hashed", display_name="BS")
+    session.add(user)
+    await session.commit()
+
+    game = Game(
+        user_id=user.id,
+        ai_rank="5k",
+        handicap=0,
+        komi=6.5,
+        user_color="black",
+        board_size=9,
+    )
+    session.add(game)
+    await session.commit()
+
+    res = await session.execute(select(Game).where(Game.id == game.id))
+    loaded = res.scalar_one()
+    assert loaded.board_size == 9
