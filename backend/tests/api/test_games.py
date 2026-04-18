@@ -73,7 +73,9 @@ async def test_create_handicap_game_13(client: AsyncClient) -> None:
 async def test_list_games(client: AsyncClient) -> None:
     await _signup(client)
     await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
-    await client.post("/api/games", json={"ai_rank": "1k", "handicap": 2, "user_color": "black", "board_size": 9})
+    await client.post(
+        "/api/games", json={"ai_rank": "1k", "handicap": 2, "user_color": "black", "board_size": 9}
+    )
     r = await client.get("/api/games")
     assert r.status_code == 200
     assert len(r.json()) == 2

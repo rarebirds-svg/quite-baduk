@@ -36,7 +36,9 @@ async def test_create_game(session: AsyncSession) -> None:
     session.add(user)
     await session.commit()
 
-    game = Game(user_id=user.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black", board_size=19)
+    game = Game(
+        user_id=user.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black", board_size=19
+    )
     session.add(game)
     await session.commit()
     await session.refresh(game)
@@ -51,7 +53,9 @@ async def test_create_move(session: AsyncSession) -> None:
     session.add(user)
     await session.commit()
 
-    game = Game(user_id=user.id, ai_rank="1d", handicap=0, komi=6.5, user_color="black", board_size=19)
+    game = Game(
+        user_id=user.id, ai_rank="1d", handicap=0, komi=6.5, user_color="black", board_size=19
+    )
     session.add(game)
     await session.commit()
 
@@ -69,7 +73,9 @@ async def test_create_analysis_cache(session: AsyncSession) -> None:
     session.add(user)
     await session.commit()
 
-    game = Game(user_id=user.id, ai_rank="3k", handicap=4, komi=0.5, user_color="black", board_size=19)
+    game = Game(
+        user_id=user.id, ai_rank="3k", handicap=4, komi=0.5, user_color="black", board_size=19
+    )
     session.add(game)
     await session.commit()
 
