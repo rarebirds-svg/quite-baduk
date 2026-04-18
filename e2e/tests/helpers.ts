@@ -13,8 +13,14 @@ export async function signup(page: Page, email: string, password = "password1", 
   await expect(page).toHaveURL(/\/game\/new/);
 }
 
-export async function createGame(page: Page, opts: { rank?: string; handicap?: number } = {}) {
+export async function createGame(
+  page: Page,
+  opts: { rank?: string; handicap?: number; boardSize?: 9 | 13 | 19 } = {},
+) {
   await page.goto("/game/new");
+  if (opts.boardSize) {
+    await page.getByRole("radio", { name: `${opts.boardSize}×${opts.boardSize}` }).click();
+  }
   if (opts.rank) await page.selectOption("select >> nth=0", opts.rank);
   if (opts.handicap != null) await page.selectOption("select >> nth=1", String(opts.handicap));
   await page.getByRole("button", { name: /create|생성/i }).click();
