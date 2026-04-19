@@ -93,6 +93,50 @@ Email + bcrypt password, JWT (access + refresh) in HttpOnly cookies. `app/securi
 - Frontend path alias: none — use relative imports. Tailwind classes only; no CSS modules.
 - Docker is the reference deployment. If a change works locally but breaks the Docker build, the Docker build wins.
 
+## UI/UX 디자인 시스템 규칙 (0.3.0+ · Editorial Hardcover / Journal)
+
+공개 서비스 수준의 UI를 위해 디자인 시스템이 도입되었습니다. 모든 새 프론트엔드 코드는 아래 규칙을 따릅니다. 스펙: `docs/superpowers/specs/2026-04-20-ui-ux-uplift-design.md`.
+
+**색상** — 토큰만 사용. 하드코딩 hex 금지.
+- `bg-paper` / `bg-paper-deep` / `text-ink` / `text-ink-mute` / `text-ink-faint`
+- 악센트: `oxblood` (primary), `gold` (승률 강조), `moss` (성공·최적수)
+- 다크 모드: 모든 토큰에 `dark:` 변형 — 예) `bg-paper dark:bg-paper` (토큰 자체가 모드별 값 가짐)
+- 원본 값은 `web/app/globals.css` CSS 변수로만 선언
+
+**타이포그래피** — Tailwind 클래스만.
+- `font-serif` (Newsreader — 헤딩·영문 본문) / `font-sans` (Pretendard — 한글 본문·UI) / `font-mono` (IBM Plex Mono — 숫자·좌표)
+- 인라인 `style={{ fontFamily: ... }}` 금지
+- 숫자는 `tabular-nums` 기본. `web/lib/i18n/`를 거치지 않은 하드코딩 한국어 문자열 금지
+
+**아이콘** — `lucide-react` 사용. 이모지 금지. 기본 크기 16px, `strokeWidth={1.5}`. 바둑 전용 기호(패스·기권·핸디캡)는 `web/components/editorial/icons/`의 독자 SVG.
+
+**모션** — Tailwind transition / CSS keyframes만. `framer-motion` 금지. 정의된 easing: `transition-base` 150ms, `transition-stone` 300ms `cubic-bezier(.2,.7,.2,1)`. 장식용 entry/stagger 애니메이션 금지.
+
+**Radius / Shadow** — `rounded-none` (카드·보드), `rounded-sm` (2px 기본), `rounded-full` (토글·배지·돌)만. 그림자는 사용하지 않음 — 위계는 규칙선과 배경 대비로.
+
+**컴포넌트 구조**
+- `web/components/ui/` — shadcn 프리미티브 (Button, Card, Dialog, Input, Select, Tabs, Tooltip, DropdownMenu, Sheet, Separator 등). 설치 직후 Editorial 토큰으로 재스타일링.
+- `web/components/editorial/` — 독자 프리미티브: `Hero` `RuleDivider` `StatFigure` `DataBlock` `PlayerCaption` `KeybindHint` `EmptyState` `Spinner` `BrandMark`. Go 도메인 아이콘도 여기.
+- `web/app/` 화면 파일에는 UI 로직을 직접 쓰지 말 것 — 프리미티브 조합만.
+
+**다크 모드** — `next-themes` `attribute="class"` 사용. `ThemeBootstrapper`와 `lib/theme.ts`는 폐기 예정 (Phase 1에서 next-themes로 교체).
+
+**i18n** — 새 문구는 `web/lib/i18n/ko.json`과 `en.json`에 **동시** 추가. 키 누락은 `korean-copy-qa` 에이전트가 체크.
+
+**자동 가드** — `.claude/hooks/design-token-check.sh`가 `Write`/`Edit` 후 `web/components/*` 또는 `web/app/*`에서 하드코딩 hex·이모지를 검출해 경고합니다. `design-token-guardian` 에이전트로 수동 감사 가능.
+
+## 프로젝트 에이전트 팀
+
+`.claude/agents/` 에 5개 커스텀 에이전트 정의:
+
+- **`editorial-implementer`** — 화면 1개를 디자인 스펙대로 구현 (frontend-design 스킬 강제, sonnet)
+- **`design-token-guardian`** — 토큰 준수 감사 (read-only, haiku)
+- **`visual-qa`** — Playwright 스크린샷 + 라이트/다크 시각 회귀 (sonnet)
+- **`korean-copy-qa`** — ko/en i18n 자연스러움 + 바둑 용어 일관성 (sonnet)
+- **`a11y-auditor`** — axe + 키보드 흐름 + 대비 (sonnet)
+
+Phase 2/3의 독립적 화면은 `editorial-implementer`를 병렬 호출해 동시 작업. 구현 완료 후 `design-token-guardian` + `visual-qa`로 일괄 리뷰.
+
 ## Environment
 
 Backend reads from `backend/.env` (see `.env.example`). Root `.env` is consumed by `docker-compose.yml` and passed to the backend container. Key vars: `KATAGO_MOCK` (skip model download — use for all dev and tests), `JWT_SECRET` (must be strong in prod), `DB_PATH`, `KATAGO_*` paths, `CORS_ORIGINS`.
