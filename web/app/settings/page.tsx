@@ -1,17 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useT, useLocale, setLocale, type Locale } from "@/lib/i18n";
-import { getTheme, setTheme, type Theme } from "@/lib/theme";
+import { useTheme } from "next-themes";
 import RankPicker, { type Rank } from "@/components/RankPicker";
 
 export default function SettingsPage() {
   const t = useT();
   const [locale] = useLocale();
-  const [theme, setThemeState] = useState<Theme>("light");
+  const { theme, setTheme } = useTheme();
   const [rank, setRank] = useState<Rank>("5k");
 
   useEffect(() => {
-    setThemeState(getTheme());
     const saved = (localStorage.getItem("preferred_rank") as Rank | null) || "5k";
     setRank(saved);
   }, []);
@@ -29,9 +28,10 @@ export default function SettingsPage() {
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-sm">{t("settings.theme")}</span>
-        <select value={theme} onChange={(e) => { const v = e.target.value as Theme; setTheme(v); setThemeState(v); }} className="border rounded px-2 py-1 dark:bg-gray-900">
+        <select value={theme ?? "system"} onChange={(e) => setTheme(e.target.value)} className="border rounded px-2 py-1 dark:bg-gray-900">
           <option value="light">{t("settings.themeLight")}</option>
           <option value="dark">{t("settings.themeDark")}</option>
+          <option value="system">System</option>
         </select>
       </label>
     </div>
