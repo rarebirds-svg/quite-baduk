@@ -1,10 +1,10 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
-export default function LoginPage() {
+function LoginForm() {
   const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,5 +31,13 @@ export default function LoginPage() {
       {err && <div className="text-red-600 text-sm">{err}</div>}
       <button className="px-4 py-2 bg-blue-600 text-white rounded">{t("auth.login")}</button>
     </form>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }
