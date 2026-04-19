@@ -119,6 +119,14 @@
   [data-state="closed"].ed-anim-fade { animation: ed-fade-out 150ms ease-out }
   [data-state="open"].ed-anim-slide-right { animation: ed-slide-in-from-right 200ms ease-out }
   [data-state="closed"].ed-anim-slide-right { animation: ed-slide-out-to-right 200ms ease-out }
+
+  @keyframes ed-linear-slide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .ed-spinner-bar {
+    animation: ed-linear-slide 1.2s linear infinite;
+  }
 }
 
 /* Pretendard CDN loads via <link> in layout.tsx */
