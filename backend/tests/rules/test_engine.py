@@ -1,5 +1,5 @@
 import pytest
-from app.core.rules.board import BLACK, WHITE, Board
+from app.core.rules.board import BLACK, WHITE, Board, SUPPORTED_SIZES
 from app.core.rules.engine import (
     GameState,
     IllegalMoveError,
@@ -189,8 +189,8 @@ def test_build_sgf_with_resign():
 
 
 def test_build_sgf_custom_board_size():
-    state = GameState()
-    sgf = build_sgf(state, board_size=9)
+    state = GameState(board=Board(9))
+    sgf = build_sgf(state)
     assert "SZ[9]" in sgf
 
 
@@ -241,3 +241,12 @@ def test_illegal_move_error_no_detail():
     err = IllegalMoveError("TEST_CODE")
     assert err.code == "TEST_CODE"
     assert err.detail == ""
+
+
+@pytest.mark.parametrize("size", SUPPORTED_SIZES)
+def test_play_one_move_each_size(size):
+    state = GameState(board=Board(size))
+    coord = "A" + str(size)  # top-left
+    new_state = play(state, Move(color=BLACK, coord=coord))
+    assert new_state.board.size == size
+    assert new_state.board.get(0, 0) == BLACK

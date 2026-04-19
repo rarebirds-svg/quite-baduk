@@ -9,16 +9,16 @@ from __future__ import annotations
 from app.core.katago.adapter import GTPResult
 from app.core.katago.analysis import AnalysisResult, MoveHint
 from app.core.katago.strength import StrengthConfig
-from app.core.rules.board import BLACK, WHITE, Board, BOARD_SIZE
-from app.core.rules.sgf_coord import xy_to_gtp
+from app.core.rules.board import BLACK, WHITE, Board
+from app.core.rules.sgf_coord import gtp_to_xy, xy_to_gtp
 
 
 class MockKataGoAdapter:
     """Drop-in replacement for KataGoAdapter."""
 
     def __init__(self) -> None:
-        self.board = Board()
-        self.board_size = BOARD_SIZE
+        self.board_size = 19
+        self.board = Board(self.board_size)
         self.komi = 6.5
         self.profile: tuple[str, int] | None = None
         self.move_history: list[tuple[str, str]] = []
@@ -38,12 +38,13 @@ class MockKataGoAdapter:
         return GTPResult(ok=True, body="")
 
     async def clear_board(self) -> None:
-        self.board = Board()
+        self.board = Board(self.board_size)
         self.move_history.clear()
 
     async def set_boardsize(self, size: int) -> None:
         self.board_size = size
-        self.board = Board()
+        self.board = Board(size)
+        self.move_history.clear()
 
     async def set_komi(self, komi: float) -> None:
         self.komi = komi
@@ -59,8 +60,7 @@ class MockKataGoAdapter:
         if coord.lower() == "pass":
             self.move_history.append((color, "pass"))
             return
-        from app.core.rules.sgf_coord import gtp_to_xy
-        xy = gtp_to_xy(coord)
+        xy = gtp_to_xy(coord, self.board_size)
         if xy is None:
             return
         x, y = xy
@@ -73,8 +73,7 @@ class MockKataGoAdapter:
         color, coord = self.move_history.pop()
         if coord.lower() == "pass":
             return
-        from app.core.rules.sgf_coord import gtp_to_xy
-        xy = gtp_to_xy(coord)
+        xy = gtp_to_xy(coord, self.board_size)
         if xy is not None:
             x, y = xy
             self.board = self.board.remove(x, y)
@@ -84,7 +83,7 @@ class MockKataGoAdapter:
         for y in range(self.board_size):
             for x in range(self.board_size):
                 if self.board.is_empty(x, y):
-                    coord = xy_to_gtp(x, y)
+                    coord = xy_to_gtp(x, y, self.board_size)
                     await self.play(color, coord)
                     return coord
         return "pass"
@@ -102,7 +101,7 @@ class MockKataGoAdapter:
                 break
             for x in range(self.board_size):
                 if self.board.is_empty(x, y):
-                    coord = xy_to_gtp(x, y)
+                    coord = xy_to_gtp(x, y, self.board_size)
                     hints.append(MoveHint(move=coord, visits=max_visits - count * 10, winrate=0.5 + count * 0.01))
                     count += 1
                     if count >= 3:

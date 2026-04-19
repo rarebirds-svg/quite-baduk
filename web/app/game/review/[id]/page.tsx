@@ -5,21 +5,21 @@ import Board from "@/components/Board";
 import AnalysisOverlay from "@/components/AnalysisOverlay";
 import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { gtpToXy } from "@/lib/board";
+import { gtpToXy, totalCells } from "@/lib/board";
 
 interface MoveEntry { move_number: number; color: string; coord: string | null; is_undone: boolean; }
-interface GameDetail { id: number; moves: MoveEntry[]; result: string | null; }
+interface GameDetail { id: number; board_size: number; moves: MoveEntry[]; result: string | null; }
 interface AnalysisResp { winrate: number; top_moves: { move: string; winrate: number; visits: number }[]; ownership: number[] }
 
-function replay(moves: MoveEntry[], upto: number): string {
-  const cells = Array.from({ length: 19 * 19 }, () => ".");
+function replay(size: number, moves: MoveEntry[], upto: number): string {
+  const cells = Array.from({ length: totalCells(size) }, () => ".");
   for (let i = 0; i < Math.min(upto, moves.length); i++) {
     const m = moves[i];
     if (m.is_undone || !m.coord || m.coord === "pass") continue;
-    const xy = gtpToXy(m.coord);
+    const xy = gtpToXy(m.coord, size);
     if (!xy) continue;
     const [x, y] = xy;
-    cells[y * 19 + x] = m.color;
+    cells[y * size + x] = m.color;
   }
   return cells.join("");
 }
@@ -37,7 +37,7 @@ export default function ReviewPage() {
   }, [gameId]);
 
   if (!game) return <div className="mt-6">Loading...</div>;
-  const board = replay(game.moves, idx);
+  const board = replay(game.board_size, game.moves, idx);
 
   const analyze = async () => {
     const r = await api<AnalysisResp>(`/api/games/${gameId}/analyze?moveNum=${idx}`, { method: "POST" });
@@ -46,7 +46,7 @@ export default function ReviewPage() {
 
   return (
     <div className="mt-4 space-y-4">
-      <Board board={board} />
+      <Board size={game.board_size} board={board} />
       <div className="flex gap-2 text-sm">
         <button className="border rounded px-2 py-1" onClick={() => setIdx(0)}>{t("review.first")}</button>
         <button className="border rounded px-2 py-1" onClick={() => setIdx(Math.max(0, idx - 1))}>{t("review.prev")}</button>

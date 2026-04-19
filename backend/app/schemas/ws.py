@@ -21,7 +21,8 @@ class WSUndoIn(BaseModel):
 
 class WSStateOut(BaseModel):
     type: Literal["state"] = "state"
-    board: str  # 361-char flat string of '.', 'B', 'W'
+    board: str  # size*size chars of '.', 'B', 'W' (size = 9, 13, or 19)
+    board_size: int
     to_move: str
     move_count: int
     captures: dict[str, int]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.core.rules.board import BLACK, EMPTY, WHITE, Board, BOARD_SIZE
+from app.core.rules.board import BLACK, EMPTY, WHITE, Board
 
 
 @dataclass
@@ -57,8 +57,8 @@ def _flood_territory(
                 border_colors.add(cell)
         return region, border_colors
 
-    for y in range(BOARD_SIZE):
-        for x in range(BOARD_SIZE):
+    for y in range(board.size):
+        for x in range(board.size):
             if (x, y) not in visited and effective.get(x, y) == EMPTY:
                 region, colors = flood(x, y)
                 visited |= region

@@ -1,8 +1,9 @@
 "use client";
-import { BOARD, STAR_POINTS, COLS } from "@/lib/board";
+import { starPoints, COLS } from "@/lib/board";
 
 interface Props {
-  board: string;          // 361 chars
+  size: number;
+  board: string;               // size*size chars
   lastMove?: { x: number; y: number } | null;
   onClick?(x: number, y: number): void;
   disabled?: boolean;
@@ -11,19 +12,21 @@ interface Props {
 
 const CELL = 30;
 const OFFSET = 24;
-const SIZE = OFFSET * 2 + CELL * (BOARD - 1);
-const STONE_R = CELL / 2 - 1;
-const LINE = "#3B2412";       // warm dark-brown for lines/labels over the wood
+const LINE = "#3B2412";
 const LABEL = "#4A2F17";
 
-export default function Board({ board, lastMove, onClick, disabled, overlay }: Props) {
+export default function Board({ size, board, lastMove, onClick, disabled, overlay }: Props) {
+  const SIZE_PX = OFFSET * 2 + CELL * (size - 1);
+  const STONE_R = CELL / 2 - 1;
   const cells = board.split("");
+  const stars = starPoints(size);
+
   return (
     <svg
-      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      viewBox={`0 0 ${SIZE_PX} ${SIZE_PX}`}
       className="w-full max-w-[640px] bg-board-bg dark:bg-board-dark rounded-lg shadow-lg"
       role="grid"
-      aria-label="Go board"
+      aria-label={`${size}x${size} Go board`}
     >
       <defs>
         <radialGradient id="black-stone" cx="35%" cy="35%" r="70%">
@@ -38,13 +41,12 @@ export default function Board({ board, lastMove, onClick, disabled, overlay }: P
         </radialGradient>
       </defs>
 
-      {/* grid */}
-      {Array.from({ length: BOARD }, (_, i) => (
+      {Array.from({ length: size }, (_, i) => (
         <g key={`g-${i}`}>
           <line
             x1={OFFSET}
             y1={OFFSET + i * CELL}
-            x2={OFFSET + (BOARD - 1) * CELL}
+            x2={OFFSET + (size - 1) * CELL}
             y2={OFFSET + i * CELL}
             stroke={LINE}
             strokeWidth={0.9}
@@ -52,7 +54,7 @@ export default function Board({ board, lastMove, onClick, disabled, overlay }: P
           <line
             y1={OFFSET}
             x1={OFFSET + i * CELL}
-            y2={OFFSET + (BOARD - 1) * CELL}
+            y2={OFFSET + (size - 1) * CELL}
             x2={OFFSET + i * CELL}
             stroke={LINE}
             strokeWidth={0.9}
@@ -60,44 +62,36 @@ export default function Board({ board, lastMove, onClick, disabled, overlay }: P
         </g>
       ))}
 
-      {/* star points */}
-      {STAR_POINTS.flatMap((sx) =>
-        STAR_POINTS.map((sy) => (
+      {stars.flatMap((sx) =>
+        stars.map((sy) => (
           <circle key={`s-${sx}-${sy}`} cx={OFFSET + sx * CELL} cy={OFFSET + sy * CELL} r={3.2} fill={LINE} />
         ))
       )}
 
-      {/* coordinate labels (always dark for readability on wood) */}
-      {Array.from({ length: BOARD }, (_, i) => (
+      {Array.from({ length: size }, (_, i) => (
         <g key={`lab-${i}`}>
           <text x={OFFSET + i * CELL} y={12} textAnchor="middle" fontSize={10} fontWeight={600} fill={LABEL}>
             {COLS[i]}
           </text>
-          <text x={OFFSET + i * CELL} y={SIZE - 4} textAnchor="middle" fontSize={10} fontWeight={600} fill={LABEL}>
+          <text x={OFFSET + i * CELL} y={SIZE_PX - 4} textAnchor="middle" fontSize={10} fontWeight={600} fill={LABEL}>
             {COLS[i]}
           </text>
           <text x={9} y={OFFSET + i * CELL + 3} textAnchor="start" fontSize={10} fontWeight={600} fill={LABEL}>
-            {BOARD - i}
+            {size - i}
           </text>
-          <text x={SIZE - 18} y={OFFSET + i * CELL + 3} textAnchor="start" fontSize={10} fontWeight={600} fill={LABEL}>
-            {BOARD - i}
+          <text x={SIZE_PX - 18} y={OFFSET + i * CELL + 3} textAnchor="start" fontSize={10} fontWeight={600} fill={LABEL}>
+            {size - i}
           </text>
         </g>
       ))}
 
-      {/* stones */}
       {cells.map((c, i) => {
-        const x = i % BOARD;
-        const y = Math.floor(i / BOARD);
+        const x = i % size;
+        const y = Math.floor(i / size);
         if (c === "B" || c === "W") {
           return (
             <g key={`st-${i}`}>
-              <circle
-                cx={OFFSET + x * CELL + 0.8}
-                cy={OFFSET + y * CELL + 1.2}
-                r={STONE_R}
-                fill="rgba(0,0,0,0.22)"
-              />
+              <circle cx={OFFSET + x * CELL + 0.8} cy={OFFSET + y * CELL + 1.2} r={STONE_R} fill="rgba(0,0,0,0.22)" />
               <circle
                 cx={OFFSET + x * CELL}
                 cy={OFFSET + y * CELL}
@@ -112,57 +106,42 @@ export default function Board({ board, lastMove, onClick, disabled, overlay }: P
         return null;
       })}
 
-      {/* last-move marker — small dot in the middle of the latest stone */}
       {lastMove && (() => {
-        const idx = lastMove.y * BOARD + lastMove.x;
+        const idx = lastMove.y * size + lastMove.x;
         const c = cells[idx];
         const dotFill = c === "B" ? "#ffffff" : "#d0342c";
         return (
-          <circle
-            cx={OFFSET + lastMove.x * CELL}
-            cy={OFFSET + lastMove.y * CELL}
-            r={4}
-            fill={dotFill}
-          />
+          <circle cx={OFFSET + lastMove.x * CELL} cy={OFFSET + lastMove.y * CELL} r={4} fill={dotFill} />
         );
       })()}
 
-      {/* hint overlay */}
       {overlay?.map((o, i) => (
         <g key={`o-${i}`}>
           <circle cx={OFFSET + o.x * CELL} cy={OFFSET + o.y * CELL} r={CELL / 2 - 3} fill={o.color} opacity={0.4} />
           {o.label && (
-            <text
-              x={OFFSET + o.x * CELL}
-              y={OFFSET + o.y * CELL + 3}
-              textAnchor="middle"
-              fontSize={9}
-              fontWeight={700}
-              fill="#ffffff"
-            >
+            <text x={OFFSET + o.x * CELL} y={OFFSET + o.y * CELL + 3} textAnchor="middle" fontSize={9} fontWeight={700} fill="#ffffff">
               {o.label}
             </text>
           )}
         </g>
       ))}
 
-      {/* click layer */}
       <rect
         x={OFFSET - CELL / 2}
         y={OFFSET - CELL / 2}
-        width={CELL * BOARD}
-        height={CELL * BOARD}
+        width={CELL * size}
+        height={CELL * size}
         fill="transparent"
         onClick={(e) => {
           if (disabled || !onClick) return;
           const svg = e.currentTarget.ownerSVGElement!;
           const rect = svg.getBoundingClientRect();
-          const scale = SIZE / rect.width;
+          const scale = SIZE_PX / rect.width;
           const px = (e.clientX - rect.left) * scale - OFFSET;
           const py = (e.clientY - rect.top) * scale - OFFSET;
           const x = Math.round(px / CELL);
           const y = Math.round(py / CELL);
-          if (x >= 0 && x < BOARD && y >= 0 && y < BOARD) onClick(x, y);
+          if (x >= 0 && x < size && y >= 0 && y < size) onClick(x, y);
         }}
       />
     </svg>

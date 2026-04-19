@@ -1,0 +1,128 @@
+"""Drop legacy tables and add board_size to games.
+
+Dev-only destructive migration: wipes existing games/moves/analyses.
+
+Revision ID: 0002
+Revises: 0001
+Create Date: 2026-04-18
+"""
+from typing import Sequence, Union
+
+import sqlalchemy as sa
+from alembic import op
+
+revision: str = "0002"
+down_revision: Union[str, None] = "0001"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    op.drop_index("ix_analyses_game_move", table_name="analyses")
+    op.drop_table("analyses")
+    op.drop_index("ix_moves_game", table_name="moves")
+    op.drop_table("moves")
+    op.drop_index("ix_games_user_status", table_name="games")
+    op.drop_table("games")
+
+    op.create_table(
+        "games",
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("user_id", sa.Integer, nullable=False),
+        sa.Column("ai_rank", sa.String(8), nullable=False),
+        sa.Column("handicap", sa.Integer, nullable=False, server_default="0"),
+        sa.Column("board_size", sa.Integer, nullable=False),
+        sa.Column("komi", sa.Float, nullable=False, server_default="6.5"),
+        sa.Column("user_color", sa.String(8), nullable=False),
+        sa.Column("status", sa.String(16), nullable=False, server_default="active"),
+        sa.Column("result", sa.String(16), nullable=True),
+        sa.Column("winner", sa.String(8), nullable=True),
+        sa.Column("move_count", sa.Integer, nullable=False, server_default="0"),
+        sa.Column("started_at", sa.DateTime, server_default=sa.func.now()),
+        sa.Column("finished_at", sa.DateTime, nullable=True),
+        sa.Column("sgf_cache", sa.Text, nullable=True),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+    )
+    op.create_index("ix_games_user_status", "games", ["user_id", "status"])
+
+    op.create_table(
+        "moves",
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("game_id", sa.Integer, nullable=False),
+        sa.Column("move_number", sa.Integer, nullable=False),
+        sa.Column("color", sa.String(2), nullable=False),
+        sa.Column("coord", sa.String(4), nullable=True),
+        sa.Column("captures", sa.Integer, nullable=False, server_default="0"),
+        sa.Column("is_undone", sa.Boolean, nullable=False, server_default="0"),
+        sa.Column("played_at", sa.DateTime, server_default=sa.func.now()),
+        sa.ForeignKeyConstraint(["game_id"], ["games.id"], ondelete="CASCADE"),
+        sa.UniqueConstraint("game_id", "move_number", name="uq_game_move"),
+    )
+    op.create_index("ix_moves_game", "moves", ["game_id", "move_number"])
+
+    op.create_table(
+        "analyses",
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("game_id", sa.Integer, nullable=False),
+        sa.Column("move_number", sa.Integer, nullable=False),
+        sa.Column("payload", sa.Text, nullable=False),
+        sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
+        sa.ForeignKeyConstraint(["game_id"], ["games.id"], ondelete="CASCADE"),
+        sa.UniqueConstraint("game_id", "move_number", name="uq_analysis_game_move"),
+    )
+    op.create_index("ix_analyses_game_move", "analyses", ["game_id", "move_number"])
+
+
+def downgrade() -> None:
+    op.drop_index("ix_analyses_game_move", table_name="analyses")
+    op.drop_table("analyses")
+    op.drop_index("ix_moves_game", table_name="moves")
+    op.drop_table("moves")
+    op.drop_index("ix_games_user_status", table_name="games")
+    op.drop_table("games")
+
+    op.create_table(
+        "games",
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("user_id", sa.Integer, nullable=False),
+        sa.Column("ai_rank", sa.String(8), nullable=False),
+        sa.Column("handicap", sa.Integer, nullable=False, server_default="0"),
+        sa.Column("komi", sa.Float, nullable=False, server_default="6.5"),
+        sa.Column("user_color", sa.String(8), nullable=False),
+        sa.Column("status", sa.String(16), nullable=False, server_default="active"),
+        sa.Column("result", sa.String(16), nullable=True),
+        sa.Column("winner", sa.String(8), nullable=True),
+        sa.Column("move_count", sa.Integer, nullable=False, server_default="0"),
+        sa.Column("started_at", sa.DateTime, server_default=sa.func.now()),
+        sa.Column("finished_at", sa.DateTime, nullable=True),
+        sa.Column("sgf_cache", sa.Text, nullable=True),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+    )
+    op.create_index("ix_games_user_status", "games", ["user_id", "status"])
+
+    op.create_table(
+        "moves",
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("game_id", sa.Integer, nullable=False),
+        sa.Column("move_number", sa.Integer, nullable=False),
+        sa.Column("color", sa.String(2), nullable=False),
+        sa.Column("coord", sa.String(4), nullable=True),
+        sa.Column("captures", sa.Integer, nullable=False, server_default="0"),
+        sa.Column("is_undone", sa.Boolean, nullable=False, server_default="0"),
+        sa.Column("played_at", sa.DateTime, server_default=sa.func.now()),
+        sa.ForeignKeyConstraint(["game_id"], ["games.id"], ondelete="CASCADE"),
+        sa.UniqueConstraint("game_id", "move_number", name="uq_game_move"),
+    )
+    op.create_index("ix_moves_game", "moves", ["game_id", "move_number"])
+
+    op.create_table(
+        "analyses",
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("game_id", sa.Integer, nullable=False),
+        sa.Column("move_number", sa.Integer, nullable=False),
+        sa.Column("payload", sa.Text, nullable=False),
+        sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
+        sa.ForeignKeyConstraint(["game_id"], ["games.id"], ondelete="CASCADE"),
+        sa.UniqueConstraint("game_id", "move_number", name="uq_analysis_game_move"),
+    )
+    op.create_index("ix_analyses_game_move", "analyses", ["game_id", "move_number"])

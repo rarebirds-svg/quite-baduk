@@ -13,6 +13,7 @@ class Game(Base):
     user_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     ai_rank: Mapped[str] = mapped_column(String(8), nullable=False)
     handicap: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    board_size: Mapped[int] = mapped_column(Integer, nullable=False)
     komi: Mapped[float] = mapped_column(Float, nullable=False, default=6.5)
     user_color: Mapped[str] = mapped_column(String(8), nullable=False)  # 'black' | 'white'
     status: Mapped[str] = mapped_column(

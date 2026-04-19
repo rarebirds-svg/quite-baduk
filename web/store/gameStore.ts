@@ -1,9 +1,11 @@
 "use client";
 import { create } from "zustand";
+import { totalCells } from "@/lib/board";
 
-interface GameState {
-  board: string;           // 361 chars
-  toMove: string;          // "B" | "W"
+interface GameStoreState {
+  boardSize: number;
+  board: string;
+  toMove: string;
   moveCount: number;
   captures: Record<string, number>;
   lastAiMove: string | null;
@@ -11,24 +13,27 @@ interface GameState {
   gameOver: boolean;
   result: string | null;
   error: string | null;
-  set(partial: Partial<GameState>): void;
-  reset(): void;
+  set(partial: Partial<GameStoreState>): void;
+  reset(size?: number): void;
 }
 
-const initial = {
-  board: ".".repeat(19 * 19),
-  toMove: "B",
-  moveCount: 0,
-  captures: { B: 0, W: 0 },
-  lastAiMove: null as string | null,
-  aiThinking: false,
-  gameOver: false,
-  result: null as string | null,
-  error: null as string | null
-};
+function initial(size: number) {
+  return {
+    boardSize: size,
+    board: ".".repeat(totalCells(size)),
+    toMove: "B",
+    moveCount: 0,
+    captures: { B: 0, W: 0 },
+    lastAiMove: null as string | null,
+    aiThinking: false,
+    gameOver: false,
+    result: null as string | null,
+    error: null as string | null,
+  };
+}
 
-export const useGameStore = create<GameState>((set) => ({
-  ...initial,
+export const useGameStore = create<GameStoreState>((set) => ({
+  ...initial(19),
   set: (p) => set(p),
-  reset: () => set(initial)
+  reset: (size = 19) => set(initial(size)),
 }));
