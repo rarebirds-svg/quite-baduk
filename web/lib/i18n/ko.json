@@ -1,7 +1,7 @@
 {
   "app": { "title": "AI 바둑" },
   "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "settings": "설정", "login": "로그인", "signup": "가입", "logout": "로그아웃", "volume": "Vol. I" },
-  "home": { "heading": "AI 바둑과 대국", "sub": "급수(18급~7단)와 접바둑(2~9점)을 선택하세요.", "startButton": "대국 시작" },
+  "home": { "heading": "바둑, 조용한 승부", "sub": "KataGo Human-SL과 두는 한국식 바둑. 9×9 · 13×13 · 19×19.", "startButton": "대국 시작", "ctaHistory": "기보 보기", "sectionRecent": "최근 대국", "sectionEmpty": "아직 대국이 없습니다. 첫 대국을 시작하세요.", "guestSignup": "가입하고 기보를 저장하세요" },
   "auth": { "email": "이메일", "password": "비밀번호", "displayName": "표시 이름", "signup": "가입", "login": "로그인", "mustBeLongerPassword": "비밀번호는 최소 8자" },
   "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "접바둑", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "색", "colorBlack": "흑", "colorWhite": "백", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "aiThinking": "AI 생각 중...", "downloadSgf": "기보(SGF) 다운로드", "resultLabel": "결과" },
   "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "analyze": "분석", "winrate": "승률" },
