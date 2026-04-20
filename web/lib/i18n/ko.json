@@ -1,6 +1,6 @@
 {
   "app": { "title": "AI 바둑" },
-  "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "settings": "설정", "login": "로그인", "signup": "가입", "logout": "로그아웃" },
+  "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "settings": "설정", "login": "로그인", "signup": "가입", "logout": "로그아웃", "volume": "Vol. I" },
   "home": { "heading": "AI 바둑과 대국", "sub": "급수(18급~7단)와 접바둑(2~9점)을 선택하세요.", "startButton": "대국 시작" },
   "auth": { "email": "이메일", "password": "비밀번호", "displayName": "표시 이름", "signup": "가입", "login": "로그인", "mustBeLongerPassword": "비밀번호는 최소 8자" },
   "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "접바둑", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "색", "colorBlack": "흑", "colorWhite": "백", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "aiThinking": "AI 생각 중...", "downloadSgf": "기보(SGF) 다운로드", "resultLabel": "결과" },

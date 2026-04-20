@@ -1,6 +1,6 @@
 {
   "app": { "title": "AI Go" },
-  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "settings": "Settings", "login": "Log in", "signup": "Sign up", "logout": "Log out" },
+  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "settings": "Settings", "login": "Log in", "signup": "Sign up", "logout": "Log out", "volume": "Vol. I" },
   "home": { "heading": "Play Go vs. AI", "sub": "Choose a rank (18k-7d) and handicap (2-9 stones).", "startButton": "Start a game" },
   "auth": { "email": "Email", "password": "Password", "displayName": "Display name", "signup": "Sign up", "login": "Log in", "mustBeLongerPassword": "Password must be 8+ chars" },
   "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Color", "colorBlack": "Black", "colorWhite": "White", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "aiThinking": "AI thinking...", "downloadSgf": "Download SGF", "resultLabel": "Result" },
