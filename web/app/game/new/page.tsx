@@ -1,12 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import RankPicker, { type Rank } from "@/components/RankPicker";
-import HandicapPicker from "@/components/HandicapPicker";
-import BoardSizePicker from "@/components/BoardSizePicker";
-import { api, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n";
+import { api, ApiError } from "@/lib/api";
 import type { BoardSize } from "@/lib/board";
+import { Hero } from "@/components/editorial/Hero";
+import { RuleDivider } from "@/components/editorial/RuleDivider";
+import { DataBlock } from "@/components/editorial/DataBlock";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Label } from "@/components/ui/label";
+import RankPicker, { type Rank } from "@/components/RankPicker";
+import BoardSizePicker from "@/components/BoardSizePicker";
+import HandicapPicker from "@/components/HandicapPicker";
+import { toast } from "sonner";
 
 const VALID_HANDICAPS_BY_SIZE: Record<number, number[]> = {
   9: [0, 2, 3, 4, 5],
@@ -17,71 +25,140 @@ const VALID_HANDICAPS_BY_SIZE: Record<number, number[]> = {
 export default function NewGamePage() {
   const t = useT();
   const router = useRouter();
-  const [boardSize, setBoardSize] = useState<BoardSize>(19);
+  const [boardSize, setBoardSize] = useState<BoardSize>(9);
   const [rank, setRank] = useState<Rank>("5k");
-  const [handicap, setHandicap] = useState<number>(0);
+  const [handicap, setHandicap] = useState(0);
   const [userColor, setUserColor] = useState<"black" | "white">("black");
-  const [err, setErr] = useState<string | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api("/api/auth/me")
-      .then(() => setAuthed(true))
-      .catch(() => {
+    (async () => {
+      try {
+        await api("/api/auth/me");
+        setAuthed(true);
+      } catch {
         setAuthed(false);
         router.replace("/login?next=/game/new");
-      });
+      }
+    })();
   }, [router]);
 
-  function pickSize(s: BoardSize) {
-    setBoardSize(s);
-    if (!VALID_HANDICAPS_BY_SIZE[s].includes(handicap)) {
-      setHandicap(0);
-    }
-  }
+  useEffect(() => {
+    if (!VALID_HANDICAPS_BY_SIZE[boardSize].includes(handicap)) setHandicap(0);
+  }, [boardSize, handicap]);
 
-  async function create() {
-    setErr(null);
+  const onCreate = async () => {
+    setBusy(true);
     try {
-      const body = JSON.stringify({
-        ai_rank: rank,
-        handicap,
-        user_color: handicap > 0 ? "black" : userColor,
-        board_size: boardSize,
+      const res = await api<{ id: number }>("/api/games", {
+        method: "POST",
+        body: JSON.stringify({
+          ai_rank: rank,
+          handicap,
+          user_color: handicap > 0 ? "black" : userColor,
+          board_size: boardSize,
+        }),
       });
-      const game = await api<{ id: number }>("/api/games", { method: "POST", body });
-      router.push(`/game/play/${game.id}`);
+      router.push(`/game/play/${res.id}`);
     } catch (e: unknown) {
       const code = (e as ApiError).code || "validation";
       if ((e as ApiError).status === 401) {
         router.replace("/login?next=/game/new");
         return;
       }
-      setErr(t(`errors.${code}`));
+      toast.error(t(`errors.${code}`));
+    } finally {
+      setBusy(false);
     }
-  }
+  };
 
-  if (authed === null) {
-    return <div className="mt-6 text-sm text-gray-500">...</div>;
-  }
+  if (authed === null) return null;
 
   return (
-    <div className="space-y-4 max-w-md mt-6">
-      <h1 className="text-2xl font-bold">{t("nav.newGame")}</h1>
-      <BoardSizePicker value={boardSize} onChange={pickSize} />
-      <RankPicker value={rank} onChange={setRank} />
-      <HandicapPicker boardSize={boardSize} value={handicap} onChange={setHandicap} />
-      {handicap === 0 && (
-        <label className="flex flex-col gap-1">
-          <span className="text-sm">{t("game.color")}</span>
-          <select value={userColor} onChange={(e) => setUserColor(e.target.value as "black" | "white")} className="border rounded px-2 py-1 dark:bg-gray-900">
-            <option value="black">{t("game.colorBlack")}</option>
-            <option value="white">{t("game.colorWhite")}</option>
-          </select>
-        </label>
-      )}
-      {err && <div className="text-red-600 text-sm">{err}</div>}
-      <button onClick={create} className="px-4 py-2 bg-blue-600 text-white rounded">{t("game.create")}</button>
+    <div className="flex flex-col gap-8 py-6">
+      <Hero title={t("game.newGame")} subtitle={t("game.newGameSubtitle")} />
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_1fr]">
+        <div className="flex flex-col gap-8">
+          <section className="flex flex-col gap-4">
+            <RuleDivider label={t("game.sectionOpponent")} />
+            <RankPicker value={rank} onChange={setRank} />
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <RuleDivider label={t("game.sectionBoard")} />
+            <BoardSizePicker value={boardSize} onChange={setBoardSize} />
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <RuleDivider label={t("game.sectionHandicap")} />
+            <HandicapPicker
+              boardSize={boardSize}
+              value={handicap}
+              onChange={setHandicap}
+            />
+          </section>
+
+          {handicap === 0 && (
+            <section className="flex flex-col gap-4">
+              <RuleDivider label={t("game.sectionChoice")} />
+              <div className="flex flex-col gap-2">
+                <Label>{t("game.color")}</Label>
+                <ToggleGroup
+                  type="single"
+                  value={userColor}
+                  onValueChange={(v) => v && setUserColor(v as "black" | "white")}
+                >
+                  <ToggleGroupItem value="black">
+                    {t("game.colorBlack")}
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="white">
+                    {t("game.colorWhite")}
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+            </section>
+          )}
+        </div>
+
+        <aside>
+          <Card className="sticky top-4">
+            <CardContent className="flex flex-col gap-3 py-4">
+              <div className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood">
+                {t("game.summary")}
+              </div>
+              <DataBlock label={t("game.rank")} value={rank} />
+              <DataBlock
+                label={t("game.boardSize")}
+                value={`${boardSize}×${boardSize}`}
+              />
+              <DataBlock
+                label={t("game.handicap")}
+                value={handicap === 0 ? t("game.handicapNone") : `${handicap}`}
+              />
+              {handicap === 0 && (
+                <DataBlock
+                  label={t("game.color")}
+                  value={
+                    userColor === "black"
+                      ? t("game.colorBlack")
+                      : t("game.colorWhite")
+                  }
+                />
+              )}
+              <Button
+                className="mt-4 w-full"
+                size="lg"
+                onClick={onCreate}
+                disabled={busy}
+              >
+                {busy ? "…" : t("game.start")}
+              </Button>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
     </div>
   );
 }
