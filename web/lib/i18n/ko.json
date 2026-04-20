@@ -4,7 +4,7 @@
   "home": { "heading": "바둑, 조용한 승부", "sub": "KataGo Human-SL과 두는 한국식 바둑. 9×9 · 13×13 · 19×19.", "startButton": "대국 시작", "ctaHistory": "기보 보기", "sectionRecent": "최근 대국", "sectionEmpty": "아직 대국이 없습니다. 첫 대국을 시작하세요.", "guestSignup": "가입하고 기보를 저장하세요" },
   "auth": { "email": "이메일", "password": "비밀번호", "displayName": "표시 이름", "signup": "가입", "login": "로그인", "mustBeLongerPassword": "비밀번호는 최소 8자" },
   "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "접바둑", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "색", "colorBlack": "흑", "colorWhite": "백", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "aiThinking": "AI 생각 중...", "downloadSgf": "기보(SGF) 다운로드", "resultLabel": "결과", "newGame": "새 대국", "newGameSubtitle": "상대·판 크기·핸디캡을 선택하고 시작하세요.", "summary": "대국 요약", "start": "대국 시작", "sectionOpponent": "상대", "sectionBoard": "판", "sectionHandicap": "핸디캡", "sectionChoice": "선택", "aiRank": "KataGo Human-SL", "you": "나", "yourRank": "플레이어", "yourTurn": "당신 차례", "thinking": "수를 읽는 중…", "result": "결과", "info": "정보", "moves": "기보", "move": "수", "captures": "따냄", "toMove": "차례", "confirmResignTitle": "기권하시겠습니까?", "confirmResignDesc": "현재 대국을 기권으로 종료합니다. 기보는 저장됩니다.", "cancel": "취소" },
-  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "analyze": "분석", "winrate": "승률" },
+  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더" },
   "history": { "total": "총", "wins": "승", "losses": "패", "empty": "아직 대국이 없습니다" },
   "settings": { "heading": "설정", "preferredRank": "선호 급수", "language": "언어", "theme": "테마", "themeLight": "밝게", "themeDark": "어둡게", "saved": "저장됨" },
   "errors": {
