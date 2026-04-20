@@ -24,7 +24,8 @@ interface GameDetail {
   board_size: number;
   moves: MoveEntryRaw[];
   result: string | null;
-  created_at?: string;
+  started_at?: string;
+  finished_at?: string | null;
 }
 interface AnalysisResp {
   winrate: number;
@@ -154,9 +155,7 @@ export default function ReviewPage() {
     : undefined;
 
   const heroSubtitle = [
-    game.created_at
-      ? new Date(game.created_at).toISOString().slice(0, 10)
-      : null,
+    game.started_at ? game.started_at.slice(0, 10) : null,
     `${game.board_size}×${game.board_size}`,
     game.result,
   ]

@@ -15,8 +15,10 @@ type RecentGame = {
   id: number;
   board_size: number;
   ai_rank?: string;
-  result?: string;
-  created_at: string;
+  status: string;
+  result: string | null;
+  started_at: string;
+  finished_at: string | null;
 };
 
 export default function Home() {
@@ -29,7 +31,7 @@ export default function Home() {
     (async () => {
       try {
         const res = await api<{ games?: RecentGame[] } | RecentGame[]>(
-          "/api/games?limit=3"
+          "/api/games"
         );
         const games = Array.isArray(res) ? res : res.games ?? [];
         setRecent(games.slice(0, 3));
@@ -83,12 +85,12 @@ export default function Home() {
                     <CardHeader>
                       <CardTitle>
                         {g.board_size} × {g.board_size}
-                        {g.result && ` · ${g.result}`}
+                        {g.result ? ` · ${g.result}` : g.status === "active" ? " · 진행중" : ""}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="font-mono text-xs text-ink-mute">
-                        {new Date(g.created_at).toISOString().slice(0, 10)}
+                        {g.started_at.slice(0, 10)}
                         {g.ai_rank && ` · 상대 ${g.ai_rank}`}
                       </div>
                     </CardContent>
