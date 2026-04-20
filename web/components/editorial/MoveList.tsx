@@ -7,7 +7,8 @@ export interface MoveEntry {
   coord: string;
 }
 
-export interface MoveListProps extends React.HTMLAttributes<HTMLOListElement> {
+export interface MoveListProps
+  extends Omit<React.HTMLAttributes<HTMLOListElement>, "onSelect"> {
   moves: MoveEntry[];
   currentIndex: number;
   onSelect?: (index: number) => void;
