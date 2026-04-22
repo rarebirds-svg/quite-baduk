@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from app.config import settings
 from app.core.katago.analysis import AnalysisResult, parse_analysis
@@ -102,7 +102,10 @@ class KataGoAdapter:
     def is_alive(self) -> bool:
         return self._proc is not None and self._proc.returncode is None
 
-    async def start(self) -> None:
+    async def _spawn(self) -> None:
+        """Raw subprocess spawn. Does not replay cached state — callers must
+        use :meth:`start` or :meth:`_ensure_alive` to get a consistent board.
+        """
         if self.is_alive:
             return
         args = [
@@ -119,6 +122,18 @@ class KataGoAdapter:
             stderr=asyncio.subprocess.DEVNULL,
         )
 
+    async def start(self) -> None:
+        """Public, idempotent. Spawns the subprocess if necessary AND
+        replays any cached :class:`_ReplayState` so the KataGo board always
+        matches what this adapter has been told to play.
+
+        This is the only safe public entry — direct ``_spawn`` calls would
+        leave KataGo on a blank board even though the adapter's own history
+        has progressed, which would make later ``play``/``genmove`` return
+        coords illegal against the rules engine.
+        """
+        await self._ensure_alive()
+
     async def stop(self) -> None:
         async with self._lock:
             if not self._proc:
@@ -131,11 +146,11 @@ class KataGoAdapter:
                         pass
                     try:
                         await asyncio.wait_for(self._proc.wait(), timeout=3.0)
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         self._proc.terminate()
                         try:
                             await asyncio.wait_for(self._proc.wait(), timeout=2.0)
-                        except asyncio.TimeoutError:
+                        except TimeoutError:
                             self._proc.kill()
                             await self._proc.wait()
             finally:
@@ -146,7 +161,7 @@ class KataGoAdapter:
             return
         self._starting = True
         try:
-            await self.start()
+            await self._spawn()
             await self._replay_state()
         finally:
             self._starting = False
@@ -189,7 +204,7 @@ class KataGoAdapter:
 
         try:
             data = await asyncio.wait_for(_read_until_blank(), timeout=deadline)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise TimeoutError(f"KataGo timed out on: {cmd}")
         return parse_gtp(data.decode("utf-8", errors="replace"))
 
@@ -264,26 +279,37 @@ class KataGoAdapter:
             raise ValueError(f"final_score failed: {r.body}")
         return r.body.strip()
 
-    async def analyze(self, max_visits: int = 100) -> AnalysisResult:
+    async def analyze(self, *, side: str = "B", max_visits: int = 100) -> AnalysisResult:
         """Run a one-shot analysis and return best moves + ownership.
 
-        kata-analyze is a streaming command that does not naturally return a
-        `\\n\\n` terminator, so we cannot use the standard send() path. Instead
-        we collect info lines for up to ~2s, then send a blank line / `name` to
-        interrupt and drain the final response.
+        kata-analyze streams 'info move ...' lines until interrupted. To stop
+        it we send a bare newline (the GTP-idiomatic way), then drain the
+        final '= ...\\n\\n' response so subsequent commands stay in-sync with
+        the subprocess pipe.
+
+        The side argument is required by this KataGo build: omitting it makes
+        the engine accept and immediately terminate the analyze with no info
+        lines, so the caller gets zero hints. Pass state.to_move.
         """
         async with self._lock:
             await self._ensure_alive()
             if self._proc is None or self._proc.stdin is None or self._proc.stdout is None:
                 return AnalysisResult()
 
-            # Start streaming analysis
-            cmd = f"kata-analyze interval 200 maxmoves 5 ownership true\n"
+            # Start streaming analysis. `interval 20` = 200ms cadence.
+            # Do NOT pass `maxvisits` here: with a small visit cap KataGo
+            # completes the search before emitting any info lines, returning
+            # zero hints. Instead we cap the total time via our own deadline
+            # below and interrupt with a blank line. The `max_visits` arg is
+            # kept on the signature for future use / callers.
+            _ = max_visits  # noqa: F841 (reserved for future per-call tuning)
+            cmd = f"kata-analyze {side} interval 20 maxmoves 5 ownership true\n"
             self._proc.stdin.write(cmd.encode())
             await self._proc.stdin.drain()
 
             collected: list[str] = []
             deadline = asyncio.get_event_loop().time() + 2.0
+            pipe_healthy = True
             try:
                 while asyncio.get_event_loop().time() < deadline:
                     remaining = max(0.05, deadline - asyncio.get_event_loop().time())
@@ -291,7 +317,7 @@ class KataGoAdapter:
                         line = await asyncio.wait_for(
                             self._proc.stdout.readline(), timeout=remaining
                         )
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         break
                     if not line:
                         break
@@ -299,23 +325,41 @@ class KataGoAdapter:
                     if text.strip().startswith("info move"):
                         collected.append(text)
             finally:
-                # Interrupt the analysis by sending a no-op GTP command.
-                # KataGo stops the analyze loop and answers the next command.
+                # Stop the analyze stream with a bare newline (standard GTP).
                 try:
-                    self._proc.stdin.write(b"name\n")
+                    self._proc.stdin.write(b"\n")
                     await self._proc.stdin.drain()
                 except Exception:
-                    pass
-                # Drain until blank line so subsequent sends are in-sync
+                    pipe_healthy = False
+                # Drain any trailing 'info move' lines plus the final
+                # GTP response ('= ...\\n\\n' or '? ...\\n\\n').
+                buffer = b""
+                saw_terminator = False
                 try:
                     while True:
                         line = await asyncio.wait_for(
-                            self._proc.stdout.readline(), timeout=1.0
+                            self._proc.stdout.readline(), timeout=1.5
                         )
-                        if not line or line in (b"\n", b"\r\n"):
+                        if not line:
                             break
-                except asyncio.TimeoutError:
+                        buffer += line
+                        text = line.decode("utf-8", errors="replace")
+                        if text.strip().startswith("info move"):
+                            collected.append(text)
+                        if buffer.endswith(b"\n\n") or buffer.endswith(b"\r\n\r\n"):
+                            saw_terminator = True
+                            break
+                except TimeoutError:
                     pass
+                # If we failed to resync the pipe, force a restart so the
+                # next caller gets a clean state instead of reading stale bytes.
+                if not saw_terminator or not pipe_healthy:
+                    try:
+                        if self._proc is not None:
+                            self._proc.terminate()
+                    except Exception:
+                        pass
+                    self._proc = None
 
             return parse_analysis("".join(collected))
 
