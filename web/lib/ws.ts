@@ -1,6 +1,15 @@
 export type WSMessage =
-  | { type: "state"; board: string; board_size: number; to_move: string; move_count: number; captures: Record<string, number> }
+  | {
+      type: "state";
+      board: string;
+      board_size: number;
+      to_move: string;
+      move_count: number;
+      captures: Record<string, number>;
+      winrate_black?: number;
+    }
   | { type: "ai_move"; coord: string; captures: number }
+  | { type: "winrate"; winrate_black: number }
   | { type: "game_over"; result: string; winner: string }
   | { type: "error"; code: string; detail?: string };
 
@@ -13,7 +22,17 @@ export function openGameWS(
   gameId: number,
   onMessage: (m: WSMessage) => void
 ): GameWS {
-  const base = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/^http/, "ws");
+  // Prefer same-origin in the browser so the WS rides the same host as the
+  // page (works through tunnels, LAN access, and prod behind a reverse proxy
+  // that forwards /api/ws to the backend). Falls back to NEXT_PUBLIC_API_URL
+  // for server-side / non-window contexts.
+  const base =
+    typeof window !== "undefined"
+      ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`
+      : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(
+          /^http/,
+          "ws",
+        );
   const url = `${base}/api/ws/games/${gameId}`;
   let ws = new WebSocket(url);
   let closed = false;

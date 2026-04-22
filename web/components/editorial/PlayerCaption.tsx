@@ -22,7 +22,14 @@ export const PlayerCaption = React.forwardRef<HTMLDivElement, PlayerCaptionProps
             <span className="font-sans text-sm font-semibold text-ink">{name}</span>
             {rank && <span className="font-mono text-xs text-ink-mute">{rank}</span>}
           </div>
-          {subtitle && <span className="font-sans text-xs text-ink-mute">{subtitle}</span>}
+          {subtitle !== undefined && (
+            <span
+              aria-live="polite"
+              className="font-sans text-xs text-ink-mute leading-4 min-h-[1rem] block"
+            >
+              {subtitle || "\u00a0"}
+            </span>
+          )}
         </div>
       </div>
     );

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Laptop } from "lucide-react";
 import { useT, useLocale, setLocale } from "@/lib/i18n";
@@ -14,51 +14,43 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/cn";
 
 export default function TopNav() {
   const t = useT();
   const [locale] = useLocale();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { user, setUser } = useAuthStore();
+  const { session, setSession } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const me = await api<{
-          id: number;
-          email: string;
-          display_name: string;
-          preferred_rank?: string | null;
-          locale?: string;
-          theme?: string;
-        }>("/api/auth/me");
-        setUser(me);
-      } catch {
-        setUser(null);
-      }
-    })();
-  }, [setUser]);
+  // Hide the nav entirely on the nickname gate — that screen is its own hero
+  if (pathname === "/") return null;
 
-  const logout = async () => {
+  const endSession = async () => {
     try {
-      await api("/api/auth/logout", { method: "POST" });
+      await api("/api/session/end", { method: "POST" });
     } catch {}
-    setUser(null);
+    setSession(null);
     router.push("/");
   };
 
-  const ThemeIcon = theme === "system" ? Laptop : resolvedTheme === "dark" ? Moon : Sun;
+  const ThemeIcon = !mounted
+    ? Laptop
+    : theme === "system"
+      ? Laptop
+      : resolvedTheme === "dark"
+        ? Moon
+        : Sun;
   const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "system" : "light";
 
   return (
     <nav className="border-b border-ink-faint bg-paper">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
-        <Link href="/" className="flex items-center gap-2" aria-label={t("app.title")}>
+        <Link href="/game/new" className="flex items-center gap-2" aria-label={t("app.title")}>
           <BrandMark size={20} />
           <span className="font-serif text-lg font-semibold tracking-tight">Baduk</span>
           <span aria-hidden className="h-3 w-px bg-ink-faint" />
@@ -68,7 +60,7 @@ export default function TopNav() {
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
-          {user && (
+          {session && (
             <Button asChild size="sm" variant="outline">
               <Link href="/game/new">{t("nav.newGame")}</Link>
             </Button>
@@ -90,17 +82,15 @@ export default function TopNav() {
             <ThemeIcon size={16} strokeWidth={1.5} />
           </button>
 
-          {user ? (
+          {session && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
                   <span aria-hidden className="h-2 w-2 rounded-full bg-ink" />
-                  {user.display_name}
+                  {session.nickname}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/history">{t("nav.history")}</Link>
                 </DropdownMenuItem>
@@ -108,18 +98,9 @@ export default function TopNav() {
                   <Link href="/settings">{t("nav.settings")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>{t("nav.logout")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={endSession}>{t("session.endSession")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <>
-              <Button asChild size="sm" variant="ghost">
-                <Link href="/login">{t("nav.login")}</Link>
-              </Button>
-              <Button asChild size="sm" variant="default">
-                <Link href="/signup">{t("nav.signup")}</Link>
-              </Button>
-            </>
           )}
         </div>
       </div>

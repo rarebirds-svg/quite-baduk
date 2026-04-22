@@ -19,6 +19,7 @@ export default function HistoryPage() {
 
   return (
     <div className="mt-6 space-y-4">
+      <p className="text-sm text-ink-mute">{t("session.ephemeralNote")}</p>
       {stats && (
         <div className="text-sm">
           {t("history.total")}: {stats.total}, {t("history.wins")}: {stats.wins}, {t("history.losses")}: {stats.losses}

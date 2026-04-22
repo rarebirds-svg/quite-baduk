@@ -1,14 +1,14 @@
 "use client";
 import { create } from "zustand";
 
-export interface User { id: number; email: string; display_name: string; preferred_rank?: string | null; locale?: string; theme?: string; }
+export interface Session { id: number; nickname: string; }
 
 interface AuthState {
-  user: User | null;
-  setUser(u: User | null): void;
+  session: Session | null;
+  setSession(s: Session | null): void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  setUser: (u) => set({ user: u })
+  session: null,
+  setSession: (s) => set({ session: s })
 }));

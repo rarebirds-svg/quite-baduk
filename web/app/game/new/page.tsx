@@ -14,6 +14,11 @@ import { Label } from "@/components/ui/label";
 import RankPicker, { type Rank } from "@/components/RankPicker";
 import BoardSizePicker from "@/components/BoardSizePicker";
 import HandicapPicker from "@/components/HandicapPicker";
+import type { AiStyle } from "@/components/StylePicker";
+import PlayerPicker, {
+  type PlayerId,
+  PLAYER_GROUPS,
+} from "@/components/PlayerPicker";
 import { toast } from "sonner";
 
 const VALID_HANDICAPS_BY_SIZE: Record<number, number[]> = {
@@ -25,9 +30,15 @@ const VALID_HANDICAPS_BY_SIZE: Record<number, number[]> = {
 export default function NewGamePage() {
   const t = useT();
   const router = useRouter();
-  const [boardSize, setBoardSize] = useState<BoardSize>(9);
+  const [boardSize, setBoardSize] = useState<BoardSize>(19);
   const [rank, setRank] = useState<Rank>("5k");
+  const [aiPlayer, setAiPlayer] = useState<PlayerId>("shin_jinseo");
   const [handicap, setHandicap] = useState(0);
+
+  // Player determines style for the summary row + backend payload.
+  const aiStyle: AiStyle = (PLAYER_GROUPS.find((g) =>
+    g.players.includes(aiPlayer),
+  )?.style ?? "balanced") as AiStyle;
   const [userColor, setUserColor] = useState<"black" | "white">("black");
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,11 +46,11 @@ export default function NewGamePage() {
   useEffect(() => {
     (async () => {
       try {
-        await api("/api/auth/me");
+        await api("/api/session");
         setAuthed(true);
       } catch {
         setAuthed(false);
-        router.replace("/login?next=/game/new");
+        router.replace("/");
       }
     })();
   }, [router]);
@@ -55,6 +66,8 @@ export default function NewGamePage() {
         method: "POST",
         body: JSON.stringify({
           ai_rank: rank,
+          ai_style: aiStyle,
+          ai_player: aiPlayer,
           handicap,
           user_color: handicap > 0 ? "black" : userColor,
           board_size: boardSize,
@@ -64,7 +77,7 @@ export default function NewGamePage() {
     } catch (e: unknown) {
       const code = (e as ApiError).code || "validation";
       if ((e as ApiError).status === 401) {
-        router.replace("/login?next=/game/new");
+        router.replace("/");
         return;
       }
       toast.error(t(`errors.${code}`));
@@ -84,6 +97,11 @@ export default function NewGamePage() {
           <section className="flex flex-col gap-4">
             <RuleDivider label={t("game.sectionOpponent")} />
             <RankPicker value={rank} onChange={setRank} />
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <RuleDivider label={t("game.sectionPlayer")} />
+            <PlayerPicker value={aiPlayer} onChange={setAiPlayer} />
           </section>
 
           <section className="flex flex-col gap-4">
@@ -129,6 +147,14 @@ export default function NewGamePage() {
                 {t("game.summary")}
               </div>
               <DataBlock label={t("game.rank")} value={rank} />
+              <DataBlock
+                label={t("game.aiPlayer")}
+                value={t(`game.players.${aiPlayer}.name`)}
+              />
+              <DataBlock
+                label={t("game.aiStyle")}
+                value={t(`game.aiStyleName.${aiStyle}`)}
+              />
               <DataBlock
                 label={t("game.boardSize")}
                 value={`${boardSize}×${boardSize}`}

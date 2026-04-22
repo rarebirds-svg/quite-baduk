@@ -14,6 +14,8 @@ import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { DataBlock } from "@/components/editorial/DataBlock";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
+import { WinrateBar } from "@/components/editorial/WinrateBar";
+import BoardBgSwitcher from "@/components/BoardBgSwitcher";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +38,12 @@ export default function PlayPage() {
     useState<{ move: string; winrate: number; visits: number }[]>([]);
   const [hintWinrate, setHintWinrate] = useState<number | null>(null);
   const [confirmResign, setConfirmResign] = useState(false);
+  // Track the move_count we are optimistically anticipating. If the server
+  // sends back a stale state (e.g. an initial handshake that arrived after
+  // the user already clicked, or a reconnect mid-flight), we ignore its
+  // board so the optimistic stone doesn't get wiped.
+  const expectedMoveCount = useRef<number>(0);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     api<{ board_size: number }>(`/api/games/${gameId}`).then((detail) => {
@@ -44,7 +52,19 @@ export default function PlayPage() {
 
     const ws = openGameWS(gameId, (msg: WSMessage) => {
       if (msg.type === "state") {
+        // Discard the state if it's a *stale* view that would undo an
+        // in-flight move — i.e. the server's move_count is behind what
+        // we already expect. Only the error path rolls back optimistics.
+        if (msg.move_count < expectedMoveCount.current) {
+          return;
+        }
         preOptimisticBoard.current = null;
+        expectedMoveCount.current = msg.move_count;
+        // If the server's side-to-move equals our current side-to-move,
+        // the full user+AI round trip has landed — drop the thinking
+        // indicator defensively in case the ai_move message is lost or
+        // arrives out of order.
+        const roundComplete = msg.to_move === g.toMove;
         g.set({
           boardSize: msg.board_size,
           board: msg.board,
@@ -52,7 +72,14 @@ export default function PlayPage() {
           moveCount: msg.move_count,
           captures: msg.captures,
           error: null,
+          ...(roundComplete ? { aiThinking: false } : {}),
+          ...(typeof msg.winrate_black === "number"
+            ? { winrateBlack: msg.winrate_black }
+            : {}),
         });
+        setReady(true);
+      } else if (msg.type === "winrate") {
+        g.set({ winrateBlack: msg.winrate_black });
       } else if (msg.type === "ai_move") {
         const c = msg.coord?.toLowerCase();
         if (msg.coord && c !== "pass" && c !== "resign") playStoneClick();
@@ -65,7 +92,12 @@ export default function PlayPage() {
           preOptimisticBoard.current = null;
         }
         optimisticUserMove.current = null;
-        g.set({ error: msg.code, aiThinking: false });
+        // Clear the "last move" ring too — otherwise the red circle lingers
+        // on the empty intersection the user just tried to click.
+        g.set({ error: msg.code, aiThinking: false, lastAiMove: null });
+        // Drop the optimistic advance so future state messages aren't
+        // filtered out as stale.
+        expectedMoveCount.current = g.moveCount;
         toast.error(t(`errors.${msg.code}`));
       }
     });
@@ -73,12 +105,14 @@ export default function PlayPage() {
     return () => {
       ws.close();
       g.reset();
+      setReady(false);
+      expectedMoveCount.current = 0;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId]);
 
   const sendMove = (x: number, y: number) => {
-    if (g.gameOver || g.aiThinking) return;
+    if (!ready || g.gameOver || g.aiThinking) return;
     const coord = xyToGtp(x, y, g.boardSize);
     const idx = y * g.boardSize + x;
     if (g.board[idx] !== ".") {
@@ -91,6 +125,9 @@ export default function PlayPage() {
     const newBoard =
       g.board.substring(0, idx) + userColor + g.board.substring(idx + 1);
     optimisticUserMove.current = { x, y };
+    // Reserve two move slots (user + AI) so a late initial-state payload
+    // with a smaller move_count doesn't wipe the optimistic stone.
+    expectedMoveCount.current = g.moveCount + 2;
     g.set({
       board: newBoard,
       aiThinking: true,
@@ -193,7 +230,7 @@ export default function PlayPage() {
             lastMoveXy ? { x: lastMoveXy[0], y: lastMoveXy[1] } : null
           }
           onClick={sendMove}
-          disabled={g.aiThinking || g.gameOver}
+          disabled={!ready || g.aiThinking || g.gameOver}
           overlay={overlay}
         />
         <PlayerCaption
@@ -236,6 +273,12 @@ export default function PlayPage() {
         ) : (
           <StatFigure value={g.moveCount} label={t("game.move")} />
         )}
+        <RuleDivider label={t("game.winrate")} />
+        <WinrateBar
+          value={g.winrateBlack}
+          blackLabel={t("game.winrateBlack")}
+          whiteLabel={t("game.winrateWhite")}
+        />
         <RuleDivider label={t("game.info")} />
         <DataBlock
           label={t("game.captures")}
@@ -245,6 +288,8 @@ export default function PlayPage() {
           label={t("game.toMove")}
           value={g.toMove === "B" ? t("game.colorBlack") : t("game.colorWhite")}
         />
+        <RuleDivider label={t("settings.boardBg")} />
+        <BoardBgSwitcher compact />
       </aside>
 
       <Dialog open={confirmResign} onOpenChange={setConfirmResign}>

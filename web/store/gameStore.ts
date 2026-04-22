@@ -13,6 +13,7 @@ interface GameStoreState {
   gameOver: boolean;
   result: string | null;
   error: string | null;
+  winrateBlack: number | null;
   set(partial: Partial<GameStoreState>): void;
   reset(size?: number): void;
 }
@@ -29,6 +30,7 @@ function initial(size: number) {
     gameOver: false,
     result: null as string | null,
     error: null as string | null,
+    winrateBlack: null as number | null,
   };
 }
 

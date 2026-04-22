@@ -1,6 +1,8 @@
 "use client";
+import { useEffect, useState } from "react";
 import { COLS, starPoints } from "@/lib/board";
 import { tokens } from "@/lib/tokens";
+import { BOARD_THEMES, useBoardTheme } from "@/store/boardThemeStore";
 
 type OverlayColor = "primary" | "secondary" | "tertiary";
 type OverlayItem = { x: number; y: number; color: OverlayColor | string; label?: string };
@@ -33,6 +35,14 @@ export default function Board({
   const W = CELL * (size - 1) + pad * 2;
   const pts = [...Array(size).keys()].map((i) => pad + i * CELL);
   const stars = starPoints(size);
+  // Zustand persist rehydrates from localStorage synchronously on the
+  // client, which can disagree with the SSR default. Use the default on
+  // the server + first client render, then swap after mount to keep
+  // hydration stable.
+  const boardTheme = useBoardTheme((s) => s.theme);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const palette = BOARD_THEMES[mounted ? boardTheme : "paper"];
 
   const handleClick = (evt: React.MouseEvent<SVGRectElement, MouseEvent>) => {
     if (!onClick || disabled) return;
@@ -52,12 +62,24 @@ export default function Board({
     <svg
       viewBox={`0 0 ${W} ${W}`}
       width="100%"
-      style={{ maxWidth: "min(90vh, 90vw, 900px)" }}
-      className="block bg-paper-deep"
+      style={{
+        maxWidth: "min(90vh, 90vw, 900px)",
+        backgroundColor: palette.bg,
+        transition: "background-color 200ms ease-out",
+      }}
+      className="block"
       role="img"
       aria-label={`${size}×${size} Go board`}
     >
-      <rect x={0.5} y={0.5} width={W - 1} height={W - 1} fill="none" stroke="rgb(var(--ink))" strokeWidth={1} />
+      <rect
+        x={0.5}
+        y={0.5}
+        width={W - 1}
+        height={W - 1}
+        fill="none"
+        stroke={palette.lineInk}
+        strokeWidth={1}
+      />
 
       {pts.map((p, i) => (
         <g key={i}>
@@ -66,7 +88,7 @@ export default function Board({
             y1={p}
             x2={W - pad}
             y2={p}
-            stroke="rgb(var(--ink))"
+            stroke={palette.lineInk}
             strokeWidth={i === 0 || i === size - 1 ? 1.25 : 0.75}
           />
           <line
@@ -74,7 +96,7 @@ export default function Board({
             y1={pad}
             x2={p}
             y2={W - pad}
-            stroke="rgb(var(--ink))"
+            stroke={palette.lineInk}
             strokeWidth={i === 0 || i === size - 1 ? 1.25 : 0.75}
           />
         </g>
@@ -87,7 +109,7 @@ export default function Board({
             cx={pad + sx * CELL}
             cy={pad + sy * CELL}
             r={2.5}
-            fill="rgb(var(--ink))"
+            fill={palette.starInk}
           />
         ))
       )}
@@ -96,7 +118,7 @@ export default function Board({
         const label = COLS[i];
         const x = pad + i * CELL;
         return (
-          <g key={`c-${i}`} className="font-mono" fill="rgb(var(--ink-mute))" fontSize={10}>
+          <g key={`c-${i}`} className="font-mono" fill={palette.labelInk} fontSize={10}>
             <text x={x} y={14} textAnchor="middle">
               {label}
             </text>
@@ -110,7 +132,7 @@ export default function Board({
         const label = size - i;
         const y = pad + i * CELL + 3;
         return (
-          <g key={`r-${i}`} className="font-mono" fill="rgb(var(--ink-mute))" fontSize={10}>
+          <g key={`r-${i}`} className="font-mono" fill={palette.labelInk} fontSize={10}>
             <text x={10} y={y} textAnchor="middle">
               {label}
             </text>
@@ -128,7 +150,7 @@ export default function Board({
         const cx = pad + x * CELL;
         const cy = pad + y * CELL;
         const fill = c === "B" ? tokens.light["stone-black"] : tokens.light["stone-white"];
-        const stroke = c === "W" ? "rgb(var(--ink))" : "transparent";
+        const stroke = c === "W" ? palette.lineInk : "transparent";
         return (
           <circle
             key={`st-${idx}`}
