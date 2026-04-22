@@ -1,5 +1,7 @@
 # Social Login + Nationality Onboarding Implementation Plan
 
+> **SUPERSEDED 2026-04-22** — 상위 스펙이 폐기되었습니다. 대체 설계: [`../specs/2026-04-22-ephemeral-nickname-auth-design.md`](../specs/2026-04-22-ephemeral-nickname-auth-design.md). 이 플랜은 실행되지 않았으며 역사 보존 목적으로만 유지합니다.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace email/password auth with social-only login across 8 providers (Google, Naver, Kakao, Facebook, LINE, WeChat, LinkedIn, Yahoo! JAPAN), and gate first login on a nationality (`country_code`) choice.

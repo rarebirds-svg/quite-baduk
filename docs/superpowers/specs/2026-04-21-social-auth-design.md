@@ -1,7 +1,9 @@
 # Social Login + Nationality Onboarding — Design
 
+> **SUPERSEDED 2026-04-22** — 개인정보 관리 이슈로 폐기. 대체 설계: [`2026-04-22-ephemeral-nickname-auth-design.md`](./2026-04-22-ephemeral-nickname-auth-design.md). 이 문서는 설계 역사 보존 목적으로 유지합니다.
+
 **Date:** 2026-04-21
-**Status:** Approved for planning
+**Status:** Superseded (was "Approved for planning")
 **Scope:** Replace email/password auth with social login across 8 providers; collect nationality during onboarding.
 
 ## 1. Problem & Goals
