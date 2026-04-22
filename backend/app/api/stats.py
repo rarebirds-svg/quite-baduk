@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.deps import get_current_user, get_db
-from app.models import Game, User
+from app.deps import get_current_session, get_db
+from app.models import Game, Session
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
@@ -13,11 +15,11 @@ router = APIRouter(prefix="/api", tags=["stats"])
 @router.get("/stats")
 async def stats(
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
-) -> dict:
+    sess: Session = Depends(get_current_session),
+) -> dict[str, Any]:
     res = await db.execute(
         select(Game.ai_rank, Game.handicap, Game.winner, func.count(Game.id))
-        .where(Game.user_id == user.id, Game.status.in_(["finished", "resigned"]))
+        .where(Game.session_id == sess.id, Game.status.in_(["finished", "resigned"]))
         .group_by(Game.ai_rank, Game.handicap, Game.winner)
     )
     rows = res.all()

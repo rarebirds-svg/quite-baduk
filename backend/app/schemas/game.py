@@ -8,10 +8,21 @@ from pydantic import BaseModel, Field
 from app.core.katago.strength import SUPPORTED_RANKS
 
 Rank = Literal["18k","15k","12k","10k","7k","5k","3k","1k","1d","3d","5d","7d"]
+AiStyle = Literal[
+    "balanced",
+    "territorial",
+    "influence",
+    "combative",
+    "speed",
+    "classical",
+    "rustic",
+]
 
 
 class CreateGameRequest(BaseModel):
     ai_rank: Rank
+    ai_style: AiStyle = "balanced"
+    ai_player: str | None = None
     handicap: int = Field(ge=0, le=9)
     user_color: Literal["black", "white"] = "black"
     board_size: Literal[9, 13, 19] = 19
@@ -20,6 +31,8 @@ class CreateGameRequest(BaseModel):
 class GameSummary(BaseModel):
     id: int
     ai_rank: str
+    ai_style: str = "balanced"
+    ai_player: str | None = None
     handicap: int
     board_size: int
     komi: float

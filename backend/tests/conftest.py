@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db import Base
-from app.models import User, Game, Move, AnalysisCache  # register models with metadata
+from app.models import Session, Game, Move, AnalysisCache  # register models with metadata
 from app.engine_pool import set_adapter, drop_state
 
 
@@ -23,7 +23,17 @@ async def db_engine():
         f"sqlite+aiosqlite:///{db_path}",
         connect_args={"check_same_thread": False},
     )
+    # Keep foreign-key enforcement consistent with runtime so CASCADE works.
+    from sqlalchemy import event
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _fk_on(dbapi_conn, _rec):  # type: ignore[no-untyped-def]
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA foreign_keys=ON;")
+        cur.close()
+
     async with engine.begin() as conn:
+        await conn.exec_driver_sql("PRAGMA foreign_keys=ON;")
         await conn.run_sync(Base.metadata.create_all)
     yield engine
     await engine.dispose()
@@ -69,3 +79,7 @@ async def client(db_engine, monkeypatch):
     # Reset rate limiter between tests
     from app.rate_limit import rate_limiter
     rate_limiter._buckets.clear()
+
+    # Reset nickname registry so client-based tests don't collide across runs
+    from app.session_registry import registry
+    registry._by_key.clear()

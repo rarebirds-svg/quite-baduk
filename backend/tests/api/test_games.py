@@ -2,11 +2,20 @@ import pytest
 from httpx import AsyncClient
 
 
-async def _signup(client: AsyncClient, email: str = "p@example.com") -> None:
-    await client.post(
-        "/api/auth/signup",
-        json={"email": email, "password": "password1", "display_name": "P"},
-    )
+_ctr = 0
+
+
+async def _signup(client: AsyncClient, email: str | None = None) -> None:
+    """Bridge helper kept for existing call sites — creates a fresh session
+    with a unique nickname. Email arg is accepted but ignored."""
+    global _ctr
+    _ctr += 1
+    # Derive a nickname from call order / optional email hint so repeat calls
+    # inside a single test don't collide with the DB UNIQUE(nickname_key).
+    nick = (email or "p").replace("@", "_").replace(".", "_")[:24]
+    nick = f"{nick}_{_ctr}"
+    r = await client.post("/api/session", json={"nickname": nick})
+    assert r.status_code == 201, r.text
 
 
 @pytest.mark.asyncio
@@ -82,14 +91,16 @@ async def test_list_games(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_cannot_access_other_users_game(client: AsyncClient) -> None:
+async def test_session_end_cascades_owned_games(client: AsyncClient) -> None:
+    """After a session ends, its owned games are cascade-deleted — a new
+    session cannot see or touch them even by raw game_id."""
     await _signup(client, email="u1@example.com")
     r = await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
     game_id = r.json()["id"]
-    await client.post("/api/auth/logout")
+    await client.post("/api/session/end")
     await _signup(client, email="u2@example.com")
     r2 = await client.get(f"/api/games/{game_id}")
-    assert r2.status_code == 403
+    assert r2.status_code == 404
 
 
 @pytest.mark.asyncio

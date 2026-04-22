@@ -22,13 +22,15 @@ from app.core.rules.engine import (
 from app.core.rules.board import Board
 from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap
 from app.engine_pool import (
+    adapter_owner,
     cache_state,
     drop_state,
     game_lock,
     get_adapter,
     get_cached_state,
+    set_adapter_owner,
 )
-from app.models import Game, Move as MoveRow, User
+from app.models import Game, Move as MoveRow, Session
 
 
 class GameError(Exception):
@@ -46,6 +48,7 @@ class MoveResult:
     captured_by_ai: int
     game_over: bool
     result_str: str | None  # "B+R", "W+12.5", etc.
+    winrate_black: float | None = None  # side-to-move normalised to Black's winrate
 
 
 async def _user_side(game: Game) -> str:
@@ -59,11 +62,13 @@ def _ai_side(game: Game) -> str:
 async def create_game(
     db: AsyncSession,
     *,
-    user: User,
+    session: Session,
     ai_rank: str,
     handicap: int,
     user_color: str,
     board_size: int,
+    ai_style: str = "balanced",
+    ai_player: str | None = None,
 ) -> Game:
     if board_size not in HANDICAP_TABLES:
         raise GameError("INVALID_BOARD_SIZE", str(board_size))
@@ -76,9 +81,18 @@ async def create_game(
     if handicap > 0:
         user_color = "black"
 
+    # If a specific player is chosen, derive the style from the player so
+    # the two fields stay consistent and summaries/reseeds don't disagree.
+    from app.core.katago.players import get_player
+
+    resolved_player = get_player(ai_player)
+    resolved_style = resolved_player.style if resolved_player else ai_style
+
     game = Game(
-        user_id=user.id,
+        session_id=session.id,
         ai_rank=ai_rank,
+        ai_style=resolved_style,
+        ai_player=ai_player if resolved_player else None,
         handicap=handicap,
         board_size=board_size,
         komi=komi,
@@ -93,7 +107,7 @@ async def create_game(
     await adapter.start()
     await adapter.set_boardsize(board_size)
     await adapter.set_komi(komi)
-    cfg = rank_to_config(ai_rank)
+    cfg = rank_to_config(ai_rank, resolved_style, game.ai_player)
     await adapter.set_profile(cfg)
 
     state = GameState(board=Board(board_size), komi=komi)
@@ -104,6 +118,7 @@ async def create_game(
         state.to_move = WHITE
 
     cache_state(game.id, state)
+    set_adapter_owner(game.id)
     return game
 
 
@@ -121,10 +136,10 @@ async def _record_move(
 
 
 async def place_move(
-    db: AsyncSession, *, game: Game, user: User, coord: str
+    db: AsyncSession, *, game: Game, session: Session, coord: str
 ) -> MoveResult:
-    if game.user_id != user.id:
-        raise GameError("FORBIDDEN", "game.user_id != user.id")
+    if game.session_id != session.id:
+        raise GameError("FORBIDDEN", "game.session_id != session.id")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
@@ -155,12 +170,12 @@ async def place_move(
         )
         game.move_count = move_no
 
-        # KataGo mirror
-        await adapter.start()
-        if coord.lower() == "pass":
-            await adapter.play(user_side, "pass")
-        else:
-            await adapter.play(user_side, coord)
+        # Sync the shared KataGo adapter with the rules state (including the
+        # user's latest move). The adapter is process-wide, so its internal
+        # board can drift whenever the user switches between games or the
+        # subprocess restarts; without this step KataGo may return a coord
+        # that the rules engine rejects as AI_ILLEGAL_MOVE.
+        await _sync_adapter(game, state, new_state, coord)
 
         ai_move: str | None = None
         ai_captures = 0
@@ -207,6 +222,18 @@ async def place_move(
         await db.commit()
         cache_state(game.id, new_state)
 
+        # Compute a cheap position evaluation so the UI can show the live
+        # winrate after each move. Swallow failures — winrate is optional.
+        winrate_black: float | None = None
+        if not game_over:
+            try:
+                analysis = await adapter.analyze(side=new_state.to_move, max_visits=32)
+                wr = float(analysis.winrate)
+                # analyze() returns the winrate from the side-to-move's perspective.
+                winrate_black = wr if new_state.to_move == BLACK else 1.0 - wr
+            except Exception:
+                winrate_black = None
+
         return MoveResult(
             game_state=new_state,
             ai_move=ai_move,
@@ -214,11 +241,12 @@ async def place_move(
             captured_by_ai=ai_captures,
             game_over=game_over,
             result_str=result_str,
+            winrate_black=winrate_black,
         )
 
 
-async def undo_move(db: AsyncSession, *, game: Game, user: User, steps: int = 2) -> GameState:
-    if game.user_id != user.id:
+async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: int = 2) -> GameState:
+    if game.session_id != session.id:
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
@@ -238,10 +266,10 @@ async def undo_move(db: AsyncSession, *, game: Game, user: User, steps: int = 2)
             row.is_undone = True
             game.move_count -= 1
 
-        adapter = get_adapter()
-        await adapter.start()
-        for _ in to_undo:
-            await adapter.undo()
+        # Force the next place_move to fully reseed the shared adapter — this
+        # is cheaper and more reliable than trying to keep adapter.undo() in
+        # lockstep with a multi-step undo that straddles captures.
+        set_adapter_owner(None)
 
         state = await _replay_state(db, game)
         cache_state(game.id, state)
@@ -249,8 +277,8 @@ async def undo_move(db: AsyncSession, *, game: Game, user: User, steps: int = 2)
         return state
 
 
-async def resign_game(db: AsyncSession, *, game: Game, user: User) -> Game:
-    if game.user_id != user.id:
+async def resign_game(db: AsyncSession, *, game: Game, session: Session) -> Game:
+    if game.session_id != session.id:
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
@@ -294,14 +322,71 @@ async def _replay_state(db: AsyncSession, game: Game) -> GameState:
     return state
 
 
-async def hint(game: Game, max_visits: int = 50) -> list[Any]:
+async def _reseed_adapter(game: Game, state: GameState) -> None:
+    """Reset the shared KataGo adapter so its internal board matches ``state``.
+
+    The adapter is a single process-wide subprocess, so switching between
+    games or recovering from a restart can leave its board out of sync with
+    the rules engine. Without this step, KataGo may genmove a coord that
+    is out of bounds or otherwise illegal in the current game's rules
+    state, and we surface it to the user as ``AI_ILLEGAL_MOVE``.
+    """
     adapter = get_adapter()
     await adapter.start()
-    analysis = await adapter.analyze(max_visits=max_visits)
+    await adapter.set_boardsize(game.board_size)
+    await adapter.set_komi(game.komi)
+    cfg = rank_to_config(
+        game.ai_rank,
+        getattr(game, "ai_style", "balanced"),
+        getattr(game, "ai_player", None),
+    )
+    await adapter.set_profile(cfg)
+    # Handicap stones first (they're placed directly on the board and are not
+    # in move_history).
+    if game.handicap > 0:
+        for hcoord in HANDICAP_TABLES[game.board_size][game.handicap]:
+            await adapter.play(BLACK, hcoord)
+    # Then replay the game's move history.
+    for mv in state.move_history:
+        if mv.coord is None:
+            continue  # resign — no board change
+        await adapter.play(mv.color, mv.coord)
+    set_adapter_owner(game.id)
+
+
+async def _sync_adapter(
+    game: Game,
+    state_before_user: GameState,
+    new_state: GameState,
+    user_move_coord: str,
+) -> None:
+    """Bring the shared adapter in sync with ``new_state``.
+
+    Fast path: the adapter already owns this game, so we just play the user's
+    latest move on top of what's already loaded.
+
+    Slow path: ownership differs (another game interleaved, or the process
+    restarted) — wipe and replay the full history.
+    """
+    if adapter_owner() == game.id:
+        adapter = get_adapter()
+        await adapter.start()
+        await adapter.play(
+            BLACK if game.user_color == "black" else WHITE,
+            user_move_coord,
+        )
+        return
+    await _reseed_adapter(game, new_state)
+
+
+async def hint(game: Game, side: str, max_visits: int = 50) -> list[Any]:
+    adapter = get_adapter()
+    await adapter.start()
+    analysis = await adapter.analyze(side=side, max_visits=max_visits)
     return analysis.top_moves[:3]
 
 
-async def analyze_position(game: Game, max_visits: int = 100) -> Any:
+async def analyze_position(game: Game, side: str, max_visits: int = 100) -> Any:
     adapter = get_adapter()
     await adapter.start()
-    return await adapter.analyze(max_visits=max_visits)
+    return await adapter.analyze(side=side, max_visits=max_visits)

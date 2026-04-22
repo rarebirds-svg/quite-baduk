@@ -19,7 +19,7 @@ class _AdapterProto(Protocol):
     async def undo(self) -> None: ...
     async def genmove(self, color: str) -> str: ...
     async def final_score(self) -> str: ...
-    async def analyze(self, max_visits: int = 100): ...  # type: ignore[no-untyped-def]
+    async def analyze(self, *, side: str = "B", max_visits: int = 100): ...  # type: ignore[no-untyped-def]
     async def start(self) -> None: ...
     async def stop(self) -> None: ...
     @property
@@ -29,6 +29,9 @@ class _AdapterProto(Protocol):
 _adapter: _AdapterProto | None = None
 _locks: dict[int, asyncio.Lock] = {}
 _states: dict[int, GameState] = {}
+# Which game_id the shared adapter was last seeded for. Lets callers skip a
+# full clear_board + replay when we know the adapter is already in sync.
+_adapter_owner: int | None = None
 
 
 def get_adapter() -> _AdapterProto:
@@ -40,8 +43,18 @@ def get_adapter() -> _AdapterProto:
 
 def set_adapter(a: _AdapterProto) -> None:
     """Test hook."""
-    global _adapter
+    global _adapter, _adapter_owner
     _adapter = a
+    _adapter_owner = None
+
+
+def adapter_owner() -> int | None:
+    return _adapter_owner
+
+
+def set_adapter_owner(game_id: int | None) -> None:
+    global _adapter_owner
+    _adapter_owner = game_id
 
 
 def game_lock(game_id: int) -> asyncio.Lock:

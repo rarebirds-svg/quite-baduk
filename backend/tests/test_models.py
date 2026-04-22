@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db import Base
-from app.models import AnalysisCache, Game, Move, User
+from app.models import AnalysisCache, Game, Move, Session
 
 
 @pytest.fixture
@@ -20,24 +20,24 @@ async def session() -> AsyncSession:
 
 
 @pytest.mark.asyncio
-async def test_create_user(session: AsyncSession) -> None:
-    user = User(email="test@example.com", password_hash="hashed", display_name="Tester")
-    session.add(user)
+async def test_create_session_row(session: AsyncSession) -> None:
+    s = Session(token="t1", nickname="alice", nickname_key="alice")
+    session.add(s)
     await session.commit()
-    await session.refresh(user)
-    assert user.id is not None
-    assert user.locale == "ko"
-    assert user.theme == "light"
+    await session.refresh(s)
+    assert s.id is not None
+    assert s.last_seen_at is not None
 
 
 @pytest.mark.asyncio
 async def test_create_game(session: AsyncSession) -> None:
-    user = User(email="player@example.com", password_hash="hashed", display_name="Player")
-    session.add(user)
+    s = Session(token="t2", nickname="bob", nickname_key="bob")
+    session.add(s)
     await session.commit()
+    await session.refresh(s)
 
     game = Game(
-        user_id=user.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black", board_size=19
+        session_id=s.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black", board_size=19
     )
     session.add(game)
     await session.commit()
@@ -49,12 +49,13 @@ async def test_create_game(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_create_move(session: AsyncSession) -> None:
-    user = User(email="m@example.com", password_hash="hashed", display_name="M")
-    session.add(user)
+    s = Session(token="t3", nickname="carol", nickname_key="carol")
+    session.add(s)
     await session.commit()
+    await session.refresh(s)
 
     game = Game(
-        user_id=user.id, ai_rank="1d", handicap=0, komi=6.5, user_color="black", board_size=19
+        session_id=s.id, ai_rank="1d", handicap=0, komi=6.5, user_color="black", board_size=19
     )
     session.add(game)
     await session.commit()
@@ -69,12 +70,13 @@ async def test_create_move(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_create_analysis_cache(session: AsyncSession) -> None:
-    user = User(email="a@example.com", password_hash="hashed", display_name="A")
-    session.add(user)
+    s = Session(token="t4", nickname="dan", nickname_key="dan")
+    session.add(s)
     await session.commit()
+    await session.refresh(s)
 
     game = Game(
-        user_id=user.id, ai_rank="3k", handicap=4, komi=0.5, user_color="black", board_size=19
+        session_id=s.id, ai_rank="3k", handicap=4, komi=0.5, user_color="black", board_size=19
     )
     session.add(game)
     await session.commit()
@@ -88,12 +90,13 @@ async def test_create_analysis_cache(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_game_persists_board_size(session: AsyncSession) -> None:
-    user = User(email="bs@example.com", password_hash="hashed", display_name="BS")
-    session.add(user)
+    s = Session(token="t5", nickname="eve", nickname_key="eve")
+    session.add(s)
     await session.commit()
+    await session.refresh(s)
 
     game = Game(
-        user_id=user.id,
+        session_id=s.id,
         ai_rank="5k",
         handicap=0,
         komi=6.5,
@@ -106,3 +109,22 @@ async def test_game_persists_board_size(session: AsyncSession) -> None:
     res = await session.execute(select(Game).where(Game.id == game.id))
     loaded = res.scalar_one()
     assert loaded.board_size == 9
+
+
+@pytest.mark.asyncio
+async def test_game_cascade_on_session_delete(session: AsyncSession) -> None:
+    s = Session(token="t6", nickname="frank", nickname_key="frank")
+    session.add(s)
+    await session.commit()
+    await session.refresh(s)
+
+    session.add(Game(
+        session_id=s.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black", board_size=19
+    ))
+    await session.commit()
+
+    await session.delete(s)
+    await session.commit()
+
+    res = await session.execute(select(Game))
+    assert res.scalars().all() == []

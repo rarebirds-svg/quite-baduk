@@ -18,10 +18,7 @@ async def test_stats_requires_auth(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_stats_empty(client: AsyncClient) -> None:
-    await client.post(
-        "/api/auth/signup",
-        json={"email": "s@example.com", "password": "password1", "display_name": "S"},
-    )
+    await client.post("/api/session", json={"nickname": "stats_user"})
     r = await client.get("/api/stats")
     assert r.status_code == 200
     body = r.json()
