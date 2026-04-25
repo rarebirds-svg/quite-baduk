@@ -1,6 +1,5 @@
 "use client";
 import { useT } from "@/lib/i18n";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
@@ -19,34 +18,30 @@ export interface HandicapPickerProps {
   boardSize: number;
   value: number;
   onChange: (n: number) => void;
-  label?: string;
+  triggerId?: string;
 }
 
 export default function HandicapPicker({
   boardSize,
   value,
   onChange,
-  label,
+  triggerId = "handicap-picker",
 }: HandicapPickerProps) {
   const t = useT();
   const valid = HANDICAP_BY_SIZE[boardSize] ?? [];
-  const resolvedLabel = label ?? t("game.handicap");
   return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor="handicap-picker">{resolvedLabel}</Label>
-      <Select value={String(value)} onValueChange={(v) => onChange(Number(v))}>
-        <SelectTrigger id="handicap-picker" className="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="0">{t("game.handicapNone")}</SelectItem>
-          {valid.map((n) => (
-            <SelectItem key={n} value={String(n)}>
-              {t("game.handicapStones", { n: String(n) })}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={String(value)} onValueChange={(v) => onChange(Number(v))}>
+      <SelectTrigger id={triggerId} aria-label={t("game.handicap")} className="w-full">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="0">{t("game.handicapNone")}</SelectItem>
+        {valid.map((n) => (
+          <SelectItem key={n} value={String(n)}>
+            {t("game.handicapStones", { n: String(n) })}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

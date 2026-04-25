@@ -25,6 +25,7 @@ class AnalysisResult:
     top_moves: list[MoveHint] = field(default_factory=list)
     ownership: list[float] = field(default_factory=list)  # length size*size
     winrate: float = 0.5  # overall winrate for side to move
+    score_lead: float = 0.0  # best move's score lead from side-to-move's perspective
 
 
 def parse_analysis(body: str, board_size: int = 19) -> AnalysisResult:
@@ -94,4 +95,5 @@ def parse_analysis(body: str, board_size: int = 19) -> AnalysisResult:
     result.top_moves.sort(key=lambda m: -m.visits)
     if result.top_moves:
         result.winrate = result.top_moves[0].winrate
+        result.score_lead = result.top_moves[0].score_lead
     return result

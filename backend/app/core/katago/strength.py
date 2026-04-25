@@ -33,19 +33,27 @@ class StrengthConfig:
 
 # Baseline visit budgets per rank, tuned for the default 'balanced' style.
 # Style multipliers (see app.core.katago.style) scale these up or down.
+# The exponential 9k→9d ladder roughly doubles visits per two ranks, so
+# playing strength tracks rank perception instead of saturating at 9k.
 _RANK_BASE_VISITS: dict[str, int] = {
-    "18k": 1,
-    "15k": 1,
-    "12k": 1,
-    "10k": 2,
+    "9k":  2,
+    "8k":  3,
     "7k":  4,
+    "6k":  6,
     "5k":  8,
+    "4k":  12,
     "3k":  16,
+    "2k":  24,
     "1k":  32,
     "1d":  64,
+    "2d":  96,
     "3d":  128,
+    "4d":  192,
     "5d":  256,
+    "6d":  384,
     "7d":  512,
+    "8d":  768,
+    "9d":  1024,
 }
 
 SUPPORTED_RANKS: tuple[str, ...] = tuple(_RANK_BASE_VISITS.keys())

@@ -4,13 +4,13 @@ import datetime as dt
 from typing import Any
 
 from fastapi import APIRouter, Cookie, Depends, WebSocket, WebSocketDisconnect, status
-from sqlalchemy import select
+from sqlalchemy import select, update as _sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rules.engine import GameState
 from app.deps import COOKIE_SESSION, get_db
 from app.models import Game, Session
-from app.services.game_service import GameError, place_move, undo_move
+from app.services.game_service import GameError, place_move, score_by_request, undo_move
 
 router = APIRouter(tags=["ws"])
 
@@ -30,6 +30,9 @@ async def _state_payload(
     state: GameState,
     move_count: int,
     winrate_black: float | None = None,
+    undo_count: int | None = None,
+    score_lead_black: float | None = None,
+    endgame_phase: bool | None = None,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "type": "state",
@@ -41,6 +44,12 @@ async def _state_payload(
     }
     if winrate_black is not None:
         payload["winrate_black"] = winrate_black
+    if undo_count is not None:
+        payload["undo_count"] = undo_count
+    if score_lead_black is not None:
+        payload["score_lead_black"] = score_lead_black
+    if endgame_phase is not None:
+        payload["endgame_phase"] = endgame_phase
     return payload
 
 
@@ -51,8 +60,16 @@ async def _authenticate_ws(token: str | None, db: AsyncSession) -> Session | Non
     sess = res.scalar_one_or_none()
     if sess is None:
         return None
-    sess.last_seen_at = dt.datetime.now(dt.timezone.utc)
+    # Direct UPDATE so a concurrent DELETE (logout, idle purge) doesn't
+    # trigger SQLAlchemy's optimistic-lock StaleDataError.
+    upd = await db.execute(
+        _sa_update(Session)
+        .where(Session.id == sess.id)
+        .values(last_seen_at=dt.datetime.now(dt.timezone.utc))
+    )
     await db.commit()
+    if upd.rowcount == 0:
+        return None
     return sess
 
 
@@ -93,7 +110,9 @@ async def ws_game(
         if state is None:
             state = await _replay_state(db, game)
 
-        await websocket.send_json(await _state_payload(state, game.move_count))
+        await websocket.send_json(
+            await _state_payload(state, game.move_count, undo_count=game.undo_count)
+        )
 
         try:
             from app.core.rules.board import BLACK as _BLACK
@@ -103,9 +122,15 @@ async def ws_game(
             await adapter.start()
             analysis = await adapter.analyze(side=state.to_move, max_visits=32)
             wr = float(analysis.winrate)
+            sl = float(analysis.score_lead)
             winrate_black_init = wr if state.to_move == _BLACK else 1.0 - wr
+            score_lead_black_init = sl if state.to_move == _BLACK else -sl
             await websocket.send_json(
-                {"type": "winrate", "winrate_black": winrate_black_init}
+                {
+                    "type": "winrate",
+                    "winrate_black": winrate_black_init,
+                    "score_lead_black": score_lead_black_init,
+                }
             )
         except Exception:
             pass
@@ -114,12 +139,33 @@ async def ws_game(
             msg = await websocket.receive_json()
             mtype = msg.get("type")
             try:
-                if mtype == "move":
-                    coord = msg.get("coord", "")
-                    result = await place_move(db, game=game, session=sess, coord=coord)
+                if mtype in ("move", "pass"):
+                    coord = msg.get("coord", "") if mtype == "move" else "pass"
+
+                    async def _flush_user_state(
+                        user_state: GameState, _user_captures: int
+                    ) -> None:
+                        await websocket.send_json(
+                            await _state_payload(
+                                user_state, game.move_count, undo_count=game.undo_count
+                            )
+                        )
+
+                    result = await place_move(
+                        db,
+                        game=game,
+                        session=sess,
+                        coord=coord,
+                        on_user_applied=_flush_user_state,
+                    )
                     await websocket.send_json(
                         await _state_payload(
-                            result.game_state, game.move_count, result.winrate_black
+                            result.game_state,
+                            game.move_count,
+                            result.winrate_black,
+                            undo_count=game.undo_count,
+                            score_lead_black=result.score_lead_black,
+                            endgame_phase=result.endgame_phase,
                         )
                     )
                     if result.ai_move is not None:
@@ -128,35 +174,71 @@ async def ws_game(
                             "coord": result.ai_move,
                             "captures": result.captured_by_ai,
                         })
-                    if result.game_over:
+                    # If the AI's pass triggered an automatic scoring, ship
+                    # the breakdown before the game_over event so the client
+                    # can open the scoring modal and know how the game ended.
+                    if result.ai_passed_scored is not None:
+                        d = result.ai_passed_scored
                         await websocket.send_json({
+                            "type": "score_result",
+                            "black_territory": d.black_territory,
+                            "white_territory": d.white_territory,
+                            "black_captures": d.black_captures,
+                            "white_captures": d.white_captures,
+                            "komi": d.komi,
+                            "black_score": d.black_score,
+                            "white_score": d.white_score,
+                            "winner": d.winner,
+                            "margin": d.margin,
+                            "result": d.result_str,
+                            "reason": "ai_passed",
+                        })
+                    if result.game_over:
+                        # Annotate how the game ended so the client can pick
+                        # the right message. "ai_resigned" triggers a special
+                        # modal; "ai_passed" uses the scoring breakdown;
+                        # other cases fall through to the generic result.
+                        reason = None
+                        if game.status == "resigned" and game.winner == "user":
+                            reason = "ai_resigned"
+                        elif result.ai_passed_scored is not None:
+                            reason = "ai_passed"
+                        payload: dict[str, Any] = {
                             "type": "game_over",
                             "result": result.result_str or "",
                             "winner": game.winner or "",
-                        })
-                elif mtype == "pass":
-                    result = await place_move(db, game=game, session=sess, coord="pass")
-                    await websocket.send_json(
-                        await _state_payload(
-                            result.game_state, game.move_count, result.winrate_black
-                        )
-                    )
-                    if result.ai_move is not None:
-                        await websocket.send_json({
-                            "type": "ai_move",
-                            "coord": result.ai_move,
-                            "captures": result.captured_by_ai,
-                        })
-                    if result.game_over:
-                        await websocket.send_json({
-                            "type": "game_over",
-                            "result": result.result_str or "",
-                            "winner": game.winner or "",
-                        })
+                        }
+                        if reason is not None:
+                            payload["reason"] = reason
+                        await websocket.send_json(payload)
+                elif mtype == "score_request":
+                    detail = await score_by_request(db, game=game, session=sess)
+                    await websocket.send_json({
+                        "type": "score_result",
+                        "black_territory": detail.black_territory,
+                        "white_territory": detail.white_territory,
+                        "black_captures": detail.black_captures,
+                        "white_captures": detail.white_captures,
+                        "komi": detail.komi,
+                        "black_score": detail.black_score,
+                        "white_score": detail.white_score,
+                        "winner": detail.winner,
+                        "margin": detail.margin,
+                        "result": detail.result_str,
+                    })
+                    await websocket.send_json({
+                        "type": "game_over",
+                        "result": detail.result_str,
+                        "winner": game.winner or "",
+                    })
                 elif mtype == "undo":
                     steps = int(msg.get("steps", 2))
                     new_state = await undo_move(db, game=game, session=sess, steps=steps)
-                    await websocket.send_json(await _state_payload(new_state, game.move_count))
+                    await websocket.send_json(
+                        await _state_payload(
+                            new_state, game.move_count, undo_count=game.undo_count
+                        )
+                    )
                 else:
                     await websocket.send_json({"type": "error", "code": "UNKNOWN_MESSAGE"})
             except GameError as e:

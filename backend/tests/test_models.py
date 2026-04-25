@@ -112,14 +112,19 @@ async def test_game_persists_board_size(session: AsyncSession) -> None:
 
 
 @pytest.mark.asyncio
-async def test_game_cascade_on_session_delete(session: AsyncSession) -> None:
+async def test_game_survives_session_delete(session: AsyncSession) -> None:
+    """Games must persist after their originating session is deleted so the
+    admin console's audit trail isn't lost on logout/idle-purge.
+    session_id is SET NULL via ON DELETE SET NULL; the user_nickname
+    snapshot continues to identify the player."""
     s = Session(token="t6", nickname="frank", nickname_key="frank")
     session.add(s)
     await session.commit()
     await session.refresh(s)
 
     session.add(Game(
-        session_id=s.id, ai_rank="5k", handicap=0, komi=6.5, user_color="black", board_size=19
+        session_id=s.id, user_nickname="frank", ai_rank="5k", handicap=0,
+        komi=6.5, user_color="black", board_size=19,
     ))
     await session.commit()
 
@@ -127,4 +132,7 @@ async def test_game_cascade_on_session_delete(session: AsyncSession) -> None:
     await session.commit()
 
     res = await session.execute(select(Game))
-    assert res.scalars().all() == []
+    games = res.scalars().all()
+    assert len(games) == 1
+    assert games[0].session_id is None
+    assert games[0].user_nickname == "frank"

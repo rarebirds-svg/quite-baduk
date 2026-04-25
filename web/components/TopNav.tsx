@@ -21,11 +21,27 @@ export default function TopNav() {
   const t = useT();
   const [locale] = useLocale();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const { session, setSession } = useAuthStore();
+  const { session, setSession, isAdmin, setIsAdmin } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // Resolve admin status from the backend once per session. We intentionally
+  // don't trust the nickname alone — the server decides and returns a flag.
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await api<{ is_admin: boolean }>("/api/admin/me");
+        if (!cancelled) setIsAdmin(Boolean(r.is_admin));
+      } catch {
+        if (!cancelled) setIsAdmin(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [session, setIsAdmin]);
 
   // Hide the nav entirely on the nickname gate — that screen is its own hero
   if (pathname === "/") return null;
@@ -97,6 +113,16 @@ export default function TopNav() {
                 <DropdownMenuItem asChild>
                   <Link href="/settings">{t("nav.settings")}</Link>
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="text-oxblood">
+                        {t("nav.admin")}
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={endSession}>{t("session.endSession")}</DropdownMenuItem>
               </DropdownMenuContent>

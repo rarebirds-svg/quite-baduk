@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이미언 허스트 — 진실은 없어 그러나 모든 것은 가능하지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Gowun+Batang:wght@400;700&family=Noto+Serif+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0908;
+    --bg-soft: #141210;
+    --ink: #ede7d9;
+    --ink-dim: #a09684;
+    --accent: #c9a961;
+    --accent-soft: #8a7546;
+    --line: #2a2621;
+    --blood: #7a1f1f;
+    --mint: #b8d4c2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Gowun Batang', 'Noto Serif KR', serif;
+    font-weight: 400;
+    line-height: 1.7;
+    overflow-x: hidden;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/><feColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0.08 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.6;
+    mix-blend-mode: overlay;
+  }
+
+  .content { position: relative; z-index: 2; }
+
+  /* ==================== HERO ==================== */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem 5vw 4rem;
+    position: relative;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .top-bar .mark {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .top-bar .mark-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .hero-main {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 4rem 0;
+  }
+
+  .hero-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(3rem, 8vw, 7.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+
+  .hero-title-kr {
+    font-family: 'Noto Serif KR', serif;
+    font-style: normal;
+    font-weight: 300;
+    font-size: clamp(1.6rem, 3.5vw, 3rem);
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-top: 1.5rem;
+  }
+
+  .hero-rule {
+    width: 80px;
+    height: 1px;
+    background: var(--accent);
+    margin: 2.5rem 0;
+  }
+
+  .hero-lead {
+    max-width: 560px;
+    font-size: 1.05rem;
+    color: var(--ink-dim);
+    line-height: 1.85;
+  }
+
+  .hero-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .meta-item .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  .meta-item .value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    color: var(--ink);
+  }
+
+  /* ==================== INTRO / MANIFESTO ==================== */
+  .manifesto {
+    padding: 8rem 5vw;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+  }
+
+  @media (min-width: 900px) {
+    .manifesto { grid-template-columns: 1fr 2fr; }
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .manifesto h2 {
+    font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.1;
+    margin-top: 1.5rem;
+  }
+
+  .manifesto-body p {
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+
+  .manifesto-body p.dim {
+    color: var(--ink-dim);
+    font-size: 0.95rem;
+  }
+
+  .pull-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+    line-height: 1.3;
+    color: var(--accent);
+    padding: 2rem 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin: 3rem 0;
+  }
+
+  .themes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .theme-card {
+    padding: 1.5rem 0;
+    border-left: 1px solid var(--accent-soft);
+    padding-left: 1.5rem;
+  }
+
+  .theme-card .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+  }
+
+  .theme-card h4 {
+    font-family: 'Cormorant Garamond', 'Noto Serif KR', serif;
+    font-weight: 400;
+    font-size: 1.35rem;
+    margin: 0.6rem 0;
+  }
+
+  .theme-card p {
+    font-size: 0.9rem;
+    color: var(--ink-dim);
+    line-height: 1.7;
+  }
+
+  /* ==================== ROOMS (SECTIONS) ==================== */
+  .room {
+    padding: 8rem 5vw;
+    border-top: 1px solid var(--line);
+    position: relative;
+  }
+
+  .room-intro {
+    max-width: 1400px;
+    margin: 0 auto 6rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  @media (min-width: 900px) {
+    .room-intro { grid-template-columns: 1fr 1.8fr; align-items: end; }
+  }
+
+  .room-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(6rem, 14vw, 12rem);
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--accent);
+    letter-spacing: -0.04em;
+  }
+
+  .room-title {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 300;
+    font-size: clamp(2rem, 4.5vw, 4rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .room-title-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-top: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .room-desc {
+    max-width: 680px;
+    margin: 2rem 0 0;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--ink-dim);
+  }
+
+  /* Work cards */
+  .works {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  @media (min-width: 900px) {
+    .works { grid-template-columns: repeat(2, 1fr); gap: 4rem 3rem; }
+  }
+
+  .work {
+    position: relative;
+    padding-top: 2rem;
+  }
+
+  .work-plate {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .work:hover .work-plate {
+    transform: translateY(-4px);
+  }
+
+  .work-plate-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Abstract motif SVGs to evoke themes (not reproductions) */
+  .motif {
+    width: 100%;
+    height: 100%;
+    opacity: 0.8;
+  }
+
+  .work-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 1.5rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .work h3 {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 400;
+    font-size: 1.4rem;
+    line-height: 1.3;
+    margin: 1rem 0 0.3rem;
+  }
+
+  .work .work-title-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .work .medium {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-dim);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  .work p {
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: var(--ink);
+  }
+
+  .work .curator-note {
+    margin-top: 1.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px dashed var(--line);
+    font-size: 0.88rem;
+    color: var(--ink-dim);
+    font-style: italic;
+  }
+
+  .work .curator-note::before {
+    content: "도슨트 — ";
+    color: var(--accent);
+    font-style: normal;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+  }
+
+  /* Room-specific motif tints */
+  .room--r1 .work-plate { background: linear-gradient(180deg, #141210 0%, #1a1612 100%); }
+  .room--r2 .work-plate { background: linear-gradient(180deg, #0f0e0d 0%, #151815 100%); }
+  .room--r3 .work-plate { background: linear-gradient(180deg, #141210 0%, #1c1612 100%); }
+  .room--r4 .work-plate { background: linear-gradient(180deg, #121110 0%, #181412 100%); }
+
+  /* ==================== CLOSING ==================== */
+  .closing {
+    padding: 10rem 5vw 6rem;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .closing-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 2rem;
+    color: var(--accent);
+    margin-bottom: 2rem;
+  }
+
+  .closing h2 {
+    font-family: 'Noto Serif KR', serif;
+    font-weight: 300;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    line-height: 1.3;
+    margin-bottom: 2rem;
+  }
+
+  .closing p {
+    color: var(--ink-dim);
+    font-size: 1rem;
+    line-height: 1.9;
+    margin-bottom: 2rem;
+  }
+
+  .cta {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 1.1rem 2.5rem;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.4s ease;
+  }
+
+  .cta:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  /* ==================== FOOTER ==================== */
+  footer {
+    padding: 3rem 5vw;
+    border-top: 1px solid var(--line);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--ink-dim);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+
+  .disclaimer {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 5vw 4rem;
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    line-height: 1.8;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+
+  /* Entrance animation */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  .reveal.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+<div class="content">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="top-bar">
+    <div class="mark"><span class="mark-dot"></span><span>가상 온라인 전시 · MMCA 기반</span></div>
+    <div>2026.03.20 — 06.28</div>
+  </div>
+
+  <div class="hero-main">
+    <div class="hero-eyebrow">Virtual Exhibition Guide · Asia's First Retrospective</div>
+    <h1 class="hero-title">Damien Hirst</h1>
+    <div class="hero-rule"></div>
+    <div class="hero-title-kr">진실은 없어<br>그러나 모든 것은 가능하지</div>
+    <p class="hero-lead" style="margin-top:2.5rem;">
+      35년에 걸친 영국 현대미술 거장의 여정을 50여 점의 대표작으로 조망하는 아시아 최초 대규모 개인전. 삶과 죽음, 과학과 믿음, 예술과 자본이 교차하는 지점에서 허스트는 여전히 묻는다 — 우리가 절대적이라고 믿어온 가치는 과연 실재하는가.
+    </p>
+  </div>
+
+  <div class="hero-meta">
+    <div class="meta-item">
+      <div class="label">기간 / Dates</div>
+      <div class="value">2026.03.20 – 06.28</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">장소 / Venue</div>
+      <div class="value">국립현대미술관 서울</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">구성 / Structure</div>
+      <div class="value">4개 섹션 · 50여 점</div>
+    </div>
+    <div class="meta-item">
+      <div class="label">주최 / Host</div>
+      <div class="value">MMCA</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MANIFESTO ============ -->
+<section class="manifesto">
+  <div>
+    <div class="section-label">00 — 서문</div>
+    <h2>예술이 어디까지<br>갈 수 있는가</h2>
+  </div>
+  <div class="manifesto-body">
+    <p>
+      1965년 브리스틀에서 태어나 리즈에서 성장한 데이미언 허스트는 청년기 시체 안치소를 드나들며 죽은 자들을 스케치했다. 훗날 그의 예술이 '죽음'을 가장 집요하게 응시하는 방식으로 자라난 이유다.
+    </p>
+    <p>
+      1988년, 골드스미스 재학 시절 직접 기획한 그룹전 《프리즈》를 통해 허스트는 혜성처럼 등장하며 YBA(Young British Artists)의 지형을 바꾸었다. 이후 그는 그리는 작가가 아니라 <em>기획하고 유통하고 수집하는</em> 작가로, 현대미술의 작동 방식 자체를 재편해 왔다.
+    </p>
+
+    <div class="pull-quote">
+      "나는 관객이 죽음 앞에서 회피할 틈을 주지 않으려 한다. 그것이 내가 예술을 하는 이유다."
+    </div>
+
+    <p class="dim">
+      본 가상 전시는 국립현대미술관 서울에서 개최 중인 실제 전시 《진실은 없어 그러나 모든 것은 가능하지》의 4부 구성과 큐레이션을 따라, 작품의 개념·맥락·비평적 논점을 텍스트 기반으로 재구성한 온라인 감상 가이드입니다. 실제 이미지와 체험은 MMCA 공식 페이지에서 확인하실 수 있습니다.
+    </p>
+
+    <div class="themes">
+      <div class="theme-card">
+        <div class="num">THEME 01</div>
+        <h4>죽음과 영생</h4>
+        <p>포르말린 속의 상어, 다이아몬드로 뒤덮인 두개골. 허스트는 죽음을 감정이 아닌 관찰 대상으로 놓는다.</p>
+      </div>
+      <div class="theme-card">
+        <div class="num">THEME 02</div>
+        <h4>과학과 믿음</h4>
+        <p>약장과 알약의 진열은 질병으로부터 자유로워지고자 하는 욕망, 그리고 그 허무를 동시에 보여준다.</p>
+      </div>
+      <div class="theme-card">
+        <div class="num">THEME 03</div>
+        <h4>예술과 자본</h4>
+        <p>8,601개의 다이아몬드가 박힌 해골 앞에서 우리는 묻는다 — 가치는 어디서 오는가.</p>
+      </div>
+      <div class="theme-card">
+        <div class="num">THEME 04</div>
+        <h4>시간과 유한성</h4>
+        <p>찰나에 피고 지는 벚꽃, 구더기에서 파리로 이어지는 생의 순환. 유한함이야말로 허스트의 언어다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROOM 1 ============ -->
+<section class="room room--r1">
+  <div class="room-intro">
+    <div class="room-number">01</div>
+    <div>
+      <div class="section-label">ROOM ONE · 1986–1996</div>
+      <h2 class="room-title">모든 질문에는 의심이 따른다</h2>
+      <div class="room-title-en">Every Question Comes with Doubt</div>
+      <p class="room-desc">
+        청년 허스트가 정체성을 탐색하던 시기. 노인의 빈집에서 주워온 잡동사니, 자신의 이름을 애너그램한 자수, 점과 회전과 중력 — 1980년대 후반부터 1990년대 중반까지의 초기작은 '작가는 누구인가, 예술은 무엇인가'라는 근원적 질문을 재치 있는 조형 언어로 풀어낸다.
+      </p>
+    </div>
+  </div>
+
+  <div class="works">
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="thread" width="6" height="6" patternUnits="userSpaceOnUse">
+                <path d="M0,3 L6,3" stroke="#c9a961" stroke-width="0.5" opacity="0.4"/>
+              </pattern>
+            </defs>
+            <rect x="60" y="40" width="280" height="220" fill="url(#thread)" stroke="#8a7546" stroke-width="1"/>
+            <text x="200" y="160" text-anchor="middle" font-family="Cormorant Garamond" font-style="italic" font-size="28" fill="#c9a961" opacity="0.8">a denim shirt</text>
+            <text x="200" y="195" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#a09684" letter-spacing="3">— anagram of —</text>
+            <text x="200" y="218" text-anchor="middle" font-family="Cormorant Garamond" font-size="16" fill="#ede7d9" opacity="0.9">Damien Hirst</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>01 / 01</span><span>1987</span></div>
+      <h3>자화상</h3>
+      <div class="work-title-en">Self-Portrait</div>
+      <div class="medium">자수, 캔버스 · 1987</div>
+      <p>자신의 이름(Damien Hirst)을 재배열해 얻은 애너그램 'a denim shirt'를 자수로 새긴 작품. 청년 허스트가 '작가란 무엇인가'를 자기 이름의 해체를 통해 물었던 순간이다.</p>
+      <div class="curator-note">정체성이란 주어진 것이 아니라 재배열 가능한 기호라는 선언. 이후 허스트의 전 작업을 관통할 '해체와 재배치'의 시작점.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g opacity="0.9">
+              <circle cx="100" cy="120" r="22" fill="#7a1f1f"/>
+              <circle cx="160" cy="80" r="14" fill="#b8d4c2"/>
+              <circle cx="220" cy="140" r="28" fill="#c9a961"/>
+              <circle cx="300" cy="100" r="18" fill="#6b5d8c"/>
+              <circle cx="130" cy="200" r="20" fill="#d4a574"/>
+              <circle cx="250" cy="220" r="16" fill="#8f9e6b"/>
+              <circle cx="320" cy="180" r="24" fill="#a03f3f"/>
+              <circle cx="70" cy="170" r="12" fill="#5a7a8a"/>
+              <circle cx="190" cy="250" r="14" fill="#b8a961"/>
+            </g>
+            <text x="200" y="285" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">SPOT PAINTING · INDUSTRIAL PRECISION</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>01 / 02</span><span>1986</span></div>
+      <h3>스팟 페인팅</h3>
+      <div class="work-title-en">Spot Painting</div>
+      <div class="medium">캔버스 위 가정용 광택 페인트 · 1986</div>
+      <p>같은 색은 두 번 쓰지 않는다는 규칙 아래 원을 규칙적으로 배열한 연작. 과학적 체계처럼 정돈된 화면은 후일 허스트가 평생 파고들게 되는 '통제와 욕망'의 시각적 원형이 된다.</p>
+      <div class="curator-note">약장에 진열된 알약과 스팟 페인팅은 같은 언어를 쓴다 — 질서를 통해 혼돈을 다스리려는 인간의 강박.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g>
+              <g transform="translate(200 150)">
+                <g opacity="0.6">
+                  <circle r="100" fill="none" stroke="#c9a961" stroke-width="0.5"/>
+                  <circle r="80" fill="none" stroke="#c9a961" stroke-width="0.5"/>
+                  <circle r="60" fill="none" stroke="#c9a961" stroke-width="0.5"/>
+                </g>
+                <g>
+                  <path d="M -90 0 Q 0 -60 90 0 Q 0 60 -90 0" fill="#7a1f1f" opacity="0.7"/>
+                  <path d="M 0 -90 Q 60 0 0 90 Q -60 0 0 -90" fill="#c9a961" opacity="0.5"/>
+                </g>
+              </g>
+            </g>
+            <text x="200" y="285" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">CENTRIFUGAL FORCE · CHANCE OPERATIONS</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>01 / 03</span><span>1999</span></div>
+      <h3>스핀 페인팅 연작</h3>
+      <div class="work-title-en">Spin Paintings</div>
+      <div class="medium">캔버스 위 가정용 광택 페인트 · 회전판 · 1999</div>
+      <p>회전하는 원형 캔버스 위에 페인트를 쏟아 원심력에 맡긴 작업. 작가의 손이 아닌 기계적 원리가 구성을 결정하는, 현대미술에서의 '우연성' 실험.</p>
+      <div class="curator-note">작가의 권위를 내려놓는 듯하지만, 실은 '작가란 무엇을 결정하는 자인가'를 더 날카롭게 묻는 작업이다.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="#8a7546" stroke-width="1" fill="none">
+              <rect x="60" y="60" width="70" height="180" opacity="0.6"/>
+              <rect x="140" y="40" width="70" height="200" opacity="0.6"/>
+              <rect x="220" y="70" width="70" height="170" opacity="0.6"/>
+              <rect x="300" y="50" width="40" height="190" opacity="0.6"/>
+            </g>
+            <g fill="#ede7d9" opacity="0.7">
+              <rect x="68" y="72" width="54" height="8"/>
+              <rect x="68" y="90" width="54" height="6"/>
+              <rect x="68" y="104" width="54" height="10"/>
+              <rect x="148" y="52" width="54" height="6"/>
+              <rect x="148" y="66" width="54" height="10"/>
+              <rect x="148" y="82" width="54" height="8"/>
+              <rect x="228" y="82" width="54" height="8"/>
+              <rect x="228" y="98" width="54" height="6"/>
+              <rect x="308" y="62" width="24" height="10"/>
+              <rect x="308" y="78" width="24" height="6"/>
+            </g>
+            <text x="200" y="280" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">MEDICINE CABINETS · THE SEX PISTOLS</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>01 / 04</span><span>1996</span></div>
+      <h3>더 섹스 피스톨즈</h3>
+      <div class="work-title-en">The Sex Pistols</div>
+      <div class="medium">유리, 포마이카, MDF, 비치 목재, 의약품 포장재 · 4개 부분 · 각 269.2×121.9×25.4cm</div>
+      <p>전설의 펑크 밴드 이름을 붙인 네 개의 약장. 반항과 질서, 저항과 진열 — 서로 어긋나는 두 세계가 한 이름으로 포개진다.</p>
+      <div class="curator-note">약장은 허스트에게 일종의 성유물함이다. 과학이라는 현대의 신전에 바쳐진, 영생을 향한 인간의 제의.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ ROOM 2 ============ -->
+<section class="room room--r2">
+  <div class="room-intro">
+    <div class="room-number">02</div>
+    <div>
+      <div class="section-label">ROOM TWO · 1990–2000</div>
+      <h2 class="room-title">우리는 시간 속에 산다</h2>
+      <div class="room-title-en">We Live in Time</div>
+      <p class="room-desc">
+        허스트를 현대미술의 중심에 놓은 '자연사(Natural History)' 연작이 자리한 방. 포르말린 수조 속 죽은 상어, 유리 상자 안에서 순환하는 파리와 구더기. 죽음은 감정의 서사로 포장되지 않고 표본처럼 전시되어, 관객은 회피할 틈 없이 직면한다.
+      </p>
+    </div>
+  </div>
+
+  <div class="works">
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="tank" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#b8d4c2" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="#5a7a8a" stop-opacity="0.25"/>
+              </linearGradient>
+            </defs>
+            <rect x="40" y="60" width="320" height="180" fill="url(#tank)" stroke="#8a7546" stroke-width="1.5"/>
+            <line x1="40" y1="60" x2="360" y2="60" stroke="#c9a961" stroke-width="2" opacity="0.6"/>
+            <g opacity="0.6">
+              <path d="M 80 150 Q 140 130 200 150 Q 260 170 320 150 L 320 160 Q 260 180 200 160 Q 140 140 80 160 Z" fill="#a09684" opacity="0.5"/>
+              <ellipse cx="310" cy="155" rx="10" ry="6" fill="#a09684" opacity="0.6"/>
+              <circle cx="105" cy="148" r="2" fill="#0a0908"/>
+            </g>
+            <text x="200" y="285" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">TIGER SHARK · FORMALDEHYDE · STEEL · GLASS</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>02 / 01</span><span>1991</span></div>
+      <h3>살아있는 자의 마음 속<br>죽음의 물리적 불가능성</h3>
+      <div class="work-title-en">The Physical Impossibility of Death<br>in the Mind of Someone Living</div>
+      <div class="medium">유리, 채색된 철, 실리콘, 모노필라멘트, 상어, 포름알데히드 수용액 · 217×542×180cm · 개인 소장</div>
+      <p>길이 5미터가 넘는 거대한 뱀상어를 포르말린 수조에 넣어 박제한 대표작. 2012년 테이트 모던 이후 13년 만에 처음 공개되는 이 작품은, 관객이 죽음의 공포를 물리적 실체로 마주하게 만든다.</p>
+      <div class="curator-note">허스트는 죽음을 '아는 것'과 '실감하는 것' 사이의 간극을 주제로 삼는다. 상어는 그 간극 위에 떠 있다 — 살아있는 자에게 죽음은 언제나 상상의 영역이기에.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <rect x="50" y="50" width="300" height="200" fill="none" stroke="#8a7546" stroke-width="1.5"/>
+            <line x1="200" y1="50" x2="200" y2="250" stroke="#8a7546" stroke-width="1" opacity="0.6"/>
+            <g opacity="0.5">
+              <circle cx="90" cy="90" r="1.5" fill="#ede7d9"/>
+              <circle cx="120" cy="110" r="1.5" fill="#ede7d9"/>
+              <circle cx="150" cy="95" r="1.5" fill="#ede7d9"/>
+              <circle cx="100" cy="130" r="1.5" fill="#ede7d9"/>
+              <circle cx="140" cy="140" r="1.5" fill="#ede7d9"/>
+              <circle cx="170" cy="125" r="1.5" fill="#ede7d9"/>
+              <circle cx="110" cy="170" r="1.5" fill="#ede7d9"/>
+              <circle cx="160" cy="180" r="1.5" fill="#ede7d9"/>
+              <circle cx="130" cy="210" r="1.5" fill="#ede7d9"/>
+            </g>
+            <g opacity="0.7" fill="#7a1f1f">
+              <ellipse cx="270" cy="170" rx="32" ry="22"/>
+              <ellipse cx="250" cy="160" rx="6" ry="4" fill="#0a0908"/>
+              <path d="M 240 190 Q 270 200 300 190" stroke="#0a0908" stroke-width="1" fill="none"/>
+            </g>
+            <text x="200" y="285" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">A THOUSAND YEARS · LIFE CYCLE IN A VITRINE</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>02 / 02</span><span>1990</span></div>
+      <h3>천년</h3>
+      <div class="work-title-en">A Thousand Years</div>
+      <div class="medium">유리, 강철, 실리콘, MDF, 소 머리, 파리, 구더기, 설탕 · 1990</div>
+      <p>유리 상자 한쪽에서는 구더기가 파리로 우화하고, 다른 쪽에서는 소 머리의 피를 먹다 전기 살충기에 떨어진다. 탄생과 죽음이 같은 공간 안에서 동시에 진행되는 설치.</p>
+      <div class="curator-note">허스트는 "이 작품은 죽음을 보여주는 게 아니라, 우리가 죽음을 바라보는 방식과 그 공포를 어떻게 사회적 구조로 만들어내는지를 역설한다"고 말했다.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g>
+              <rect x="40" y="80" width="100" height="140" fill="none" stroke="#8a7546" stroke-width="1"/>
+              <rect x="150" y="80" width="100" height="140" fill="none" stroke="#8a7546" stroke-width="1"/>
+              <rect x="260" y="80" width="100" height="140" fill="none" stroke="#8a7546" stroke-width="1"/>
+              <circle cx="90" cy="150" r="28" fill="#a09684" opacity="0.4"/>
+              <circle cx="200" cy="150" r="28" fill="#b8d4c2" opacity="0.3"/>
+              <circle cx="310" cy="150" r="28" fill="#c9a961" opacity="0.3"/>
+            </g>
+            <text x="200" y="280" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">NATURAL HISTORY · PRESERVED SPECIMENS</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>02 / 03</span><span>1991–</span></div>
+      <h3>자연사 연작</h3>
+      <div class="work-title-en">Natural History</div>
+      <div class="medium">유리, 강철, 포름알데히드 수용액, 동물 표본 · 연작</div>
+      <p>상어, 양, 소, 돼지 등 죽은 동물을 포르말린 수조에 담아 전시하는 연작. 자연사박물관의 표본 진열처럼 죽음을 감정이 아닌 관찰 대상으로 만들어 관객을 불편한 현실과 마주하게 한다.</p>
+      <div class="curator-note">동물 윤리, 보존 과정의 원본성 문제 등 오래 논쟁의 중심에 있는 연작. 허스트의 예술은 언제나 찬사와 비판을 함께 불러일으킨다.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ ROOM 3 ============ -->
+<section class="room room--r3">
+  <div class="room-intro">
+    <div class="room-number">03</div>
+    <div>
+      <div class="section-label">ROOM THREE · 1997–PRESENT</div>
+      <h2 class="room-title">침묵의 사치</h2>
+      <div class="room-title-en">Silent Luxury</div>
+      <p class="room-desc">
+        약장과 알약, 다이아몬드와 나비, 그리고 찰나에 피는 벚꽃. 3부는 시각적 위용 뒤에 숨겨진 인간의 끝없는 욕망과 삶의 무상함을 파고든다. 현대사회의 새로운 종교가 된 과학·의학·자본이 한자리에서 해부된다.
+      </p>
+    </div>
+  </div>
+
+  <div class="works">
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="blossom" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#d4a4b4" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#a06876" stop-opacity="0.4"/>
+              </radialGradient>
+            </defs>
+            <g opacity="0.85">
+              <circle cx="80" cy="70" r="14" fill="url(#blossom)"/>
+              <circle cx="130" cy="50" r="10" fill="url(#blossom)"/>
+              <circle cx="180" cy="90" r="16" fill="url(#blossom)"/>
+              <circle cx="240" cy="60" r="12" fill="url(#blossom)"/>
+              <circle cx="300" cy="85" r="18" fill="url(#blossom)"/>
+              <circle cx="340" cy="55" r="10" fill="url(#blossom)"/>
+              <circle cx="100" cy="130" r="12" fill="url(#blossom)"/>
+              <circle cx="155" cy="150" r="16" fill="url(#blossom)"/>
+              <circle cx="210" cy="140" r="10" fill="url(#blossom)"/>
+              <circle cx="275" cy="155" r="14" fill="url(#blossom)"/>
+              <circle cx="325" cy="130" r="12" fill="url(#blossom)"/>
+              <circle cx="60" cy="175" r="10" fill="url(#blossom)"/>
+              <circle cx="130" cy="200" r="14" fill="url(#blossom)"/>
+              <circle cx="195" cy="215" r="12" fill="url(#blossom)"/>
+              <circle cx="260" cy="200" r="16" fill="url(#blossom)"/>
+              <circle cx="320" cy="225" r="12" fill="url(#blossom)"/>
+            </g>
+            <text x="200" y="280" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">CHERRY BLOSSOMS · EPHEMERAL / DEVOTIONAL</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>03 / 01</span><span>2018–</span></div>
+      <h3>벚꽃 연작</h3>
+      <div class="work-title-en">Cherry Blossoms</div>
+      <div class="medium">캔버스 위 유채 · 대형 연작 · 2018년 이후</div>
+      <p>최근 3년간 스튜디오에 틀어박혀 작업한 대형 회화 연작. 포르말린과 다이아몬드의 작가가 돌연 고전적 회화로 돌아선 의외의 전환이다. 김인혜 학예실장의 말처럼 "찰나의 화려함 뒤에 바로 져버리는 죽음의 속성을 가장 잘 담고 있는 매개체"로서의 벚꽃.</p>
+      <div class="curator-note">허스트는 자신의 페이퍼에 이렇게 적었다 — "나는 마티스만큼은 안 되는구나." 그러나 그는 여전히 동시대를 기억하며 일상을 기록하는 '화가로서의 삶'을 받아들이고 있다.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g>
+              <rect x="60" y="60" width="280" height="180" fill="none" stroke="#8a7546" stroke-width="1.5"/>
+              <g fill="#ede7d9" opacity="0.75">
+                <circle cx="90" cy="85" r="6"/>
+                <circle cx="115" cy="85" r="6"/>
+                <circle cx="140" cy="85" r="6"/>
+                <circle cx="165" cy="85" r="6"/>
+                <circle cx="190" cy="85" r="6"/>
+                <circle cx="215" cy="85" r="6"/>
+                <circle cx="240" cy="85" r="6"/>
+                <circle cx="265" cy="85" r="6"/>
+                <circle cx="290" cy="85" r="6"/>
+                <circle cx="315" cy="85" r="6"/>
+              </g>
+              <g fill="#c9a961" opacity="0.7">
+                <ellipse cx="90" cy="120" rx="10" ry="4"/>
+                <ellipse cx="115" cy="120" rx="10" ry="4"/>
+                <ellipse cx="140" cy="120" rx="10" ry="4"/>
+                <ellipse cx="165" cy="120" rx="10" ry="4"/>
+                <ellipse cx="190" cy="120" rx="10" ry="4"/>
+                <ellipse cx="215" cy="120" rx="10" ry="4"/>
+                <ellipse cx="240" cy="120" rx="10" ry="4"/>
+                <ellipse cx="265" cy="120" rx="10" ry="4"/>
+                <ellipse cx="290" cy="120" rx="10" ry="4"/>
+                <ellipse cx="315" cy="120" rx="10" ry="4"/>
+              </g>
+              <g fill="#7a1f1f" opacity="0.6">
+                <rect x="85" y="150" width="12" height="16"/>
+                <rect x="110" y="150" width="12" height="16"/>
+                <rect x="135" y="150" width="12" height="16"/>
+                <rect x="160" y="150" width="12" height="16"/>
+                <rect x="185" y="150" width="12" height="16"/>
+                <rect x="210" y="150" width="12" height="16"/>
+                <rect x="235" y="150" width="12" height="16"/>
+                <rect x="260" y="150" width="12" height="16"/>
+                <rect x="285" y="150" width="12" height="16"/>
+                <rect x="310" y="150" width="12" height="16"/>
+              </g>
+              <g fill="#b8d4c2" opacity="0.7">
+                <rect x="85" y="185" width="20" height="10" rx="5"/>
+                <rect x="120" y="185" width="20" height="10" rx="5"/>
+                <rect x="155" y="185" width="20" height="10" rx="5"/>
+                <rect x="190" y="185" width="20" height="10" rx="5"/>
+                <rect x="225" y="185" width="20" height="10" rx="5"/>
+                <rect x="260" y="185" width="20" height="10" rx="5"/>
+                <rect x="295" y="185" width="20" height="10" rx="5"/>
+              </g>
+              <g fill="#a09684" opacity="0.6">
+                <circle cx="95" cy="215" r="5"/>
+                <circle cx="115" cy="215" r="5"/>
+                <circle cx="135" cy="215" r="5"/>
+                <circle cx="155" cy="215" r="5"/>
+                <circle cx="175" cy="215" r="5"/>
+                <circle cx="195" cy="215" r="5"/>
+                <circle cx="215" cy="215" r="5"/>
+                <circle cx="235" cy="215" r="5"/>
+                <circle cx="255" cy="215" r="5"/>
+                <circle cx="275" cy="215" r="5"/>
+                <circle cx="295" cy="215" r="5"/>
+                <circle cx="315" cy="215" r="5"/>
+              </g>
+            </g>
+            <text x="200" y="280" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">PILLS · THE NEW RELIGION</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>03 / 02</span><span>1997–</span></div>
+      <h3>약장 & 알약 연작</h3>
+      <div class="work-title-en">Medical Cabinets & Pills</div>
+      <div class="medium">유리, 알루미늄, 가짜 알약, 실제 의약품 · 연작</div>
+      <p>3부 '침묵의 사치' 전시실의 알약과 약장은 의학에 관한 맹신과 그 이면에 자리잡은 영생에 대한 욕망을 시각화한다. 정제되고 정돈된 깔끔한 외관, 규칙적으로 정돈된 양식은 삶과 운명을 통제하려는 강박적인 집착을 표현한다.</p>
+      <div class="curator-note">허스트는 약을 '현대의 성찬'이라 불렀다. 인간이 신에게서 구원을 바라던 자리를, 이제 과학과 제약이 대신하고 있다는 것.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="diamond" cx="50%" cy="50%" r="60%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+                <stop offset="40%" stop-color="#e8e4da" stop-opacity="0.7"/>
+                <stop offset="100%" stop-color="#8a8270" stop-opacity="0.2"/>
+              </radialGradient>
+            </defs>
+            <g transform="translate(200 155)">
+              <path d="M -70 -30 Q -80 20 -60 60 Q -30 80 0 70 Q 30 80 60 60 Q 80 20 70 -30 Q 50 -80 0 -85 Q -50 -80 -70 -30 Z"
+                    fill="#1a1612" stroke="#c9a961" stroke-width="0.5"/>
+              <g opacity="0.9">
+                <circle cx="-40" cy="-40" r="2" fill="url(#diamond)"/>
+                <circle cx="-20" cy="-50" r="2.5" fill="url(#diamond)"/>
+                <circle cx="0" cy="-55" r="3" fill="url(#diamond)"/>
+                <circle cx="20" cy="-50" r="2.5" fill="url(#diamond)"/>
+                <circle cx="40" cy="-40" r="2" fill="url(#diamond)"/>
+                <circle cx="-55" cy="-20" r="2" fill="url(#diamond)"/>
+                <circle cx="-45" cy="0" r="2.5" fill="url(#diamond)"/>
+                <circle cx="-30" cy="15" r="2" fill="url(#diamond)"/>
+                <circle cx="-15" cy="25" r="2.5" fill="url(#diamond)"/>
+                <circle cx="0" cy="30" r="3" fill="url(#diamond)"/>
+                <circle cx="15" cy="25" r="2.5" fill="url(#diamond)"/>
+                <circle cx="30" cy="15" r="2" fill="url(#diamond)"/>
+                <circle cx="45" cy="0" r="2.5" fill="url(#diamond)"/>
+                <circle cx="55" cy="-20" r="2" fill="url(#diamond)"/>
+                <circle cx="-30" cy="45" r="2" fill="url(#diamond)"/>
+                <circle cx="0" cy="55" r="2.5" fill="url(#diamond)"/>
+                <circle cx="30" cy="45" r="2" fill="url(#diamond)"/>
+                <!-- Teeth suggestion -->
+                <rect x="-20" y="42" width="3" height="10" fill="#ede7d9" opacity="0.7"/>
+                <rect x="-12" y="44" width="3" height="10" fill="#ede7d9" opacity="0.7"/>
+                <rect x="-4" y="45" width="3" height="10" fill="#ede7d9" opacity="0.7"/>
+                <rect x="4" y="45" width="3" height="10" fill="#ede7d9" opacity="0.7"/>
+                <rect x="12" y="44" width="3" height="10" fill="#ede7d9" opacity="0.7"/>
+                <rect x="20" y="42" width="3" height="10" fill="#ede7d9" opacity="0.7"/>
+              </g>
+            </g>
+            <g opacity="0.15">
+              <line x1="200" y1="30" x2="200" y2="280" stroke="#c9a961"/>
+              <line x1="80" y1="150" x2="320" y2="150" stroke="#c9a961"/>
+            </g>
+            <text x="200" y="285" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">FOR THE LOVE OF GOD · 8,601 DIAMONDS · PLATINUM</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>03 / 03</span><span>2007</span></div>
+      <h3>신의 사랑을 위하여</h3>
+      <div class="work-title-en">For the Love of God</div>
+      <div class="medium">백금, 8,601개의 다이아몬드, 18세기 인간의 치아 · 17.1×12.7×19cm · 개인 소장</div>
+      <p>전시의 클라이막스이자 허스트를 세계 미술시장의 정상에 올려놓은 작품. 18세기에 살았던 것으로 추정되는 실제 인간의 두개골을 백금으로 주조하고, 8,601개의 다이아몬드를 촘촘히 박아 완성했다.</p>
+      <div class="curator-note">'해골'이라는 전통적 죽음의 상징 위에 '다이아몬드'라는 자본의 기호를 덧씌운 작품. 인간이 죽음을 돈과 권력으로 무마하려는 욕망 자체를, 허스트는 그 욕망의 가장 빛나는 형태로 구현했다.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g>
+              <rect x="30" y="60" width="110" height="180" fill="none" stroke="#8a7546" stroke-width="1"/>
+              <rect x="145" y="60" width="110" height="180" fill="none" stroke="#8a7546" stroke-width="1"/>
+              <rect x="260" y="60" width="110" height="180" fill="none" stroke="#8a7546" stroke-width="1"/>
+              <!-- Abstract butterfly-like dots -->
+              <g fill="#c9a961" opacity="0.7">
+                <ellipse cx="85" cy="100" rx="5" ry="3"/><ellipse cx="75" cy="100" rx="5" ry="3"/>
+                <ellipse cx="105" cy="130" rx="4" ry="2.5"/><ellipse cx="95" cy="130" rx="4" ry="2.5"/>
+                <ellipse cx="60" cy="150" rx="5" ry="3"/><ellipse cx="70" cy="150" rx="5" ry="3"/>
+                <ellipse cx="90" cy="180" rx="4" ry="2.5"/><ellipse cx="100" cy="180" rx="4" ry="2.5"/>
+                <ellipse cx="75" cy="210" rx="5" ry="3"/><ellipse cx="85" cy="210" rx="5" ry="3"/>
+              </g>
+              <g fill="#7a1f1f" opacity="0.7">
+                <ellipse cx="200" cy="110" rx="5" ry="3"/><ellipse cx="190" cy="110" rx="5" ry="3"/>
+                <ellipse cx="210" cy="140" rx="4" ry="2.5"/><ellipse cx="200" cy="140" rx="4" ry="2.5"/>
+                <ellipse cx="185" cy="170" rx="5" ry="3"/><ellipse cx="195" cy="170" rx="5" ry="3"/>
+                <ellipse cx="200" cy="200" rx="4" ry="2.5"/><ellipse cx="210" cy="200" rx="4" ry="2.5"/>
+              </g>
+              <g fill="#b8d4c2" opacity="0.7">
+                <ellipse cx="315" cy="100" rx="5" ry="3"/><ellipse cx="305" cy="100" rx="5" ry="3"/>
+                <ellipse cx="325" cy="130" rx="4" ry="2.5"/><ellipse cx="315" cy="130" rx="4" ry="2.5"/>
+                <ellipse cx="290" cy="160" rx="5" ry="3"/><ellipse cx="300" cy="160" rx="5" ry="3"/>
+                <ellipse cx="320" cy="190" rx="4" ry="2.5"/><ellipse cx="310" cy="190" rx="4" ry="2.5"/>
+                <ellipse cx="305" cy="215" rx="5" ry="3"/><ellipse cx="315" cy="215" rx="5" ry="3"/>
+              </g>
+            </g>
+            <text x="200" y="280" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">BUTTERFLY TRIPTYCH · STAINED GLASS SENSIBILITY</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>03 / 04</span><span>2000s</span></div>
+      <h3>신의 무한한 권능과 영광을 묵상하며</h3>
+      <div class="work-title-en">Contemplating a Perfect Sanctuary</div>
+      <div class="medium">캔버스 위 가정용 광택 페인트, 나비 · 삼면화</div>
+      <p>수천 마리의 나비 날개를 캔버스에 붙여 만든 삼면화. 중세 교회의 스테인드글라스처럼 보이지만, 그 반짝임의 실체는 죽은 곤충의 몸이다. 성스러움과 잔혹함이 같은 이미지 안에서 공존한다.</p>
+      <div class="curator-note">나비는 허스트의 작업 전반에서 영혼(psyche)의 상징. 그러나 그는 영혼을 '유리 뒤에 고정된 것'으로, 신앙을 '표본화된 경이'로 제시한다.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ ROOM 4 ============ -->
+<section class="room room--r4">
+  <div class="room-intro">
+    <div class="room-number">04</div>
+    <div>
+      <div class="section-label">ROOM FOUR · WORLD PREMIERE</div>
+      <h2 class="room-title">작가의 스튜디오</h2>
+      <div class="room-title-en">River Studio · Artist's Workspace</div>
+      <p class="room-desc">
+        이번 전시에서 세계 최초로 공개되는 허스트의 실제 작업실 '리버 스튜디오(River Studio)' 재현 공간. 국립현대미술관은 사실감을 극대화하기 위해 실제 런던 스튜디오의 낡은 바닥재까지 뜯어와 전시장 바닥에 깔았다. 20대부터 60대까지, 작가로서의 40년에 걸친 붓질의 흔적이 한자리에 놓인다.
+      </p>
+    </div>
+  </div>
+
+  <div class="works">
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g opacity="0.8">
+              <!-- Studio floor perspective -->
+              <path d="M 50 250 L 350 250 L 280 100 L 120 100 Z" fill="none" stroke="#8a7546" stroke-width="1" stroke-dasharray="3,3"/>
+              <!-- Scattered canvases -->
+              <rect x="80" y="140" width="50" height="70" fill="#1a1612" stroke="#c9a961" stroke-width="0.5" transform="rotate(-8 105 175)"/>
+              <rect x="170" y="120" width="60" height="80" fill="#1a1612" stroke="#c9a961" stroke-width="0.5"/>
+              <rect x="260" y="150" width="55" height="70" fill="#1a1612" stroke="#c9a961" stroke-width="0.5" transform="rotate(5 287 185)"/>
+              <!-- Paint splatters -->
+              <g fill="#7a1f1f" opacity="0.6">
+                <circle cx="105" cy="175" r="6"/>
+                <circle cx="110" cy="165" r="3"/>
+                <circle cx="200" cy="160" r="8"/>
+                <circle cx="290" cy="185" r="5"/>
+              </g>
+              <g fill="#c9a961" opacity="0.5">
+                <circle cx="95" cy="185" r="4"/>
+                <circle cx="210" cy="175" r="5"/>
+                <circle cx="285" cy="175" r="3"/>
+              </g>
+            </g>
+            <text x="200" y="280" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">RIVER STUDIO · LONDON → SEOUL (TRANSPLANTED)</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>04 / 01</span><span>2026</span></div>
+      <h3>리버 스튜디오 재현</h3>
+      <div class="work-title-en">The River Studio Reconstruction</div>
+      <div class="medium">실제 작업실 바닥재, 회화 작업물, 드로잉, 친필 페이퍼 · MMCA 제작</div>
+      <p>내한 직후 전시장으로 달려간 작가는 밤 12시가 넘도록 직접 작품에 파이널 터치를 가하며 회화에 대한 집념을 보여주었다. 스튜디오 한편에는 친필 페이퍼가 전시된다 — "나는 마티스만큼은 안 되는구나"라는 거장의 솔직한 열등감과, 그럼에도 동시대 사람들을 기억하며 일상을 기록하는 화가로서의 삶을 받아들이는 인간적 고백이 적혀 있다.</p>
+      <div class="curator-note">파격의 이면에 숨겨진 창작자의 고뇌와 열정. 30년간 논란의 한가운데 있던 작가가 결국 돌아간 자리는, 의외로 붓을 쥔 화가의 자리였다.</div>
+    </div>
+
+    <div class="work">
+      <div class="work-plate">
+        <div class="work-plate-inner">
+          <svg class="motif" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <g opacity="0.85">
+              <!-- Pharmacy storefront abstract -->
+              <rect x="80" y="60" width="240" height="180" fill="none" stroke="#8a7546" stroke-width="1.5"/>
+              <line x1="80" y1="110" x2="320" y2="110" stroke="#8a7546" stroke-width="1"/>
+              <text x="200" y="95" text-anchor="middle" font-family="Cormorant Garamond" font-style="italic" font-size="18" fill="#c9a961" letter-spacing="4">PHARMACY</text>
+              <!-- Shelves with bottles -->
+              <g fill="#ede7d9" opacity="0.6">
+                <rect x="100" y="130" width="8" height="16"/>
+                <rect x="115" y="130" width="8" height="16"/>
+                <rect x="130" y="130" width="8" height="16"/>
+                <rect x="145" y="130" width="8" height="16"/>
+                <rect x="160" y="130" width="8" height="16"/>
+                <rect x="175" y="130" width="8" height="16"/>
+                <rect x="190" y="130" width="8" height="16"/>
+                <rect x="205" y="130" width="8" height="16"/>
+                <rect x="220" y="130" width="8" height="16"/>
+                <rect x="235" y="130" width="8" height="16"/>
+                <rect x="250" y="130" width="8" height="16"/>
+                <rect x="265" y="130" width="8" height="16"/>
+                <rect x="280" y="130" width="8" height="16"/>
+                <rect x="295" y="130" width="8" height="16"/>
+              </g>
+              <line x1="90" y1="155" x2="310" y2="155" stroke="#8a7546" stroke-width="0.5"/>
+              <g fill="#b8d4c2" opacity="0.6">
+                <rect x="105" y="170" width="10" height="18"/>
+                <rect x="125" y="170" width="10" height="18"/>
+                <rect x="145" y="170" width="10" height="18"/>
+                <rect x="165" y="170" width="10" height="18"/>
+                <rect x="185" y="170" width="10" height="18"/>
+                <rect x="205" y="170" width="10" height="18"/>
+                <rect x="225" y="170" width="10" height="18"/>
+                <rect x="245" y="170" width="10" height="18"/>
+                <rect x="265" y="170" width="10" height="18"/>
+                <rect x="285" y="170" width="10" height="18"/>
+              </g>
+              <line x1="90" y1="200" x2="310" y2="200" stroke="#8a7546" stroke-width="0.5"/>
+              <g fill="#c9a961" opacity="0.5">
+                <rect x="100" y="215" width="200" height="15" rx="2"/>
+              </g>
+            </g>
+            <text x="200" y="285" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#a09684" letter-spacing="2">PHARMACY · NOTTING HILL 1997 → MMCA 2026</text>
+          </svg>
+        </div>
+      </div>
+      <div class="work-meta"><span>04 / 02</span><span>1997–2003 / 재현 2026</span></div>
+      <h3>약국 (PHARMACY)</h3>
+      <div class="work-title-en">Pharmacy — Restaurant Recreated</div>
+      <div class="medium">집기, 도자, 네온, 유리 선반, 의약품 패키지 · 부대 시설</div>
+      <p>1997년부터 6년간 허스트가 노팅힐에서 운영했던 약국 콘셉트의 카페 겸 레스토랑을 미술관 안에 재현했다. 폐업 당시 집기류 150여 개를 소더비 경매로 판매해 약 1,100만 파운드의 수익을 거두었고, 이 뉴스는 허스트를 일반인에게까지 유명세를 떨치게 한 결정적 계기가 되었다.</p>
+      <div class="curator-note">작품인가, 상품인가, 공간인가. 허스트는 이 경계들을 동시에 운영하는 법을 누구보다 먼저 알았다. 현대미술이 '브랜드'가 되는 과정의 원형적 사례.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ CLOSING ============ -->
+<section class="closing">
+  <div class="closing-mark">⁂</div>
+  <h2>가상 전시의 끝,<br>실제 전시의 시작</h2>
+  <p>
+    텍스트와 도식으로 허스트의 세계를 거닐어 보았다면, 이제 실제 전시장에서 포르말린 수조 앞의 공기, 다이아몬드 해골 앞의 빛, 스튜디오 바닥의 낡은 질감을 직접 마주해 보시길 권합니다. "진본성의 힘"이라고 송수정 전시과장이 말한 그것 말이죠.
+  </p>
+  <p style="color: var(--ink-dim); font-size: 0.92rem;">
+    전시 기간 중 상시 운영되는 디지털 교육 프로그램 '안녕하십니까?'와 퍼포먼스 '말하지 않는 약국' 등 부대 프로그램도 함께 경험해 보실 수 있습니다.
+  </p>
+  <a href="https://www.mmca.go.kr/exhibitions/exhibitionsDetail.do?exhId=202601060002023" target="_blank" rel="noopener" class="cta">공식 전시 페이지 →</a>
+</section>
+
+<!-- ============ DISCLAIMER ============ -->
+<div class="disclaimer">
+  본 페이지는 국립현대미술관 《데이미언 허스트: 진실은 없어 그러나 모든 것은 가능하지》전(2026.03.20–06.28)의 공개된 큐레이션 구조와 보도 자료를 기반으로 재구성한 비공식 가상 감상 가이드입니다.<br>
+  모든 작품의 저작권은 © Damien Hirst and Science Ltd. / DACS 2026 에 귀속되며, 본 페이지의 그래픽 모티프는 실제 작품의 복제가 아닌 주제를 암시하는 추상적 시각 장치입니다.
+</div>
+
+<footer>
+  <div>MMCA × DAMIEN HIRST · 2026</div>
+  <div>NOTHING IS TRUE · EVERYTHING IS POSSIBLE</div>
+  <div><a href="https://www.mmca.go.kr/exhibitions/exhibitionsDetail.do?exhId=202601060002023" target="_blank" rel="noopener">MMCA.GO.KR</a></div>
+</footer>
+
+</div>
+
+<script>
+  // Scroll reveal
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.work, .theme-card, .room-intro, .closing, .manifesto-body, .pull-quote').forEach(el => {
+    el.classList.add('reveal');
+    io.observe(el);
+  });
+</script>
+</body>
+</html>

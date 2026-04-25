@@ -59,6 +59,7 @@ def create_app() -> FastAPI:
     from app.api import stats as stats_router
     from app.api import health as health_router
     from app.api import ws as ws_router
+    from app.api import admin as admin_router
 
     app.include_router(session_router.router)
     app.include_router(games_router.router)
@@ -66,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(stats_router.router)
     app.include_router(health_router.router)
     app.include_router(ws_router.router)
+    app.include_router(admin_router.router)
 
     register_handlers(app)
     return app

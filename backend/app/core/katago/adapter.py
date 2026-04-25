@@ -297,18 +297,18 @@ class KataGoAdapter:
                 return AnalysisResult()
 
             # Start streaming analysis. `interval 20` = 200ms cadence.
-            # Do NOT pass `maxvisits` here: with a small visit cap KataGo
-            # completes the search before emitting any info lines, returning
-            # zero hints. Instead we cap the total time via our own deadline
-            # below and interrupt with a blank line. The `max_visits` arg is
-            # kept on the signature for future use / callers.
-            _ = max_visits  # noqa: F841 (reserved for future per-call tuning)
+            # We cannot pass `maxvisits` to kata-analyze — at low visits the
+            # engine completes the search before emitting any info lines and
+            # we'd get zero hints. Instead, map `max_visits` to a wall-clock
+            # deadline (≈ 20 ms per requested visit; clamped to [0.3s, 5.0s]),
+            # and interrupt with a blank newline once we've collected enough.
+            deadline_s = max(0.3, min(5.0, max_visits * 0.02))
             cmd = f"kata-analyze {side} interval 20 maxmoves 5 ownership true\n"
             self._proc.stdin.write(cmd.encode())
             await self._proc.stdin.drain()
 
             collected: list[str] = []
-            deadline = asyncio.get_event_loop().time() + 2.0
+            deadline = asyncio.get_event_loop().time() + deadline_s
             pipe_healthy = True
             try:
                 while asyncio.get_event_loop().time() < deadline:
@@ -361,7 +361,7 @@ class KataGoAdapter:
                         pass
                     self._proc = None
 
-            return parse_analysis("".join(collected))
+            return parse_analysis("".join(collected), board_size=self._replay.boardsize)
 
     async def load_sgf_text(self, sgf: str) -> None:
         # loadsgf requires a file path; a simpler approach is clear_board + replay moves.

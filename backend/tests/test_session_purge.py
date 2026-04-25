@@ -27,7 +27,9 @@ async def wired_db(db_engine):
 
 
 @pytest.mark.asyncio
-async def test_purge_deletes_idle_sessions_and_cascades_games(db_session, wired_db):
+async def test_purge_deletes_idle_sessions_preserves_game_history(db_session, wired_db):
+    """Idle sessions are purged but their games are preserved (session_id
+    detaches via SET NULL) so the admin console's audit trail persists."""
     # Fresh (not expired)
     fresh = Session(token="t-fresh", nickname="alice", nickname_key="alice")
     db_session.add(fresh)
@@ -43,9 +45,10 @@ async def test_purge_deletes_idle_sessions_and_cascades_games(db_session, wired_
     await registry.claim("alice", fresh.id)
     await registry.claim("bob", stale.id)
 
-    # Game owned by stale session — must be cascade-deleted.
-    g = Game(session_id=stale.id, ai_rank="5k", board_size=19,
-             handicap=0, komi=6.5, user_color="black", status="active")
+    # Game owned by stale session — must survive the purge via SET NULL.
+    g = Game(session_id=stale.id, user_nickname="bob", ai_rank="5k",
+             board_size=19, handicap=0, komi=6.5, user_color="black",
+             status="active")
     db_session.add(g)
     await db_session.commit()
 
@@ -57,9 +60,15 @@ async def test_purge_deletes_idle_sessions_and_cascades_games(db_session, wired_
     remaining = {r[0] for r in res.all()}
     assert remaining == {"t-fresh"}
 
-    # Game cascade-deleted
+    # Game persists with session_id detached; nickname snapshot intact.
+    # expire_all() so the test's Session re-fetches from the DB (the purge
+    # runs on a different AsyncSession wired via _db_mod.AsyncSessionLocal).
+    db_session.expire_all()
     res2 = await db_session.execute(select(Game))
-    assert res2.scalars().all() == []
+    games = res2.scalars().all()
+    assert len(games) == 1
+    assert games[0].session_id is None
+    assert games[0].user_nickname == "bob"
 
     # Registry released bob but kept alice
     assert await registry.is_taken("alice") is True

@@ -1,6 +1,5 @@
 "use client";
 import { useT } from "@/lib/i18n";
-import { Label } from "@/components/ui/label";
 import type { AiStyle } from "@/components/StylePicker";
 
 export type PlayerId =
@@ -37,16 +36,14 @@ export const PLAYER_GROUPS: { style: AiStyle; players: PlayerId[] }[] = [
 export interface PlayerPickerProps {
   value: PlayerId | null;
   onChange: (p: PlayerId) => void;
-  label?: string;
 }
 
-export default function PlayerPicker({ value, onChange, label }: PlayerPickerProps) {
+export default function PlayerPicker({ value, onChange }: PlayerPickerProps) {
   const t = useT();
-  const resolvedLabel = label ?? t("game.aiPlayer");
+  const resolvedLabel = t("game.aiPlayer");
 
   return (
     <div className="flex flex-col gap-4">
-      <Label>{resolvedLabel}</Label>
       <div role="radiogroup" aria-label={resolvedLabel} className="flex flex-col gap-5">
         {PLAYER_GROUPS.map((group) => (
           <div key={group.style} className="flex flex-col gap-2">

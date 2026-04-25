@@ -91,16 +91,19 @@ async def test_list_games(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_session_end_cascades_owned_games(client: AsyncClient) -> None:
-    """After a session ends, its owned games are cascade-deleted — a new
-    session cannot see or touch them even by raw game_id."""
+async def test_games_survive_session_end_but_are_forbidden_to_others(
+    client: AsyncClient,
+) -> None:
+    """After a session ends, its games are preserved (so the admin console
+    keeps its audit trail), but a different user's session cannot access
+    them — a non-admin peer gets 403, not a 404."""
     await _signup(client, email="u1@example.com")
     r = await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
     game_id = r.json()["id"]
     await client.post("/api/session/end")
     await _signup(client, email="u2@example.com")
     r2 = await client.get(f"/api/games/{game_id}")
-    assert r2.status_code == 404
+    assert r2.status_code == 403
 
 
 @pytest.mark.asyncio

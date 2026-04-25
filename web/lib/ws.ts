@@ -1,3 +1,18 @@
+export interface ScoreResultMsg {
+  type: "score_result";
+  black_territory: number;
+  white_territory: number;
+  black_captures: number;
+  white_captures: number;
+  komi: number;
+  black_score: number;
+  white_score: number;
+  winner: string; // "B" | "W"
+  margin: number;
+  result: string;
+  reason?: "ai_passed";
+}
+
 export type WSMessage =
   | {
       type: "state";
@@ -7,10 +22,14 @@ export type WSMessage =
       move_count: number;
       captures: Record<string, number>;
       winrate_black?: number;
+      undo_count?: number;
+      score_lead_black?: number;
+      endgame_phase?: boolean;
     }
   | { type: "ai_move"; coord: string; captures: number }
-  | { type: "winrate"; winrate_black: number }
-  | { type: "game_over"; result: string; winner: string }
+  | { type: "winrate"; winrate_black: number; score_lead_black?: number }
+  | { type: "game_over"; result: string; winner: string; reason?: "ai_resigned" | "user_resigned" }
+  | ScoreResultMsg
   | { type: "error"; code: string; detail?: string };
 
 export interface GameWS {

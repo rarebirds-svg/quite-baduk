@@ -6,11 +6,13 @@ HttpOnly session cookie with no Max-Age (deleted on browser close).
 """
 from __future__ import annotations
 
+import datetime as _dt
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy import delete as _sa_delete
 from sqlalchemy import select
+from sqlalchemy import update as _sa_update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -89,6 +91,14 @@ async def create_session(
         async with registry._lock:  # noqa: SLF001 (intentional — atomic swap)
             registry._by_key[key] = sess.id  # noqa: SLF001
 
+        # Append an audit log row so the admin console can see historical
+        # logins even after the session itself is deleted.
+        from app.models import SessionHistory
+        db.add(SessionHistory(
+            session_id=sess.id, nickname=display, nickname_key=key,
+        ))
+        await db.commit()
+
         _set_session_cookie(response, token)
         return SessionPublic(id=sess.id, nickname=sess.nickname)
     except HTTPException:
@@ -107,15 +117,38 @@ async def read_session(sess: Session = Depends(get_current_session)) -> SessionP
 @router.post("/end", status_code=204)
 async def end_session(
     response: Response,
-    sess: Session = Depends(get_current_session),
+    baduk_session: str | None = Cookie(default=None, alias=COOKIE_SESSION),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
+    """Idempotent logout. Browsers fire this twice (explicit logout +
+    pagehide beacon, React StrictMode dev double-effect, mobile Safari's
+    duplicate unload), so missing/already-deleted sessions must succeed
+    rather than 500 on a stale-row race or 401 on the second attempt."""
+    response.status_code = 204
+    if not baduk_session:
+        _clear_session_cookie(response)
+        return response
+    res = await db.execute(select(Session).where(Session.token == baduk_session))
+    sess = res.scalar_one_or_none()
+    if sess is None:
+        _clear_session_cookie(response)
+        return response
     key = sess.nickname_key
+    # Mark the audit row as ended before deleting the session so we don't
+    # lose the link via session_id.
+    from app.models import SessionHistory
+    await db.execute(
+        _sa_update(SessionHistory)
+        .where(
+            SessionHistory.session_id == sess.id,
+            SessionHistory.ended_at.is_(None),
+        )
+        .values(ended_at=_dt.datetime.utcnow(), end_reason="logout")
+    )
     await db.execute(_sa_delete(Session).where(Session.id == sess.id))
     await db.commit()
     await registry.release(key)
     _clear_session_cookie(response)
-    response.status_code = 204
     return response
 
 

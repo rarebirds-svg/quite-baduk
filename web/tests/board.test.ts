@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { xyToGtp, gtpToXy, starPoints, totalCells } from "@/lib/board";
+import { xyToGtp, gtpToXy, starPoints, totalCells, applyMoveWithCaptures } from "@/lib/board";
 
 describe("coord conversion", () => {
   it("round-trips on 19x19", () => {
@@ -50,5 +50,86 @@ describe("totalCells", () => {
     expect(totalCells(9)).toBe(81);
     expect(totalCells(13)).toBe(169);
     expect(totalCells(19)).toBe(361);
+  });
+});
+
+describe("applyMoveWithCaptures", () => {
+  // Helpers for legible board fixtures on 5x5.
+  const SIZE = 5;
+  const toBoard = (rows: string[]): string =>
+    rows.map((r) => r.replace(/\s/g, "")).join("");
+
+  it("places a stone and leaves surrounding empties", () => {
+    const before = toBoard([
+      ". . . . .",
+      ". . . . .",
+      ". . . . .",
+      ". . . . .",
+      ". . . . .",
+    ]);
+    expect(applyMoveWithCaptures(before, SIZE, 2, 2, "B")).toBe(
+      toBoard([
+        ". . . . .",
+        ". . . . .",
+        ". . B . .",
+        ". . . . .",
+        ". . . . .",
+      ]),
+    );
+  });
+
+  it("captures a single stone in atari on the side", () => {
+    // W at (0,2) has only one liberty: (1,2). Black plays there → W captured.
+    const before = toBoard([
+      ". . . . .",
+      "B . . . .",
+      "W . . . .",
+      "B . . . .",
+      ". . . . .",
+    ]);
+    const after = applyMoveWithCaptures(before, SIZE, 1, 2, "B");
+    expect(after[2 * SIZE + 0]).toBe("."); // W at (0,2) removed
+    expect(after[2 * SIZE + 1]).toBe("B"); // B placed at (1,2)
+  });
+
+  it("captures a multi-stone group", () => {
+    // 2-stone White group at (0,1)+(0,2). Liberties of the group are (1,1)
+    // only (since (0,0), (1,2), (0,3) are all Black). Black plays (1,1).
+    const before = toBoard([
+      "B . . . .",
+      "W . . . .",
+      "W B . . .",
+      "B . . . .",
+      ". . . . .",
+    ]);
+    const after = applyMoveWithCaptures(before, SIZE, 1, 1, "B");
+    expect(after[1 * SIZE + 0]).toBe("."); // W at (0,1) removed
+    expect(after[2 * SIZE + 0]).toBe("."); // W at (0,2) removed
+    expect(after[1 * SIZE + 1]).toBe("B"); // B placed at (1,1)
+  });
+
+  it("does nothing when the target cell is occupied", () => {
+    const before = toBoard([
+      "B . . . .",
+      ". . . . .",
+      ". . . . .",
+      ". . . . .",
+      ". . . . .",
+    ]);
+    expect(applyMoveWithCaptures(before, SIZE, 0, 0, "W")).toBe(before);
+  });
+
+  it("does not capture when the opponent group still has liberties", () => {
+    const before = toBoard([
+      ". . . . .",
+      ". B . . .",
+      ". W . . .",
+      ". . . . .",
+      ". . . . .",
+    ]);
+    // W at (1,2) has 3 liberties; B playing (2,2) shouldn't capture.
+    const after = applyMoveWithCaptures(before, SIZE, 2, 2, "B");
+    expect(after[2 * SIZE + 1]).toBe("W"); // W still there
+    expect(after[2 * SIZE + 2]).toBe("B");
   });
 });

@@ -41,6 +41,13 @@ export const IconHint = ({ size = 16, ...props }: IconProps) => (
   </svg>
 );
 
+export const IconScore = ({ size = 16, ...props }: IconProps) => (
+  <svg {...svgBase(size)} aria-hidden="true" {...props}>
+    <rect x="4" y="4" width="16" height="16" rx="1" />
+    <path d="M4 12h16M12 4v16" />
+  </svg>
+);
+
 export const IconHandicap = ({ size = 16, ...props }: IconProps) => (
   <svg {...svgBase(size)} aria-hidden="true" {...props}>
     <circle cx="7" cy="7" r="1.5" fill="currentColor" />

@@ -53,18 +53,36 @@ export default function ReviewPage() {
   const [game, setGame] = useState<GameDetail | null>(null);
   const [idx, setIdx] = useState(0);
   const [analysis, setAnalysis] = useState<AnalysisResp | null>(null);
+  // Auto-play the game from move 1. Starts playing on load; any manual
+  // navigation pauses it. Clicking play at the end rewinds to 0.
+  const [playing, setPlaying] = useState(false);
+  const PLAYBACK_MS = 700;
 
   useEffect(() => {
     (async () => {
       try {
         const g = await api<GameDetail>(`/api/games/${gameId}`);
         setGame(g);
-        setIdx(g.moves.length);
+        setIdx(0);
+        setPlaying(true);
       } catch {
         toast.error(t("errors.game_not_found"));
       }
     })();
   }, [gameId, t]);
+
+  useEffect(() => {
+    if (!playing || !game) return;
+    if (idx >= game.moves.length) { setPlaying(false); return; }
+    const id = setInterval(() => {
+      setIdx((i) => {
+        if (!game) return i;
+        if (i >= game.moves.length) return i;
+        return i + 1;
+      });
+    }, PLAYBACK_MS);
+    return () => clearInterval(id);
+  }, [playing, game, idx]);
 
   const board = useMemo(
     () => (game ? replay(game.board_size, game.moves, idx) : ""),
@@ -110,15 +128,22 @@ export default function ReviewPage() {
       if (!game) return;
       const target = e.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
-      if (e.key === "ArrowLeft") setIdx((i) => Math.max(0, i - 1));
-      if (e.key === "ArrowRight")
+      if (e.key === "ArrowLeft") { setIdx((i) => Math.max(0, i - 1)); setPlaying(false); }
+      if (e.key === "ArrowRight") {
         setIdx((i) => Math.min(game.moves.length, i + 1));
-      if (e.key === "Home") setIdx(0);
-      if (e.key === "End") setIdx(game.moves.length);
+        setPlaying(false);
+      }
+      if (e.key === "Home") { setIdx(0); setPlaying(false); }
+      if (e.key === "End") { setIdx(game.moves.length); setPlaying(false); }
+      if (e.key === " ") {
+        e.preventDefault();
+        if (idx >= game.moves.length) setIdx(0);
+        setPlaying((p) => !p);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [game]);
+  }, [game, idx]);
 
   if (!game) {
     return <div className="py-6 font-sans text-sm text-ink-mute">…</div>;
@@ -181,7 +206,7 @@ export default function ReviewPage() {
               min={0}
               max={game.moves.length}
               value={idx}
-              onChange={(e) => setIdx(Number(e.target.value))}
+              onChange={(e) => { setIdx(Number(e.target.value)); setPlaying(false); }}
               className="w-full accent-oxblood"
               aria-label={t("review.scrubber")}
             />
@@ -195,31 +220,42 @@ export default function ReviewPage() {
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={() => setIdx(0)}>
+              <Button variant="outline" size="sm"
+                onClick={() => { setIdx(0); setPlaying(false); }}
+              >
                 {t("review.first")}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIdx(Math.max(0, idx - 1))}
+                onClick={() => { setIdx(Math.max(0, idx - 1)); setPlaying(false); }}
               >
                 {t("review.prev")}
               </Button>
               <Button
+                size="sm"
+                onClick={() => {
+                  if (idx >= game.moves.length) setIdx(0);
+                  setPlaying((p) => !p);
+                }}
+              >
+                {playing ? t("review.pause") : t("review.play")}
+              </Button>
+              <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIdx(Math.min(game.moves.length, idx + 1))}
+                onClick={() => { setIdx(Math.min(game.moves.length, idx + 1)); setPlaying(false); }}
               >
                 {t("review.next")}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIdx(game.moves.length)}
+                onClick={() => { setIdx(game.moves.length); setPlaying(false); }}
               >
                 {t("review.last")}
               </Button>
-              <Button size="sm" onClick={analyze} className="ml-auto">
+              <Button variant="outline" size="sm" onClick={analyze} className="ml-auto">
                 {t("review.analyze")}
               </Button>
             </div>

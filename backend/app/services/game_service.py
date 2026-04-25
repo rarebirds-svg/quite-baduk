@@ -1,14 +1,15 @@
 """Game lifecycle: create, move, undo, resign, finalize, replay."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.katago.strength import rank_to_config
-from app.core.rules.board import BLACK, WHITE
+from app.core.rules.board import BLACK, EMPTY, WHITE
 from app.core.rules.engine import (
     GameState,
     IllegalMoveError,
@@ -49,6 +50,26 @@ class MoveResult:
     game_over: bool
     result_str: str | None  # "B+R", "W+12.5", etc.
     winrate_black: float | None = None  # side-to-move normalised to Black's winrate
+    score_lead_black: float | None = None  # positive = black ahead, negative = white ahead
+    endgame_phase: bool = False  # true when dame-fill phase detected (score-by-request eligible)
+    # Populated when the AI unilaterally passes in a settled position — the
+    # service has already run the scoring logic and finalized the game.
+    ai_passed_scored: "ScoringDetail | None" = None
+
+
+@dataclass
+class ScoringDetail:
+    """Per-side breakdown returned by the "계가 신청" (request scoring) flow."""
+    black_territory: int
+    white_territory: int
+    black_captures: int
+    white_captures: int
+    komi: float
+    black_score: float
+    white_score: float
+    winner: str  # 'B' or 'W'
+    margin: float
+    result_str: str  # "B+3.5"
 
 
 async def _user_side(game: Game) -> str:
@@ -69,6 +90,7 @@ async def create_game(
     board_size: int,
     ai_style: str = "balanced",
     ai_player: str | None = None,
+    user_rank: str | None = None,
 ) -> Game:
     if board_size not in HANDICAP_TABLES:
         raise GameError("INVALID_BOARD_SIZE", str(board_size))
@@ -90,6 +112,8 @@ async def create_game(
 
     game = Game(
         session_id=session.id,
+        user_nickname=session.nickname,
+        user_rank=user_rank,
         ai_rank=ai_rank,
         ai_style=resolved_style,
         ai_player=ai_player if resolved_player else None,
@@ -136,7 +160,12 @@ async def _record_move(
 
 
 async def place_move(
-    db: AsyncSession, *, game: Game, session: Session, coord: str
+    db: AsyncSession,
+    *,
+    game: Game,
+    session: Session,
+    coord: str,
+    on_user_applied: Callable[[GameState, int], Awaitable[None]] | None = None,
 ) -> MoveResult:
     if game.session_id != session.id:
         raise GameError("FORBIDDEN", "game.session_id != session.id")
@@ -154,6 +183,16 @@ async def place_move(
 
     # Lock per game
     async with game_lock(game.id):
+        # Back-compat self-heal. Games created before the "delete on undo"
+        # fix have is_undone=True rows sitting in the moves table — those
+        # collide with the UNIQUE(game_id, move_number) constraint on the
+        # next INSERT. Purge them up front so those games can still be
+        # played instead of raising IntegrityError forever.
+        await db.execute(
+            delete(MoveRow).where(
+                MoveRow.game_id == game.id, MoveRow.is_undone.is_(True)
+            )
+        )
         # Validate + apply user move
         try:
             new_state = play(state, Move(color=user_side, coord=coord))  # type: ignore[arg-type]
@@ -176,6 +215,12 @@ async def place_move(
         # subprocess restarts; without this step KataGo may return a coord
         # that the rules engine rejects as AI_ILLEGAL_MOVE.
         await _sync_adapter(game, state, new_state, coord)
+
+        # Flush the user's move to the client before the AI starts thinking.
+        # Captures take effect in `new_state` above; without this hook the
+        # user would wait on `genmove` before seeing their own stones disappear.
+        if on_user_applied is not None:
+            await on_user_applied(new_state, user_captures)
 
         ai_move: str | None = None
         ai_captures = 0
@@ -223,16 +268,132 @@ async def place_move(
         cache_state(game.id, new_state)
 
         # Compute a cheap position evaluation so the UI can show the live
-        # winrate after each move. Swallow failures — winrate is optional.
+        # winrate + score lead + endgame phase after each move. Swallow
+        # failures — eval is optional. Also reused to decide whether the AI
+        # should resign on its next read.
         winrate_black: float | None = None
+        score_lead_black: float | None = None
+        endgame_phase = False
         if not game_over:
             try:
                 analysis = await adapter.analyze(side=new_state.to_move, max_visits=32)
                 wr = float(analysis.winrate)
-                # analyze() returns the winrate from the side-to-move's perspective.
+                sl = float(analysis.score_lead)
+                # analyze() reports both from the side-to-move's perspective.
                 winrate_black = wr if new_state.to_move == BLACK else 1.0 - wr
+                score_lead_black = sl if new_state.to_move == BLACK else -sl
+                endgame_phase = _endgame_phase_from_ownership(
+                    new_state, analysis.ownership
+                )
+
+                # AI auto-resign — three guards to prevent premature
+                # resigns from noisy 32-visit winrate reads (especially
+                # on 9x9 where a single capture can swing 20%+):
+                #
+                #   1. Min-move gate: ≥ 2×board_size ply played. 9x9 = 20,
+                #      19x19 = 40. Below this, winrate reads are too
+                #      unstable to trust.
+                #   2. Two-stage eval: the 32-visit shallow read serves as
+                #      a *trigger* (< 3%), not a decision. A deeper
+                #      200-visit re-analysis must agree (< 1%).
+                #   3. Loss-streak: the deep-confirmed sub-1% condition
+                #      must hold for three consecutive AI turns. One
+                #      noisy read can't end the game; the user has plies
+                #      in between to play into a recovery. Persisted in
+                #      games.loss_streak so it survives reconnects.
+                ai_winrate_shallow = 1.0 - wr
+                resign_min_moves = max(20, new_state.board.size * 2)
+                is_normal_ai_move = (
+                    ai_move is not None
+                    and ai_move.lower() not in ("pass", "resign")
+                )
+                deep_confirms_loss = False
+                if (
+                    is_normal_ai_move
+                    and len(new_state.move_history) >= resign_min_moves
+                    and ai_winrate_shallow < 0.03
+                ):
+                    try:
+                        deep = await adapter.analyze(
+                            side=new_state.to_move, max_visits=200
+                        )
+                        deep_ai_wr = 1.0 - float(deep.winrate)
+                    except Exception:
+                        deep_ai_wr = 1.0
+                    deep_confirms_loss = deep_ai_wr < 0.01
+
+                if deep_confirms_loss:
+                    game.loss_streak = (game.loss_streak or 0) + 1
+                elif is_normal_ai_move:
+                    # Reset streak on any AI turn that isn't confirming a
+                    # crushing loss. Streak only reflects consecutive
+                    # deep-confirmed losing ply.
+                    if game.loss_streak:
+                        game.loss_streak = 0
+
+                RESIGN_STREAK_THRESHOLD = 3
+                if game.loss_streak >= RESIGN_STREAK_THRESHOLD:
+                    game.status = "resigned"
+                    game.winner = "user"
+                    game.result = f"{user_side}+R"
+                    result_str = game.result
+                    game_over = True
+                    game.sgf_cache = build_sgf(new_state, result=game.result)
+                    import datetime as _dt
+                    game.finished_at = _dt.datetime.now(_dt.timezone.utc)
+                    await db.commit()
             except Exception:
                 winrate_black = None
+                score_lead_black = None
+                endgame_phase = False
+
+        # AI unilateral pass in a settled position: the AI is effectively
+        # saying "the game is over, let's score". Run the same scoring
+        # pipeline as a manual /score_request and finalize the game.
+        ai_passed_scored: ScoringDetail | None = None
+        if (
+            not game_over
+            and ai_move is not None
+            and ai_move.lower() == "pass"
+            and endgame_phase
+        ):
+            try:
+                # Re-use the analysis we already ran for ownership.
+                dead_stones = _dead_stones_from_ownership(new_state, analysis.ownership)
+                result_obj = score_engine(new_state, dead_stones=dead_stones)
+                margin = result_obj.margin
+                prefix = "B+" if result_obj.winner == BLACK else "W+"
+                result_str_local = f"{prefix}{margin:g}"
+
+                game.status = "finished"
+                game.winner = "user" if (
+                    (result_obj.winner == BLACK and game.user_color == "black")
+                    or (result_obj.winner == WHITE and game.user_color == "white")
+                ) else "ai"
+                game.result = result_str_local
+                game.sgf_cache = build_sgf(new_state, result=result_str_local)
+                import datetime as _dt
+                game.finished_at = _dt.datetime.now(_dt.timezone.utc)
+                await db.commit()
+
+                game_over = True
+                result_str = result_str_local
+                ai_passed_scored = ScoringDetail(
+                    black_territory=result_obj.black_territory,
+                    white_territory=result_obj.white_territory,
+                    black_captures=result_obj.black_captures,
+                    white_captures=result_obj.white_captures,
+                    komi=result_obj.komi,
+                    black_score=result_obj.black_score,
+                    white_score=result_obj.white_score,
+                    winner=result_obj.winner,
+                    margin=result_obj.margin,
+                    result_str=result_str_local,
+                )
+            except Exception:
+                # If anything fails we leave the game open; the pass is
+                # still recorded and the user can play on or pass too.
+                ai_passed_scored = None
 
         return MoveResult(
             game_state=new_state,
@@ -242,7 +403,13 @@ async def place_move(
             game_over=game_over,
             result_str=result_str,
             winrate_black=winrate_black,
+            score_lead_black=score_lead_black,
+            endgame_phase=endgame_phase,
+            ai_passed_scored=ai_passed_scored,
         )
+
+
+UNDO_LIMIT = 3
 
 
 async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: int = 2) -> GameState:
@@ -252,19 +419,27 @@ async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: in
         raise GameError("GAME_NOT_ACTIVE", game.status)
     if steps < 1:
         raise GameError("INVALID_UNDO_STEPS")
+    if game.undo_count >= UNDO_LIMIT:
+        raise GameError("UNDO_LIMIT_EXCEEDED", f"max {UNDO_LIMIT} undos per game")
 
     async with game_lock(game.id):
-        # Mark the last N non-undone moves as undone
+        # Delete the last N moves outright. Marking is_undone=True is
+        # tempting for audit purposes, but the moves table has a
+        # UNIQUE(game_id, move_number) constraint — a ghost row would
+        # collide with the next place_move's INSERT and brick the game.
         res = await db.execute(
-            select(MoveRow).where(MoveRow.game_id == game.id, MoveRow.is_undone == False).order_by(MoveRow.move_number.desc())  # noqa: E712
+            select(MoveRow)
+            .where(MoveRow.game_id == game.id, MoveRow.is_undone.is_(False))
+            .order_by(MoveRow.move_number.desc())
         )
         rows = res.scalars().all()
         to_undo = rows[:steps]
         if not to_undo:
             raise GameError("NO_MOVES_TO_UNDO")
         for row in to_undo:
-            row.is_undone = True
+            await db.delete(row)
             game.move_count -= 1
+        game.undo_count += 1
 
         # Force the next place_move to fully reseed the shared adapter — this
         # is cheaper and more reliable than trying to keep adapter.undo() in
@@ -275,6 +450,66 @@ async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: in
         cache_state(game.id, state)
         await db.commit()
         return state
+
+
+async def score_by_request(
+    db: AsyncSession, *, game: Game, session: Session
+) -> ScoringDetail:
+    """Finalize the game "계가 신청" style — auto dead-stone, Korean territory
+    scoring, full per-side breakdown. Rejects if the position isn't in the
+    yose/dame-fill phase yet, so a user can't short-circuit an unsettled game."""
+    if game.session_id != session.id:
+        raise GameError("FORBIDDEN")
+    if game.status != "active":
+        raise GameError("GAME_NOT_ACTIVE", game.status)
+
+    state = get_cached_state(game.id) or await _replay_state(db, game)
+    adapter = get_adapter()
+    await adapter.start()
+
+    # Deeper analysis than the mid-game 32-visit read — we need a confident
+    # ownership read for both phase gating and dead-stone inference.
+    try:
+        analysis = await adapter.analyze(side=state.to_move, max_visits=200)
+    except Exception as e:
+        raise GameError("ANALYSIS_FAILED", str(e)) from e
+
+    if not _endgame_phase_from_ownership(state, analysis.ownership):
+        raise GameError(
+            "NOT_IN_ENDGAME_PHASE",
+            "The position is not settled enough to score yet.",
+        )
+
+    async with game_lock(game.id):
+        dead_stones = _dead_stones_from_ownership(state, analysis.ownership)
+        result = score_engine(state, dead_stones=dead_stones)
+        margin = result.margin
+        prefix = "B+" if result.winner == BLACK else "W+"
+        result_str = f"{prefix}{margin:g}"
+
+        game.status = "finished"
+        game.winner = "user" if (
+            (result.winner == BLACK and game.user_color == "black")
+            or (result.winner == WHITE and game.user_color == "white")
+        ) else "ai"
+        game.result = result_str
+        game.sgf_cache = build_sgf(state, result=result_str)
+        import datetime as _dt
+        game.finished_at = _dt.datetime.now(_dt.timezone.utc)
+        await db.commit()
+
+    return ScoringDetail(
+        black_territory=result.black_territory,
+        white_territory=result.white_territory,
+        black_captures=result.black_captures,
+        white_captures=result.white_captures,
+        komi=result.komi,
+        black_score=result.black_score,
+        white_score=result.white_score,
+        winner=result.winner,
+        margin=result.margin,
+        result_str=result_str,
+    )
 
 
 async def resign_game(db: AsyncSession, *, game: Game, session: Session) -> Game:
@@ -291,9 +526,106 @@ async def resign_game(db: AsyncSession, *, game: Game, session: Session) -> Game
     return game
 
 
+# Ownership threshold: a stone is considered dead when the ownership value at
+# that point has the opposite sign of the stone's color with at least this
+# magnitude. KataGo ownership is +1 for definitely Black, -1 for definitely
+# White; values near 0 are contested. 0.6 is conservative — it won't demote
+# live groups, but it may miss some marginal cases (which we then under-count
+# rather than hand points to the wrong side).
+_DEAD_STONE_OWNERSHIP_THRESHOLD = 0.6
+
+
+def _endgame_phase_from_ownership(state: GameState, ownership: list[float]) -> bool:
+    """True when the position is firmly resolved — stones are clearly alive or
+    dead, and few empty points remain contested. Used to gate the "계가 신청"
+    button so it can't be pressed while the board is still in flux.
+
+    Thresholds tuned for real games: initial constants were too strict and
+    almost never fired on 9x9/13x13 even in obviously-settled positions.
+    """
+    size = state.board.size
+    if len(ownership) != size * size:
+        return False
+    # Require SOME play before declaring endgame — avoid flagging an empty
+    # fuseki board. Scaled linearly with board size; 9x9 ≥ 9 moves,
+    # 13x13 ≥ 13, 19x19 ≥ 19.
+    if len(state.move_history) < size:
+        return False
+    empty_contested = 0
+    stone_unsettled = 0
+    for y in range(size):
+        for x in range(size):
+            cell = state.board.get(x, y)
+            val = ownership[y * size + x]
+            if cell == EMPTY:
+                # |ownership| < 0.35 ~= still contested. Above that, the
+                # point has leaned one side strongly enough to call it
+                # resolved even if not yet a stone.
+                if abs(val) < 0.35:
+                    empty_contested += 1
+            else:
+                # Stone whose color disagrees with ownership is "unsettled"
+                # (could still die or live). Tight threshold prevents false
+                # endgames on fighting positions.
+                if cell == BLACK and val < 0.1:
+                    stone_unsettled += 1
+                elif cell == WHITE and val > -0.1:
+                    stone_unsettled += 1
+    # Budget for "contested empty" points — roughly a third of each board
+    # dimension, with a floor of 6. Realistic games still have several
+    # contested dame points when players are ready to score.
+    contested_budget = max(6, size // 3 * 2)
+    # Allow a small number of unsettled stones (one weak group on the
+    # board shouldn't block scoring in practice).
+    unsettled_budget = max(0, size // 6)
+    return empty_contested <= contested_budget and stone_unsettled <= unsettled_budget
+
+
+def _dead_stones_from_ownership(
+    state: GameState, ownership: list[float]
+) -> set[tuple[int, int]]:
+    """Pure version — takes an already-fetched ownership vector and marks stones
+    whose position is owned by the opposite color beyond the confidence
+    threshold. Ownership convention: +1 = definitely Black, -1 = definitely
+    White. Our Board uses y=0 at top, matching KataGo's row-major ordering."""
+    size = state.board.size
+    if len(ownership) != size * size:
+        return set()
+    dead: set[tuple[int, int]] = set()
+    for y in range(size):
+        for x in range(size):
+            cell = state.board.get(x, y)
+            if cell not in (BLACK, WHITE):
+                continue
+            val = ownership[y * size + x]
+            if cell == BLACK and val < -_DEAD_STONE_OWNERSHIP_THRESHOLD:
+                dead.add((x, y))
+            elif cell == WHITE and val > _DEAD_STONE_OWNERSHIP_THRESHOLD:
+                dead.add((x, y))
+    return dead
+
+
+async def _infer_dead_stones(state: GameState) -> set[tuple[int, int]]:
+    """Run a fresh KataGo analysis and return dead stones. Returns empty on
+    any analysis failure."""
+    from app.engine_pool import get_adapter
+
+    try:
+        adapter = get_adapter()
+        await adapter.start()
+        analysis = await adapter.analyze(side=state.to_move, max_visits=200)
+    except Exception:
+        return set()
+    return _dead_stones_from_ownership(state, analysis.ownership)
+
+
 async def _finalize_game(db: AsyncSession, game: Game, state: GameState) -> None:
-    # Compute territory using the rules engine (auto, no dead-stone input)
-    result = score_engine(state)
+    # Ask KataGo for an ownership read, then convert it to a dead-stone set so
+    # scoring can reflect obviously-captured groups that both players passed
+    # over without physically removing. We use a strong threshold so live
+    # groups are never demoted — any false positive would hand opponent points.
+    dead_stones = await _infer_dead_stones(state)
+    result = score_engine(state, dead_stones=dead_stones)
     margin = result.margin
     prefix = "B+" if result.winner == BLACK else "W+"
     game.status = "finished"
@@ -379,7 +711,15 @@ async def _sync_adapter(
     await _reseed_adapter(game, new_state)
 
 
-async def hint(game: Game, side: str, max_visits: int = 50) -> list[Any]:
+async def hint(
+    game: Game, state: GameState, side: str, max_visits: int = 50
+) -> list[Any]:
+    # The shared adapter's internal board can drift from this game's rules
+    # state (another game interleaved, the subprocess restarted, or an undo
+    # just reset ownership). Reseed when we don't own it so hints reflect
+    # the actual position and not a stale one from a different game.
+    if adapter_owner() != game.id:
+        await _reseed_adapter(game, state)
     adapter = get_adapter()
     await adapter.start()
     analysis = await adapter.analyze(side=side, max_visits=max_visits)

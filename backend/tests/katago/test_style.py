@@ -46,8 +46,8 @@ def test_combative_amplifies_visits():
 
 
 def test_speed_reduces_visits_but_stays_at_least_one():
-    cfg = rank_to_config("18k", "speed")
-    assert cfg.max_visits >= 1  # 1 * 0.5 clamps to 1
+    cfg = rank_to_config("9k", "speed")
+    assert cfg.max_visits >= 1  # 2 * 0.5 clamps to >= 1
 
 
 def test_unknown_style_falls_back_to_balanced():
@@ -134,6 +134,6 @@ def test_influence_player_at_low_rank_stays_at_that_rank():
 
 
 def test_classical_player_at_low_rank_stays_at_that_rank():
-    cfg = rank_to_config("10k", "balanced", "go_seigen")
-    assert cfg.human_sl_profile == "preaz_10k"  # classical -> preaz_{rank}
-    assert cfg.max_visits == 2  # base(10k)=2 * 1.0 = 2
+    cfg = rank_to_config("9k", "balanced", "go_seigen")
+    assert cfg.human_sl_profile == "preaz_9k"  # classical -> preaz_{rank}
+    assert cfg.max_visits == 2  # base(9k)=2 * 1.0 = 2

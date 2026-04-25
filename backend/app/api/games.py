@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rules.engine import build_sgf
-from app.deps import get_current_session, get_db
+from app.deps import get_current_session, get_db, is_admin
 from app.engine_pool import game_lock, get_cached_state
 from app.models import Game, Session
 from app.models import Move as MoveRow
@@ -31,11 +31,25 @@ router = APIRouter(prefix="/api/games", tags=["games"])
 
 
 async def _fetch_owned_game(db: AsyncSession, game_id: int, sess: Session) -> Game:
+    """Fetch a game for mutation (resign / hint / delete). Strict session
+    ownership — admins must use their own games if they want to play, not
+    hijack someone else's."""
     res = await db.execute(select(Game).where(Game.id == game_id))
     game = res.scalar_one_or_none()
     if game is None:
         raise HTTPException(status_code=404, detail="game_not_found")
     if game.session_id != sess.id:
+        raise HTTPException(status_code=403, detail="forbidden")
+    return game
+
+
+async def _fetch_readable_game(db: AsyncSession, game_id: int, sess: Session) -> Game:
+    """Read-only fetch. Owner OR admin can view (for kifu review + SGF)."""
+    res = await db.execute(select(Game).where(Game.id == game_id))
+    game = res.scalar_one_or_none()
+    if game is None:
+        raise HTTPException(status_code=404, detail="game_not_found")
+    if game.session_id != sess.id and not is_admin(sess):
         raise HTTPException(status_code=403, detail="forbidden")
     return game
 
@@ -56,6 +70,7 @@ async def create(
             handicap=body.handicap,
             user_color=body.user_color,
             board_size=body.board_size,
+            user_rank=body.user_rank,
         )
     except GameError as e:
         raise HTTPException(status_code=400, detail=e.code)
@@ -83,7 +98,7 @@ async def get_game(
     db: AsyncSession = Depends(get_db),
     sess: Session = Depends(get_current_session),
 ) -> GameDetail:
-    game = await _fetch_owned_game(db, game_id, sess)
+    game = await _fetch_readable_game(db, game_id, sess)
     res = await db.execute(
         select(MoveRow).where(MoveRow.game_id == game.id).order_by(MoveRow.move_number.asc())
     )
@@ -133,7 +148,7 @@ async def download_sgf(
     db: AsyncSession = Depends(get_db),
     sess: Session = Depends(get_current_session),
 ) -> str:
-    game = await _fetch_owned_game(db, game_id, sess)
+    game = await _fetch_readable_game(db, game_id, sess)
     if game.sgf_cache:
         return game.sgf_cache
     state = get_cached_state(game.id)
@@ -155,7 +170,10 @@ async def hint_endpoint(
         if state is None:
             from app.services.game_service import _replay_state
             state = await _replay_state(db, game)
-        moves = await hint_service(game, side=state.to_move)
+        moves = await hint_service(game, state, side=state.to_move)
+        # Track hint usage for per-game history and aggregate stats.
+        game.hint_count = (game.hint_count or 0) + 1
+        await db.commit()
     return HintResponse(
         hints=[HintMove(move=m.move, winrate=m.winrate, visits=m.visits) for m in moves]
     )

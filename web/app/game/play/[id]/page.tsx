@@ -4,11 +4,13 @@ import { useParams } from "next/navigation";
 import Board from "@/components/Board";
 import GameControls from "@/components/GameControls";
 import AnalysisOverlay from "@/components/AnalysisOverlay";
-import { openGameWS, type WSMessage, type GameWS } from "@/lib/ws";
-import { useGameStore } from "@/store/gameStore";
+import { openGameWS, type WSMessage, type GameWS, type ScoreResultMsg } from "@/lib/ws";
+import { useGameStore, UNDO_LIMIT, emaWinrate } from "@/store/gameStore";
+import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
-import { gtpToXy, xyToGtp } from "@/lib/board";
-import { useT } from "@/lib/i18n";
+import { applyMoveWithCaptures, gtpToXy, xyToGtp } from "@/lib/board";
+import { useT, useLocale } from "@/lib/i18n";
+import { formatRank, type Rank } from "@/components/RankPicker";
 import { playStoneClick } from "@/lib/soundfx";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { StatFigure } from "@/components/editorial/StatFigure";
@@ -16,6 +18,7 @@ import { DataBlock } from "@/components/editorial/DataBlock";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { WinrateBar } from "@/components/editorial/WinrateBar";
 import BoardBgSwitcher from "@/components/BoardBgSwitcher";
+import ReviewPlayer from "@/components/ReviewPlayer";
 import {
   Dialog,
   DialogContent,
@@ -26,11 +29,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+interface GameMeta {
+  board_size: number;
+  user_color: "black" | "white";
+  ai_rank: Rank;
+  ai_style: string;
+  ai_player: string | null;
+  handicap: number;
+}
+
 export default function PlayPage() {
   const t = useT();
+  const [locale] = useLocale();
   const params = useParams<{ id: string }>();
   const gameId = parseInt(params.id, 10);
   const g = useGameStore();
+  const nickname = useAuthStore((s) => s.session?.nickname ?? null);
+  const [meta, setMeta] = useState<GameMeta | null>(null);
   const wsRef = useRef<GameWS | null>(null);
   const preOptimisticBoard = useRef<string | null>(null);
   const optimisticUserMove = useRef<{ x: number; y: number } | null>(null);
@@ -38,6 +53,11 @@ export default function PlayPage() {
     useState<{ move: string; winrate: number; visits: number }[]>([]);
   const [hintWinrate, setHintWinrate] = useState<number | null>(null);
   const [confirmResign, setConfirmResign] = useState(false);
+  const [confirmPass, setConfirmPass] = useState(false);
+  const [scoringDetail, setScoringDetail] =
+    useState<ScoreResultMsg | null>(null);
+  const [aiResigned, setAiResigned] = useState(false);
+  const [kifuOpen, setKifuOpen] = useState(false);
   // Track the move_count we are optimistically anticipating. If the server
   // sends back a stale state (e.g. an initial handshake that arrived after
   // the user already clicked, or a reconnect mid-flight), we ignore its
@@ -46,16 +66,22 @@ export default function PlayPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    api<{ board_size: number }>(`/api/games/${gameId}`).then((detail) => {
+    api<GameMeta>(`/api/games/${gameId}`).then((detail) => {
       g.reset(detail.board_size);
+      setMeta(detail);
     });
 
     const ws = openGameWS(gameId, (msg: WSMessage) => {
       if (msg.type === "state") {
+        // An undo deliberately decreases move_count; a bumped undo_count
+        // tells us the server accepted an undo so we drop the stale-move
+        // filter for this payload.
+        const isUndoResponse =
+          typeof msg.undo_count === "number" && msg.undo_count > g.undoCount;
         // Discard the state if it's a *stale* view that would undo an
         // in-flight move — i.e. the server's move_count is behind what
         // we already expect. Only the error path rolls back optimistics.
-        if (msg.move_count < expectedMoveCount.current) {
+        if (!isUndoResponse && msg.move_count < expectedMoveCount.current) {
           return;
         }
         preOptimisticBoard.current = null;
@@ -74,18 +100,49 @@ export default function PlayPage() {
           error: null,
           ...(roundComplete ? { aiThinking: false } : {}),
           ...(typeof msg.winrate_black === "number"
-            ? { winrateBlack: msg.winrate_black }
+            ? {
+                winrateBlack: msg.winrate_black,
+                winrateBlackSmoothed: emaWinrate(
+                  g.winrateBlackSmoothed,
+                  msg.winrate_black,
+                ),
+              }
             : {}),
+          ...(typeof msg.score_lead_black === "number"
+            ? { scoreLeadBlack: msg.score_lead_black }
+            : {}),
+          ...(typeof msg.endgame_phase === "boolean"
+            ? { endgamePhase: msg.endgame_phase }
+            : {}),
+          ...(typeof msg.undo_count === "number"
+            ? { undoCount: msg.undo_count }
+            : {}),
+          ...(isUndoResponse ? { lastAiMove: null, aiThinking: false } : {}),
         });
         setReady(true);
       } else if (msg.type === "winrate") {
-        g.set({ winrateBlack: msg.winrate_black });
+        g.set({
+          winrateBlack: msg.winrate_black,
+          winrateBlackSmoothed: emaWinrate(
+            g.winrateBlackSmoothed,
+            msg.winrate_black,
+          ),
+          ...(typeof msg.score_lead_black === "number"
+            ? { scoreLeadBlack: msg.score_lead_black }
+            : {}),
+        });
       } else if (msg.type === "ai_move") {
         const c = msg.coord?.toLowerCase();
         if (msg.coord && c !== "pass" && c !== "resign") playStoneClick();
+        if (c === "pass") {
+          toast(t("game.aiPassed"));
+        }
         g.set({ lastAiMove: msg.coord, aiThinking: false });
+      } else if (msg.type === "score_result") {
+        setScoringDetail(msg);
       } else if (msg.type === "game_over") {
         g.set({ gameOver: true, result: msg.result, aiThinking: false });
+        if (msg.reason === "ai_resigned") setAiResigned(true);
       } else if (msg.type === "error") {
         if (preOptimisticBoard.current !== null) {
           g.set({ board: preOptimisticBoard.current });
@@ -106,6 +163,8 @@ export default function PlayPage() {
       ws.close();
       g.reset();
       setReady(false);
+      setAiResigned(false);
+      setScoringDetail(null);
       expectedMoveCount.current = 0;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,8 +181,16 @@ export default function PlayPage() {
     }
     preOptimisticBoard.current = g.board;
     const userColor = g.toMove;
-    const newBoard =
-      g.board.substring(0, idx) + userColor + g.board.substring(idx + 1);
+    // Resolve client-side captures so atari/catches vanish the instant the
+    // user clicks — without this the captured stones linger on screen until
+    // the server's authoritative state payload arrives.
+    const newBoard = applyMoveWithCaptures(
+      g.board,
+      g.boardSize,
+      x,
+      y,
+      userColor as "B" | "W",
+    );
     optimisticUserMove.current = { x, y };
     // Reserve two move slots (user + AI) so a late initial-state payload
     // with a smaller move_count doesn't wipe the optimistic stone.
@@ -141,12 +208,31 @@ export default function PlayPage() {
   };
 
   const pass = () => {
+    // Confirmation dialog — if the AI passes in response, the game is
+    // scored immediately. We want the user to think twice so they don't
+    // accidentally end a game with yose plays still on the board.
+    setConfirmPass(true);
+  };
+  const passConfirmed = () => {
+    setConfirmPass(false);
     g.set({ aiThinking: true, error: null });
     wsRef.current?.send({ type: "pass" });
   };
   const undo = () => {
+    if (g.undoCount >= UNDO_LIMIT) {
+      toast.error(t("errors.UNDO_LIMIT_EXCEEDED"));
+      return;
+    }
     g.set({ error: null });
     wsRef.current?.send({ type: "undo", steps: 2 });
+  };
+  const requestScoring = () => {
+    if (!g.endgamePhase) {
+      toast.error(t("errors.NOT_IN_ENDGAME_PHASE"));
+      return;
+    }
+    g.set({ error: null });
+    wsRef.current?.send({ type: "score_request" });
   };
   const resign = async () => {
     setConfirmResign(false);
@@ -218,9 +304,17 @@ export default function PlayPage() {
     <div className="flex flex-col gap-4 py-4 md:grid md:grid-cols-[minmax(0,1fr)_280px] md:gap-8">
       <div className="flex flex-col gap-4">
         <PlayerCaption
-          color="white"
-          name="KataGo"
-          rank={t("game.aiRank")}
+          color={meta?.user_color === "black" ? "white" : "black"}
+          name={
+            meta?.ai_player
+              ? t(`game.players.${meta.ai_player}.name`)
+              : "KataGo"
+          }
+          rank={
+            meta
+              ? `${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`
+              : t("game.aiRank")
+          }
           subtitle={g.aiThinking ? t("game.thinking") : ""}
         />
         <Board
@@ -234,11 +328,13 @@ export default function PlayPage() {
           overlay={overlay}
         />
         <PlayerCaption
-          color="black"
-          name={t("game.you")}
+          color={meta?.user_color === "white" ? "white" : "black"}
+          name={nickname ?? t("game.you")}
           rank={t("game.yourRank")}
           subtitle={
-            g.toMove === "B" && !g.gameOver && !g.aiThinking
+            (meta?.user_color === "white" ? g.toMove === "W" : g.toMove === "B") &&
+            !g.gameOver &&
+            !g.aiThinking
               ? t("game.yourTurn")
               : ""
           }
@@ -249,20 +345,22 @@ export default function PlayPage() {
           onResign={() => setConfirmResign(true)}
           onUndo={undo}
           onHint={hintMe}
+          onScoreRequest={requestScoring}
           disabled={g.gameOver || g.aiThinking}
+          undosRemaining={Math.max(0, UNDO_LIMIT - g.undoCount)}
+          scoringAvailable={g.endgamePhase && !g.gameOver}
         />
 
         {g.gameOver && (
-          <div className="border border-ink p-4 font-serif text-lg">
-            {t("game.result")}: {g.result || ""}{" "}
-            <a
-              className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline ml-3"
-              href={`/api/games/${gameId}/sgf`}
-              target="_blank"
-              rel="noreferrer"
+          <div className="border border-ink p-4 font-serif text-lg flex items-center">
+            <span>{t("game.result")}: {g.result || ""}</span>
+            <button
+              type="button"
+              className="ml-3 font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
+              onClick={() => setKifuOpen(true)}
             >
-              {t("game.downloadSgf")}
-            </a>
+              {t("game.viewKifu")}
+            </button>
           </div>
         )}
       </div>
@@ -275,10 +373,20 @@ export default function PlayPage() {
         )}
         <RuleDivider label={t("game.winrate")} />
         <WinrateBar
-          value={g.winrateBlack}
+          value={g.winrateBlackSmoothed ?? g.winrateBlack}
           blackLabel={t("game.winrateBlack")}
           whiteLabel={t("game.winrateWhite")}
         />
+        {typeof g.scoreLeadBlack === "number" && (
+          <div className="font-mono text-xs tabular-nums text-ink-mute text-center -mt-1">
+            {(() => {
+              const lead = g.scoreLeadBlack;
+              if (Math.abs(lead) < 0.05) return t("game.evenPosition");
+              const prefix = lead > 0 ? "B+" : "W+";
+              return `${prefix}${Math.abs(lead).toFixed(1)}`;
+            })()}
+          </div>
+        )}
         <RuleDivider label={t("game.info")} />
         <DataBlock
           label={t("game.captures")}
@@ -291,6 +399,25 @@ export default function PlayPage() {
         <RuleDivider label={t("settings.boardBg")} />
         <BoardBgSwitcher compact />
       </aside>
+
+      <Dialog open={confirmPass} onOpenChange={setConfirmPass}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("game.confirmPassTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("game.confirmPassDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setConfirmPass(false)}>
+              {t("game.cancel")}
+            </Button>
+            <Button onClick={passConfirmed}>
+              {t("game.pass")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={confirmResign} onOpenChange={setConfirmResign}>
         <DialogContent>
@@ -308,6 +435,94 @@ export default function PlayPage() {
               {t("game.resign")}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={aiResigned}
+        onOpenChange={(open) => {
+          if (!open) setAiResigned(false);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("game.aiResignedTitle")}</DialogTitle>
+            <DialogDescription className="font-serif text-xl text-ink">
+              {t("game.aiResignedBody")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => setAiResigned(false)}>
+              {t("game.confirm")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={scoringDetail !== null}
+        onOpenChange={(open) => {
+          if (!open) setScoringDetail(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {scoringDetail?.reason === "ai_passed"
+                ? t("game.aiPassedScoredTitle")
+                : t("game.scoringBreakdown")}
+            </DialogTitle>
+            <DialogDescription className="font-serif text-2xl text-ink">
+              {scoringDetail?.result ?? ""}
+            </DialogDescription>
+          </DialogHeader>
+          {scoringDetail && (
+            <div className="flex flex-col gap-3 font-mono tabular-nums text-sm">
+              <div className="grid grid-cols-3 gap-2 border-b border-ink-faint pb-2">
+                <span className="text-ink-mute">{t("game.blackTerritory")}</span>
+                <span className="text-right">{scoringDetail.black_territory}</span>
+                <span className="text-right text-ink-mute">
+                  +{scoringDetail.black_captures} {t("game.blackCaptures")}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-ink-faint pb-2">
+                <span className="text-ink-mute">{t("game.whiteTerritory")}</span>
+                <span className="text-right">{scoringDetail.white_territory}</span>
+                <span className="text-right text-ink-mute">
+                  +{scoringDetail.white_captures} {t("game.whiteCaptures")}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-ink-faint pb-2">
+                <span className="text-ink-mute">{t("game.komiLabel")}</span>
+                <span />
+                <span className="text-right">+{scoringDetail.komi}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 font-semibold">
+                <span>{t("game.totalLabel")}</span>
+                <span className="text-right">● {scoringDetail.black_score}</span>
+                <span className="text-right">○ {scoringDetail.white_score}</span>
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end">
+            <Button onClick={() => setScoringDetail(null)}>
+              {t("game.cancel")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={kifuOpen}
+        onOpenChange={(open) => {
+          if (!open) setKifuOpen(false);
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{t("game.kifuDialogTitle")}</DialogTitle>
+          </DialogHeader>
+          {kifuOpen && <ReviewPlayer gameId={gameId} />}
         </DialogContent>
       </Dialog>
     </div>

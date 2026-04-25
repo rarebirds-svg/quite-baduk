@@ -36,3 +36,9 @@ e2e/test-results/
 
 # Claude Code — personal overrides (shared config is committed as .claude/settings.json)
 .claude/settings.local.json
+
+# Local SQLite (root-level dev DB)
+backend/baduk.db
+backend/baduk.db-wal
+backend/baduk.db-shm
+.coverage
