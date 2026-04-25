@@ -42,3 +42,6 @@ backend/baduk.db
 backend/baduk.db-wal
 backend/baduk.db-shm
 .coverage
+
+# Git worktrees (Superpowers convention)
+.worktrees/
