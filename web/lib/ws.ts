@@ -11,6 +11,10 @@ export interface ScoreResultMsg {
   margin: number;
   result: string;
   reason?: "ai_passed";
+  black_points: [number, number][];
+  white_points: [number, number][];
+  dame_points: [number, number][];
+  dead_stones: [number, number][];
 }
 
 export type WSMessage =
