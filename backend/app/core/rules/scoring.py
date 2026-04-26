@@ -118,6 +118,7 @@ def score_game(
     b_score = float(black_terr + black_captures + extra_black_captures)
     w_score = white_terr + white_captures + extra_white_captures + komi
 
+    winner: str
     if b_score > w_score:
         winner = BLACK
         margin = b_score - w_score

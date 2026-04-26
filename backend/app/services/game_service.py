@@ -206,7 +206,7 @@ async def place_move(
         )
         # Validate + apply user move
         try:
-            new_state = play(state, Move(color=user_side, coord=coord))  # type: ignore[arg-type]
+            new_state = play(state, Move(color=user_side, coord=coord))
         except IllegalMoveError as e:
             raise GameError(e.code, e.detail) from e
 
@@ -260,9 +260,9 @@ async def place_move(
                     result_str = game.result
                     game_over = True
                 elif ai_move.lower() == "pass":
-                    new_state = pass_move(new_state, ai_side)  # type: ignore[arg-type]
+                    new_state = pass_move(new_state, ai_side)
                 else:
-                    new_state = play(new_state, Move(color=ai_side, coord=ai_move))  # type: ignore[arg-type]
+                    new_state = play(new_state, Move(color=ai_side, coord=ai_move))
             except IllegalMoveError as e:
                 raise GameError("AI_ILLEGAL_MOVE", f"{ai_move}: {e}") from e
 

@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+
+if TYPE_CHECKING:
+    from app.models.session import Session
 
 
 class Game(Base):
@@ -50,4 +56,4 @@ class Game(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     sgf_cache: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    session: Mapped["Session"] = relationship("Session", back_populates="games")  # noqa: F821
+    session: Mapped[Session] = relationship("Session", back_populates="games")

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
+
+if TYPE_CHECKING:
+    from app.models.game import Game
 
 
 class Session(Base):
@@ -22,6 +26,6 @@ class Session(Base):
     # purged — history should survive the session. The DB-level FK is
     # ``ON DELETE SET NULL`` (migration 0008), and the ORM side matches it
     # with a passive default so SQLAlchemy doesn't NULL-set children twice.
-    games: Mapped[list[Game]] = relationship(  # noqa: F821
+    games: Mapped[list[Game]] = relationship(
         "Game", back_populates="session", passive_deletes=True
     )

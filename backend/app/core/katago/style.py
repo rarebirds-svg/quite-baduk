@@ -104,7 +104,7 @@ DEFAULT_STYLE: StyleId = "balanced"
 def style_to_profile(style: str, rank: str) -> StyleProfile:
     """Look up a style profile. Falls back to ``balanced`` on unknown input
     so a legacy game row without ``ai_style`` still plays gracefully."""
-    key: StyleId = style if style in STYLES else DEFAULT_STYLE  # type: ignore[assignment]
+    key: StyleId = style if style in STYLES else DEFAULT_STYLE
     return STYLES[key]
 
 

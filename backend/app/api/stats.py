@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from fastapi import APIRouter
@@ -42,7 +43,7 @@ async def stats(
     total_undos = int(total_row[3])
     total_hints = int(total_row[4])
 
-    def _bucket(rows: list[Any], key: str) -> list[dict[str, Any]]:
+    def _bucket(rows: Sequence[Any], key: str) -> list[dict[str, Any]]:
         out = []
         for r in rows:
             n_total = int(r[1])

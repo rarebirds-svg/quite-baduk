@@ -54,7 +54,10 @@ async def get_current_session(
         .values(last_seen_at=dt.datetime.now(dt.UTC))
     )
     await db.commit()
-    if upd.rowcount == 0:
+    # `Result[Any].rowcount` is exposed at runtime by CursorResult (returned for
+    # UPDATE/DELETE) but not declared in the parent generic — see SQLAlchemy
+    # typing stubs. Read via getattr to satisfy strict mypy.
+    if getattr(upd, "rowcount", 0) == 0:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_session"
         )

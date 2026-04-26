@@ -74,7 +74,7 @@ async def _authenticate_ws(token: str | None, db: AsyncSession) -> Session | Non
         .values(last_seen_at=dt.datetime.now(dt.UTC))
     )
     await db.commit()
-    if upd.rowcount == 0:
+    if getattr(upd, "rowcount", 0) == 0:
         return None
     return sess
 

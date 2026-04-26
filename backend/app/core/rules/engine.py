@@ -39,7 +39,7 @@ class GameState:
 
 
 def _opponent(color: Color) -> Color:
-    return WHITE if color == BLACK else BLACK  # type: ignore[return-value]
+    return WHITE if color == BLACK else BLACK
 
 
 def play(state: GameState, move: Move) -> GameState:

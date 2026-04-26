@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter
 from sqlalchemy import text
 
@@ -10,7 +12,7 @@ router = APIRouter(tags=["health"])
 
 
 @router.get("/api/health")
-async def health(db: DbSession) -> dict:
+async def health(db: DbSession) -> dict[str, Any]:
     db_ok = True
     try:
         await db.execute(text("SELECT 1"))
