@@ -197,11 +197,11 @@ def test_ws_score_result_payload_includes_points(
     import os
     import tempfile
 
-    import app.services.game_service as _svc
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
     from sqlalchemy.pool import StaticPool
     from starlette.testclient import TestClient
 
+    import app.services.game_service as _svc
     from app.core.katago.mock import MockKataGoAdapter
     from app.db import Base
     from app.engine_pool import set_adapter
@@ -216,9 +216,7 @@ def test_ws_score_result_payload_includes_points(
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    asyncio.get_event_loop().run_until_complete(
-        _create_schema(engine, Base)
-    )
+    asyncio.run(_create_schema(engine, Base))
     session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     import app.db as db_module
@@ -229,7 +227,7 @@ def test_ws_score_result_payload_includes_points(
     os.environ["KATAGO_MOCK"] = "true"
     mock = MockKataGoAdapter()
     set_adapter(mock)
-    asyncio.get_event_loop().run_until_complete(mock.start())
+    asyncio.run(mock.start())
 
     monkeypatch.setattr(_svc, "_endgame_phase_from_ownership", lambda state, ownership: True)
 
@@ -278,8 +276,7 @@ def test_ws_score_result_payload_includes_points(
 
     # cleanup
     try:
-        import os as _os
-        _os.unlink(db_path)
+        os.unlink(db_path)
     except OSError:
         pass
 
