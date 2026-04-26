@@ -26,7 +26,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -471,6 +476,7 @@ export default function PlayPage() {
       </Dialog>
 
       <Sheet
+        modal={false}
         open={scoringDetail !== null}
         onOpenChange={(open) => {
           if (!open) setScoringDetail(null);
@@ -478,17 +484,18 @@ export default function PlayPage() {
       >
         <SheetContent
           side="right"
+          overlay={false}
           className="w-full sm:max-w-sm"
         >
           <div className="flex flex-col gap-1 mb-2">
-            <h2 className="font-serif text-lg font-semibold text-ink">
+            <SheetTitle className="font-serif text-lg font-semibold text-ink">
               {scoringDetail?.reason === "ai_passed"
                 ? t("game.aiPassedScoredTitle")
                 : t("game.scoringBreakdown")}
-            </h2>
-            <p className="font-serif text-2xl text-ink">
+            </SheetTitle>
+            <SheetDescription className="font-serif text-2xl text-ink">
               {scoringDetail?.result ?? ""}
-            </p>
+            </SheetDescription>
           </div>
           {scoringDetail && (
             <div className="flex flex-col gap-3 font-mono tabular-nums text-sm mt-4">
@@ -520,7 +527,7 @@ export default function PlayPage() {
           )}
           <div className="flex justify-end mt-6">
             <Button onClick={() => setScoringDetail(null)}>
-              {t("game.cancel")}
+              {t("game.close")}
             </Button>
           </div>
         </SheetContent>

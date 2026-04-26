@@ -104,7 +104,7 @@
     "requestScoring": "Score game", "scoringBreakdown": "Scoring",
     "blackTerritory": "Black territory", "whiteTerritory": "White territory",
     "blackCaptures": "Black captures", "whiteCaptures": "White captures",
-    "komiLabel": "Komi", "totalLabel": "Total", "winnerLabel": "Winner", "confirmResignTitle": "Resign?", "confirmResignDesc": "End this game as a loss; the record is saved.", "cancel": "Cancel", "confirm": "OK",
+    "komiLabel": "Komi", "totalLabel": "Total", "winnerLabel": "Winner", "confirmResignTitle": "Resign?", "confirmResignDesc": "End this game as a loss; the record is saved.", "cancel": "Cancel", "close": "Close", "confirm": "OK",
     "confirmPassTitle": "Pass?", "confirmPassDesc": "If the AI passes right after you, the game is scored immediately. If endgame plays remain, cancel and keep playing.",
     "aiStyle": "Style", "sectionStyle": "Style",
     "aiPlayer": "AI opponent", "aiPlayerHint": "Choose a style", "sectionPlayer": "AI opponent",

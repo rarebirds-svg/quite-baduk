@@ -104,7 +104,7 @@
     "requestScoring": "계가 신청", "scoringBreakdown": "계가 결과",
     "blackTerritory": "흑 집", "whiteTerritory": "백 집",
     "blackCaptures": "흑 따냄", "whiteCaptures": "백 따냄",
-    "komiLabel": "코미", "totalLabel": "합계", "winnerLabel": "승자", "confirmResignTitle": "기권하시겠습니까?", "confirmResignDesc": "현재 대국을 기권으로 종료합니다. 기보는 저장됩니다.", "cancel": "취소", "confirm": "확인",
+    "komiLabel": "코미", "totalLabel": "합계", "winnerLabel": "승자", "confirmResignTitle": "기권하시겠습니까?", "confirmResignDesc": "현재 대국을 기권으로 종료합니다. 기보는 저장됩니다.", "cancel": "취소", "close": "닫기", "confirm": "확인",
     "confirmPassTitle": "패스하시겠습니까?", "confirmPassDesc": "AI도 이어서 패스하면 대국이 바로 집계됩니다. 아직 끝내기가 남아 있다면 '취소'를 눌러 계속 두세요.",
     "aiStyle": "기풍", "sectionStyle": "기풍",
     "aiPlayer": "대국 상대 AI", "aiPlayerHint": "기풍 선택", "sectionPlayer": "대국 상대 AI",
