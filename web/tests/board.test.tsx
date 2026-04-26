@@ -193,6 +193,22 @@ describe("Board lithic stones", () => {
   });
 });
 
+describe("Board stone shadow", () => {
+  it("renders a shadow ellipse per stone on kaya theme", () => {
+    useBoardTheme.setState({ theme: "kaya" });
+    const board = "B" + ".".repeat(9 * 9 - 1);
+    const { container } = render(<Board size={9} board={board} />);
+    expect(container.querySelector('ellipse[data-stone-shadow]')).not.toBeNull();
+  });
+
+  it("renders no shadow on paper theme", () => {
+    useBoardTheme.setState({ theme: "paper" });
+    const board = "B" + ".".repeat(9 * 9 - 1);
+    const { container } = render(<Board size={9} board={board} />);
+    expect(container.querySelector('ellipse[data-stone-shadow]')).toBeNull();
+  });
+});
+
 describe("Board territoryMarkers prop", () => {
   it("renders a black territory marker at the given coordinate", () => {
     const board = ".".repeat(9 * 9);

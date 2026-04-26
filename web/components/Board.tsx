@@ -208,16 +208,27 @@ export default function Board({
         const stroke =
           c === "W" && !isLithic ? palette.lineInk : "transparent";
         return (
-          <circle
-            key={`st-${idx}`}
-            data-stone={c}
-            cx={cx}
-            cy={cy}
-            r={CELL * 0.45}
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={c === "W" && !isLithic ? 0.5 : 0}
-          />
+          <g key={`st-${idx}`}>
+            {palette.shadow && (
+              <ellipse
+                data-stone-shadow
+                cx={cx}
+                cy={cy + CELL * 0.05}
+                rx={CELL * 0.42}
+                ry={CELL * 0.12}
+                fill="rgba(0,0,0,0.18)"
+              />
+            )}
+            <circle
+              data-stone={c}
+              cx={cx}
+              cy={cy}
+              r={CELL * 0.45}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={c === "W" && !isLithic ? 0.5 : 0}
+            />
+          </g>
         );
       })}
 
