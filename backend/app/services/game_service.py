@@ -70,6 +70,10 @@ class ScoringDetail:
     winner: str  # 'B' or 'W'
     margin: float
     result_str: str  # "B+3.5"
+    black_points: frozenset[tuple[int, int]] = frozenset()
+    white_points: frozenset[tuple[int, int]] = frozenset()
+    dame_points: frozenset[tuple[int, int]] = frozenset()
+    dead_stones: frozenset[tuple[int, int]] = frozenset()
 
 
 async def _user_side(game: Game) -> str:
@@ -389,6 +393,10 @@ async def place_move(
                     winner=result_obj.winner,
                     margin=result_obj.margin,
                     result_str=result_str_local,
+                    black_points=result_obj.black_points,
+                    white_points=result_obj.white_points,
+                    dame_points=result_obj.dame_points,
+                    dead_stones=frozenset(dead_stones),
                 )
             except Exception:
                 # If anything fails we leave the game open; the pass is
@@ -509,6 +517,10 @@ async def score_by_request(
         winner=result.winner,
         margin=result.margin,
         result_str=result_str,
+        black_points=result.black_points,
+        white_points=result.white_points,
+        dame_points=result.dame_points,
+        dead_stones=frozenset(dead_stones),
     )
 
 

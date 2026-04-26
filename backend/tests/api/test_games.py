@@ -137,3 +137,47 @@ async def test_hint(client: AsyncClient) -> None:
     r2 = await client.post(f"/api/games/{game_id}/hint")
     assert r2.status_code == 200
     assert "hints" in r2.json()
+
+
+@pytest.mark.asyncio
+async def test_score_request_includes_territory_points(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When the user requests scoring on a finished position, ScoringDetail
+    exposes per-side territory coordinates and the dead-stones set inferred
+    by the engine."""
+    await _signup(client)
+    r = await client.post(
+        "/api/games",
+        json={"board_size": 9, "handicap": 0, "ai_rank": "5k", "user_color": "black"},
+    )
+    assert r.status_code == 201
+    game_id = r.json()["id"]
+
+    # Bypass the endgame-phase gate so score_by_request can run on a fresh game.
+    import app.services.game_service as _svc
+    monkeypatch.setattr(_svc, "_endgame_phase_from_ownership", lambda state, ownership: True)
+
+    from app.services.game_service import score_by_request
+    from app.db import AsyncSessionLocal
+    from sqlalchemy import select
+    from app.models import Game, Session
+
+    session_token = client.cookies.get("baduk_session")
+    async with AsyncSessionLocal() as db:
+        sess = (
+            await db.execute(
+                select(Session).where(Session.token == session_token)
+            )
+        ).scalar_one()
+        game = (
+            await db.execute(select(Game).where(Game.id == game_id))
+        ).scalar_one()
+        detail = await score_by_request(db, game=game, session=sess)
+
+    assert isinstance(detail.black_points, frozenset)
+    assert isinstance(detail.white_points, frozenset)
+    assert isinstance(detail.dame_points, frozenset)
+    assert isinstance(detail.dead_stones, frozenset)
+    assert len(detail.black_points) == detail.black_territory
+    assert len(detail.white_points) == detail.white_territory
