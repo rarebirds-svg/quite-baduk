@@ -82,3 +82,43 @@ async def test_nickname_check_reports_invalid(client: AsyncClient) -> None:
     r = await client.get("/api/session/nickname/check", params={"name": "🙂"})
     assert r.status_code == 200
     assert r.json() == {"available": False, "reason": "invalid"}
+
+
+@pytest.mark.asyncio
+async def test_end_session_idempotent_without_cookie(client: AsyncClient) -> None:
+    """No cookie at all → 204, not 401. The endpoint is fired twice during
+    pagehide on most browsers, so it must be idempotent."""
+    r = await client.post("/api/session/end")
+    assert r.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_end_session_idempotent_with_stale_cookie(client: AsyncClient) -> None:
+    """A cookie pointing to a deleted session row should still return 204."""
+    await client.post("/api/session", json={"nickname": "ephemeral"})
+    # First end deletes the row; second end with the same (now-stale) cookie
+    # must not 500 or 401.
+    assert (await client.post("/api/session/end")).status_code == 204
+    # Cookie may have been cleared by the first call; force a stale value.
+    client.cookies.set("baduk_session", "definitely-not-a-real-token")
+    assert (await client.post("/api/session/end")).status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_create_session_too_long_nickname_is_422(client: AsyncClient) -> None:
+    long_name = "x" * 100
+    r = await client.post("/api/session", json={"nickname": long_name})
+    assert r.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_nickname_check_invalid_then_taken(client: AsyncClient) -> None:
+    """Drive both 'invalid' and 'taken' branches in one test for parity."""
+    invalid = await client.get("/api/session/nickname/check", params={"name": "x"})
+    assert invalid.json()["reason"] == "invalid"
+
+    await client.post("/api/session", json={"nickname": "claimed_one"})
+    taken = await client.get(
+        "/api/session/nickname/check", params={"name": "claimed_one"}
+    )
+    assert taken.json()["reason"] == "taken"
