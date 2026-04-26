@@ -11,7 +11,8 @@ import asyncio
 import datetime as dt
 
 import structlog
-from sqlalchemy import select, update as _sa_update
+from sqlalchemy import select
+from sqlalchemy import update as _sa_update
 
 import app.db as _db_module
 from app.models import Session, SessionHistory
@@ -21,7 +22,7 @@ log = structlog.get_logger()
 
 
 async def purge_expired_sessions_once(ttl_sec: int) -> int:
-    cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=ttl_sec)
+    cutoff = dt.datetime.now(dt.UTC) - dt.timedelta(seconds=ttl_sec)
     async with _db_module.AsyncSessionLocal() as db:
         res = await db.execute(select(Session).where(Session.last_seen_at < cutoff))
         expired = res.scalars().all()

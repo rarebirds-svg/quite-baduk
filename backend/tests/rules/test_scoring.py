@@ -1,6 +1,5 @@
-import pytest
-from app.core.rules.board import BLACK, WHITE, Board, BOARD_SIZE
-from app.core.rules.scoring import ScoreResult, score_game
+from app.core.rules.board import BLACK, BOARD_SIZE, WHITE, Board
+from app.core.rules.scoring import score_game
 
 
 def _full_black_board() -> Board:

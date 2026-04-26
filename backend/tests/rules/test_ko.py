@@ -1,7 +1,5 @@
-import pytest
-from app.core.rules.board import BLACK, WHITE, Board
+from app.core.rules.board import BLACK, Board
 from app.core.rules.ko import KoState, is_ko_violation
-from app.core.rules.captures import place_with_captures
 
 
 def test_no_ko_initially():

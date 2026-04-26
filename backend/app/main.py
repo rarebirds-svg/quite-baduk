@@ -1,6 +1,6 @@
 import asyncio
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 import structlog
 from fastapi import FastAPI
@@ -53,13 +53,13 @@ def create_app() -> FastAPI:
     )
 
     # Routers
-    from app.api import session as session_router
-    from app.api import games as games_router
-    from app.api import analysis as analysis_router
-    from app.api import stats as stats_router
-    from app.api import health as health_router
-    from app.api import ws as ws_router
     from app.api import admin as admin_router
+    from app.api import analysis as analysis_router
+    from app.api import games as games_router
+    from app.api import health as health_router
+    from app.api import session as session_router
+    from app.api import stats as stats_router
+    from app.api import ws as ws_router
 
     app.include_router(session_router.router)
     app.include_router(games_router.router)

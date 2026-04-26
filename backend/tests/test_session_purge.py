@@ -35,7 +35,7 @@ async def test_purge_deletes_idle_sessions_preserves_game_history(db_session, wi
     db_session.add(fresh)
     # Stale
     stale = Session(token="t-stale", nickname="bob", nickname_key="bob",
-                    last_seen_at=dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=7200))
+                    last_seen_at=dt.datetime.now(dt.UTC) - dt.timedelta(seconds=7200))
     db_session.add(stale)
     await db_session.commit()
     await db_session.refresh(fresh)

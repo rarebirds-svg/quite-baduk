@@ -1,6 +1,5 @@
-import pytest
 from app.core.rules.board import BLACK, EMPTY, WHITE, Board
-from app.core.rules.captures import is_suicide, place_with_captures, opponent
+from app.core.rules.captures import is_suicide, opponent, place_with_captures
 
 
 def test_opponent():

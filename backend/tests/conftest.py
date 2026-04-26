@@ -1,21 +1,20 @@
 from __future__ import annotations
 
 import os
-import pytest
+
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.pool import StaticPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db import Base
-from app.models import Session, Game, Move, AnalysisCache  # register models with metadata
-from app.engine_pool import set_adapter, drop_state
+from app.engine_pool import set_adapter
 
 
 @pytest_asyncio.fixture
 async def db_engine():
     # Use a file-based temp DB so all connections see the same schema
-    import tempfile, os as _os
+    import os as _os
+    import tempfile
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
     tmp.close()
     db_path = tmp.name

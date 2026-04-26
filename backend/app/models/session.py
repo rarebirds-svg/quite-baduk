@@ -22,6 +22,6 @@ class Session(Base):
     # purged — history should survive the session. The DB-level FK is
     # ``ON DELETE SET NULL`` (migration 0008), and the ORM side matches it
     # with a passive default so SQLAlchemy doesn't NULL-set children twice.
-    games: Mapped[list["Game"]] = relationship(  # noqa: F821
+    games: Mapped[list[Game]] = relationship(  # noqa: F821
         "Game", back_populates="session", passive_deletes=True
     )

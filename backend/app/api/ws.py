@@ -4,7 +4,8 @@ import datetime as dt
 from typing import Any
 
 from fastapi import APIRouter, Cookie, Depends, WebSocket, WebSocketDisconnect, status
-from sqlalchemy import select, update as _sa_update
+from sqlalchemy import select
+from sqlalchemy import update as _sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rules.engine import GameState
@@ -70,7 +71,7 @@ async def _authenticate_ws(token: str | None, db: AsyncSession) -> Session | Non
     upd = await db.execute(
         _sa_update(Session)
         .where(Session.id == sess.id)
-        .values(last_seen_at=dt.datetime.now(dt.timezone.utc))
+        .values(last_seen_at=dt.datetime.now(dt.UTC))
     )
     await db.commit()
     if upd.rowcount == 0:

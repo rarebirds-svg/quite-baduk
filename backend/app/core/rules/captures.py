@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.rules.board import BLACK, EMPTY, WHITE, Board
+from app.core.rules.board import BLACK, WHITE, Board
 
 
 def opponent(color: str) -> str:

@@ -2,7 +2,7 @@ import pytest
 
 from app.core.katago.mock import MockKataGoAdapter
 from app.core.katago.strength import rank_to_config
-from app.core.rules.board import BLACK, EMPTY, WHITE
+from app.core.rules.board import BLACK, WHITE
 
 
 @pytest.mark.asyncio

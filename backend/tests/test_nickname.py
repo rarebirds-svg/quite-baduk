@@ -12,7 +12,6 @@ from app.core.nickname import (
     validate,
 )
 
-
 # ─── normalize ───────────────────────────────────────────────────────────
 
 def test_normalize_trims_whitespace():

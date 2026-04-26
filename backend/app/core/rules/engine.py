@@ -9,7 +9,7 @@ from app.core.rules.board import BLACK, EMPTY, WHITE, Board
 from app.core.rules.captures import is_suicide, place_with_captures
 from app.core.rules.ko import KoState, is_ko_violation
 from app.core.rules.scoring import ScoreResult, score_game
-from app.core.rules.sgf_coord import gtp_to_xy, xy_to_gtp
+from app.core.rules.sgf_coord import gtp_to_xy
 
 Color = Literal["B", "W"]
 

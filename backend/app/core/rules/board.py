@@ -49,17 +49,17 @@ class Board:
             if self.in_bounds(x + dx, y + dy)
         ]
 
-    def place(self, x: int, y: int, color: str) -> "Board":
+    def place(self, x: int, y: int, color: str) -> Board:
         cells = list(self._cells)
         cells[self._idx(x, y)] = color
         return Board(self.size, tuple(cells))
 
-    def remove(self, x: int, y: int) -> "Board":
+    def remove(self, x: int, y: int) -> Board:
         cells = list(self._cells)
         cells[self._idx(x, y)] = EMPTY
         return Board(self.size, tuple(cells))
 
-    def remove_group(self, positions: set[tuple[int, int]]) -> "Board":
+    def remove_group(self, positions: set[tuple[int, int]]) -> Board:
         cells = list(self._cells)
         for x, y in positions:
             cells[self._idx(x, y)] = EMPTY

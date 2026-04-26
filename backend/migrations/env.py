@@ -4,9 +4,9 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
+import app.models  # noqa: F401 — ensures all models are registered
 from app.config import settings
 from app.db import Base
-import app.models  # noqa: F401 — ensures all models are registered
 
 config = context.config
 if config.config_file_name is not None:

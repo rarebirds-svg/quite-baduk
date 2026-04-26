@@ -1,7 +1,6 @@
 import pytest
 from httpx import AsyncClient
 
-
 _ctr = 0
 
 
@@ -158,10 +157,11 @@ async def test_score_request_includes_territory_points(
     import app.services.game_service as _svc
     monkeypatch.setattr(_svc, "_endgame_phase_from_ownership", lambda state, ownership: True)
 
-    from app.services.game_service import score_by_request
-    from app.db import AsyncSessionLocal
     from sqlalchemy import select
+
+    from app.db import AsyncSessionLocal
     from app.models import Game, Session
+    from app.services.game_service import score_by_request
 
     session_token = client.cookies.get("baduk_session")
     async with AsyncSessionLocal() as db:

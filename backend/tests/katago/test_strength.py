@@ -1,4 +1,5 @@
 import pytest
+
 from app.core.katago.strength import SUPPORTED_RANKS, rank_to_config
 
 

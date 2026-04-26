@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from fastapi import Cookie, Depends, HTTPException, status
-from sqlalchemy import select, update as _sa_update
+from sqlalchemy import select
+from sqlalchemy import update as _sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.db as _db_module
@@ -44,7 +45,7 @@ async def get_current_session(
     upd = await db.execute(
         _sa_update(Session)
         .where(Session.id == sess.id)
-        .values(last_seen_at=dt.datetime.now(dt.timezone.utc))
+        .values(last_seen_at=dt.datetime.now(dt.UTC))
     )
     await db.commit()
     if upd.rowcount == 0:

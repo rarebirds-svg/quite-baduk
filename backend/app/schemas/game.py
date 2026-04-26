@@ -5,8 +5,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.core.katago.strength import SUPPORTED_RANKS
-
 Rank = Literal[
     "9k", "8k", "7k", "6k", "5k", "4k", "3k", "2k", "1k",
     "1d", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d",

@@ -9,7 +9,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.katago.strength import rank_to_config
-from app.core.rules.board import BLACK, EMPTY, WHITE
+from app.core.rules.board import BLACK, EMPTY, WHITE, Board
 from app.core.rules.engine import (
     GameState,
     IllegalMoveError,
@@ -18,20 +18,21 @@ from app.core.rules.engine import (
     is_game_over,
     pass_move,
     play,
+)
+from app.core.rules.engine import (
     score as score_engine,
 )
-from app.core.rules.board import Board
 from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap
 from app.engine_pool import (
     adapter_owner,
     cache_state,
-    drop_state,
     game_lock,
     get_adapter,
     get_cached_state,
     set_adapter_owner,
 )
-from app.models import Game, Move as MoveRow, Session
+from app.models import Game, Session
+from app.models import Move as MoveRow
 
 
 class GameError(Exception):
@@ -54,7 +55,7 @@ class MoveResult:
     endgame_phase: bool = False  # true when dame-fill phase detected (score-by-request eligible)
     # Populated when the AI unilaterally passes in a settled position — the
     # service has already run the scoring logic and finalized the game.
-    ai_passed_scored: "ScoringDetail | None" = None
+    ai_passed_scored: ScoringDetail | None = None
 
 
 @dataclass
@@ -344,7 +345,7 @@ async def place_move(
                     game_over = True
                     game.sgf_cache = build_sgf(new_state, result=game.result)
                     import datetime as _dt
-                    game.finished_at = _dt.datetime.now(_dt.timezone.utc)
+                    game.finished_at = _dt.datetime.now(_dt.UTC)
                     await db.commit()
             except Exception:
                 winrate_black = None
@@ -377,7 +378,7 @@ async def place_move(
                 game.result = result_str_local
                 game.sgf_cache = build_sgf(new_state, result=result_str_local)
                 import datetime as _dt
-                game.finished_at = _dt.datetime.now(_dt.timezone.utc)
+                game.finished_at = _dt.datetime.now(_dt.UTC)
                 await db.commit()
 
                 game_over = True
@@ -503,7 +504,7 @@ async def score_by_request(
         game.result = result_str
         game.sgf_cache = build_sgf(state, result=result_str)
         import datetime as _dt
-        game.finished_at = _dt.datetime.now(_dt.timezone.utc)
+        game.finished_at = _dt.datetime.now(_dt.UTC)
         await db.commit()
 
     return ScoringDetail(
@@ -648,7 +649,7 @@ async def _finalize_game(db: AsyncSession, game: Game, state: GameState) -> None
     game.result = f"{prefix}{margin:g}"
     game.sgf_cache = build_sgf(state, result=game.result)
     import datetime as _dt
-    game.finished_at = _dt.datetime.now(_dt.timezone.utc)
+    game.finished_at = _dt.datetime.now(_dt.UTC)
 
 
 async def _replay_state(db: AsyncSession, game: Game) -> GameState:

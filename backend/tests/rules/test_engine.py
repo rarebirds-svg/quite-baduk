@@ -1,5 +1,6 @@
 import pytest
-from app.core.rules.board import BLACK, WHITE, Board, SUPPORTED_SIZES
+
+from app.core.rules.board import BLACK, SUPPORTED_SIZES, WHITE, Board
 from app.core.rules.engine import (
     GameState,
     IllegalMoveError,
