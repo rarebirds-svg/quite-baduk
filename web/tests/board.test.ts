@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { xyToGtp, gtpToXy, starPoints, totalCells, applyMoveWithCaptures } from "@/lib/board";
+import { BOARD_THEMES } from "@/store/boardThemeStore";
 
 describe("coord conversion", () => {
   it("round-trips on 19x19", () => {
@@ -131,5 +132,25 @@ describe("applyMoveWithCaptures", () => {
     const after = applyMoveWithCaptures(before, SIZE, 2, 2, "B");
     expect(after[2 * SIZE + 1]).toBe("W"); // W still there
     expect(after[2 * SIZE + 2]).toBe("B");
+  });
+});
+
+describe("BOARD_THEMES metadata", () => {
+  it("paper is flat with no shadow", () => {
+    expect(BOARD_THEMES.paper.surface).toBe("flat");
+    expect(BOARD_THEMES.paper.stoneStyle).toBe("flat");
+    expect(BOARD_THEMES.paper.shadow).toBe(false);
+  });
+
+  it("kaya uses wood surface and lithic stones", () => {
+    expect(BOARD_THEMES.kaya.surface).toBe("wood");
+    expect(BOARD_THEMES.kaya.stoneStyle).toBe("lithic");
+    expect(BOARD_THEMES.kaya.shadow).toBe(true);
+  });
+
+  it("slate is flat surface but lithic stones", () => {
+    expect(BOARD_THEMES.slate.surface).toBe("flat");
+    expect(BOARD_THEMES.slate.stoneStyle).toBe("lithic");
+    expect(BOARD_THEMES.slate.shadow).toBe(true);
   });
 });
