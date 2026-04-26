@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { COLS, starPoints } from "@/lib/board";
 import { tokens } from "@/lib/tokens";
 import { BOARD_THEMES, useBoardTheme } from "@/store/boardThemeStore";
@@ -52,6 +52,13 @@ export default function Board({
   useEffect(() => setMounted(true), []);
   const palette = BOARD_THEMES[mounted ? boardTheme : "paper"];
 
+  const rawId = useId();
+  // useId returns ":r0:" — strip the colons so the result is a valid SVG id fragment
+  const uid = rawId.replace(/:/g, "");
+  const grainId = `kayaGrain-${uid}`;
+  const stoneBlackId = `stoneBlackLithic-${uid}`;
+  const stoneWhiteId = `stoneWhiteLithic-${uid}`;
+
   const handleClick = (evt: React.MouseEvent<SVGRectElement, MouseEvent>) => {
     if (!onClick || disabled) return;
     const svg = evt.currentTarget.ownerSVGElement as SVGSVGElement | null;
@@ -81,7 +88,7 @@ export default function Board({
     >
       <defs>
         {palette.surface === "wood" && (
-          <filter id="kayaGrain" x="0" y="0" width="100%" height="100%">
+          <filter id={grainId} x="0" y="0" width="100%" height="100%">
             <feTurbulence
               type="fractalNoise"
               baseFrequency="0.012 0.6"
@@ -94,15 +101,15 @@ export default function Board({
               values="0 0 0 0 0.55  0 0 0 0 0.38  0 0 0 0 0.20  0 0 0 0.10 0"
               result="grain"
             />
-            <feComposite in="grain" in2="SourceGraphic" operator="in" />
+            <feBlend in="SourceGraphic" in2="grain" mode="multiply" />
           </filter>
         )}
-        <radialGradient id="stoneBlackLithic" cx="35%" cy="32%" r="65%">
+        <radialGradient id={stoneBlackId} cx="35%" cy="32%" r="65%">
           <stop offset="0%" stopColor="rgb(74 66 60)" />
           <stop offset="55%" stopColor="rgb(28 24 21)" />
           <stop offset="100%" stopColor="rgb(8 6 6)" />
         </radialGradient>
-        <radialGradient id="stoneWhiteLithic" cx="35%" cy="32%" r="70%">
+        <radialGradient id={stoneWhiteId} cx="35%" cy="32%" r="70%">
           <stop offset="0%" stopColor="rgb(253 252 248)" />
           <stop offset="65%" stopColor="rgb(229 224 213)" />
           <stop offset="100%" stopColor="rgb(187 181 168)" />
@@ -115,7 +122,7 @@ export default function Board({
           width={W}
           height={W}
           fill={palette.bg}
-          filter="url(#kayaGrain)"
+          filter={`url(#${grainId})`}
         />
       )}
       <rect
@@ -200,10 +207,10 @@ export default function Board({
         const fill =
           c === "B"
             ? isLithic
-              ? "url(#stoneBlackLithic)"
+              ? `url(#${stoneBlackId})`
               : tokens.light["stone-black"]
             : isLithic
-              ? "url(#stoneWhiteLithic)"
+              ? `url(#${stoneWhiteId})`
               : tokens.light["stone-white"];
         const stroke =
           c === "W" && !isLithic ? palette.lineInk : "transparent";

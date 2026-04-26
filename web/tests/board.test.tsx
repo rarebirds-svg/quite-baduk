@@ -162,15 +162,15 @@ describe("Board surface=wood themes", () => {
     useBoardTheme.setState({ theme: "kaya" });
     const board = ".".repeat(9 * 9);
     const { container } = render(<Board size={9} board={board} />);
-    expect(container.querySelector("filter#kayaGrain")).not.toBeNull();
-    expect(container.querySelector('rect[filter="url(#kayaGrain)"]')).not.toBeNull();
+    expect(container.querySelector('filter[id^="kayaGrain-"]')).not.toBeNull();
+    expect(container.querySelector('rect[filter^="url(#kayaGrain-"]')).not.toBeNull();
   });
 
   it("does NOT render the wood grain filter on paper theme", () => {
     useBoardTheme.setState({ theme: "paper" });
     const board = ".".repeat(9 * 9);
     const { container } = render(<Board size={9} board={board} />);
-    expect(container.querySelector("filter#kayaGrain")).toBeNull();
+    expect(container.querySelector('filter[id^="kayaGrain-"]')).toBeNull();
   });
 });
 
@@ -181,7 +181,7 @@ describe("Board lithic stones", () => {
     const { container } = render(<Board size={9} board={board} />);
     const stone = container.querySelector('circle[data-stone="B"]');
     expect(stone).not.toBeNull();
-    expect(stone?.getAttribute("fill")).toContain("url(#stoneBlackLithic)");
+    expect(stone?.getAttribute("fill")).toMatch(/^url\(#stoneBlackLithic-/);
   });
 
   it("uses flat token fill on paper theme", () => {
