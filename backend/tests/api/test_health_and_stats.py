@@ -11,6 +11,39 @@ async def test_health(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_health_db_failure_returns_degraded(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Force `db.execute` to blow up so we exercise the `db_ok = False`
+    branch of the health endpoint."""
+    import app.api.health as _health
+
+    class _FailingExec:
+        async def execute(self, *_a: object, **_kw: object) -> None:
+            raise RuntimeError("simulated DB failure")
+
+    async def fake_get_db() -> object:
+        # Generator-style override matching `Annotated[..., Depends(get_db)]`.
+        yield _FailingExec()
+
+    from app.deps import get_db
+    from app.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[get_db] = fake_get_db
+
+    from httpx import ASGITransport
+    from httpx import AsyncClient as _AC
+    async with _AC(transport=ASGITransport(app=app), base_url="http://test") as c:
+        r = await c.get("/api/health")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["db"] is False
+    assert body["status"] == "degraded"
+    _ = _health  # silence unused-import lint
+
+
+@pytest.mark.asyncio
 async def test_stats_requires_auth(client: AsyncClient) -> None:
     r = await client.get("/api/stats")
     assert r.status_code == 401
