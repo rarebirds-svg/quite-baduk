@@ -26,8 +26,10 @@ async def test_start_replays_state_when_subprocess_was_never_started() -> None:
     async def spawn_side_effect() -> None:
         adapter._proc = Mock(returncode=None)  # type: ignore[assignment]
 
-    with patch.object(adapter, "_spawn", new=AsyncMock(side_effect=spawn_side_effect)) as mock_spawn, \
-         patch.object(adapter, "_replay_state", new=AsyncMock()) as mock_replay:
+    with (
+        patch.object(adapter, "_spawn", new=AsyncMock(side_effect=spawn_side_effect)) as mock_spawn,
+        patch.object(adapter, "_replay_state", new=AsyncMock()) as mock_replay,
+    ):
         await adapter.start()
 
     mock_spawn.assert_awaited_once()
@@ -49,8 +51,10 @@ async def test_start_replays_cached_history_when_subprocess_died() -> None:
     async def spawn_side_effect() -> None:
         adapter._proc = Mock(returncode=None)  # type: ignore[assignment]
 
-    with patch.object(adapter, "_spawn", new=AsyncMock(side_effect=spawn_side_effect)) as mock_spawn, \
-         patch.object(adapter, "_replay_state", new=AsyncMock()) as mock_replay:
+    with (
+        patch.object(adapter, "_spawn", new=AsyncMock(side_effect=spawn_side_effect)) as mock_spawn,
+        patch.object(adapter, "_replay_state", new=AsyncMock()) as mock_replay,
+    ):
         await adapter.start()
 
     mock_spawn.assert_awaited_once()

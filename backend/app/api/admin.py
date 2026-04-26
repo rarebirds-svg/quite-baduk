@@ -5,14 +5,13 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import case, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.ws import _connections as _ws_connections
 from app.config import settings
-from app.deps import get_current_session, get_db, is_admin, require_admin
+from app.deps import AdminSession, CurrentSession, DbSession, is_admin
 from app.engine_pool import get_adapter
 from app.models import Game, Session, SessionHistory
 
@@ -115,14 +114,14 @@ class AdminEngineHealth(BaseModel):
 
 
 @router.get("/me", response_model=AdminIdentity)
-async def whoami(sess: Session = Depends(get_current_session)) -> AdminIdentity:
+async def whoami(sess: CurrentSession) -> AdminIdentity:
     return AdminIdentity(is_admin=is_admin(sess))
 
 
 @router.get("/summary", response_model=AdminSummary)
 async def summary(
-    _: Session = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
+    _: AdminSession,
+    db: DbSession,
 ) -> AdminSummary:
     # Global tallies + status-bucket counts in one grouped query.
     row = (
@@ -212,7 +211,7 @@ async def summary(
 
 
 @router.get("/engine", response_model=AdminEngineHealth)
-async def engine(_: Session = Depends(require_admin)) -> AdminEngineHealth:
+async def engine(_: AdminSession) -> AdminEngineHealth:
     if settings.katago_mock:
         return AdminEngineHealth(
             mode="mock",
@@ -247,8 +246,8 @@ async def engine(_: Session = Depends(require_admin)) -> AdminEngineHealth:
 
 @router.get("/sessions", response_model=list[AdminSessionRow])
 async def list_sessions(
-    _: Session = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
+    _: AdminSession,
+    db: DbSession,
 ) -> list[AdminSessionRow]:
     # Count games per session with a single grouped query.
     total_q = (
@@ -296,10 +295,10 @@ async def list_sessions(
 
 @router.get("/games", response_model=list[AdminGameRow])
 async def list_games(
+    _: AdminSession,
+    db: DbSession,
     status_: str | None = None,
     limit: int = 100,
-    _: Session = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
 ) -> list[AdminGameRow]:
     q = select(Game).order_by(Game.started_at.desc()).limit(max(1, min(limit, 500)))
     if status_:
@@ -344,9 +343,9 @@ async def list_games(
 
 @router.get("/login-history", response_model=list[AdminLoginRow])
 async def login_history(
+    _: AdminSession,
+    db: DbSession,
     limit: int = 200,
-    _: Session = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
 ) -> list[AdminLoginRow]:
     """Historical login events, newest first. Includes already-ended
     sessions so the admin can see the full connection timeline beyond
@@ -374,8 +373,8 @@ async def login_history(
 @router.get("/sessions/{session_id}", response_model=AdminSessionDetail)
 async def session_detail(
     session_id: int,
-    _: Session = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
+    _: AdminSession,
+    db: DbSession,
 ) -> AdminSessionDetail:
     """Details for a single session row (if still live) plus every game ever
     played by the same nickname_key — joined across all historical

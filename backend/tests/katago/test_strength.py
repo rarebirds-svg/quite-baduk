@@ -45,5 +45,6 @@ def test_unknown_rank_raises():
 
 def test_config_frozen():
     cfg = rank_to_config("5k")
-    with pytest.raises(Exception):
+    # frozen dataclass -> dataclasses.FrozenInstanceError (subclass of AttributeError)
+    with pytest.raises(AttributeError):
         cfg.rank = "1d"  # type: ignore[misc]

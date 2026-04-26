@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Cookie, Depends, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Cookie, WebSocket, WebSocketDisconnect, status
 from sqlalchemy import select
 from sqlalchemy import update as _sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rules.engine import GameState
-from app.deps import COOKIE_SESSION, get_db
+from app.deps import COOKIE_SESSION, DbSession
 from app.models import Game, Session
 from app.services.game_service import GameError, place_move, score_by_request, undo_move
 
@@ -83,8 +83,8 @@ async def _authenticate_ws(token: str | None, db: AsyncSession) -> Session | Non
 async def ws_game(
     websocket: WebSocket,
     game_id: int,
-    baduk_session: str | None = Cookie(default=None, alias=COOKIE_SESSION),
-    db: AsyncSession = Depends(get_db),
+    db: DbSession,
+    baduk_session: Annotated[str | None, Cookie(alias=COOKIE_SESSION)] = None,
 ) -> None:
     sess = await _authenticate_ws(baduk_session, db)
     if sess is None:
@@ -102,7 +102,7 @@ async def ws_game(
         try:
             await existing.send_json({"type": "error", "code": "SESSION_REPLACED"})
             await existing.close()
-        except Exception:
+        except Exception:  # noqa: S110 (best-effort eviction; old WS may already be dead)
             pass
 
     await websocket.accept()
@@ -138,7 +138,7 @@ async def ws_game(
                     "score_lead_black": score_lead_black_init,
                 }
             )
-        except Exception:
+        except Exception:  # noqa: S110 (initial winrate is decorative; suppress engine errors)
             pass
 
         while True:

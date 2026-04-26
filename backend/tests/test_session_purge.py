@@ -31,10 +31,10 @@ async def test_purge_deletes_idle_sessions_preserves_game_history(db_session, wi
     """Idle sessions are purged but their games are preserved (session_id
     detaches via SET NULL) so the admin console's audit trail persists."""
     # Fresh (not expired)
-    fresh = Session(token="t-fresh", nickname="alice", nickname_key="alice")
+    fresh = Session(token="t-fresh", nickname="alice", nickname_key="alice")  # noqa: S106 (test session token, not a password)
     db_session.add(fresh)
     # Stale
-    stale = Session(token="t-stale", nickname="bob", nickname_key="bob",
+    stale = Session(token="t-stale", nickname="bob", nickname_key="bob",  # noqa: S106 (test session token, not a password)
                     last_seen_at=dt.datetime.now(dt.UTC) - dt.timedelta(seconds=7200))
     db_session.add(stale)
     await db_session.commit()
@@ -80,7 +80,7 @@ async def test_purge_deletes_idle_sessions_preserves_game_history(db_session, wi
 
 @pytest.mark.asyncio
 async def test_purge_noop_when_nothing_stale(db_session, wired_db):
-    fresh = Session(token="t-only", nickname="carol", nickname_key="carol")
+    fresh = Session(token="t-only", nickname="carol", nickname_key="carol")  # noqa: S106 (test session token, not a password)
     db_session.add(fresh)
     await db_session.commit()
     n = await purge_expired_sessions_once(ttl_sec=3600)

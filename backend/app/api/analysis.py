@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.deps import get_current_session, get_db
+from app.deps import CurrentSession, DbSession
 from app.engine_pool import get_adapter
 from app.models import AnalysisCache, Game, Session
 from app.schemas.game import AnalysisResponse, HintMove
@@ -28,8 +28,8 @@ async def _fetch_owned(db: AsyncSession, game_id: int, sess: Session) -> Game:
 async def analyze_game(
     game_id: int,
     moveNum: int,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> AnalysisResponse:
     game = await _fetch_owned(db, game_id, sess)
 
@@ -54,7 +54,10 @@ async def analyze_game(
 
     response = AnalysisResponse(
         winrate=result.winrate,
-        top_moves=[HintMove(move=m.move, winrate=m.winrate, visits=m.visits) for m in result.top_moves],
+        top_moves=[
+            HintMove(move=m.move, winrate=m.winrate, visits=m.visits)
+            for m in result.top_moves
+        ],
         ownership=result.ownership,
     )
 

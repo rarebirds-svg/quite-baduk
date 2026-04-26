@@ -18,5 +18,11 @@ def register_handlers(app: FastAPI) -> None:
     async def val_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         return JSONResponse(
             status_code=422,
-            content={"error": {"code": "validation_error", "message_key": "errors.validation", "detail": exc.errors()}},
+            content={
+                "error": {
+                    "code": "validation_error",
+                    "message_key": "errors.validation",
+                    "detail": exc.errors(),
+                }
+            },
         )

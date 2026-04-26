@@ -26,7 +26,7 @@ async def test_play_after_undo_does_not_collide_on_move_number(
     db_session: AsyncSession,
 ) -> None:
     set_adapter(MockKataGoAdapter())
-    s = Session(token="u-t", nickname="undoer", nickname_key="undoer")
+    s = Session(token="u-t", nickname="undoer", nickname_key="undoer")  # noqa: S106 (test session token, not a password)
     db_session.add(s)
     await db_session.commit()
     await db_session.refresh(s)
@@ -62,7 +62,7 @@ async def test_play_after_undo_heals_legacy_undone_rows(
     still occupy move_number slots. `place_move` should self-heal so users
     can continue those games instead of being permanently stuck."""
     set_adapter(MockKataGoAdapter())
-    s = Session(token="u-legacy", nickname="legacy", nickname_key="legacy")
+    s = Session(token="u-legacy", nickname="legacy", nickname_key="legacy")  # noqa: S106 (test session token, not a password)
     db_session.add(s)
     await db_session.commit()
     await db_session.refresh(s)
@@ -114,7 +114,7 @@ async def test_play_after_undo_heals_legacy_undone_rows(
 async def test_undo_multiple_times(db_session: AsyncSession) -> None:
     """Repeated undo → play cycles must not leave ghost rows behind."""
     set_adapter(MockKataGoAdapter())
-    s = Session(token="u-multi", nickname="multi", nickname_key="multi")
+    s = Session(token="u-multi", nickname="multi", nickname_key="multi")  # noqa: S106 (test session token, not a password)
     db_session.add(s)
     await db_session.commit()
     await db_session.refresh(s)

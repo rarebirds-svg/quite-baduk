@@ -21,7 +21,7 @@ async def session() -> AsyncSession:
 
 @pytest.mark.asyncio
 async def test_create_session_row(session: AsyncSession) -> None:
-    s = Session(token="t1", nickname="alice", nickname_key="alice")
+    s = Session(token="t1", nickname="alice", nickname_key="alice")  # noqa: S106 (test session token, not a password)
     session.add(s)
     await session.commit()
     await session.refresh(s)
@@ -31,7 +31,7 @@ async def test_create_session_row(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_create_game(session: AsyncSession) -> None:
-    s = Session(token="t2", nickname="bob", nickname_key="bob")
+    s = Session(token="t2", nickname="bob", nickname_key="bob")  # noqa: S106 (test session token, not a password)
     session.add(s)
     await session.commit()
     await session.refresh(s)
@@ -49,7 +49,7 @@ async def test_create_game(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_create_move(session: AsyncSession) -> None:
-    s = Session(token="t3", nickname="carol", nickname_key="carol")
+    s = Session(token="t3", nickname="carol", nickname_key="carol")  # noqa: S106 (test session token, not a password)
     session.add(s)
     await session.commit()
     await session.refresh(s)
@@ -70,7 +70,7 @@ async def test_create_move(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_create_analysis_cache(session: AsyncSession) -> None:
-    s = Session(token="t4", nickname="dan", nickname_key="dan")
+    s = Session(token="t4", nickname="dan", nickname_key="dan")  # noqa: S106 (test session token, not a password)
     session.add(s)
     await session.commit()
     await session.refresh(s)
@@ -90,7 +90,7 @@ async def test_create_analysis_cache(session: AsyncSession) -> None:
 
 @pytest.mark.asyncio
 async def test_game_persists_board_size(session: AsyncSession) -> None:
-    s = Session(token="t5", nickname="eve", nickname_key="eve")
+    s = Session(token="t5", nickname="eve", nickname_key="eve")  # noqa: S106 (test session token, not a password)
     session.add(s)
     await session.commit()
     await session.refresh(s)
@@ -117,7 +117,7 @@ async def test_game_survives_session_delete(session: AsyncSession) -> None:
     admin console's audit trail isn't lost on logout/idle-purge.
     session_id is SET NULL via ON DELETE SET NULL; the user_nickname
     snapshot continues to identify the player."""
-    s = Session(token="t6", nickname="frank", nickname_key="frank")
+    s = Session(token="t6", nickname="frank", nickname_key="frank")  # noqa: S106 (test session token, not a password)
     session.add(s)
     await session.commit()
     await session.refresh(s)

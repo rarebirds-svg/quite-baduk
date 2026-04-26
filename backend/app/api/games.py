@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.rules.engine import build_sgf
-from app.deps import get_current_session, get_db, is_admin
+from app.deps import CurrentSession, DbSession, is_admin
 from app.engine_pool import game_lock, get_cached_state
 from app.models import Game, Session
 from app.models import Move as MoveRow
@@ -57,8 +57,8 @@ async def _fetch_readable_game(db: AsyncSession, game_id: int, sess: Session) ->
 @router.post("", status_code=201, response_model=GameSummary)
 async def create(
     body: CreateGameRequest,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> GameSummary:
     try:
         game = await create_game(
@@ -73,16 +73,16 @@ async def create(
             user_rank=body.user_rank,
         )
     except GameError as e:
-        raise HTTPException(status_code=400, detail=e.code)
+        raise HTTPException(status_code=400, detail=e.code) from e
     return GameSummary.model_validate(game, from_attributes=True)
 
 
 @router.get("", response_model=list[GameSummary])
 async def list_games(
+    db: DbSession,
+    sess: CurrentSession,
     status_: str | None = None,
     page: int = 1,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
 ) -> list[GameSummary]:
     q = select(Game).where(Game.session_id == sess.id).order_by(Game.started_at.desc())
     if status_:
@@ -95,8 +95,8 @@ async def list_games(
 @router.get("/{game_id}", response_model=GameDetail)
 async def get_game(
     game_id: int,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> GameDetail:
     game = await _fetch_readable_game(db, game_id, sess)
     res = await db.execute(
@@ -119,8 +119,8 @@ async def get_game(
 @router.delete("/{game_id}", status_code=204)
 async def delete_game(
     game_id: int,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> Response:
     game = await _fetch_owned_game(db, game_id, sess)
     await db.delete(game)
@@ -131,22 +131,22 @@ async def delete_game(
 @router.post("/{game_id}/resign", response_model=GameSummary)
 async def resign(
     game_id: int,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> GameSummary:
     game = await _fetch_owned_game(db, game_id, sess)
     try:
         await resign_game(db, game=game, session=sess)
     except GameError as e:
-        raise HTTPException(status_code=400, detail=e.code)
+        raise HTTPException(status_code=400, detail=e.code) from e
     return GameSummary.model_validate(game, from_attributes=True)
 
 
 @router.get("/{game_id}/sgf", response_class=PlainTextResponse)
 async def download_sgf(
     game_id: int,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> str:
     game = await _fetch_readable_game(db, game_id, sess)
     if game.sgf_cache:
@@ -161,8 +161,8 @@ async def download_sgf(
 @router.post("/{game_id}/hint", response_model=HintResponse)
 async def hint_endpoint(
     game_id: int,
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> HintResponse:
     game = await _fetch_owned_game(db, game_id, sess)
     async with game_lock(game.id):

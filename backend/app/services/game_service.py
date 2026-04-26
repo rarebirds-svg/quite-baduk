@@ -152,7 +152,13 @@ async def create_game(
 
 
 async def _record_move(
-    db: AsyncSession, *, game_id: int, move_number: int, color: str, coord: str | None, captures: int
+    db: AsyncSession,
+    *,
+    game_id: int,
+    move_number: int,
+    color: str,
+    coord: str | None,
+    captures: int,
 ) -> None:
     stored_coord = coord if coord != "resign" else None
     db.add(MoveRow(
@@ -202,7 +208,7 @@ async def place_move(
         try:
             new_state = play(state, Move(color=user_side, coord=coord))  # type: ignore[arg-type]
         except IllegalMoveError as e:
-            raise GameError(e.code, e.detail)
+            raise GameError(e.code, e.detail) from e
 
         # Figure out captures by user
         user_captures = new_state.captures.get(user_side, 0) - state.captures.get(user_side, 0)
@@ -210,7 +216,12 @@ async def place_move(
         # Persist user move
         move_no = game.move_count + 1
         await _record_move(
-            db, game_id=game.id, move_number=move_no, color=user_side, coord=coord, captures=user_captures,
+            db,
+            game_id=game.id,
+            move_number=move_no,
+            color=user_side,
+            coord=coord,
+            captures=user_captures,
         )
         game.move_count = move_no
 
@@ -253,7 +264,7 @@ async def place_move(
                 else:
                     new_state = play(new_state, Move(color=ai_side, coord=ai_move))  # type: ignore[arg-type]
             except IllegalMoveError as e:
-                raise GameError("AI_ILLEGAL_MOVE", f"{ai_move}: {e}")
+                raise GameError("AI_ILLEGAL_MOVE", f"{ai_move}: {e}") from e
 
             ai_captures = new_state.captures.get(ai_side, 0) - prev_captures_ai
             if not game_over:
@@ -659,7 +670,9 @@ async def _replay_state(db: AsyncSession, game: Game) -> GameState:
         state.board = apply_handicap(state.board, game.handicap)
         state.to_move = WHITE
     res = await db.execute(
-        select(MoveRow).where(MoveRow.game_id == game.id, MoveRow.is_undone == False).order_by(MoveRow.move_number.asc())  # noqa: E712
+        select(MoveRow)
+        .where(MoveRow.game_id == game.id, MoveRow.is_undone == False)  # noqa: E712
+        .order_by(MoveRow.move_number.asc())
     )
     for m in res.scalars().all():
         coord = m.coord if m.coord else "pass"

@@ -2,20 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from sqlalchemy import case, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.deps import get_current_session, get_db
-from app.models import Game, Session
+from app.deps import CurrentSession, DbSession
+from app.models import Game
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
 
 @router.get("/stats")
 async def stats(
-    db: AsyncSession = Depends(get_db),
-    sess: Session = Depends(get_current_session),
+    db: DbSession,
+    sess: CurrentSession,
 ) -> dict[str, Any]:
     """Per-session summary statistics for the history page dashboard."""
     # Only decisively finished games contribute to win/loss stats.

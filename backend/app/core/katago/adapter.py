@@ -142,7 +142,7 @@ class KataGoAdapter:
                 if self._proc.returncode is None:
                     try:
                         await self._send_raw("quit")
-                    except Exception:
+                    except Exception:  # noqa: S110 (graceful quit; we terminate next)
                         pass
                     try:
                         await asyncio.wait_for(self._proc.wait(), timeout=3.0)
@@ -204,8 +204,8 @@ class KataGoAdapter:
 
         try:
             data = await asyncio.wait_for(_read_until_blank(), timeout=deadline)
-        except TimeoutError:
-            raise TimeoutError(f"KataGo timed out on: {cmd}")
+        except TimeoutError as e:
+            raise TimeoutError(f"KataGo timed out on: {cmd}") from e
         return parse_gtp(data.decode("utf-8", errors="replace"))
 
     async def send(self, cmd: str, timeout: float | None = None) -> GTPResult:
@@ -235,7 +235,11 @@ class KataGoAdapter:
         await self.send(f"komi {komi}")
         self._replay.komi = komi
 
-    async def set_profile(self, profile_or_config: StrengthConfig | str, max_visits: int | None = None) -> None:
+    async def set_profile(
+        self,
+        profile_or_config: StrengthConfig | str,
+        max_visits: int | None = None,
+    ) -> None:
         if isinstance(profile_or_config, StrengthConfig):
             profile = profile_or_config.human_sl_profile
             visits = profile_or_config.max_visits
@@ -357,7 +361,7 @@ class KataGoAdapter:
                     try:
                         if self._proc is not None:
                             self._proc.terminate()
-                    except Exception:
+                    except Exception:  # noqa: S110 (force-restart path; proc may be already gone)
                         pass
                     self._proc = None
 

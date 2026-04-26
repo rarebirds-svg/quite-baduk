@@ -97,7 +97,10 @@ async def test_games_survive_session_end_but_are_forbidden_to_others(
     keeps its audit trail), but a different user's session cannot access
     them — a non-admin peer gets 403, not a 404."""
     await _signup(client, email="u1@example.com")
-    r = await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+    )
     game_id = r.json()["id"]
     await client.post("/api/session/end")
     await _signup(client, email="u2@example.com")
@@ -108,7 +111,10 @@ async def test_games_survive_session_end_but_are_forbidden_to_others(
 @pytest.mark.asyncio
 async def test_resign(client: AsyncClient) -> None:
     await _signup(client)
-    r = await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+    )
     game_id = r.json()["id"]
     r2 = await client.post(f"/api/games/{game_id}/resign")
     assert r2.status_code == 200
@@ -120,7 +126,10 @@ async def test_resign(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_sgf_download(client: AsyncClient) -> None:
     await _signup(client)
-    r = await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+    )
     game_id = r.json()["id"]
     await client.post(f"/api/games/{game_id}/resign")
     r2 = await client.get(f"/api/games/{game_id}/sgf")
@@ -131,7 +140,10 @@ async def test_sgf_download(client: AsyncClient) -> None:
 @pytest.mark.asyncio
 async def test_hint(client: AsyncClient) -> None:
     await _signup(client)
-    r = await client.post("/api/games", json={"ai_rank": "5k", "handicap": 0, "user_color": "black"})
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+    )
     game_id = r.json()["id"]
     r2 = await client.post(f"/api/games/{game_id}/hint")
     assert r2.status_code == 200

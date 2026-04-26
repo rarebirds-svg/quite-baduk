@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 from collections.abc import AsyncGenerator
+from typing import Annotated
 
 from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy import select
@@ -20,9 +21,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield s
 
 
+# Type alias used by every endpoint that needs a DB session — keeps signatures
+# short and satisfies ruff B008 (no Depends() in default-argument position).
+DbSession = Annotated[AsyncSession, Depends(get_db)]
+
+
 async def get_current_session(
-    baduk_session: str | None = Cookie(default=None),
-    db: AsyncSession = Depends(get_db),
+    db: DbSession,
+    baduk_session: Annotated[str | None, Cookie()] = None,
 ) -> Session:
     """Resolve the current session from the cookie, bumping ``last_seen_at``.
 
@@ -66,9 +72,15 @@ def is_admin(sess: Session) -> bool:
     return sess.nickname_key in ADMIN_NICKNAME_KEYS
 
 
-async def require_admin(sess: Session = Depends(get_current_session)) -> Session:
+CurrentSession = Annotated[Session, Depends(get_current_session)]
+
+
+async def require_admin(sess: CurrentSession) -> Session:
     if not is_admin(sess):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="admin_only"
         )
     return sess
+
+
+AdminSession = Annotated[Session, Depends(require_admin)]

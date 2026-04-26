@@ -19,7 +19,11 @@ def test_parse_single_move():
 
 
 def test_parse_multi_moves_sorted():
-    body = "info move D4 visits 30 winrate 0.48 info move Q16 visits 100 winrate 0.52 info move Q4 visits 50 winrate 0.50\n"
+    body = (
+        "info move D4 visits 30 winrate 0.48 "
+        "info move Q16 visits 100 winrate 0.52 "
+        "info move Q4 visits 50 winrate 0.50\n"
+    )
     r = parse_analysis(body)
     assert [m.move for m in r.top_moves] == ["Q16", "Q4", "D4"]
 

@@ -68,24 +68,7 @@ def test_is_suicide_false_normal():
 
 
 def test_is_suicide_false_capture():
-    # Black can capture white -- not suicide even though it looks surrounded
-    b = (Board(19)
-         .place(0, 0, WHITE)
-         .place(1, 0, BLACK)
-         .place(0, 1, BLACK))
-    # White has no liberty -- placing black there would capture white
-    # Actually the reverse: place white where it would be captured? let's rewrite
-    # Setup: black stone at (0,0) with white at (1,0) and (0,1). Placing black
-    # on an empty spot that captures... this isn't quite suicide.
-    # Instead: white at (0,0), wanting to place black at (1,1) with white
-    # around it but if it captures, that's not suicide
-    b2 = (Board(19)
-          .place(0, 0, BLACK)
-          .place(2, 0, BLACK).place(0, 2, BLACK)
-          .place(1, 1, BLACK)
-          # white group at (1,0) surrounded by blacks except one lib at (0,0)
-          )
-    # Simple non-suicide check
+    # Placing on an empty board with neighbors free is never suicide.
     assert not is_suicide(Board(19), 3, 3, BLACK)
 
 

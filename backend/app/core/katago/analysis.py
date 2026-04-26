@@ -71,7 +71,8 @@ def parse_analysis(body: str, board_size: int = 19) -> AnalysisResult:
         segments.append(current)
 
     for seg in segments:
-        # seg example: ['move', 'Q16', 'visits', '100', 'winrate', '0.523', 'scoreLead', '1.2', 'prior', ...]
+        # seg example:
+        # ['move', 'Q16', 'visits', '100', 'winrate', '0.523', 'scoreLead', '1.2', 'prior', ...]
         hint_data: dict[str, str] = {}
         i = 0
         while i < len(seg) - 1:

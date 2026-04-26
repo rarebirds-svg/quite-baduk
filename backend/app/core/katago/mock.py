@@ -56,7 +56,11 @@ class MockKataGoAdapter:
     async def set_komi(self, komi: float) -> None:
         self.komi = komi
 
-    async def set_profile(self, profile_or_config: StrengthConfig | str, max_visits: int | None = None) -> None:
+    async def set_profile(
+        self,
+        profile_or_config: StrengthConfig | str,
+        max_visits: int | None = None,
+    ) -> None:
         if isinstance(profile_or_config, StrengthConfig):
             self.profile = (profile_or_config.human_sl_profile, profile_or_config.max_visits)
         else:

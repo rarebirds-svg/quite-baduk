@@ -8,17 +8,17 @@ from __future__ import annotations
 
 import datetime as _dt
 import secrets
+from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, HTTPException, Request, Response, status
 from sqlalchemy import delete as _sa_delete
 from sqlalchemy import select
 from sqlalchemy import update as _sa_update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.nickname import InvalidNickname, normalize, to_key, validate
-from app.deps import COOKIE_SESSION, get_current_session, get_db
+from app.deps import COOKIE_SESSION, CurrentSession, DbSession
 from app.models import Session
 from app.rate_limit import rate_limiter
 from app.schemas.session import NicknameAvailability, SessionCreateRequest, SessionPublic
@@ -62,14 +62,16 @@ async def create_session(
     body: SessionCreateRequest,
     request: Request,
     response: Response,
-    db: AsyncSession = Depends(get_db),
+    db: DbSession,
 ) -> SessionPublic:
-    if not await rate_limiter.check(f"session_create:{_client_key(request)}", max_hits=5, window_sec=60):
+    if not await rate_limiter.check(
+        f"session_create:{_client_key(request)}", max_hits=5, window_sec=60
+    ):
         raise HTTPException(status_code=429, detail="rate_limited")
     try:
         display, key = _parse_nickname(body.nickname)
-    except InvalidNickname:
-        raise HTTPException(status_code=422, detail="invalid_nickname")
+    except InvalidNickname as e:
+        raise HTTPException(status_code=422, detail="invalid_nickname") from e
 
     # Primary defense — in-memory claim. Use a sentinel session_id, then swap
     # to the real id once the row is inserted.
@@ -83,9 +85,9 @@ async def create_session(
         db.add(sess)
         try:
             await db.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             await db.rollback()
-            raise HTTPException(status_code=409, detail="nickname_taken")
+            raise HTTPException(status_code=409, detail="nickname_taken") from e
         await db.refresh(sess)
         # Swap sentinel → real session_id
         async with registry._lock:  # noqa: SLF001 (intentional — atomic swap)
@@ -110,15 +112,15 @@ async def create_session(
 
 
 @router.get("", response_model=SessionPublic)
-async def read_session(sess: Session = Depends(get_current_session)) -> SessionPublic:
+async def read_session(sess: CurrentSession) -> SessionPublic:
     return SessionPublic(id=sess.id, nickname=sess.nickname)
 
 
 @router.post("/end", status_code=204)
 async def end_session(
     response: Response,
-    baduk_session: str | None = Cookie(default=None, alias=COOKIE_SESSION),
-    db: AsyncSession = Depends(get_db),
+    db: DbSession,
+    baduk_session: Annotated[str | None, Cookie(alias=COOKIE_SESSION)] = None,
 ) -> Response:
     """Idempotent logout. Browsers fire this twice (explicit logout +
     pagehide beacon, React StrictMode dev double-effect, mobile Safari's
@@ -156,9 +158,11 @@ async def end_session(
 async def check_nickname(
     name: str,
     request: Request,
-    db: AsyncSession = Depends(get_db),
+    db: DbSession,
 ) -> NicknameAvailability:
-    if not await rate_limiter.check(f"nickname_check:{_client_key(request)}", max_hits=30, window_sec=60):
+    if not await rate_limiter.check(
+        f"nickname_check:{_client_key(request)}", max_hits=30, window_sec=60
+    ):
         raise HTTPException(status_code=429, detail="rate_limited")
     try:
         _display, key = _parse_nickname(name)

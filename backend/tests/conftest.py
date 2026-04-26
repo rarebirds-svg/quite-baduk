@@ -55,7 +55,9 @@ async def client(db_engine, monkeypatch):
     # Override DB
     from app import db as db_module
     db_module.engine = db_engine  # type: ignore[assignment]
-    db_module.AsyncSessionLocal = async_sessionmaker(db_engine, expire_on_commit=False, class_=AsyncSession)  # type: ignore[assignment]
+    db_module.AsyncSessionLocal = async_sessionmaker(  # type: ignore[assignment]
+        db_engine, expire_on_commit=False, class_=AsyncSession
+    )
 
     # Force mock KataGo
     os.environ["KATAGO_MOCK"] = "true"
