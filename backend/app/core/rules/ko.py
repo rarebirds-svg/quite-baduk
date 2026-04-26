@@ -12,7 +12,7 @@ class KoState:
     """Tracks the previous board position to detect simple ko."""
     previous_board: Board | None = field(default=None)
 
-    def update(self, board: Board) -> "KoState":
+    def update(self, board: Board) -> KoState:
         return KoState(previous_board=board)
 
 

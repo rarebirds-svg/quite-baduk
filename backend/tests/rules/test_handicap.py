@@ -1,6 +1,6 @@
 import pytest
 
-from app.core.rules.board import BLACK, EMPTY, Board
+from app.core.rules.board import BLACK, Board
 from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap
 from app.core.rules.sgf_coord import gtp_to_xy
 

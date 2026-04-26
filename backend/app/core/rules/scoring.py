@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from app.core.rules.board import BLACK, EMPTY, WHITE, Board
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScoreResult:
     black_territory: int
     white_territory: int
@@ -18,23 +18,33 @@ class ScoreResult:
     white_score: float
     winner: str  # 'B' or 'W'
     margin: float  # absolute difference
+    black_points: frozenset[tuple[int, int]] = frozenset()
+    white_points: frozenset[tuple[int, int]] = frozenset()
+    dame_points: frozenset[tuple[int, int]] = frozenset()
 
 
 def _flood_territory(
     board: Board, dead_stones: set[tuple[int, int]]
-) -> tuple[int, int]:
+) -> tuple[
+    int,
+    int,
+    frozenset[tuple[int, int]],
+    frozenset[tuple[int, int]],
+    frozenset[tuple[int, int]],
+]:
     """Flood-fill empty regions to determine territory ownership.
 
     An empty region belongs to BLACK if it's only adjacent to black stones,
     WHITE if only adjacent to white stones, and is neutral (dame) otherwise.
 
+    Returns (black_count, white_count, black_points, white_points, dame_points).
     Dead stones are treated as empty during counting.
     """
     visited: set[tuple[int, int]] = set()
-    black_terr = 0
-    white_terr = 0
+    black_pts: set[tuple[int, int]] = set()
+    white_pts: set[tuple[int, int]] = set()
+    dame_pts: set[tuple[int, int]] = set()
 
-    # Build effective board (remove dead stones)
     effective = board
     for pos in dead_stones:
         effective = effective.remove(*pos)
@@ -63,12 +73,19 @@ def _flood_territory(
                 region, colors = flood(x, y)
                 visited |= region
                 if colors == {BLACK}:
-                    black_terr += len(region)
+                    black_pts |= region
                 elif colors == {WHITE}:
-                    white_terr += len(region)
-                # neutral (dame) or seki: not counted
+                    white_pts |= region
+                else:
+                    dame_pts |= region
 
-    return black_terr, white_terr
+    return (
+        len(black_pts),
+        len(white_pts),
+        frozenset(black_pts),
+        frozenset(white_pts),
+        frozenset(dame_pts),
+    )
 
 
 def score_game(
@@ -94,7 +111,9 @@ def score_game(
         1 for pos in dead_stones if board.get(*pos) == BLACK
     )
 
-    black_terr, white_terr = _flood_territory(board, dead_stones)
+    black_terr, white_terr, black_pts, white_pts, dame_pts = _flood_territory(
+        board, dead_stones
+    )
 
     b_score = float(black_terr + black_captures + extra_black_captures)
     w_score = white_terr + white_captures + extra_white_captures + komi
@@ -116,4 +135,7 @@ def score_game(
         white_score=w_score,
         winner=winner,
         margin=margin,
+        black_points=black_pts,
+        white_points=white_pts,
+        dame_points=dame_pts,
     )

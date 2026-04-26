@@ -2,5 +2,131 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body { height: 100%; }
-body { @apply bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100; }
+@layer base {
+  :root {
+    /* Light — Day Edition */
+    --paper: 245 239 230;
+    --paper-deep: 233 223 201;
+    --ink: 26 23 21;
+    --ink-mute: 107 99 90;
+    --ink-faint: 184 175 163;
+    --oxblood: 123 30 36;
+    --gold: 163 123 30;
+    --moss: 46 74 58;
+    --stone-black: 15 13 12;
+    --stone-white: 250 245 236;
+
+    /* Sans stack (Pretendard from CDN — not loaded via next/font) */
+    --font-sans: "Pretendard Variable", Pretendard, -apple-system, system-ui, sans-serif;
+  }
+
+  .dark {
+    /* Dark — Night Edition */
+    --paper: 28 25 23;
+    --paper-deep: 38 34 31;
+    --ink: 242 235 223;
+    --ink-mute: 155 146 136;
+    --ink-faint: 92 84 77;
+    --oxblood: 200 80 88;
+    --gold: 217 166 72;
+    --moss: 106 148 120;
+    --stone-black: 15 13 12;
+    --stone-white: 250 245 236;
+  }
+
+  html, body { height: 100%; }
+
+  html {
+    font-family: var(--font-sans);
+    font-feature-settings: "kern", "liga";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: rgb(var(--paper));
+    color: rgb(var(--ink));
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif), Georgia, serif;
+    letter-spacing: -0.015em;
+  }
+
+  .font-display-xl {
+    font-size: 3rem;
+    line-height: 3.5rem;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+  .font-display {
+    font-size: 2rem;
+    line-height: 2.5rem;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+  .font-label {
+    font-size: 0.6875rem;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .font-data-xl {
+    font-size: 2rem;
+    line-height: 2.25rem;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+  .font-data {
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+  .font-data-sm {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+}
+
+@layer base {
+  /* Custom keyframes replacing tailwindcss-animate for Radix data-state transitions */
+  @keyframes ed-fade-in {
+    from { opacity: 0 }
+    to { opacity: 1 }
+  }
+  @keyframes ed-fade-out {
+    from { opacity: 1 }
+    to { opacity: 0 }
+  }
+  @keyframes ed-slide-in-from-right {
+    from { transform: translateX(100%) }
+    to { transform: translateX(0) }
+  }
+  @keyframes ed-slide-out-to-right {
+    from { transform: translateX(0) }
+    to { transform: translateX(100%) }
+  }
+
+  [data-state="open"].ed-anim-fade { animation: ed-fade-in 150ms ease-out }
+  [data-state="closed"].ed-anim-fade { animation: ed-fade-out 150ms ease-out }
+  [data-state="open"].ed-anim-slide-right { animation: ed-slide-in-from-right 200ms ease-out }
+  [data-state="closed"].ed-anim-slide-right { animation: ed-slide-out-to-right 200ms ease-out }
+
+  @keyframes ed-linear-slide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .ed-spinner-bar {
+    animation: ed-linear-slide 1.2s linear infinite;
+  }
+}
+
+/* Pretendard CDN loads via <link> in layout.tsx */

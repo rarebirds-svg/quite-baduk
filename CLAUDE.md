@@ -112,7 +112,7 @@ Email + bcrypt password, JWT (access + refresh) in HttpOnly cookies. `app/securi
 
 **모션** — Tailwind transition / CSS keyframes만. `framer-motion` 금지. 정의된 easing: `transition-base` 150ms, `transition-stone` 300ms `cubic-bezier(.2,.7,.2,1)`. 장식용 entry/stagger 애니메이션 금지.
 
-**Radius / Shadow** — `rounded-none` (카드·보드), `rounded-sm` (2px 기본), `rounded-full` (토글·배지·돌)만. 그림자는 사용하지 않음 — 위계는 규칙선과 배경 대비로.
+**Radius / Shadow** — `rounded-none` (카드·보드), `rounded-sm` (2px 기본), `rounded-full` (토글·배지·돌)만. 그림자는 사용하지 않음 — 위계는 규칙선과 배경 대비로. **예외**: `Board.tsx`의 `lithic` 돌 스타일은 사실감 표현을 위해 미세 drop-shadow 사용 (Kaya/wood/slate 테마 한정, paper는 평면 유지).
 
 **컴포넌트 구조**
 - `web/components/ui/` — shadcn 프리미티브 (Button, Card, Dialog, Input, Select, Tabs, Tooltip, DropdownMenu, Sheet, Separator 등). 설치 직후 Editorial 토큰으로 재스타일링.

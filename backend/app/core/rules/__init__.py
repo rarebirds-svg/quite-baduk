@@ -1,20 +1,20 @@
-from app.core.rules.board import EMPTY, BLACK, WHITE, Board
+from app.core.rules.board import BLACK, EMPTY, WHITE, Board
 from app.core.rules.captures import place_with_captures
-from app.core.rules.ko import KoState, is_ko_violation
-from app.core.rules.scoring import score_game, ScoreResult
-from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap, supported_handicaps
-from app.core.rules.sgf_coord import gtp_to_xy, xy_to_gtp
 from app.core.rules.engine import (
-    GameState,
-    Move,
     Color,
+    GameState,
     IllegalMoveError,
-    play,
-    pass_move,
-    is_game_over,
-    score,
+    Move,
     build_sgf,
+    is_game_over,
+    pass_move,
+    play,
+    score,
 )
+from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap, supported_handicaps
+from app.core.rules.ko import KoState, is_ko_violation
+from app.core.rules.scoring import ScoreResult, score_game
+from app.core.rules.sgf_coord import gtp_to_xy, xy_to_gtp
 
 __all__ = [
     "EMPTY", "BLACK", "WHITE", "Board",

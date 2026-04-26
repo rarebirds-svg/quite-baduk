@@ -1,4 +1,5 @@
 import pytest
+
 from app.core.rules.sgf_coord import gtp_to_xy, xy_to_gtp
 
 
