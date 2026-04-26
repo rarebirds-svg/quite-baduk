@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 import { xyToGtp, gtpToXy, starPoints, totalCells, applyMoveWithCaptures } from "@/lib/board";
-import { BOARD_THEMES } from "@/store/boardThemeStore";
+import { BOARD_THEMES, useBoardTheme } from "@/store/boardThemeStore";
 import Board from "@/components/Board";
 
 describe("coord conversion", () => {
@@ -154,6 +154,23 @@ describe("BOARD_THEMES metadata", () => {
     expect(BOARD_THEMES.slate.surface).toBe("flat");
     expect(BOARD_THEMES.slate.stoneStyle).toBe("lithic");
     expect(BOARD_THEMES.slate.shadow).toBe(true);
+  });
+});
+
+describe("Board surface=wood themes", () => {
+  it("renders the wood grain filter when theme has surface='wood'", () => {
+    useBoardTheme.setState({ theme: "kaya" });
+    const board = ".".repeat(9 * 9);
+    const { container } = render(<Board size={9} board={board} />);
+    expect(container.querySelector("filter#kayaGrain")).not.toBeNull();
+    expect(container.querySelector('rect[filter="url(#kayaGrain)"]')).not.toBeNull();
+  });
+
+  it("does NOT render the wood grain filter on paper theme", () => {
+    useBoardTheme.setState({ theme: "paper" });
+    const board = ".".repeat(9 * 9);
+    const { container } = render(<Board size={9} board={board} />);
+    expect(container.querySelector("filter#kayaGrain")).toBeNull();
   });
 });
 

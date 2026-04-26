@@ -79,6 +79,35 @@ export default function Board({
       role="img"
       aria-label={`${size}×${size} Go board`}
     >
+      <defs>
+        {palette.surface === "wood" && (
+          <filter id="kayaGrain" x="0" y="0" width="100%" height="100%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.012 0.6"
+              numOctaves={2}
+              seed={7}
+              result="noise"
+            />
+            <feColorMatrix
+              in="noise"
+              values="0 0 0 0 0.55  0 0 0 0 0.38  0 0 0 0 0.20  0 0 0 0.10 0"
+              result="grain"
+            />
+            <feComposite in="grain" in2="SourceGraphic" operator="in" />
+          </filter>
+        )}
+      </defs>
+      {palette.surface === "wood" && (
+        <rect
+          x={0}
+          y={0}
+          width={W}
+          height={W}
+          fill={palette.bg}
+          filter="url(#kayaGrain)"
+        />
+      )}
       <rect
         x={0.5}
         y={0.5}
