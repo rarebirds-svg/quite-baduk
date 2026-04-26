@@ -181,3 +181,109 @@ async def test_score_request_includes_territory_points(
     assert isinstance(detail.dead_stones, frozenset)
     assert len(detail.black_points) == detail.black_territory
     assert len(detail.white_points) == detail.white_territory
+
+
+def test_ws_score_result_payload_includes_points(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """End-to-end: open the WS, send a score_request, expect the payload
+    fields the frontend renders the territory map from.
+
+    Uses Starlette's synchronous TestClient (the only path that exposes
+    websocket_connect) with a fresh in-memory SQLite database and the mock
+    KataGo adapter.
+    """
+    import asyncio
+    import os
+    import tempfile
+
+    import app.services.game_service as _svc
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+    from sqlalchemy.pool import StaticPool
+    from starlette.testclient import TestClient
+
+    from app.core.katago.mock import MockKataGoAdapter
+    from app.db import Base
+    from app.engine_pool import set_adapter
+
+    # --- fresh isolated DB -----------------------------------------------
+    tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+    tmp.close()
+    db_path = tmp.name
+
+    engine = create_async_engine(
+        f"sqlite+aiosqlite:///{db_path}",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    asyncio.get_event_loop().run_until_complete(
+        _create_schema(engine, Base)
+    )
+    session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+    import app.db as db_module
+    monkeypatch.setattr(db_module, "engine", engine)
+    monkeypatch.setattr(db_module, "AsyncSessionLocal", session_factory)
+
+    # --- mock KataGo + bypass endgame gate --------------------------------
+    os.environ["KATAGO_MOCK"] = "true"
+    mock = MockKataGoAdapter()
+    set_adapter(mock)
+    asyncio.get_event_loop().run_until_complete(mock.start())
+
+    monkeypatch.setattr(_svc, "_endgame_phase_from_ownership", lambda state, ownership: True)
+
+    # --- build app --------------------------------------------------------
+    from app.main import create_app
+    app_instance = create_app()
+
+    with TestClient(app_instance, raise_server_exceptions=True) as tc:
+        # create session
+        r = tc.post("/api/session", json={"nickname": "ws_tester_1"})
+        assert r.status_code == 201, r.text
+        session_cookie = r.cookies.get("baduk_session")
+        assert session_cookie is not None
+
+        # create game
+        r = tc.post(
+            "/api/games",
+            json={"board_size": 9, "handicap": 0, "ai_rank": "5k", "user_color": "black"},
+            cookies={"baduk_session": session_cookie},
+        )
+        assert r.status_code == 201, r.text
+        game_id = r.json()["id"]
+
+        # open WS and send score_request
+        with tc.websocket_connect(
+            f"/api/ws/games/{game_id}",
+            cookies={"baduk_session": session_cookie},
+        ) as ws:
+            # Drain until we've consumed the initial state (and optional
+            # winrate push that the server sends on connection).
+            init = ws.receive_json()
+            assert init["type"] == "state"
+            # Optionally consume a winrate push that follows initial state.
+            ws.send_json({"type": "score_request"})
+            # Receive messages until we find score_result, skipping winrate
+            msg = ws.receive_json()
+            if msg["type"] == "winrate":
+                msg = ws.receive_json()
+            assert msg["type"] == "score_result"
+            assert isinstance(msg["black_points"], list)
+            assert isinstance(msg["white_points"], list)
+            assert isinstance(msg["dame_points"], list)
+            assert isinstance(msg["dead_stones"], list)
+            for pt in msg["black_points"]:
+                assert isinstance(pt, list) and len(pt) == 2
+
+    # cleanup
+    try:
+        import os as _os
+        _os.unlink(db_path)
+    except OSError:
+        pass
+
+
+async def _create_schema(engine, base) -> None:  # type: ignore[no-untyped-def]
+    async with engine.begin() as conn:
+        await conn.run_sync(base.metadata.create_all)

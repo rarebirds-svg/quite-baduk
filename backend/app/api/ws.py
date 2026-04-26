@@ -17,6 +17,11 @@ router = APIRouter(tags=["ws"])
 _connections: dict[int, WebSocket] = {}
 
 
+def _serialize_points(pts: frozenset[tuple[int, int]]) -> list[list[int]]:
+    """Convert a frozenset of (x, y) coords to JSON-friendly [[x, y], ...]."""
+    return [[x, y] for (x, y) in sorted(pts)]
+
+
 def _serialize_board(state: GameState) -> str:
     cells: list[str] = []
     b = state.board
@@ -192,6 +197,10 @@ async def ws_game(
                             "margin": d.margin,
                             "result": d.result_str,
                             "reason": "ai_passed",
+                            "black_points": _serialize_points(d.black_points),
+                            "white_points": _serialize_points(d.white_points),
+                            "dame_points": _serialize_points(d.dame_points),
+                            "dead_stones": _serialize_points(d.dead_stones),
                         })
                     if result.game_over:
                         # Annotate how the game ended so the client can pick
@@ -225,6 +234,10 @@ async def ws_game(
                         "winner": detail.winner,
                         "margin": detail.margin,
                         "result": detail.result_str,
+                        "black_points": _serialize_points(detail.black_points),
+                        "white_points": _serialize_points(detail.white_points),
+                        "dame_points": _serialize_points(detail.dame_points),
+                        "dead_stones": _serialize_points(detail.dead_stones),
                     })
                     await websocket.send_json({
                         "type": "game_over",
