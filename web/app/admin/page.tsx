@@ -38,6 +38,7 @@ interface AdminGameRow {
   ai_rank: string;
   ai_style: string;
   ai_player: string | null;
+  user_rank: string | null;
   move_count: number;
   undo_count: number;
   hint_count: number;
@@ -390,6 +391,7 @@ export default function AdminPage() {
                 <th className="text-left p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colResult")}</th>
                 <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colBoard")}</th>
                 <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colHandicap")}</th>
+                <th className="text-left p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colUserRank")}</th>
                 <th className="text-left p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colAi")}</th>
                 <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colMoves")}</th>
                 <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colUndos")}</th>
@@ -401,9 +403,9 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {games === null ? (
-                <tr><td colSpan={14} className="p-4 text-center text-ink-faint">…</td></tr>
+                <tr><td colSpan={15} className="p-4 text-center text-ink-faint">…</td></tr>
               ) : games.length === 0 ? (
-                <tr><td colSpan={14} className="p-4 text-center text-ink-faint">{t("admin.empty")}</td></tr>
+                <tr><td colSpan={15} className="p-4 text-center text-ink-faint">{t("admin.empty")}</td></tr>
               ) : (
                 games.map((g) => (
                   <tr key={g.id} className="border-b border-ink-faint/40">
@@ -439,6 +441,9 @@ export default function AdminPage() {
                     <td className="p-2 text-ink-mute">{g.result ?? "—"}</td>
                     <td className="p-2 text-right tabular-nums">{g.board_size}×{g.board_size}</td>
                     <td className="p-2 text-right tabular-nums">{g.handicap}</td>
+                    <td className="p-2 text-ink-mute">
+                      {g.user_rank ?? <span className="text-ink-faint">—</span>}
+                    </td>
                     <td className="p-2 text-ink-mute">
                       {g.ai_player ?? g.ai_rank} · {g.ai_style}
                     </td>

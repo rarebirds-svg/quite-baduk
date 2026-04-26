@@ -16,7 +16,6 @@ from app.deps import get_current_session, get_db, is_admin, require_admin
 from app.engine_pool import get_adapter
 from app.models import Game, Session, SessionHistory
 
-
 # Captured at module import so the admin console can show "backend uptime"
 # (the FastAPI app itself doesn't expose a boot timestamp).
 _BACKEND_STARTED_AT: datetime = datetime.utcnow()
@@ -47,6 +46,7 @@ class AdminGameRow(BaseModel):
     ai_rank: str
     ai_style: str
     ai_player: str | None
+    user_rank: str | None
     move_count: int
     undo_count: int
     hint_count: int
@@ -98,7 +98,7 @@ class AdminSessionDetail(BaseModel):
     total_moves: int
     total_undos: int
     total_hints: int
-    games: list["AdminGameRow"]
+    games: list[AdminGameRow]
     history: list[AdminLoginRow]  # all login events for this nickname_key
 
 
@@ -330,6 +330,7 @@ async def list_games(
             ai_rank=g.ai_rank,
             ai_style=g.ai_style,
             ai_player=g.ai_player,
+            user_rank=g.user_rank,
             move_count=g.move_count,
             undo_count=g.undo_count,
             hint_count=g.hint_count,
@@ -475,6 +476,7 @@ async def session_detail(
             ai_rank=g.ai_rank,
             ai_style=g.ai_style,
             ai_player=g.ai_player,
+            user_rank=g.user_rank,
             move_count=g.move_count,
             undo_count=g.undo_count,
             hint_count=g.hint_count,
