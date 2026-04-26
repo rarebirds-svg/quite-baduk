@@ -6,6 +6,7 @@ import { BOARD_THEMES, useBoardTheme } from "@/store/boardThemeStore";
 
 type OverlayColor = "primary" | "secondary" | "tertiary";
 type OverlayItem = { x: number; y: number; color: OverlayColor | string; label?: string };
+type Pt = [number, number];
 
 const OVERLAY_TOKEN: Record<OverlayColor, string> = {
   primary: "rgb(var(--oxblood))",
@@ -22,6 +23,7 @@ export default function Board({
   onClick,
   disabled,
   overlay,
+  territoryMarkers,
 }: {
   size: number;
   board: string;
@@ -29,6 +31,12 @@ export default function Board({
   onClick?: (x: number, y: number) => void;
   disabled?: boolean;
   overlay?: OverlayItem[];
+  territoryMarkers?: {
+    black: Pt[];
+    white: Pt[];
+    dame?: Pt[];
+    deadStones?: Pt[];
+  };
 }) {
   const CELL = 30;
   const pad = CELL;
@@ -203,6 +211,66 @@ export default function Board({
           </g>
         );
       })}
+
+      {territoryMarkers && (
+        <g aria-hidden>
+          {territoryMarkers.black.map(([x, y]) => (
+            <rect
+              key={`tb-${x}-${y}`}
+              data-territory="black"
+              x={pad + x * CELL - CELL * 0.09}
+              y={pad + y * CELL - CELL * 0.09}
+              width={CELL * 0.18}
+              height={CELL * 0.18}
+              fill="rgb(26 23 21)"
+            />
+          ))}
+          {territoryMarkers.white.map(([x, y]) => (
+            <rect
+              key={`tw-${x}-${y}`}
+              data-territory="white"
+              x={pad + x * CELL - CELL * 0.09}
+              y={pad + y * CELL - CELL * 0.09}
+              width={CELL * 0.18}
+              height={CELL * 0.18}
+              fill="rgb(248 246 240)"
+              stroke={palette.lineInk}
+              strokeWidth={0.5}
+            />
+          ))}
+          {(territoryMarkers.dame ?? []).map(([x, y]) => (
+            <circle
+              key={`td-${x}-${y}`}
+              data-territory="dame"
+              cx={pad + x * CELL}
+              cy={pad + y * CELL}
+              r={1.5}
+              fill={palette.labelInk}
+              opacity={0.6}
+            />
+          ))}
+          {(territoryMarkers.deadStones ?? []).map(([x, y]) => (
+            <g key={`tx-${x}-${y}`} data-territory="dead">
+              <line
+                x1={pad + x * CELL - CELL * 0.25}
+                y1={pad + y * CELL - CELL * 0.25}
+                x2={pad + x * CELL + CELL * 0.25}
+                y2={pad + y * CELL + CELL * 0.25}
+                stroke="rgb(var(--oxblood))"
+                strokeWidth={1.25}
+              />
+              <line
+                x1={pad + x * CELL + CELL * 0.25}
+                y1={pad + y * CELL - CELL * 0.25}
+                x2={pad + x * CELL - CELL * 0.25}
+                y2={pad + y * CELL + CELL * 0.25}
+                stroke="rgb(var(--oxblood))"
+                strokeWidth={1.25}
+              />
+            </g>
+          ))}
+        </g>
+      )}
 
       {onClick && (
         <rect
