@@ -47,7 +47,11 @@ jobs:
         with:
           node-version: "20"
       - name: Build and start services
-        run: docker-compose up --build -d
+        # GitHub-hosted runners ship Docker Compose v2, which is invoked as
+        # `docker compose` (no hyphen). The legacy `docker-compose` binary
+        # was removed from `ubuntu-latest` images, so the hyphenated form
+        # exits 127.
+        run: docker compose up --build -d
       - name: Wait for services
         run: |
           timeout 60 sh -c 'until curl -sf http://localhost:8000/api/health; do sleep 2; done'
