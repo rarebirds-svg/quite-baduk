@@ -97,6 +97,16 @@ export default function Board({
             <feComposite in="grain" in2="SourceGraphic" operator="in" />
           </filter>
         )}
+        <radialGradient id="stoneBlackLithic" cx="35%" cy="32%" r="65%">
+          <stop offset="0%" stopColor="rgb(74 66 60)" />
+          <stop offset="55%" stopColor="rgb(28 24 21)" />
+          <stop offset="100%" stopColor="rgb(8 6 6)" />
+        </radialGradient>
+        <radialGradient id="stoneWhiteLithic" cx="35%" cy="32%" r="70%">
+          <stop offset="0%" stopColor="rgb(253 252 248)" />
+          <stop offset="65%" stopColor="rgb(229 224 213)" />
+          <stop offset="100%" stopColor="rgb(187 181 168)" />
+        </radialGradient>
       </defs>
       {palette.surface === "wood" && (
         <rect
@@ -186,17 +196,27 @@ export default function Board({
         const y = Math.floor(idx / size);
         const cx = pad + x * CELL;
         const cy = pad + y * CELL;
-        const fill = c === "B" ? tokens.light["stone-black"] : tokens.light["stone-white"];
-        const stroke = c === "W" ? palette.lineInk : "transparent";
+        const isLithic = palette.stoneStyle === "lithic";
+        const fill =
+          c === "B"
+            ? isLithic
+              ? "url(#stoneBlackLithic)"
+              : tokens.light["stone-black"]
+            : isLithic
+              ? "url(#stoneWhiteLithic)"
+              : tokens.light["stone-white"];
+        const stroke =
+          c === "W" && !isLithic ? palette.lineInk : "transparent";
         return (
           <circle
             key={`st-${idx}`}
+            data-stone={c}
             cx={cx}
             cy={cy}
             r={CELL * 0.45}
             fill={fill}
             stroke={stroke}
-            strokeWidth={0.75}
+            strokeWidth={c === "W" && !isLithic ? 0.5 : 0}
           />
         );
       })}

@@ -174,6 +174,25 @@ describe("Board surface=wood themes", () => {
   });
 });
 
+describe("Board lithic stones", () => {
+  it("uses radial gradient fill when theme.stoneStyle is lithic", () => {
+    useBoardTheme.setState({ theme: "kaya" });
+    const board = "B" + ".".repeat(9 * 9 - 1);
+    const { container } = render(<Board size={9} board={board} />);
+    const stone = container.querySelector('circle[data-stone="B"]');
+    expect(stone).not.toBeNull();
+    expect(stone?.getAttribute("fill")).toContain("url(#stoneBlackLithic)");
+  });
+
+  it("uses flat token fill on paper theme", () => {
+    useBoardTheme.setState({ theme: "paper" });
+    const board = "B" + ".".repeat(9 * 9 - 1);
+    const { container } = render(<Board size={9} board={board} />);
+    const stone = container.querySelector('circle[data-stone="B"]');
+    expect(stone?.getAttribute("fill")).not.toContain("url(");
+  });
+});
+
 describe("Board territoryMarkers prop", () => {
   it("renders a black territory marker at the given coordinate", () => {
     const board = ".".repeat(9 * 9);
