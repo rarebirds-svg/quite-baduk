@@ -15,6 +15,7 @@ import type { AiStyle } from "@/components/StylePicker";
 import PlayerPicker, {
   type PlayerId,
   PLAYER_GROUPS,
+  randomPlayerId,
 } from "@/components/PlayerPicker";
 import { toast } from "sonner";
 
@@ -29,15 +30,28 @@ export default function NewGamePage() {
   const router = useRouter();
   const [boardSize, setBoardSize] = useState<BoardSize>(19);
   const [rank, setRank] = useState<Rank>("5k");
-  const [aiPlayer, setAiPlayer] = useState<PlayerId>("shin_jinseo");
+  // Default is null until mount: picking randomly during SSR would cause a
+  // hydration mismatch (server picks a different player than the client).
+  // The effect below seeds a random pick on the client; users can change it
+  // freely via the PlayerPicker.
+  const [aiPlayer, setAiPlayer] = useState<PlayerId | null>(null);
   const [handicap, setHandicap] = useState(0);
   const [userColor, setUserColor] = useState<"black" | "white">("black");
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const aiStyle: AiStyle = (PLAYER_GROUPS.find((g) =>
-    g.players.includes(aiPlayer),
-  )?.style ?? "balanced") as AiStyle;
+  const aiStyle: AiStyle = (
+    aiPlayer
+      ? PLAYER_GROUPS.find((g) => g.players.includes(aiPlayer))?.style
+      : undefined
+  ) ?? "balanced";
+
+  // Seed the random AI player after mount. Putting Math.random in the
+  // initial useState call would diverge between SSR and the first client
+  // render and trigger a hydration mismatch.
+  useEffect(() => {
+    setAiPlayer(randomPlayerId());
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -72,12 +86,19 @@ export default function NewGamePage() {
       } catch {
         userRank = rank;
       }
+      // The button is disabled until aiPlayer is non-null, but TypeScript
+      // can't see that — fall back to a fresh random pick if the user
+      // somehow submits before the seeding effect runs.
+      const submittedPlayer = aiPlayer ?? randomPlayerId();
+      const submittedStyle: AiStyle =
+        PLAYER_GROUPS.find((g) => g.players.includes(submittedPlayer))?.style ??
+        "balanced";
       const res = await api<{ id: number }>("/api/games", {
         method: "POST",
         body: JSON.stringify({
           ai_rank: rank,
-          ai_style: aiStyle,
-          ai_player: aiPlayer,
+          ai_style: submittedStyle,
+          ai_player: submittedPlayer,
           handicap,
           user_color: handicap > 0 ? "black" : userColor,
           board_size: boardSize,
@@ -176,7 +197,7 @@ export default function NewGamePage() {
         className="mt-2 w-full"
         size="lg"
         onClick={onCreate}
-        disabled={busy}
+        disabled={busy || aiPlayer === null}
       >
         {busy ? "…" : t("game.start")}
       </Button>
