@@ -157,3 +157,7 @@ def test_flood_territory_returns_point_sets():
     # Sizes must agree with counts
     assert len(result.black_points) == result.black_territory
     assert len(result.white_points) == result.white_territory
+    assert len(result.dame_points) > 0
+    assert result.black_points.isdisjoint(result.white_points)
+    assert result.black_points.isdisjoint(result.dame_points)
+    assert result.white_points.isdisjoint(result.dame_points)

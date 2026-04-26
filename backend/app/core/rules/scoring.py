@@ -34,6 +34,9 @@ def _flood_territory(
 ]:
     """Flood-fill empty regions to determine territory ownership.
 
+    An empty region belongs to BLACK if it's only adjacent to black stones,
+    WHITE if only adjacent to white stones, and is neutral (dame) otherwise.
+
     Returns (black_count, white_count, black_points, white_points, dame_points).
     Dead stones are treated as empty during counting.
     """
