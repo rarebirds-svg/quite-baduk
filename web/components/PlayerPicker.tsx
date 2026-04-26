@@ -33,6 +33,14 @@ export const PLAYER_GROUPS: { style: AiStyle; players: PlayerId[] }[] = [
   { style: "rustic",      players: ["seo_bongsoo"] },
 ];
 
+export const ALL_PLAYER_IDS: readonly PlayerId[] = PLAYER_GROUPS.flatMap(
+  (g) => g.players,
+);
+
+export function randomPlayerId(): PlayerId {
+  return ALL_PLAYER_IDS[Math.floor(Math.random() * ALL_PLAYER_IDS.length)];
+}
+
 export interface PlayerPickerProps {
   value: PlayerId | null;
   onChange: (p: PlayerId) => void;
