@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -300,6 +301,15 @@ export default function PlayPage() {
       );
   }, [hint, g.boardSize]);
 
+  const territoryMarkers = scoringDetail
+    ? {
+        black: scoringDetail.black_points,
+        white: scoringDetail.white_points,
+        dame: scoringDetail.dame_points,
+        deadStones: scoringDetail.dead_stones,
+      }
+    : undefined;
+
   return (
     <div className="flex flex-col gap-4 py-4 md:grid md:grid-cols-[minmax(0,1fr)_280px] md:gap-8">
       <div className="flex flex-col gap-4">
@@ -326,6 +336,7 @@ export default function PlayPage() {
           onClick={sendMove}
           disabled={!ready || g.aiThinking || g.gameOver}
           overlay={overlay}
+          territoryMarkers={territoryMarkers}
         />
         <PlayerCaption
           color={meta?.user_color === "white" ? "white" : "black"}
@@ -459,25 +470,28 @@ export default function PlayPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog
+      <Sheet
         open={scoringDetail !== null}
         onOpenChange={(open) => {
           if (!open) setScoringDetail(null);
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-sm"
+        >
+          <div className="flex flex-col gap-1 mb-2">
+            <h2 className="font-serif text-lg font-semibold text-ink">
               {scoringDetail?.reason === "ai_passed"
                 ? t("game.aiPassedScoredTitle")
                 : t("game.scoringBreakdown")}
-            </DialogTitle>
-            <DialogDescription className="font-serif text-2xl text-ink">
+            </h2>
+            <p className="font-serif text-2xl text-ink">
               {scoringDetail?.result ?? ""}
-            </DialogDescription>
-          </DialogHeader>
+            </p>
+          </div>
           {scoringDetail && (
-            <div className="flex flex-col gap-3 font-mono tabular-nums text-sm">
+            <div className="flex flex-col gap-3 font-mono tabular-nums text-sm mt-4">
               <div className="grid grid-cols-3 gap-2 border-b border-ink-faint pb-2">
                 <span className="text-ink-mute">{t("game.blackTerritory")}</span>
                 <span className="text-right">{scoringDetail.black_territory}</span>
@@ -504,13 +518,13 @@ export default function PlayPage() {
               </div>
             </div>
           )}
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-6">
             <Button onClick={() => setScoringDetail(null)}>
               {t("game.cancel")}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <Dialog
         open={kifuOpen}
