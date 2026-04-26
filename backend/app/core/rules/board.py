@@ -6,9 +6,11 @@ Each cell is EMPTY, BLACK, or WHITE.
 
 from __future__ import annotations
 
-EMPTY = "."
-BLACK = "B"
-WHITE = "W"
+from typing import Literal
+
+EMPTY: Literal["."] = "."
+BLACK: Literal["B"] = "B"
+WHITE: Literal["W"] = "W"
 
 SUPPORTED_SIZES: tuple[int, ...] = (9, 13, 19)
 

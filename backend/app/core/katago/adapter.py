@@ -299,6 +299,8 @@ class KataGoAdapter:
             await self._ensure_alive()
             if self._proc is None or self._proc.stdin is None or self._proc.stdout is None:
                 return AnalysisResult()
+            stdin = self._proc.stdin
+            stdout = self._proc.stdout
 
             # Start streaming analysis. `interval 20` = 200ms cadence.
             # We cannot pass `maxvisits` to kata-analyze — at low visits the
@@ -308,8 +310,8 @@ class KataGoAdapter:
             # and interrupt with a blank newline once we've collected enough.
             deadline_s = max(0.3, min(5.0, max_visits * 0.02))
             cmd = f"kata-analyze {side} interval 20 maxmoves 5 ownership true\n"
-            self._proc.stdin.write(cmd.encode())
-            await self._proc.stdin.drain()
+            stdin.write(cmd.encode())
+            await stdin.drain()
 
             collected: list[str] = []
             deadline = asyncio.get_event_loop().time() + deadline_s
@@ -319,7 +321,7 @@ class KataGoAdapter:
                     remaining = max(0.05, deadline - asyncio.get_event_loop().time())
                     try:
                         line = await asyncio.wait_for(
-                            self._proc.stdout.readline(), timeout=remaining
+                            stdout.readline(), timeout=remaining
                         )
                     except TimeoutError:
                         break
@@ -331,8 +333,8 @@ class KataGoAdapter:
             finally:
                 # Stop the analyze stream with a bare newline (standard GTP).
                 try:
-                    self._proc.stdin.write(b"\n")
-                    await self._proc.stdin.drain()
+                    stdin.write(b"\n")
+                    await stdin.drain()
                 except Exception:
                     pipe_healthy = False
                 # Drain any trailing 'info move' lines plus the final
@@ -342,7 +344,7 @@ class KataGoAdapter:
                 try:
                     while True:
                         line = await asyncio.wait_for(
-                            self._proc.stdout.readline(), timeout=1.5
+                            stdout.readline(), timeout=1.5
                         )
                         if not line:
                             break
