@@ -89,6 +89,17 @@ function fmtTime(iso: string): string {
   }
 }
 
+function fmtDateTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      year: "2-digit", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    });
+  } catch {
+    return iso;
+  }
+}
+
 function duration(startIso: string, endIso: string): string {
   try {
     const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
@@ -450,7 +461,7 @@ export default function AdminPage() {
                     <td className="p-2 text-right tabular-nums">{g.move_count}</td>
                     <td className="p-2 text-right tabular-nums">{g.undo_count}</td>
                     <td className="p-2 text-right tabular-nums">{g.hint_count}</td>
-                    <td className="p-2 tabular-nums text-ink-mute">{fmtTime(g.started_at)}</td>
+                    <td className="p-2 tabular-nums text-ink-mute">{fmtDateTime(g.started_at)}</td>
                     <td className="p-2 tabular-nums text-ink-mute">
                       {g.finished_at ? duration(g.started_at, g.finished_at) : "—"}
                     </td>

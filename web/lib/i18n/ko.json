@@ -20,6 +20,7 @@
     "colAi": "AI",
     "colMoves": "수",
     "colStarted": "시작",
+    "colUserRank": "내 급수",
     "empty": "표시할 데이터가 없습니다",
     "liveBadge": "LIVE",
     "refreshed": "자동 새로고침 {sec}초",
