@@ -63,6 +63,35 @@ def test_endgame_phase_dead_stones_do_not_block_scoring() -> None:
     assert _endgame_phase_from_ownership(state, ownership) is True
 
 
+def test_endgame_phase_dame_only_position_allows_scoring() -> None:
+    """When the only "open" empty points are dame (|ownership| ≈ 0), the
+    user should be able to call 계가 — those points don't change the
+    score, they just need filling. Regression test for the bug where
+    ~30 dame points kept the gate closed indefinitely."""
+    state = _empty_state(13)
+    state.move_history = [Move(color=BLACK, coord="A1") for _ in range(150)]
+    # Most of the board is firmly black-owned territory.
+    ownership = [0.9] * (13 * 13)
+    # Sprinkle 30 dame points (truly neutral, |val| < 0.10).
+    for i in range(30):
+        ownership[i] = 0.03 if i % 2 == 0 else -0.04
+    assert _endgame_phase_from_ownership(state, ownership) is True
+
+
+def test_endgame_phase_genuinely_contested_empty_points_keep_gate_closed() -> None:
+    """Empty points where one side is leaning but not yet committed
+    (0.10 ≤ |val| < 0.35) still count and can keep the gate closed when
+    there are too many of them."""
+    state = _empty_state(13)
+    state.move_history = [Move(color=BLACK, coord="A1") for _ in range(150)]
+    ownership = [0.9] * (13 * 13)  # most of the board firmly settled
+    # Override 12 empty points to "contested" (|val| in [0.10, 0.35)).
+    for i in range(12):
+        ownership[i] = 0.20
+    # Budget on 13×13 is max(6, 13//3*2) = 8; 12 contested exceeds that.
+    assert _endgame_phase_from_ownership(state, ownership) is False
+
+
 def test_endgame_phase_truly_unsettled_stones_keep_gate_closed() -> None:
     """A stone with ownership ≈ 0 is genuinely undecided and DOES count
     against the budget. Five such stones on a 13×13 board exceed the

@@ -582,10 +582,17 @@ def _endgame_phase_from_ownership(state: GameState, ownership: list[float]) -> b
             cell = state.board.get(x, y)
             val = ownership[y * size + x]
             if cell == EMPTY:
-                # |ownership| < 0.35 ~= still contested. Above that, the
-                # point has leaned one side strongly enough to call it
-                # resolved even if not yet a stone.
-                if abs(val) < 0.35:
+                absval = abs(val)
+                # An empty point falls in one of three buckets:
+                #   - |val| < 0.10  →  dame (truly neutral). These don't
+                #     change the score; they just need to be filled, and
+                #     the user can call 계가 신청 even when only dame
+                #     remain. Don't block on them.
+                #   - 0.10 ≤ |val| < 0.35  →  genuinely contested. One
+                #     side could still claim it; the result could move.
+                #     Block until they're played out.
+                #   - |val| ≥ 0.35  →  already territory. Fine.
+                if 0.10 <= absval < 0.35:
                     empty_contested += 1
             else:
                 # A stone is "unsettled" only when ownership is genuinely
