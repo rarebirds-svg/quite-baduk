@@ -154,6 +154,11 @@
       "speed": "Light, quick shapes and mobility",
       "classical": "New-fuseki paradigm shift — grand, original ideas",
       "rustic": "Self-taught, practical over theory — gut-fight Go"
+    },
+    "result": {
+      "byResignation": "{color} wins by resignation",
+      "byPoints": "{color} wins by {points}",
+      "byTimeout": "{color} wins on time"
     }
   },
   "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber" },

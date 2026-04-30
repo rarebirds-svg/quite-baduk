@@ -7,6 +7,7 @@ import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { formatRank, type Rank } from "@/components/RankPicker";
+import { formatGameResult } from "@/lib/formatResult";
 
 interface BucketRow {
   total: number;
@@ -181,12 +182,12 @@ export default function HistoryPage() {
                       {g.winner === "user" ? (
                         <span className="font-sans font-semibold text-moss">
                           {t("admin.win")}
-                          {g.result ? <span className="ml-1 font-mono text-xs text-ink-mute">{g.result}</span> : null}
+                          {g.result ? <span className="ml-1 text-xs text-ink-mute">{formatGameResult(g.result)}</span> : null}
                         </span>
                       ) : g.winner === "ai" ? (
                         <span className="font-sans font-semibold text-oxblood">
                           {t("admin.loss")}
-                          {g.result ? <span className="ml-1 font-mono text-xs text-ink-mute">{g.result}</span> : null}
+                          {g.result ? <span className="ml-1 text-xs text-ink-mute">{formatGameResult(g.result)}</span> : null}
                         </span>
                       ) : (
                         <span className="text-ink-mute">{g.status}</span>
