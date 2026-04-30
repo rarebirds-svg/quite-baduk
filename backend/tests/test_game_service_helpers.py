@@ -46,6 +46,39 @@ def test_endgame_phase_false_when_too_many_contested_points() -> None:
     assert _endgame_phase_from_ownership(state, ownership) is False
 
 
+def test_endgame_phase_dead_stones_do_not_block_scoring() -> None:
+    """Stones whose ownership is decisively the opposite color are dead;
+    they will count for the right side at scoring time and must NOT keep
+    the gate closed. Regression test for the 13×13 one-sided position
+    where a user with several dead stones could not press 계가 신청."""
+    state = _empty_state(13)
+    # Synth enough moves to clear the move-count floor.
+    state.move_history = [Move(color=BLACK, coord="A1") for _ in range(150)]
+    # Place 5 black stones scattered across the board.
+    for x, y in [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]:
+        state.board = state.board.place(x, y, BLACK)
+    # KataGo confidently calls every cell white-owned (-0.9). The 5 black
+    # stones are *dead*, not unsettled. Endgame gate should be open.
+    ownership = [-0.9] * (13 * 13)
+    assert _endgame_phase_from_ownership(state, ownership) is True
+
+
+def test_endgame_phase_truly_unsettled_stones_keep_gate_closed() -> None:
+    """A stone with ownership ≈ 0 is genuinely undecided and DOES count
+    against the budget. Five such stones on a 13×13 board exceed the
+    `max(2, size // 3) = 4` budget."""
+    state = _empty_state(13)
+    state.move_history = [Move(color=BLACK, coord="A1") for _ in range(150)]
+    coords = [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)]
+    for x, y in coords:
+        state.board = state.board.place(x, y, BLACK)
+    ownership = [0.9] * (13 * 13)  # rest of the board strongly black
+    # Override the 5 stone positions to ~0 (genuinely unsettled).
+    for x, y in coords:
+        ownership[y * 13 + x] = 0.05
+    assert _endgame_phase_from_ownership(state, ownership) is False
+
+
 def test_dead_stones_from_ownership_marks_opposite_color() -> None:
     """A black stone sitting on a square the engine assigns strongly to White
     is dead from Black's perspective."""
