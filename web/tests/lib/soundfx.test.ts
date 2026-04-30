@@ -1,55 +1,90 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-class FakeAudio {
-  src: string;
-  volume = 1;
-  paused = true;
-  static instances: FakeAudio[] = [];
-  constructor(src: string) {
-    this.src = src;
-    FakeAudio.instances.push(this);
+// Minimal Web Audio API stub. We only assert that the synth pipeline gets
+// built — exact frequency / gain ramp values are sample-rate dependent
+// and not interesting to lock down here. The visible side effects we
+// care about are: createOscillator + start when enabled, none of that
+// when disabled.
+class FakeAudioParam {
+  value = 0;
+  setValueAtTime() { return this; }
+  exponentialRampToValueAtTime() { return this; }
+}
+class FakeAudioNode {
+  connect(next: FakeAudioNode) { return next; }
+  disconnect() { return undefined; }
+}
+class FakeOscillator extends FakeAudioNode {
+  type = "sine";
+  frequency = new FakeAudioParam();
+  static started: FakeOscillator[] = [];
+  start() { FakeOscillator.started.push(this); }
+  stop() { return undefined; }
+}
+class FakeGain extends FakeAudioNode {
+  gain = new FakeAudioParam();
+}
+class FakeBufferSource extends FakeAudioNode {
+  buffer: unknown = null;
+  start() { return undefined; }
+  stop() { return undefined; }
+}
+class FakeBiquad extends FakeAudioNode {
+  type = "highpass";
+  frequency = new FakeAudioParam();
+  Q = new FakeAudioParam();
+}
+class FakeAudioContext {
+  state = "running";
+  currentTime = 0;
+  sampleRate = 44_100;
+  destination = new FakeAudioNode();
+  createOscillator() { return new FakeOscillator(); }
+  createGain() { return new FakeGain(); }
+  createBufferSource() { return new FakeBufferSource(); }
+  createBiquadFilter() { return new FakeBiquad(); }
+  createBuffer(_ch: number, len: number) {
+    const data = new Float32Array(len);
+    return { sampleRate: this.sampleRate, getChannelData: () => data };
   }
-  play() {
-    this.paused = false;
-    return Promise.resolve();
-  }
-  pause() {
-    this.paused = true;
-  }
-  set currentTime(_v: number) {
-    // no-op
-  }
+  resume() { return Promise.resolve(); }
 }
 
 describe("soundfx", () => {
   beforeEach(() => {
-    vi.stubGlobal("Audio", FakeAudio);
-    FakeAudio.instances = [];
+    vi.stubGlobal("AudioContext", FakeAudioContext);
+    FakeOscillator.started = [];
     localStorage.clear();
     vi.resetModules();
   });
 
-  it("plays one sample from the pool when enabled", async () => {
+  it("synthesizes a click when enabled", async () => {
     const { playStoneClick } = await import("@/lib/soundfx");
     playStoneClick();
-    const playing = FakeAudio.instances.filter((a) => !a.paused);
-    expect(playing.length).toBe(1);
-    expect(playing[0].src).toMatch(/\/sounds\/stone-\d\.mp3$/);
+    // The pitched body layer wires an oscillator and starts it. A single
+    // call must produce at least one started oscillator — if it doesn't,
+    // the synth pipeline got short-circuited.
+    expect(FakeOscillator.started.length).toBeGreaterThan(0);
   });
 
-  it("does not play when disabled", async () => {
+  it("does not synthesize when disabled", async () => {
     const mod = await import("@/lib/soundfx");
     mod.setStoneSoundEnabled(false);
     mod.playStoneClick();
-    const playing = FakeAudio.instances.filter((a) => !a.paused);
-    expect(playing.length).toBe(0);
+    expect(FakeOscillator.started.length).toBe(0);
   });
 
-  it("persists enabled flag in localStorage", async () => {
+  it("persists the enabled flag in localStorage", async () => {
     const mod = await import("@/lib/soundfx");
     mod.setStoneSoundEnabled(false);
     expect(localStorage.getItem("sfx:stone")).toBe("0");
     mod.setStoneSoundEnabled(true);
     expect(localStorage.getItem("sfx:stone")).toBe("1");
+  });
+
+  it("is a no-op when AudioContext is unavailable", async () => {
+    vi.stubGlobal("AudioContext", undefined);
+    const { playStoneClick } = await import("@/lib/soundfx");
+    expect(() => playStoneClick()).not.toThrow();
   });
 });
