@@ -1,5 +1,5 @@
 "use client";
-import { useT, useLocale } from "@/lib/i18n";
+import { useT, useLocale, type Locale } from "@/lib/i18n";
 import {
   Select,
   SelectTrigger,
@@ -30,10 +30,21 @@ export const RANKS = [
 ] as const;
 export type Rank = (typeof RANKS)[number];
 
-export function formatRank(r: Rank, locale: "ko" | "en"): string {
-  if (locale !== "ko") return r;
+export function formatRank(r: Rank, locale: Locale): string {
+  // CJK suffixes share the same kanji for dan/kyu, so ko / ja / zh all
+  // get the same formatting; only English keeps the bare "5k" / "1d".
   const n = parseInt(r, 10);
-  return r.endsWith("d") ? `${n}단` : `${n}급`;
+  switch (locale) {
+    case "ko":
+      return r.endsWith("d") ? `${n}단` : `${n}급`;
+    case "ja":
+      return r.endsWith("d") ? `${n}段` : `${n}級`;
+    case "zh":
+      return r.endsWith("d") ? `${n}段` : `${n}级`;
+    case "en":
+    default:
+      return r;
+  }
 }
 
 export interface RankPickerProps {
