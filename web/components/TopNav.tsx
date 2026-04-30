@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Laptop } from "lucide-react";
-import { useT, useLocale, setLocale } from "@/lib/i18n";
+import {
+  useT,
+  useLocale,
+  setLocale,
+  SUPPORTED_LOCALES,
+  LOCALE_LABELS,
+  type Locale,
+} from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/editorial/BrandMark";
@@ -82,13 +89,31 @@ export default function TopNav() {
             </Button>
           )}
 
-          <button
-            onClick={() => setLocale(locale === "ko" ? "en" : "ko")}
-            aria-label="Toggle language"
-            className="flex h-9 w-9 items-center justify-center border border-ink-faint font-mono text-[10px] font-semibold uppercase tracking-label text-ink-mute hover:bg-paper-deep"
-          >
-            {locale === "ko" ? "EN" : "KO"}
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                aria-label="Switch language"
+                className="flex h-9 w-9 items-center justify-center border border-ink-faint font-mono text-[10px] font-semibold uppercase tracking-label text-ink-mute hover:bg-paper-deep"
+              >
+                {/* The 2-letter code reads as a control affordance across all four scripts. */}
+                {locale.toUpperCase()}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {SUPPORTED_LOCALES.map((loc: Locale) => (
+                <DropdownMenuItem
+                  key={loc}
+                  onClick={() => setLocale(loc)}
+                  className={loc === locale ? "font-semibold text-oxblood" : undefined}
+                >
+                  <span className="font-mono text-[10px] uppercase tracking-label w-6 text-ink-mute">
+                    {loc}
+                  </span>
+                  <span>{LOCALE_LABELS[loc]}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <button
             onClick={() => setTheme(nextTheme)}
