@@ -302,7 +302,7 @@ async def place_move(
                     new_state, analysis.ownership
                 )
 
-                # AI auto-resign — three guards to prevent premature
+                # AI auto-resign — four guards to prevent premature
                 # resigns from noisy 32-visit winrate reads (especially
                 # on 9x9 where a single capture can swing 20%+):
                 #
@@ -312,13 +312,21 @@ async def place_move(
                 #   2. Two-stage eval: the 32-visit shallow read serves as
                 #      a *trigger* (< 3%), not a decision. A deeper
                 #      200-visit re-analysis must agree (< 1%).
-                #   3. Loss-streak: the deep-confirmed sub-1% condition
-                #      must hold for three consecutive AI turns. One
-                #      noisy read can't end the game; the user has plies
-                #      in between to play into a recovery. Persisted in
+                #   3. Score-margin gate: even with sub-1% winrate, the
+                #      deep score lead against the AI must be ≥ 10 points.
+                #      Pros never resign in a half-point game; this keeps
+                #      the AI from giving up "I'm behind by 2 but have
+                #      0% chance to come back" positions where the user
+                #      can still misplay the endgame and lose. Matches
+                #      Tygem / Orobaduk house etiquette.
+                #   4. Loss-streak: the confirmed losing condition must
+                #      hold for three consecutive AI turns. One noisy
+                #      read can't end the game; the user has plies in
+                #      between to play into a recovery. Persisted in
                 #      games.loss_streak so it survives reconnects.
                 ai_winrate_shallow = 1.0 - wr
                 resign_min_moves = max(20, new_state.board.size * 2)
+                RESIGN_MIN_MARGIN = 10.0  # points; gate (3) above
                 is_normal_ai_move = (
                     ai_move is not None
                     and ai_move.lower() not in ("pass", "resign")
@@ -334,9 +342,18 @@ async def place_move(
                             side=new_state.to_move, max_visits=200
                         )
                         deep_ai_wr = 1.0 - float(deep.winrate)
+                        # `deep.score_lead` is from new_state.to_move's
+                        # perspective (the user, since AI just moved).
+                        # Positive = user ahead. AI's losing margin is
+                        # the same magnitude.
+                        ai_losing_margin = float(deep.score_lead)
                     except Exception:
                         deep_ai_wr = 1.0
-                    deep_confirms_loss = deep_ai_wr < 0.01
+                        ai_losing_margin = 0.0
+                    deep_confirms_loss = (
+                        deep_ai_wr < 0.01
+                        and ai_losing_margin >= RESIGN_MIN_MARGIN
+                    )
 
                 if deep_confirms_loss:
                     game.loss_streak = (game.loss_streak or 0) + 1
