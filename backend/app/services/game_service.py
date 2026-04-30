@@ -588,20 +588,22 @@ def _endgame_phase_from_ownership(state: GameState, ownership: list[float]) -> b
                 if abs(val) < 0.35:
                     empty_contested += 1
             else:
-                # Stone whose color disagrees with ownership is "unsettled"
-                # (could still die or live). Tight threshold prevents false
-                # endgames on fighting positions.
-                if cell == BLACK and val < 0.1:
-                    stone_unsettled += 1
-                elif cell == WHITE and val > -0.1:
+                # A stone is "unsettled" only when ownership is genuinely
+                # undecided (≈ 0). Stones whose ownership is decisively the
+                # *opposite* color are dead — those will be counted for the
+                # right side at scoring time, so they must NOT keep the
+                # gate closed. This is the bug that blocked 계가 신청 in
+                # one-sided positions where many user stones were already
+                # confirmed dead by KataGo.
+                if abs(val) < 0.3:
                     stone_unsettled += 1
     # Budget for "contested empty" points — roughly a third of each board
     # dimension, with a floor of 6. Realistic games still have several
     # contested dame points when players are ready to score.
     contested_budget = max(6, size // 3 * 2)
-    # Allow a small number of unsettled stones (one weak group on the
-    # board shouldn't block scoring in practice).
-    unsettled_budget = max(0, size // 6)
+    # Allow a moderate number of genuinely-unsettled stones — the previous
+    # `size // 6` was too tight (2 on 13×13) and rejected obvious endgames.
+    unsettled_budget = max(2, size // 3)
     return empty_contested <= contested_budget and stone_unsettled <= unsettled_budget
 
 
