@@ -4,6 +4,7 @@ import Board from "@/components/Board";
 import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { gtpToXy, totalCells } from "@/lib/board";
+import { formatGameResult } from "@/lib/formatResult";
 import { Button } from "@/components/ui/button";
 
 interface MoveEntryRaw {
@@ -138,7 +139,7 @@ export default function ReviewPlayer({
         </span>
         <span className="text-ink-faint">
           {game.user_nickname ?? "—"} · {game.ai_player ?? game.ai_rank ?? ""}
-          {game.result ? ` · ${game.result}` : ""}
+          {game.result ? ` · ${formatGameResult(game.result)}` : ""}
         </span>
       </div>
 

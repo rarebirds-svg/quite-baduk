@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { applyMoveWithCaptures, gtpToXy, xyToGtp } from "@/lib/board";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank, type Rank } from "@/components/RankPicker";
+import { formatGameResult } from "@/lib/formatResult";
 import { playStoneClick } from "@/lib/soundfx";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { StatFigure } from "@/components/editorial/StatFigure";
@@ -369,7 +370,7 @@ export default function PlayPage() {
 
         {g.gameOver && (
           <div className="border border-ink p-4 font-serif text-lg flex items-center">
-            <span>{t("game.result")}: {g.result || ""}</span>
+            <span>{t("game.result")}: {formatGameResult(g.result)}</span>
             <button
               type="button"
               className="ml-3 font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"

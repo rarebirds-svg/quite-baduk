@@ -154,6 +154,11 @@
       "speed": "빠르고 가벼운 기동력으로 승부",
       "classical": "신포석 시대의 패러다임을 바꾼 웅대한 발상",
       "rustic": "정석보다 실전 감각으로 승부하는 야성적 행마"
+    },
+    "result": {
+      "byResignation": "{color} 불계승",
+      "byPoints": "{color} {points}집 승",
+      "byTimeout": "{color} 시간승"
     }
   },
   "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "play": "재생", "pause": "일시정지", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더" },
