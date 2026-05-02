@@ -21,8 +21,8 @@ docker compose up --build -d
 # 4. Health wait (max 60s)
 echo -n "스택 준비를 기다리는 중"
 ready=0
-for i in $(seq 1 60); do
-  if curl -fs http://localhost:8000/health >/dev/null 2>&1 \
+for _ in $(seq 1 60); do
+  if curl -fs http://localhost:8000/api/health >/dev/null 2>&1 \
      && curl -fs http://localhost:3000 >/dev/null 2>&1; then
     ready=1
     break

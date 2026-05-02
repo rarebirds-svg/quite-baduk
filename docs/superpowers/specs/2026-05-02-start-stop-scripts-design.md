@@ -21,7 +21,7 @@ Both at project root, executable (`chmod +x`).
 2. **`.env` bootstrap.** If `./.env` is missing, copy `./.env.example` to `./.env` and print a notice. Do not overwrite an existing `.env`.
 3. **Compose up.** `docker compose up --build -d` (v2 syntax — matches CI per commit `61abdab`).
 4. **Health wait.** Poll once per second, up to 60 seconds total:
-   - Backend ready when `curl -fs http://localhost:8000/health` exits 0.
+   - Backend ready when `curl -fs http://localhost:8000/api/health` exits 0.
    - Web ready when `curl -fs http://localhost:3000` exits 0 (any 2xx/3xx is fine — a 200 from the Next.js root or a redirect both count).
    - Print a single-line progress indicator (e.g. `Waiting for stack… 3s`).
    - On timeout, print `스택이 60초 안에 준비되지 않았습니다. 'docker compose logs'로 확인하세요.` and exit 1 (containers stay up so the user can inspect).
