@@ -17,7 +17,7 @@ Rank selection from **18k to 7d** (Human-SL model), handicap games **2–9 stone
 - 📊 **Personal stats** — win/loss by rank and handicap
 - 🌐 **i18n** — Korean and English, instant switching
 - 🌗 **Dark mode**
-- 🔒 **Accounts** — email + password with bcrypt-hashed storage, JWT cookies
+- 🔒 **Sessions** — ephemeral nickname-only login. Opaque random session token in an HttpOnly cookie; idle TTL 1 hour. No email, no password, no PII.
 
 ## Architecture
 
@@ -89,9 +89,11 @@ Copy `.env.example` → `.env` and override as needed.
 
 | Variable        | Default                             | Description                                                 |
 |-----------------|-------------------------------------|-------------------------------------------------------------|
-| `JWT_SECRET`    | `changeme-in-production`            | **REQUIRED in prod.** 32+ byte random string.              |
+| `APP_ENV`       | `development`                       | Set to `production` to enable Secure cookies + HSTS header. |
+| `JWT_SECRET`    | `changeme-in-production`            | Reserved for future signed-cookie support. Currently unused (sessions use opaque random tokens stored in DB). Keep it set anyway. |
 | `KATAGO_MOCK`   | `false`                             | `true` skips model download and uses a deterministic mock.  |
 | `CORS_ORIGINS`  | `http://localhost:3000`             | Comma-separated allowed origins.                            |
+| `KATAGO_ANALYZE_MAX_DEADLINE_SEC` | `15`               | Wall-clock budget for one `kata-analyze` call. Lower on fast CPUs.|
 
 Backend-only env vars (configure inside the backend container):
 
@@ -172,12 +174,13 @@ Higher ranks (5d/7d) use more visits (256/512) and take longer per move. For CPU
 
 Before deploying publicly:
 
-- [ ] Generate a strong `JWT_SECRET` (32+ random bytes)
-- [ ] Put an HTTPS-terminating reverse proxy (Caddy, Nginx, Cloudflare Tunnel) in front
-- [ ] Set cookie `secure=True` (requires code change — see `docs/QUALITY_REPORT.md` item H2)
+- [ ] Set `APP_ENV=production`. This auto-enables `Secure` cookies and `Strict-Transport-Security`.
+- [ ] Put an HTTPS-terminating reverse proxy (Caddy, Nginx, Cloudflare Tunnel) in front. The backend's built-in `SecurityHeadersMiddleware` adds the baseline (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, HSTS); a CSP / Permissions-Policy is best layered at the proxy.
 - [ ] Update `CORS_ORIGINS` to your production domain
+- [ ] Replace placeholder support address in `web/app/privacy/page.tsx` and `web/app/terms/page.tsx`
 - [ ] Run `bandit`, `pip-audit`, `npm audit` in CI and fix any `high` findings
 - [ ] Ensure the `backup` service is scheduled or swap for off-host backup storage
+- [ ] Replace placeholder PWA icons under `web/public/icons/` with branded artwork (see icons/README.md)
 
 ## Quality Report
 

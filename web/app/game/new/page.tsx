@@ -6,7 +6,6 @@ import { api, ApiError } from "@/lib/api";
 import type { BoardSize } from "@/lib/board";
 import { Hero } from "@/components/editorial/Hero";
 import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
 import RankPicker, { RANKS, type Rank } from "@/components/RankPicker";
 import BoardSizePicker from "@/components/BoardSizePicker";
@@ -36,9 +35,17 @@ export default function NewGamePage() {
   // freely via the PlayerPicker.
   const [aiPlayer, setAiPlayer] = useState<PlayerId | null>(null);
   const [handicap, setHandicap] = useState(0);
-  const [userColor, setUserColor] = useState<"black" | "white">("black");
+  // userColor stays null until the user rolls — for an even (호선) game the
+  // traditional method of deciding stones is nigiri (random), so the form
+  // requires a roll before "Start" is allowed. Default null also keeps SSR
+  // and first client render in sync (no Math.random at module scope).
+  const [userColor, setUserColor] = useState<"black" | "white" | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const rollColor = () => {
+    setUserColor(Math.random() < 0.5 ? "black" : "white");
+  };
 
   const aiStyle: AiStyle = (
     aiPlayer
@@ -100,7 +107,7 @@ export default function NewGamePage() {
           ai_style: submittedStyle,
           ai_player: submittedPlayer,
           handicap,
-          user_color: handicap > 0 ? "black" : userColor,
+          user_color: handicap > 0 ? "black" : (userColor ?? "black"),
           board_size: boardSize,
           user_rank: userRank,
         }),
@@ -165,18 +172,27 @@ export default function NewGamePage() {
             <Label className="text-xs font-semibold uppercase tracking-label text-ink-mute">
               {t("game.color")}
             </Label>
-            <ToggleGroup
-              type="single"
-              value={userColor}
-              onValueChange={(v) => v && setUserColor(v as "black" | "white")}
-            >
-              <ToggleGroupItem value="black">
-                {t("game.colorBlack")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="white">
-                {t("game.colorWhite")}
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <div className="flex items-center gap-3">
+              <span className="font-sans text-sm text-ink min-w-[3.5rem] text-right tabular-nums">
+                {userColor === null
+                  ? "—"
+                  : `${t("game.colorYou")} · ${
+                      userColor === "black"
+                        ? t("game.colorBlack")
+                        : t("game.colorWhite")
+                    }`}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={rollColor}
+              >
+                {userColor === null
+                  ? t("game.colorRoll")
+                  : t("game.colorReroll")}
+              </Button>
+            </div>
           </section>
         )}
       </div>
@@ -197,7 +213,9 @@ export default function NewGamePage() {
         className="mt-2 w-full"
         size="lg"
         onClick={onCreate}
-        disabled={busy || aiPlayer === null}
+        disabled={
+          busy || aiPlayer === null || (handicap === 0 && userColor === null)
+        }
       >
         {busy ? "…" : t("game.start")}
       </Button>

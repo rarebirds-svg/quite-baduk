@@ -10,6 +10,7 @@ from app.deps import CurrentSession, DbSession, is_admin
 from app.engine_pool import game_lock, get_cached_state
 from app.models import Game, Session
 from app.models import Move as MoveRow
+from app.rate_limit import rate_limiter
 from app.schemas.game import (
     CreateGameRequest,
     GameDetail,
@@ -164,6 +165,11 @@ async def hint_endpoint(
     db: DbSession,
     sess: CurrentSession,
 ) -> HintResponse:
+    # KataGo eval is expensive (~1–5s per call). Cap at 30/min per session.
+    if not await rate_limiter.check(
+        f"hint:{sess.id}", max_hits=30, window_sec=60
+    ):
+        raise HTTPException(status_code=429, detail="rate_limited")
     game = await _fetch_owned_game(db, game_id, sess)
     async with game_lock(game.id):
         state = get_cached_state(game.id)

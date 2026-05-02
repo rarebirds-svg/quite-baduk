@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
 import { useAuthStore, type Session } from "@/store/authStore";
 import { useT } from "@/lib/i18n";
@@ -218,6 +219,21 @@ export default function NicknameGate() {
         <p className="font-sans text-xs text-ink-faint leading-relaxed">
           {t("home.footerNote")}
         </p>
+        <div className="mt-3 flex items-center gap-4">
+          <Link
+            href="/privacy"
+            className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
+          >
+            {t("home.footerPrivacy")}
+          </Link>
+          <span className="text-ink-faint text-xs" aria-hidden="true">·</span>
+          <Link
+            href="/terms"
+            className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
+          >
+            {t("home.footerTerms")}
+          </Link>
+        </div>
       </footer>
     </div>
   );
