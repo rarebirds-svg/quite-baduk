@@ -58,6 +58,13 @@ echo "KATAGO_MOCK=true" >> .env
 docker-compose up --build
 ```
 
+On macOS, you can use the included launcher script instead — it auto-starts Docker Desktop if needed, bootstraps `.env`, waits for the stack to be healthy, and opens your browser:
+
+```bash
+./start.sh   # bring the stack up
+./stop.sh    # bring the stack down
+```
+
 First boot downloads the KataGo binary (~10 MB) and the Human-SL model (~200 MB) unless `KATAGO_MOCK=true`.
 
 ### Access
