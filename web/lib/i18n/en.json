@@ -81,7 +81,9 @@
     "valueTitle3": "Deep positional read",
     "valueDesc3": "Live winrate and score lead, endgame-phase detection, and KataGo-ownership-driven dead-stone scoring.",
     "scrollHint": "Enter a nickname below to begin",
-    "footerNote": "Your nickname lives only in a session cookie — clearing the browser forgets it."
+    "footerNote": "Your nickname lives only in a session cookie — clearing the browser forgets it.",
+    "footerPrivacy": "Privacy Policy",
+    "footerTerms": "Terms of Service"
   },
   "session": {
     "nicknameHeading": "Choose a nickname",
@@ -96,7 +98,7 @@
     "expiredTitle": "Your session has expired",
     "expiredDesc": "Please set a nickname to continue"
   },
-  "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Order", "colorBlack": "Black", "colorWhite": "White", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "aiThinking": "AI thinking...", "viewKifu": "View kifu", "downloadSgf": "Download SGF", "kifuDialogTitle": "Kifu review", "resultLabel": "Result", "newGame": "New game", "newGameSubtitle": "Pick opponent, size, and handicap to begin.", "summary": "Summary", "start": "Start", "sectionOpponent": "Opponent", "sectionBoard": "Board", "sectionHandicap": "Handicap", "sectionChoice": "Choice", "aiRank": "KataGo Human-SL", "you": "You", "yourRank": "Player", "yourTurn": "Your turn", "thinking": "Thinking…", "result": "Result", "info": "INFO", "moves": "MOVES", "move": "MOVE", "captures": "CAPTURES", "toMove": "TO MOVE", "winrate": "WINRATE", "winrateBlack": "Black", "winrateWhite": "White", "evenPosition": "Even",
+  "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Order", "colorBlack": "Black", "colorWhite": "White", "colorRoll": "Roll", "colorReroll": "Re-roll", "colorYou": "You", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "aiThinking": "AI thinking...", "viewKifu": "View kifu", "downloadSgf": "Download SGF", "kifuDialogTitle": "Kifu review", "resultLabel": "Result", "newGame": "New game", "newGameSubtitle": "Pick opponent, size, and handicap to begin.", "summary": "Summary", "start": "Start", "sectionOpponent": "Opponent", "sectionBoard": "Board", "sectionHandicap": "Handicap", "sectionChoice": "Choice", "aiRank": "KataGo Human-SL", "you": "You", "yourRank": "Player", "yourTurn": "Your turn", "thinking": "Thinking…", "result": "Result", "info": "INFO", "moves": "MOVES", "move": "MOVE", "captures": "CAPTURES", "toMove": "TO MOVE", "winrate": "WINRATE", "winrateBlack": "Black", "winrateWhite": "White", "evenPosition": "Even",
     "aiResignedTitle": "Win by resignation",
     "aiResignedBody": "The AI has laid down its stones. Congratulations.",
     "aiPassed": "AI passed",
@@ -183,6 +185,157 @@
     "colDuration": "Duration"
   },
   "settings": { "heading": "Settings", "preferredRank": "Preferred rank", "language": "Language", "theme": "Theme", "themeLight": "Light", "themeDark": "Dark", "saved": "Saved", "boardBg": "Board surface", "boardBg_paper": "Paper", "boardBg_wood": "Wood", "boardBg_kaya": "Kaya", "boardBg_slate": "Slate" },
+  "privacy": {
+    "title": "Privacy Policy",
+    "eyebrow": "Policy",
+    "intro": "Baduk takes your privacy seriously. This policy explains what data we collect, why we collect it, how long we keep it, and the rights you have over it.",
+    "lastUpdated": "Last updated",
+    "lastUpdatedDate": "2026-05-03",
+    "backHome": "Back to home",
+    "sections": {
+      "collect": {
+        "title": "Data we collect",
+        "items": [
+          "Nickname (up to 32 characters) and a normalised nickname key (used for uniqueness checks only)",
+          "Game history: board size, handicap, your colour, scores, win/loss, move sequence (kifu), start and end times",
+          "Session token (HttpOnly cookie, opaque random value — not a JWT)",
+          "Connection time and last-activity time (auto-purged after 1 hour of inactivity)",
+          "Server logs: IP address (rate-limiting and abuse prevention only), request path, response time — auto-deleted within 14 days",
+          "What we do NOT collect: email, phone number, payment details, location, device identifiers, profile photo"
+        ]
+      },
+      "purpose": {
+        "title": "How we use it",
+        "items": [
+          "To provide game play and display your game history",
+          "To check nickname uniqueness (nickname_key field)",
+          "To prevent abuse and maintain rate limits",
+          "For aggregated, anonymised service statistics (daily active users, average game length, etc.)"
+        ]
+      },
+      "retention": {
+        "title": "Retention",
+        "items": [
+          "Session token: discarded after 1 hour of inactivity or on explicit logout",
+          "Game history: kept with a nickname snapshot; deleted on user request (see rights below)",
+          "Server logs: auto-deleted 14 days after collection"
+        ]
+      },
+      "thirdParty": {
+        "title": "Third-party sharing and processors",
+        "items": [
+          "We do not share or transfer your data to any third party.",
+          "External services used: Pretendard font CDN (jsdelivr.net), KataGo model download (media.katagotraining.org). No personally identifiable information is transmitted."
+        ]
+      },
+      "rights": {
+        "title": "Your rights",
+        "items": [
+          "Access, correction, or deletion requests: support@baduk.example",
+          "Nickname change: create a new nickname session",
+          "Game history deletion: email the address above with your nickname — processed within 7 business days"
+        ]
+      },
+      "minors": {
+        "title": "Minors under 14 (Korean Network Act)",
+        "items": [
+          "Users under 14 years of age must have a legal guardian's consent before using the service.",
+          "By registering a nickname you confirm that you are 14 or older.",
+          "If guardian consent is required, please contact support@baduk.example."
+        ]
+      },
+      "cookies": {
+        "title": "Cookies",
+        "items": [
+          "We use exactly one cookie: the session token (HttpOnly, SameSite=Lax; Secure in production).",
+          "No analytics, advertising, or tracking cookies of any kind."
+        ]
+      },
+      "changes": {
+        "title": "Policy changes",
+        "items": [
+          "Material changes will be announced on this page at least one week before taking effect.",
+          "The last-updated date at the bottom of this page reflects the current version."
+        ]
+      },
+      "contact": {
+        "title": "Privacy contact",
+        "items": [
+          "Email: support@baduk.example"
+        ]
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "eyebrow": "Terms",
+    "intro": "These terms govern your use of the Baduk service and set out the rights and obligations of the operator and users.",
+    "lastUpdated": "Last updated",
+    "lastUpdatedDate": "2026-05-03",
+    "backHome": "Back to home",
+    "sections": {
+      "intro": {
+        "title": "About the service",
+        "items": [
+          "'Baduk' is a free web and mobile service for playing Go against the KataGo Human-SL model.",
+          "Twelve strength levels are available — 18-kyu through 7-dan — with even games and 2–9 stone handicaps.",
+          "Three board sizes are supported: 9×9, 13×13, and 19×19."
+        ]
+      },
+      "account": {
+        "title": "Account (nickname session)",
+        "items": [
+          "No email or password registration is required — a nickname alone creates a temporary session.",
+          "Sessions expire automatically after 1 hour of inactivity.",
+          "If the same nickname is used in a new session, the new session replaces the existing one."
+        ]
+      },
+      "prohibited": {
+        "title": "Prohibited conduct",
+        "items": [
+          "Automated bots or scripts that generate high request volumes",
+          "Impersonation nicknames or nicknames containing offensive or hateful language",
+          "Exploiting service vulnerabilities or deliberately overloading the infrastructure",
+          "Any other conduct that violates applicable law or seriously disrupts the service"
+        ]
+      },
+      "aiDisclaimer": {
+        "title": "AI disclaimer",
+        "items": [
+          "KataGo Human-SL is an AI model; its evaluations and hints are for reference only.",
+          "The AI's analysis does not guarantee correct play and is provided for educational and recreational purposes."
+        ]
+      },
+      "serviceChanges": {
+        "title": "Changes and interruptions",
+        "items": [
+          "The operator may modify or discontinue features with prior notice.",
+          "Emergency maintenance may cause unannounced temporary outages."
+        ]
+      },
+      "ip": {
+        "title": "Intellectual property",
+        "items": [
+          "The 'Baduk' name, design, and source code are owned by the operator.",
+          "KataGo is distributed under the MIT licence (source: https://github.com/lightvector/KataGo).",
+          "Kifu (SGF records) produced by users belong to those users and may be freely downloaded and shared."
+        ]
+      },
+      "jurisdiction": {
+        "title": "Governing law and disputes",
+        "items": [
+          "These terms are governed by and construed in accordance with the laws of the Republic of Korea.",
+          "Disputes will first be resolved through good-faith negotiation; unresolved matters will be referred to the court of jurisdiction at the operator's registered address."
+        ]
+      },
+      "contact": {
+        "title": "Contact",
+        "items": [
+          "Email: support@baduk.example"
+        ]
+      }
+    }
+  },
   "errors": {
     "NOT_YOUR_TURN": "Not your turn", "OCCUPIED": "Already occupied",
     "ILLEGAL_SUICIDE": "Suicide move is illegal", "ILLEGAL_KO": "Ko — same board position",
