@@ -691,6 +691,12 @@ async def _reseed_adapter(game: Game, state: GameState) -> None:
     """
     adapter = get_adapter()
     await adapter.start()
+    # Always wipe the subprocess board first. set_boardsize (= GTP `boardsize`)
+    # is documented to clear, but some KataGo builds leave the previous
+    # position untouched when the size matches — which surfaces as
+    # "illegal move" during the replay below since the stones from a prior
+    # game are still on the board.
+    await adapter.clear_board()
     await adapter.set_boardsize(game.board_size)
     await adapter.set_komi(game.komi)
     cfg = rank_to_config(

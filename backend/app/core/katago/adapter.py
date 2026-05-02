@@ -302,23 +302,44 @@ class KataGoAdapter:
             stdin = self._proc.stdin
             stdout = self._proc.stdout
 
-            # Start streaming analysis. `interval 20` = 200ms cadence.
+            # Start streaming analysis. `interval 200` = 200ms cadence.
             # We cannot pass `maxvisits` to kata-analyze — at low visits the
             # engine completes the search before emitting any info lines and
-            # we'd get zero hints. Instead, map `max_visits` to a wall-clock
-            # deadline (≈ 20 ms per requested visit; clamped to [0.3s, 5.0s]),
-            # and interrupt with a blank newline once we've collected enough.
-            deadline_s = max(0.3, min(5.0, max_visits * 0.02))
-            cmd = f"kata-analyze {side} interval 20 maxmoves 5 ownership true\n"
+            # we'd get zero hints. Instead we run a wall-clock budget and
+            # break early once we've collected at least one info line plus
+            # a small settle window (so fast hosts return quickly while slow
+            # hosts — Rosetta on Apple Silicon takes ≈ 6s for a cold first
+            # info — still get a non-empty result).
+            #
+            # Deadline scales with max_visits but is bounded so callers can
+            # rely on a reasonable upper time-to-response. Tunable via
+            # KATAGO_ANALYZE_MAX_DEADLINE_SEC (default 15s).
+            import os
+            max_deadline = float(os.getenv("KATAGO_ANALYZE_MAX_DEADLINE_SEC", "15"))
+            deadline_s = max(2.0, min(max_deadline, max_visits * 0.05))
+            cmd = f"kata-analyze {side} interval 200 maxmoves 5 ownership true\n"
             stdin.write(cmd.encode())
             await stdin.drain()
 
             collected: list[str] = []
-            deadline = asyncio.get_event_loop().time() + deadline_s
+            now = asyncio.get_event_loop().time()
+            deadline = now + deadline_s
+            # Settle window after the first info line — once we have at
+            # least one result we wait this long for any extra updates,
+            # then stop. Lets fast hosts return quickly without burning
+            # the full deadline.
+            settle_s = 0.5
+            settle_deadline: float | None = None
             pipe_healthy = True
             try:
-                while asyncio.get_event_loop().time() < deadline:
-                    remaining = max(0.05, deadline - asyncio.get_event_loop().time())
+                while True:
+                    now = asyncio.get_event_loop().time()
+                    eff_deadline = (
+                        min(deadline, settle_deadline) if settle_deadline else deadline
+                    )
+                    if now >= eff_deadline:
+                        break
+                    remaining = max(0.05, eff_deadline - now)
                     try:
                         line = await asyncio.wait_for(
                             stdout.readline(), timeout=remaining
@@ -330,6 +351,10 @@ class KataGoAdapter:
                     text = line.decode("utf-8", errors="replace")
                     if text.strip().startswith("info move"):
                         collected.append(text)
+                        if settle_deadline is None:
+                            settle_deadline = (
+                                asyncio.get_event_loop().time() + settle_s
+                            )
             finally:
                 # Stop the analyze stream with a bare newline (standard GTP).
                 try:

@@ -1,28 +1,42 @@
 services:
   web:
-    build: ./web
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: http://backend:8000
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: http://backend:8000
     depends_on:
       - backend
 
   backend:
-    build: ./backend
+    # KataGo's official Linux binaries are x86_64 only; pin the image so
+    # Docker Desktop can run it under Rosetta on Apple Silicon hosts.
+    platform: linux/amd64
+    build:
+      context: ./backend
+      platforms:
+        - linux/amd64
     ports:
       - "8000:8000"
     environment:
       DB_PATH: /data/baduk.db
       JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
       KATAGO_BIN_PATH: /usr/local/bin/katago
-      KATAGO_MODEL_PATH: /katago/models/b18c384nbt-humanv0.bin.gz
+      # Main strong net — used for policy/value/search.
+      KATAGO_MODEL_PATH: /katago/models/kata1-b18c384nbt-s9996604416-d4316597426.bin.gz
+      # Human-SL net — passed via -human-model so strength.py humanSLProfile takes effect.
+      KATAGO_HUMAN_MODEL_PATH: /katago/models/b18c384nbt-humanv0.bin.gz
       KATAGO_CONFIG_PATH: /katago/config.cfg
-      CORS_ORIGINS: http://localhost:3000
+      KATAGO_TIMEOUT_SEC: ${KATAGO_TIMEOUT_SEC:-60}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       KATAGO_MOCK: ${KATAGO_MOCK:-false}
     volumes:
       - baduk_data:/data
       - baduk_backups:/backups
+      - katago_models:/katago/models
 
   backup:
     image: alpine:3.19
@@ -43,3 +57,4 @@ services:
 volumes:
   baduk_data:
   baduk_backups:
+  katago_models:
