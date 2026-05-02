@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.deps import CurrentSession, DbSession
 from app.engine_pool import get_adapter
 from app.models import AnalysisCache, Game, Session
+from app.rate_limit import rate_limiter
 from app.schemas.game import AnalysisResponse, HintMove
 
 router = APIRouter(prefix="/api/games", tags=["analysis"])
@@ -31,6 +32,12 @@ async def analyze_game(
     db: DbSession,
     sess: CurrentSession,
 ) -> AnalysisResponse:
+    # Cap at 60/min per session (analyze is cached per move, but a malicious
+    # client could flood with random moveNum values to bypass the cache).
+    if not await rate_limiter.check(
+        f"analyze:{sess.id}", max_hits=60, window_sec=60
+    ):
+        raise HTTPException(status_code=429, detail="rate_limited")
     game = await _fetch_owned(db, game_id, sess)
 
     res = await db.execute(
