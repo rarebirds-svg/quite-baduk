@@ -16,8 +16,7 @@ Both at project root, executable (`chmod +x`).
 
 ## Behavior — `start.sh`
 
-1. **Docker daemon check.** Run `docker info >/dev/null 2>&1`. If non-zero exit, print
-   `Docker Desktop이 실행 중이 아닙니다. Docker Desktop을 먼저 실행해 주세요.` and exit 1.
+1. **Docker daemon check (auto-start on macOS).** Run `docker info >/dev/null 2>&1`. If non-zero exit and on macOS, run `open -a Docker` and poll `docker info` once per second for up to 60 seconds. On success, print `Docker가 준비되었습니다.` and proceed. On failure (Docker Desktop not installed, or didn't become ready in 60s), print a Korean error and exit 1.
 2. **`.env` bootstrap.** If `./.env` is missing, copy `./.env.example` to `./.env` and print a notice. Do not overwrite an existing `.env`.
 3. **Compose up.** `docker compose up --build -d` (v2 syntax — matches CI per commit `61abdab`).
 4. **Health wait.** Poll once per second, up to 60 seconds total:
