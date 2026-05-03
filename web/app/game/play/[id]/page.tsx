@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Board from "@/components/Board";
 import GameControls from "@/components/GameControls";
 import AnalysisOverlay from "@/components/AnalysisOverlay";
@@ -48,9 +48,11 @@ export default function PlayPage() {
   const t = useT();
   const [locale] = useLocale();
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const gameId = parseInt(params.id, 10);
   const g = useGameStore();
   const nickname = useAuthStore((s) => s.session?.nickname ?? null);
+  const setSession = useAuthStore((s) => s.setSession);
   const [meta, setMeta] = useState<GameMeta | null>(null);
   const wsRef = useRef<GameWS | null>(null);
   const preOptimisticBoard = useRef<string | null>(null);
@@ -58,6 +60,7 @@ export default function PlayPage() {
   const [hint, setHint] =
     useState<{ move: string; winrate: number; visits: number }[]>([]);
   const [hintWinrate, setHintWinrate] = useState<number | null>(null);
+  const [hintLoading, setHintLoading] = useState(false);
   const [confirmResign, setConfirmResign] = useState(false);
   const [confirmPass, setConfirmPass] = useState(false);
   const [scoringDetail, setScoringDetail] =
@@ -163,6 +166,15 @@ export default function PlayPage() {
         expectedMoveCount.current = g.moveCount;
         toast.error(t(`errors.${msg.code}`));
       }
+    }, {
+      onAuthLost: () => {
+        // Cookie/session no longer valid (purged after idle TTL, evicted by
+        // another tab, or this game vanished). Stop the silent retry loop,
+        // wipe local session state, and route back to the nickname gate.
+        setSession(null);
+        toast.error(t("errors.invalid_session"));
+        router.replace("/");
+      },
     });
     wsRef.current = ws;
     return () => {
@@ -250,6 +262,8 @@ export default function PlayPage() {
     }
   };
   const hintMe = async () => {
+    if (hintLoading) return; // ignore double-taps
+    setHintLoading(true);
     try {
       const r = await api<{
         hints: { move: string; winrate: number; visits: number }[];
@@ -263,6 +277,8 @@ export default function PlayPage() {
       );
     } catch {
       toast.error(t("errors.validation"));
+    } finally {
+      setHintLoading(false);
     }
   };
 
@@ -365,6 +381,7 @@ export default function PlayPage() {
           disabled={g.gameOver || g.aiThinking}
           undosRemaining={Math.max(0, UNDO_LIMIT - g.undoCount)}
           scoringAvailable={g.endgamePhase && !g.gameOver}
+          hintLoading={hintLoading}
         />
 
         {g.gameOver && (

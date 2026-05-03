@@ -41,9 +41,21 @@ export interface GameWS {
   close(): void;
 }
 
+export interface OpenGameWSOptions {
+  /**
+   * Fired when the WS keeps closing because the user no longer has access
+   * to this game (session purged, evicted, or the game itself is gone).
+   * Detected by probing /api/games/{id} for 401/403/404 before each retry.
+   * The retry loop stops once this fires; the caller is expected to clear
+   * its session state and route the user back to the login screen.
+   */
+  onAuthLost?: () => void;
+}
+
 export function openGameWS(
   gameId: number,
-  onMessage: (m: WSMessage) => void
+  onMessage: (m: WSMessage) => void,
+  options: OpenGameWSOptions = {},
 ): GameWS {
   // Prefer same-origin in the browser so the WS rides the same host as the
   // page (works through tunnels, LAN access, and prod behind a reverse proxy
@@ -57,6 +69,7 @@ export function openGameWS(
           "ws",
         );
   const url = `${base}/api/ws/games/${gameId}`;
+  const probeUrl = `/api/games/${gameId}`;
   let ws = new WebSocket(url);
   let closed = false;
 
@@ -68,8 +81,22 @@ export function openGameWS(
     };
     ws.onclose = () => {
       if (closed) return;
-      // simple retry
-      setTimeout(() => {
+      setTimeout(async () => {
+        if (closed) return;
+        // Probe before reconnecting: if the user's session is gone or this
+        // game no longer belongs to them, stop hammering the server and let
+        // the caller surface the error. Network failures fall through to
+        // the normal retry — they're usually transient.
+        try {
+          const r = await fetch(probeUrl, { credentials: "same-origin" });
+          if (r.status === 401 || r.status === 403 || r.status === 404) {
+            closed = true;
+            options.onAuthLost?.();
+            return;
+          }
+        } catch {
+          // probe failed — assume transient and retry
+        }
         if (closed) return;
         ws = new WebSocket(url);
         handlers();
