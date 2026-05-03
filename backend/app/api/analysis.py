@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,9 +31,9 @@ async def _fetch_owned(db: AsyncSession, game_id: int, sess: Session) -> Game:
 @router.post("/{game_id}/analyze", response_model=AnalysisResponse)
 async def analyze_game(
     game_id: int,
-    moveNum: int,
     db: DbSession,
     sess: CurrentSession,
+    moveNum: int = Query(..., ge=0, le=2000),
 ) -> AnalysisResponse:
     # Cap at 60/min per session (analyze is cached per move, but a malicious
     # client could flood with random moveNum values to bypass the cache).

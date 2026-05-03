@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -81,7 +81,7 @@ async def list_games(
     db: DbSession,
     sess: CurrentSession,
     status_: str | None = None,
-    page: int = 1,
+    page: int = Query(1, ge=1, le=10000),
 ) -> list[GameSummary]:
     q = select(Game).where(Game.session_id == sess.id).order_by(Game.started_at.desc())
     if status_:

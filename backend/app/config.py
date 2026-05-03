@@ -42,6 +42,13 @@ class Settings(BaseSettings):
         return self.app_env.lower() == "production"
 
     @property
+    def cors_origins_list(self) -> list[str]:
+        """Parsed `cors_origins` tolerant of whitespace around commas and
+        empty segments. ``" http://a , http://b ,"`` → ``["http://a", "http://b"]``.
+        """
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
     def cookie_secure(self) -> bool:
         if self.cookie_secure_override is not None:
             return self.cookie_secure_override
