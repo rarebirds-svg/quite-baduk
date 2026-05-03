@@ -60,7 +60,7 @@ async def test_create_9x9_rejects_handicap_6(client: AsyncClient) -> None:
         json={"ai_rank": "1d", "handicap": 6, "user_color": "black", "board_size": 9},
     )
     assert r.status_code == 400
-    assert r.json()["error"]["code"] == "INVALID_HANDICAP"
+    assert r.json()["detail"]["code"] == "INVALID_HANDICAP"
 
 
 @pytest.mark.asyncio

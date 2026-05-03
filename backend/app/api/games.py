@@ -20,7 +20,6 @@ from app.schemas.game import (
     MoveEntry,
 )
 from app.services.game_service import (
-    GameError,
     create_game,
     resign_game,
 )
@@ -61,20 +60,19 @@ async def create(
     db: DbSession,
     sess: CurrentSession,
 ) -> GameSummary:
-    try:
-        game = await create_game(
-            db,
-            session=sess,
-            ai_rank=body.ai_rank,
-            ai_style=body.ai_style,
-            ai_player=body.ai_player,
-            handicap=body.handicap,
-            user_color=body.user_color,
-            board_size=body.board_size,
-            user_rank=body.user_rank,
-        )
-    except GameError as e:
-        raise HTTPException(status_code=400, detail=e.code) from e
+    # GameError → 400 with {code, detail} body is registered globally in
+    # app/errors.py, so we let it propagate.
+    game = await create_game(
+        db,
+        session=sess,
+        ai_rank=body.ai_rank,
+        ai_style=body.ai_style,
+        ai_player=body.ai_player,
+        handicap=body.handicap,
+        user_color=body.user_color,
+        board_size=body.board_size,
+        user_rank=body.user_rank,
+    )
     return GameSummary.model_validate(game, from_attributes=True)
 
 
@@ -136,10 +134,8 @@ async def resign(
     sess: CurrentSession,
 ) -> GameSummary:
     game = await _fetch_owned_game(db, game_id, sess)
-    try:
-        await resign_game(db, game=game, session=sess)
-    except GameError as e:
-        raise HTTPException(status_code=400, detail=e.code) from e
+    # GameError → 400 with {code, detail} body is registered globally.
+    await resign_game(db, game=game, session=sess)
     return GameSummary.model_validate(game, from_attributes=True)
 
 
