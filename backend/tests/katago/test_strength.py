@@ -63,17 +63,22 @@ def test_deprecated_ranks_raise_via_public_api(rank: str) -> None:
 
 
 def test_rank_to_config_caps_max_visits_at_256() -> None:
-    """Every supported rank must have max_visits <= 256 in v1.0."""
+    """Every supported rank x style must have max_visits <= 256 in v1.0."""
     from app.core.katago.strength import (
         SUPPORTED_AI_RANKS,
         rank_to_config,
     )
+    from app.core.katago.style import SUPPORTED_STYLES
 
     for rank in SUPPORTED_AI_RANKS:
-        cfg = rank_to_config(rank, "balanced", None)
-        assert cfg.max_visits <= 256, (
-            f"{rank} exceeds the v1.0 cap (got {cfg.max_visits})"
-        )
+        for style in SUPPORTED_STYLES:
+            cfg = rank_to_config(rank, style, None)
+            assert cfg.max_visits <= 256, (
+                f"{rank} x {style} exceeds the v1.0 cap (got {cfg.max_visits})"
+            )
+            assert cfg.max_visits >= 1, (
+                f"{rank} x {style} fell below the floor (got {cfg.max_visits})"
+            )
 
 
 def test_supported_ranks_excludes_6d_and_7d() -> None:

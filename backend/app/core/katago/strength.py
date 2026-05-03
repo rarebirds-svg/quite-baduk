@@ -109,7 +109,7 @@ def rank_to_config(
     prof = style_to_profile(effective_style, rank)
     human_sl_profile = resolve_human_sl_profile(effective_style, rank)
 
-    visits = max(1, int(round(base_visits * prof.visits_multiplier)))
+    visits = max(1, min(256, int(round(base_visits * prof.visits_multiplier))))
     return StrengthConfig(
         rank=rank,
         human_sl_profile=human_sl_profile,
