@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 from typing import Annotated, Any
 
@@ -17,6 +18,45 @@ from app.services.game_service import GameError, place_move, score_by_request, u
 router = APIRouter(tags=["ws"])
 
 _connections: dict[int, WebSocket] = {}
+_connection_locks: dict[int, asyncio.Lock] = {}
+
+HEARTBEAT_SECONDS = 30
+
+
+def _get_connection_lock(game_id: int) -> asyncio.Lock:
+    """Per-game-id lock so concurrent WS connects can't race the
+    `_connections` swap (would otherwise leave both sockets thinking
+    they own the slot)."""
+    lock = _connection_locks.get(game_id)
+    if lock is None:
+        lock = asyncio.Lock()
+        _connection_locks[game_id] = lock
+    return lock
+
+
+async def _heartbeat(websocket: WebSocket, game_id: int, sess: Session) -> None:
+    """Every HEARTBEAT_SECONDS, re-check that the session row still
+    exists. If it doesn't (idle TTL purge or explicit logout), send a
+    SESSION_EXPIRED error and close the WS. Cancelled via task.cancel()
+    when the WS handler exits."""
+    from app.db import AsyncSessionLocal
+
+    while True:
+        await asyncio.sleep(HEARTBEAT_SECONDS)
+        async with AsyncSessionLocal() as db:
+            row = await db.execute(select(Session).where(Session.id == sess.id))
+            if row.scalar_one_or_none() is None:
+                try:
+                    await websocket.send_json(
+                        {"type": "error", "code": "SESSION_EXPIRED"}
+                    )
+                except Exception:  # noqa: S110 (best-effort; client may already be gone)
+                    pass
+                try:
+                    await websocket.close()
+                except Exception:  # noqa: S110
+                    pass
+                return
 
 
 def _serialize_points(pts: frozenset[tuple[int, int]]) -> list[list[int]]:
@@ -98,16 +138,19 @@ async def ws_game(
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
-    existing = _connections.get(game_id)
-    if existing is not None:
-        try:
-            await existing.send_json({"type": "error", "code": "SESSION_REPLACED"})
-            await existing.close()
-        except Exception:  # noqa: S110 (best-effort eviction; old WS may already be dead)
-            pass
+    async with _get_connection_lock(game_id):
+        existing = _connections.get(game_id)
+        if existing is not None:
+            try:
+                await existing.send_json({"type": "error", "code": "SESSION_REPLACED"})
+                await existing.close()
+            except Exception:  # noqa: S110 (best-effort eviction; old WS may already be dead)
+                pass
 
-    await websocket.accept()
-    _connections[game_id] = websocket
+        await websocket.accept()
+        _connections[game_id] = websocket
+
+    hb_task = asyncio.create_task(_heartbeat(websocket, game_id, sess))
 
     try:
         from app.engine_pool import get_cached_state
@@ -292,5 +335,10 @@ async def ws_game(
     except WebSocketDisconnect:
         pass
     finally:
+        hb_task.cancel()
+        try:
+            await hb_task
+        except (asyncio.CancelledError, Exception):  # noqa: S110, BLE001
+            pass
         if _connections.get(game_id) is websocket:
             _connections.pop(game_id, None)
