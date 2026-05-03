@@ -55,7 +55,7 @@ async def analyze_game(
 
     from app.services.game_service import _replay_state
     state = await _replay_state(db, game)
-    adapter = get_adapter()
+    adapter = await get_adapter(game.id)
     await adapter.start()
     result = await adapter.analyze(side=state.to_move, max_visits=100)
 

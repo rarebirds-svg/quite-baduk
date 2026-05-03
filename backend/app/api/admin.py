@@ -225,7 +225,7 @@ async def engine(_: AdminSession) -> AdminEngineHealth:
             backend_started_at=_BACKEND_STARTED_AT,
         )
     try:
-        adapter = get_adapter()
+        adapter = await get_adapter(None)
         alive = bool(getattr(adapter, "is_alive", False))
     except Exception:
         alive = False

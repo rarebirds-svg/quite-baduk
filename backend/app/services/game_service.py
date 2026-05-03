@@ -29,6 +29,7 @@ from app.engine_pool import (
     game_lock,
     get_adapter,
     get_cached_state,
+    release_game,
     set_adapter_owner,
 )
 from app.models import Game, Session
@@ -132,7 +133,7 @@ async def create_game(
     await db.commit()
     await db.refresh(game)
 
-    adapter = get_adapter()
+    adapter = await get_adapter(game.id)
     await adapter.start()
     await adapter.set_boardsize(board_size)
     await adapter.set_komi(komi)
@@ -177,6 +178,7 @@ async def place_move(
     session: Session,
     coord: str,
     on_user_applied: Callable[[GameState, int], Awaitable[None]] | None = None,
+    on_user_winrate: Callable[[float, float | None], Awaitable[None]] | None = None,
 ) -> MoveResult:
     if game.session_id != session.id:
         raise GameError("FORBIDDEN", "game.session_id != session.id")
@@ -188,7 +190,7 @@ async def place_move(
         state = await _replay_state(db, game)
         cache_state(game.id, state)
 
-    adapter = get_adapter()
+    adapter = await get_adapter(game.id)
     user_side = BLACK if game.user_color == "black" else WHITE
     ai_side = WHITE if user_side == BLACK else BLACK
 
@@ -237,6 +239,33 @@ async def place_move(
         # user would wait on `genmove` before seeing their own stones disappear.
         if on_user_applied is not None:
             await on_user_applied(new_state, user_captures)
+
+        # Real-time winrate: run a quick analyze on the post-user-move
+        # position and ship the result before genmove blocks the round
+        # for ~1–3s. The same 32-visit cost as the post-AI analyze below;
+        # callers that don't want it (review/replay paths) just leave
+        # ``on_user_winrate`` unset.
+        if (
+            on_user_winrate is not None
+            and not is_game_over(new_state)
+        ):
+            try:
+                _u_an = await adapter.analyze(
+                    side=new_state.to_move, max_visits=32
+                )
+                _u_wr = float(_u_an.winrate)
+                _u_sl = float(_u_an.score_lead)
+                # analyze() reports winrate from the side-to-move's
+                # perspective. Normalise to Black's perspective for the UI.
+                _u_wr_black = (
+                    _u_wr if new_state.to_move == BLACK else 1.0 - _u_wr
+                )
+                _u_sl_black = (
+                    _u_sl if new_state.to_move == BLACK else -_u_sl
+                )
+                await on_user_winrate(_u_wr_black, _u_sl_black)
+            except Exception:  # noqa: S110 (live winrate is decorative)
+                pass
 
         ai_move: str | None = None
         ai_captures = 0
@@ -415,6 +444,11 @@ async def place_move(
                 # still recorded and the user can play on or pass too.
                 ai_passed_scored = None
 
+        # Free the pool slot once the game is settled — the next game
+        # that lands on this adapter won't have to fight for the slot.
+        if game_over:
+            await release_game(game.id)
+
         return MoveResult(
             game_state=new_state,
             ai_move=ai_move,
@@ -484,7 +518,7 @@ async def score_by_request(
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
     state = get_cached_state(game.id) or await _replay_state(db, game)
-    adapter = get_adapter()
+    adapter = await get_adapter(game.id)
     await adapter.start()
 
     # Deeper analysis than the mid-game 32-visit read — we need a confident
@@ -518,6 +552,7 @@ async def score_by_request(
         game.finished_at = _dt.datetime.now(_dt.UTC)
         await db.commit()
 
+    await release_game(game.id)
     return ScoringDetail(
         black_territory=result.black_territory,
         white_territory=result.white_territory,
@@ -547,6 +582,7 @@ async def resign_game(db: AsyncSession, *, game: Game, session: Session) -> Game
     state = get_cached_state(game.id) or await _replay_state(db, game)
     game.sgf_cache = build_sgf(state, result=game.result)
     await db.commit()
+    await release_game(game.id)
     return game
 
 
@@ -629,13 +665,13 @@ def _dead_stones_from_ownership(
     return dead
 
 
-async def _infer_dead_stones(state: GameState) -> set[tuple[int, int]]:
+async def _infer_dead_stones(
+    state: GameState, *, game_id: int | None = None
+) -> set[tuple[int, int]]:
     """Run a fresh KataGo analysis and return dead stones. Returns empty on
     any analysis failure."""
-    from app.engine_pool import get_adapter
-
     try:
-        adapter = get_adapter()
+        adapter = await get_adapter(game_id)
         await adapter.start()
         analysis = await adapter.analyze(side=state.to_move, max_visits=200)
     except Exception:
@@ -648,7 +684,7 @@ async def _finalize_game(db: AsyncSession, game: Game, state: GameState) -> None
     # scoring can reflect obviously-captured groups that both players passed
     # over without physically removing. We use a strong threshold so live
     # groups are never demoted — any false positive would hand opponent points.
-    dead_stones = await _infer_dead_stones(state)
+    dead_stones = await _infer_dead_stones(state, game_id=game.id)
     result = score_engine(state, dead_stones=dead_stones)
     margin = result.margin
     prefix = "B+" if result.winner == BLACK else "W+"
@@ -689,7 +725,7 @@ async def _reseed_adapter(game: Game, state: GameState) -> None:
     is out of bounds or otherwise illegal in the current game's rules
     state, and we surface it to the user as ``AI_ILLEGAL_MOVE``.
     """
-    adapter = get_adapter()
+    adapter = await get_adapter(game.id)
     await adapter.start()
     # Always wipe the subprocess board first. set_boardsize (= GTP `boardsize`)
     # is documented to clear, but some KataGo builds leave the previous
@@ -732,8 +768,8 @@ async def _sync_adapter(
     Slow path: ownership differs (another game interleaved, or the process
     restarted) — wipe and replay the full history.
     """
-    if adapter_owner() == game.id:
-        adapter = get_adapter()
+    if adapter_owner(game.id) == game.id:
+        adapter = await get_adapter(game.id)
         await adapter.start()
         await adapter.play(
             BLACK if game.user_color == "black" else WHITE,
@@ -750,15 +786,15 @@ async def hint(
     # state (another game interleaved, the subprocess restarted, or an undo
     # just reset ownership). Reseed when we don't own it so hints reflect
     # the actual position and not a stale one from a different game.
-    if adapter_owner() != game.id:
+    if adapter_owner(game.id) != game.id:
         await _reseed_adapter(game, state)
-    adapter = get_adapter()
+    adapter = await get_adapter(game.id)
     await adapter.start()
     analysis = await adapter.analyze(side=side, max_visits=max_visits)
     return analysis.top_moves[:3]
 
 
 async def analyze_position(game: Game, side: str, max_visits: int = 100) -> Any:
-    adapter = get_adapter()
+    adapter = await get_adapter(game.id)
     await adapter.start()
     return await adapter.analyze(side=side, max_visits=max_visits)

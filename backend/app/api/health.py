@@ -18,7 +18,7 @@ async def health(db: DbSession) -> dict[str, Any]:
         await db.execute(text("SELECT 1"))
     except Exception:
         db_ok = False
-    adapter = get_adapter()
+    adapter = await get_adapter(None)
     return {
         "status": "ok" if db_ok else "degraded",
         "db": db_ok,

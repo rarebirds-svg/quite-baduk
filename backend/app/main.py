@@ -1,41 +1,15 @@
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import settings
 from app.db import enable_wal
 from app.errors import register_handlers
-
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Adds the baseline security response headers App Store / consumer
-    review checklists expect. Tightenings beyond this (CSP report-uri,
-    Permissions-Policy, COOP/COEP) are environment-specific and are best
-    set at the reverse proxy.
-    """
-
-    async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
-        response = await call_next(request)
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("X-Frame-Options", "DENY")
-        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        if settings.is_production:
-            # Browsers ignore HSTS over plain HTTP, so this is a no-op
-            # if you happen to be behind a non-TLS proxy in dev.
-            response.headers.setdefault(
-                "Strict-Transport-Security",
-                "max-age=31536000; includeSubDomains",
-            )
-        return response
+from app.middleware.security_headers import SecurityHeadersMiddleware
 
 structlog.configure(
     processors=[
@@ -50,6 +24,10 @@ structlog.configure(
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await enable_wal()
+
+    from app.engine_pool import get_pool
+    pool = get_pool()
+    await pool.start_all()
 
     from app.session_purge import run_purge_loop
 
@@ -67,6 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await purge_task
         except asyncio.CancelledError:
             pass
+        await pool.stop_all()
 
 
 def create_app() -> FastAPI:

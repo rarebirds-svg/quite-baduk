@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.rules.engine import GameState
 from app.deps import COOKIE_SESSION, DbSession
 from app.models import Game, Session
+from app.rate_limit import rate_limiter
 from app.services.game_service import GameError, place_move, score_by_request, undo_move
 
 router = APIRouter(tags=["ws"])
@@ -124,7 +125,7 @@ async def ws_game(
             from app.core.rules.board import BLACK as _BLACK
             from app.engine_pool import get_adapter
 
-            adapter = get_adapter()
+            adapter = await get_adapter(game.id)
             await adapter.start()
             analysis = await adapter.analyze(side=state.to_move, max_visits=32)
             wr = float(analysis.winrate)
@@ -146,6 +147,16 @@ async def ws_game(
             mtype = msg.get("type")
             try:
                 if mtype in ("move", "pass"):
+                    # Cap moves+passes at 60/min per session. KataGo replies
+                    # cost ~0.2–2s of GPU/CPU each, so a flooding client could
+                    # starve other sessions on the shared engine pool.
+                    if not await rate_limiter.check(
+                        f"ws_move:{sess.id}", max_hits=60, window_sec=60
+                    ):
+                        await websocket.send_json(
+                            {"type": "error", "code": "rate_limited"}
+                        )
+                        continue
                     coord = msg.get("coord", "") if mtype == "move" else "pass"
 
                     async def _flush_user_state(
@@ -157,12 +168,26 @@ async def ws_game(
                             )
                         )
 
+                    async def _flush_user_winrate(
+                        wr_black: float, sl_black: float | None
+                    ) -> None:
+                        # Send the post-user-move winrate immediately so the
+                        # bar reacts before the AI's reply lands.
+                        payload: dict[str, Any] = {
+                            "type": "winrate",
+                            "winrate_black": wr_black,
+                        }
+                        if sl_black is not None:
+                            payload["score_lead_black"] = sl_black
+                        await websocket.send_json(payload)
+
                     result = await place_move(
                         db,
                         game=game,
                         session=sess,
                         coord=coord,
                         on_user_applied=_flush_user_state,
+                        on_user_winrate=_flush_user_winrate,
                     )
                     await websocket.send_json(
                         await _state_payload(
@@ -246,6 +271,13 @@ async def ws_game(
                         "winner": game.winner or "",
                     })
                 elif mtype == "undo":
+                    if not await rate_limiter.check(
+                        f"ws_undo:{sess.id}", max_hits=20, window_sec=60
+                    ):
+                        await websocket.send_json(
+                            {"type": "error", "code": "rate_limited"}
+                        )
+                        continue
                     steps = int(msg.get("steps", 2))
                     new_state = await undo_move(db, game=game, session=sess, steps=steps)
                     await websocket.send_json(
