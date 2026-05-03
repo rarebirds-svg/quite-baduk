@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +29,11 @@ class Settings(BaseSettings):
     # When unset, cookie_secure is True in production and False otherwise.
     # Explicit `COOKIE_SECURE=true|false` always wins.
     cookie_secure_override: bool | None = None
+    # Cookie SameSite policy for the session cookie. Defaults to "lax"
+    # for browser-only deployments; set to "none" when serving Capacitor
+    # WebViews (cross-origin for the same product). The cookie is always
+    # HttpOnly + (in production) Secure.
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
     nickname_min_len: int = 2
     nickname_max_len: int = 32
 

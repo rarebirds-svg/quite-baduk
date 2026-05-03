@@ -1,0 +1,19 @@
+# Cloudflare Tunnel routing for baduk.
+#
+# Replace __TUNNEL_UUID__, __USER_HOME__, and __DOMAIN__ during deploy.
+# See deploy/README.md "Cloudflare Tunnel" section for full setup.
+
+tunnel: __TUNNEL_UUID__
+credentials-file: __USER_HOME__/.cloudflared/__TUNNEL_UUID__.json
+
+ingress:
+  # API + WebSocket
+  - hostname: api.__DOMAIN__
+    service: http://127.0.0.1:8000
+
+  # Frontend (web/ via npm start, also on this host in V1)
+  - hostname: __DOMAIN__
+    service: http://127.0.0.1:3000
+
+  # Catch-all
+  - service: http_status:404

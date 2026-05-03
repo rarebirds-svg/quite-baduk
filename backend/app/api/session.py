@@ -39,7 +39,7 @@ def _set_session_cookie(response: Response, token: str) -> None:
         COOKIE_SESSION,
         token,
         httponly=True,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         secure=settings.cookie_secure,
         path="/",
         # deliberately no max_age / expires — deleted on browser close
@@ -47,7 +47,12 @@ def _set_session_cookie(response: Response, token: str) -> None:
 
 
 def _clear_session_cookie(response: Response) -> None:
-    response.delete_cookie(COOKIE_SESSION, path="/")
+    response.delete_cookie(
+        COOKIE_SESSION,
+        path="/",
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+    )
 
 
 def _parse_nickname(raw: str) -> tuple[str, str]:
