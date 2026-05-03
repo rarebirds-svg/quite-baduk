@@ -9,7 +9,7 @@ Contract (post-fix):
 
 from __future__ import annotations
 
-from app.core.katago.strength import SUPPORTED_RANKS, rank_to_config
+from app.core.katago.strength import SUPPORTED_AI_RANKS, rank_to_config
 from app.core.katago.style import STYLES, SUPPORTED_STYLES
 
 
@@ -27,9 +27,9 @@ def test_territorial_uses_preaz_and_bumps_visits():
 
 def test_influence_uses_preaz_and_honours_rank():
     cfg_5k = rank_to_config("5k", "influence")
-    cfg_7d = rank_to_config("7d", "influence")
+    cfg_5d = rank_to_config("5d", "influence")
     assert cfg_5k.human_sl_profile == "preaz_5k"
-    assert cfg_7d.human_sl_profile == "preaz_7d"
+    assert cfg_5d.human_sl_profile == "preaz_5d"
 
 
 def test_classical_uses_preaz_and_honours_rank():
@@ -46,8 +46,8 @@ def test_combative_amplifies_visits():
 
 
 def test_speed_reduces_visits_but_stays_at_least_one():
-    cfg = rank_to_config("9k", "speed")
-    assert cfg.max_visits >= 1  # 2 * 0.5 clamps to >= 1
+    cfg = rank_to_config("18k", "speed")
+    assert cfg.max_visits >= 1  # 1 * 0.5 clamps to >= 1
 
 
 def test_unknown_style_falls_back_to_balanced():
@@ -59,7 +59,7 @@ def test_every_style_resolves_for_every_rank_with_rank_in_profile():
     # Exhaustive guard: every style at every rank must produce a profile that
     # carries the rank — no proyear_YEAR leaks that would ignore the user's
     # rank choice.
-    for rank in SUPPORTED_RANKS:
+    for rank in SUPPORTED_AI_RANKS:
         for style in SUPPORTED_STYLES:
             cfg = rank_to_config(rank, style)
             assert cfg.rank == rank
@@ -110,7 +110,7 @@ def test_unknown_player_falls_back_to_passed_style():
 def test_every_player_produces_rank_aware_profile_for_every_rank():
     from app.core.katago.players import SUPPORTED_PLAYERS
 
-    for rank in SUPPORTED_RANKS:
+    for rank in SUPPORTED_AI_RANKS:
         for player_id in SUPPORTED_PLAYERS:
             cfg = rank_to_config(rank, "balanced", player_id)
             assert cfg.human_sl_profile.startswith(("rank_", "preaz_")), (
@@ -134,6 +134,6 @@ def test_influence_player_at_low_rank_stays_at_that_rank():
 
 
 def test_classical_player_at_low_rank_stays_at_that_rank():
-    cfg = rank_to_config("9k", "balanced", "go_seigen")
-    assert cfg.human_sl_profile == "preaz_9k"  # classical -> preaz_{rank}
-    assert cfg.max_visits == 2  # base(9k)=2 * 1.0 = 2
+    cfg = rank_to_config("10k", "balanced", "go_seigen")
+    assert cfg.human_sl_profile == "preaz_10k"  # classical -> preaz_{rank}
+    assert cfg.max_visits == 2  # base(10k)=2 * 1.0 = 2

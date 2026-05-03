@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.katago.strength import rank_to_config
+from app.core.katago.strength import SUPPORTED_AI_RANKS, rank_to_config
 from app.core.rules.board import BLACK, EMPTY, WHITE, Board
 from app.core.rules.engine import (
     GameState,
@@ -105,6 +105,8 @@ async def create_game(
         raise GameError("INVALID_HANDICAP", str(handicap))
     if user_color not in ("black", "white"):
         raise GameError("INVALID_COLOR", user_color)
+    if ai_rank not in SUPPORTED_AI_RANKS:
+        raise GameError("INVALID_AI_RANK", ai_rank)
     komi = 0.5 if handicap > 0 else 6.5
     if handicap > 0:
         user_color = "black"
