@@ -6,8 +6,11 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.katago.strength import rank_to_config
+from app.core.rules.board import BLACK
+from app.core.rules.handicap import HANDICAP_TABLES
 from app.deps import CurrentSession, DbSession
-from app.engine_pool import get_adapter
+from app.engine_pool import get_adapter, set_adapter_owner
 from app.models import AnalysisCache, Game, Session
 from app.rate_limit import rate_limiter
 from app.schemas.game import AnalysisResponse, HintMove
@@ -53,10 +56,37 @@ async def analyze_game(
             ownership=data.get("ownership", []),
         )
 
-    from app.services.game_service import _replay_state
-    state = await _replay_state(db, game)
+    # Replay the rules state up to the requested move so the analysis
+    # reflects the board *at moveNum*, not whatever the shared adapter
+    # happens to be holding. The adapter is process-wide and may be
+    # mid-way through another game, an undo, or the latest move of this
+    # one — without reseeding, every "review at move N" call would
+    # surface the same late-game position.
+    from app.services.game_service import _replay_state_to
+
+    state = await _replay_state_to(db, game, moveNum)
     adapter = await get_adapter(game.id)
     await adapter.start()
+    await adapter.clear_board()
+    await adapter.set_boardsize(game.board_size)
+    await adapter.set_komi(game.komi)
+    cfg = rank_to_config(
+        game.ai_rank,
+        getattr(game, "ai_style", "balanced"),
+        getattr(game, "ai_player", None),
+    )
+    await adapter.set_profile(cfg)
+    if game.handicap > 0:
+        for hcoord in HANDICAP_TABLES[game.board_size][game.handicap]:
+            await adapter.play(BLACK, hcoord)
+    for mv in state.move_history:
+        if mv.coord is None:
+            continue  # resign — no board change
+        await adapter.play(mv.color, mv.coord)
+    # The adapter no longer reflects the latest game position; force the
+    # next place_move to fully reseed instead of attempting a fast-path
+    # incremental play() on top of this replayed state.
+    set_adapter_owner(None)
     result = await adapter.analyze(side=state.to_move, max_visits=100)
 
     response = AnalysisResponse(

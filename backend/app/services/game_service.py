@@ -718,6 +718,35 @@ async def _replay_state(db: AsyncSession, game: Game) -> GameState:
     return state
 
 
+async def _replay_state_to(
+    db: AsyncSession, game: Game, target_move: int
+) -> GameState:
+    """Rebuild GameState by replaying non-undone moves up to (and including)
+    ``target_move``. ``target_move=0`` returns the initial state — empty
+    board, with handicap stones placed if applicable.
+
+    Used by the review/analyze endpoints so the analysis runs against the
+    board state *at* the requested move, not whatever is currently cached.
+    """
+    state = GameState(board=Board(game.board_size), komi=game.komi)
+    if game.handicap > 0:
+        state.board = apply_handicap(state.board, game.handicap)
+        state.to_move = WHITE
+    if target_move <= 0:
+        return state
+    res = await db.execute(
+        select(MoveRow)
+        .where(MoveRow.game_id == game.id, MoveRow.is_undone == False)  # noqa: E712
+        .order_by(MoveRow.move_number.asc())
+    )
+    for m in res.scalars().all():
+        if m.move_number > target_move:
+            break
+        coord = m.coord if m.coord else "pass"
+        state = play(state, Move(color=m.color, coord=coord))  # type: ignore[arg-type]
+    return state
+
+
 async def _reseed_adapter(game: Game, state: GameState) -> None:
     """Reset the shared KataGo adapter so its internal board matches ``state``.
 
