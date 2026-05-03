@@ -27,17 +27,17 @@ class MockKataGoAdapter:
         self.profile: tuple[str, int] | None = None
         self.move_history: list[tuple[str, str]] = []
         self._ko_state = KoState()
-        self._started = False
+        self.started: bool = False
 
     @property
     def is_alive(self) -> bool:
-        return self._started
+        return self.started
 
     async def start(self) -> None:
-        self._started = True
+        self.started = True
 
     async def stop(self) -> None:
-        self._started = False
+        self.started = False
 
     async def send(self, cmd: str, timeout: float | None = None) -> GTPResult:
         return GTPResult(ok=True, body="")
