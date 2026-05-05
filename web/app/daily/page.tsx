@@ -530,6 +530,29 @@ export default function DailyChallengePage() {
           )}
         </>
       )}
+
+      {/* Attribution footer — required by CC BY-NC-SA 4.0 for the
+          gogameguru subset. Always rendered (unobtrusive) regardless
+          of which puzzle the user is currently on. */}
+      <p className="border-t border-ink-faint pt-3 mt-4 font-sans text-[11px] text-ink-faint leading-relaxed">
+        {t("daily.credits")}{" "}
+        <a
+          href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-ink-mute"
+        >
+          CC BY-NC-SA 4.0
+        </a>{" · "}
+        <a
+          href="https://gogameguru.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-ink-mute"
+        >
+          gogameguru.com
+        </a>
+      </p>
     </div>
   );
 }

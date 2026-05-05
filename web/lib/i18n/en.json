@@ -201,6 +201,10 @@
       "endgame": "Endgame — find the largest yose, weigh sente vs. gote.",
       "capturing_race": "Capturing race — count the liberties and find the killing tempo."
     },
+    "attribution": {
+      "gogameguru": "From the GoGameGuru Weekly Problems set (An Younggil 8p · David Ormerod). KataGo grades your answer on this position."
+    },
+    "credits": "Some puzzles are adapted from GoGameGuru's CC BY-NC-SA 4.0 archive. View original license",
     "verdict": {
       "best": "Best — matches KataGo's top move",
       "ok": "Good — close to the top",

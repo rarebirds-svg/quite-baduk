@@ -201,6 +201,10 @@
       "endgame": "끝내기 — 가장 큰 끝내기 자리, 선·후수 가치를 비교해보세요.",
       "capturing_race": "수상전 — 두 그룹의 수읽기 경쟁에서 결정타를 찾아보세요."
     },
+    "attribution": {
+      "gogameguru": "GoGameGuru 주간 문제집 (An Younggil 8p · David Ormerod)에서 가져온 문제입니다 — KataGo로 그 형세에서 가장 좋은 한 수를 찾아보세요."
+    },
+    "credits": "일부 문제는 GoGameGuru의 CC BY-NC-SA 4.0 자료를 변형해 사용했습니다. 원본 라이선스 보기",
     "verdict": {
       "best": "정답 — KataGo의 최선수와 일치",
       "ok": "좋은 수 — 최선과 큰 차이 없음",

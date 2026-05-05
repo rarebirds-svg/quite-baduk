@@ -283,6 +283,24 @@ CHALLENGES: tuple[DailyChallenge, ...] = (
                ("B", "Q4"))),
 )
 
+def _attach_imports() -> tuple[DailyChallenge, ...]:
+    """Late-bind imported catalogues so the data files can reference
+    DailyChallenge from this module without a circular import."""
+    try:
+        from app.services.daily_challenge_gogameguru import (
+            GOGAMEGURU_CHALLENGES,
+        )
+    except ImportError:
+        return ()
+    return GOGAMEGURU_CHALLENGES
+
+
+# Public catalogue = hand-curated core + every imported set. Variants
+# are applied at pick time via D4 transforms; this tuple is the raw
+# base set.
+CHALLENGES = CHALLENGES + _attach_imports()
+
+
 _BY_ID: dict[str, DailyChallenge] = {c.id: c for c in CHALLENGES}
 
 
