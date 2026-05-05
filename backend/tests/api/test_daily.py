@@ -79,12 +79,76 @@ async def test_answer_grades_via_katago(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_answer_rolled_over_id_rejected(client: AsyncClient) -> None:
-    await client.post("/api/session", json={"nickname": "daily_stale"})
+async def test_answer_unknown_id_returns_404(client: AsyncClient) -> None:
+    """Daily-only gate is removed — any catalogue id is gradable. An ID
+    that doesn't exist in the catalogue 404s instead of 410."""
+    await client.post("/api/session", json={"nickname": "daily_unknown"})
     r = await client.post(
         "/api/daily-challenge/answer",
         json={"challenge_id": "ch-not-real", "coord": "A1"},
     )
-    assert r.status_code == 410
-    # The project wraps HTTPException into {"error": {"code", "message_key"}}.
-    assert r.json()["error"]["code"] == "challenge_rolled_over"
+    assert r.status_code == 404
+    assert r.json()["error"]["code"] == "challenge_not_found"
+
+
+@pytest.mark.asyncio
+async def test_random_endpoint_returns_match(client: AsyncClient) -> None:
+    await client.post("/api/session", json={"nickname": "daily_random"})
+    r = await client.get(
+        "/api/daily-challenge/random",
+        params={"board_size": 9, "topic": "opening"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["board_size"] == 9
+    assert body["topic"] == "opening"
+
+
+@pytest.mark.asyncio
+async def test_random_endpoint_404_when_no_match(client: AsyncClient) -> None:
+    """No 19x19 puzzles in the V1 catalogue — request that combo and the
+    UI must see a 404 so it can disable the option, not a 500."""
+    await client.post("/api/session", json={"nickname": "daily_nomatch"})
+    r = await client.get(
+        "/api/daily-challenge/random",
+        params={"board_size": 19},
+    )
+    assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_catalogue_returns_options_and_counts(client: AsyncClient) -> None:
+    await client.post("/api/session", json={"nickname": "daily_cat"})
+    r = await client.get("/api/daily-challenge/catalogue")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body["board_sizes"]) == {9, 13, 19}
+    assert set(body["difficulties"]) == {"easy", "medium", "hard"}
+    assert set(body["topics"]) == {
+        "opening", "middle_game", "endgame", "life_death",
+    }
+    # Counts present for every (size, difficulty, topic) cell.
+    assert isinstance(body["counts"], dict)
+    assert "9|easy|opening" in body["counts"]
+    assert isinstance(body["counts"]["9|easy|opening"], int)
+
+
+@pytest.mark.asyncio
+async def test_answer_grades_non_today_challenge(client: AsyncClient) -> None:
+    """Pick a catalogue puzzle that is NOT today's and grade against it.
+    Used to be 410-blocked; now must succeed."""
+    await client.post("/api/session", json={"nickname": "daily_other"})
+    other = next(c for c in CHALLENGES if c.id != get_today().id)
+    used = {coord.upper() for _, coord in other.setup}
+    candidate = next(
+        c for c in (
+            "A1", "B1", "F1", "H1", "J1", "L1", "M1",
+            "A9", "B9", "F9", "H9", "J9",
+        ) if c not in used
+    )
+    r = await client.post(
+        "/api/daily-challenge/answer",
+        json={"challenge_id": other.id, "coord": candidate},
+    )
+    assert r.status_code == 200
+    assert r.json()["verdict"] in ("best", "ok", "weak", "miss", "illegal")

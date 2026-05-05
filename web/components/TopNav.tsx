@@ -77,9 +77,14 @@ export default function TopNav() {
 
         <div className="ml-auto flex items-center gap-2">
           {session && (
-            <Button asChild size="sm" variant="outline">
-              <Link href="/game/new">{t("nav.newGame")}</Link>
-            </Button>
+            <>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/game/new">{t("nav.newGame")}</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/daily">{t("nav.daily")}</Link>
+              </Button>
+            </>
           )}
 
           <button
@@ -107,9 +112,6 @@ export default function TopNav() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href="/daily">{t("nav.daily")}</Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/history">{t("nav.history")}</Link>
                 </DropdownMenuItem>

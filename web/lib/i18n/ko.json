@@ -163,7 +163,7 @@
   "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "play": "재생", "pause": "일시정지", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더", "blunderTag": "악수", "coachTag": "이 수", "winrateBlackShort": "흑", "noBlundersFound": "악수가 발견되지 않았습니다 — 안정적인 대국이었어요.", "modeLabel": "복기 모드", "modeReview": "복기", "modeLearn": "학습", "altsAutoShown": "추천 수 표시 중", "blunderListTitle": "악수 목록", "dialogSize": "창 크기", "size": { "sm": "S", "md": "M", "lg": "L", "full": "전체" } },
   "daily": {
     "eyebrow": "오늘의 한 수",
-    "title": "일일 챌린지",
+    "title": "챌린지",
     "fallbackPrompt": "이 형세에서 가장 좋은 수를 찾아보세요.",
     "blackToMove": "흑 차례",
     "whiteToMove": "백 차례",
@@ -172,9 +172,22 @@
     "grading": "채점 중…",
     "gradeFailed": "채점에 실패했습니다",
     "tryAgain": "다시 풀기",
+    "nextPuzzle": "다음 문제",
+    "skipNext": "건너뛰기",
     "recommended": "추천 수",
-    "navTitle": "일일 챌린지",
+    "navTitle": "챌린지",
+    "filterBoard": "바둑판",
+    "filterTopic": "유형",
+    "filterDifficulty": "난이도",
+    "any": "전체",
+    "noMatch": "이 조합엔 아직 문제가 없어요. 필터를 조정해보세요.",
     "difficulty": { "easy": "쉬움", "medium": "보통", "hard": "어려움" },
+    "topic": {
+      "opening": "포석",
+      "middle_game": "중반 대세",
+      "endgame": "마무리",
+      "life_death": "사활"
+    },
     "verdict": {
       "best": "정답 — KataGo의 최선수와 일치",
       "ok": "좋은 수 — 최선과 큰 차이 없음",
@@ -185,7 +198,13 @@
     "prompts": {
       "ch-001": "백 차례 — 흑이 두 곳을 둘러보고 있는 형세에서 침투할지, 균형을 맞출지를 정해보세요.",
       "ch-002": "흑 차례 — 좌변과 우변의 균형을 맞추는 한 수가 필요해요.",
-      "ch-003": "흑 차례 — 화점이 모두 채워진 상태. 중앙으로 갈지, 변에서 굳힐지가 핵심입니다."
+      "ch-003": "흑 차례 — 화점이 모두 채워진 상태. 중앙으로 갈지, 변에서 굳힐지가 핵심입니다.",
+      "ch-004": "백 차례 — 흑이 화점을 4개 차지한 형국. 침투 지점은?",
+      "ch-005": "흑 차례 — 좌상귀에서 사활이 걸린 한 수를 찾아보세요.",
+      "ch-006": "백 차례 — 큰 끝내기를 놓치지 마세요. 가장 큰 자리는?",
+      "ch-101": "흑 차례 — 13로 화점에 백의 응수가 있을 때 흑의 좋은 다음 한 수.",
+      "ch-102": "백 차례 — 흑이 중앙 영향력을 펼치는 모양. 침투할지 견제할지.",
+      "ch-103": "흑 차례 — 변과 중앙이 얽힌 복잡한 형세. 우선순위가 어디일지."
     }
   },
   "history": {

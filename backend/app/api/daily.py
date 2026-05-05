@@ -1,19 +1,22 @@
 """Daily challenge endpoints.
 
-Two operations:
+Endpoints:
 
-  GET  /api/daily-challenge          — returns today's puzzle (id, board,
-                                       setup plays, side-to-move, prompt key).
-  POST /api/daily-challenge/answer   — grades a candidate move in real time.
+  GET  /api/daily-challenge                 — today's puzzle (legacy)
+  GET  /api/daily-challenge/random          — random puzzle within filters
+  GET  /api/daily-challenge/catalogue       — option lists (topics, sizes,
+                                              difficulties + per-combo
+                                              availability counts)
+  POST /api/daily-challenge/answer          — grade a candidate move
 
-The grading is a fresh KataGo analyse + a play — no DB persistence, no
+Grading is a fresh KataGo analyse + a play — no DB persistence, no
 per-user attempt log (V1 deliberate non-goal). Anonymous-friendly.
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.core.rules.board import BLACK, WHITE
@@ -22,16 +25,19 @@ from app.deps import CurrentSession
 from app.engine_pool import get_adapter
 from app.rate_limit import rate_limiter
 from app.services.daily_challenge import (
+    BOARD_SIZES,
+    DIFFICULTIES,
+    TOPICS,
     DailyChallenge,
+    filter_challenges,
+    get_by_id,
     get_today,
+    pick_random,
     replay_position,
 )
 
 router = APIRouter(prefix="/api/daily-challenge", tags=["daily"])
 
-# Reuse a single shared adapter slot for daily-challenge analyses. The
-# challenges are stateless (no game_id), so we route through the legacy
-# get_adapter() (no-arg) which returns the pool's least-loaded adapter.
 _ANALYSIS_VISITS = 100
 
 
@@ -42,13 +48,62 @@ def _serialise(challenge: DailyChallenge) -> dict[str, Any]:
         "setup": [{"color": c, "coord": k} for c, k in challenge.setup],
         "to_move": challenge.to_move,
         "difficulty": challenge.difficulty,
+        "topic": challenge.topic,
         "prompt_key": challenge.prompt_key,
     }
 
 
 @router.get("")
 async def todays_challenge(sess: CurrentSession) -> dict[str, Any]:
+    """Legacy entry point — returns today's puzzle for the cycle. The
+    frontend's "다음 문제" flow uses /random with filters instead."""
     return _serialise(get_today())
+
+
+# Pydantic-style enum validation via Literal — keeps query parsing tight
+# without coupling to a global Enum.
+_TopicQ = Literal["opening", "middle_game", "endgame", "life_death"]
+_DifficultyQ = Literal["easy", "medium", "hard"]
+
+
+@router.get("/random")
+async def random_challenge(
+    sess: CurrentSession,
+    board_size: Annotated[int | None, Query(ge=9, le=19)] = None,
+    difficulty: Annotated[_DifficultyQ | None, Query()] = None,
+    topic: Annotated[_TopicQ | None, Query()] = None,
+) -> dict[str, Any]:
+    """Random puzzle from the catalogue under the supplied filters. 404
+    when no row matches so the UI can surface "이 조합엔 아직 문제 없음"."""
+    challenge = pick_random(
+        board_size=board_size, difficulty=difficulty, topic=topic
+    )
+    if challenge is None:
+        raise HTTPException(status_code=404, detail="no_match")
+    return _serialise(challenge)
+
+
+@router.get("/catalogue")
+async def catalogue(sess: CurrentSession) -> dict[str, Any]:
+    """Option lists + a sparse availability matrix so the UI can disable
+    filter combinations that have no puzzles instead of letting the user
+    hit a 404. Avoids surprising dead-ends in the picker."""
+    counts: dict[str, int] = {}
+    for size in BOARD_SIZES:
+        for diff in DIFFICULTIES:
+            for topic in TOPICS:
+                key = f"{size}|{diff}|{topic}"
+                counts[key] = len(
+                    filter_challenges(
+                        board_size=size, difficulty=diff, topic=topic
+                    )
+                )
+    return {
+        "board_sizes": list(BOARD_SIZES),
+        "difficulties": list(DIFFICULTIES),
+        "topics": list(TOPICS),
+        "counts": counts,
+    }
 
 
 class AnswerRequest(BaseModel):
@@ -61,22 +116,19 @@ async def grade_answer(
     body: AnswerRequest,
     sess: CurrentSession,
 ) -> dict[str, Any]:
-    # 30/min/session — generous enough for repeat tries, tight enough that
-    # a script can't grind through the puzzle space.
     if not await rate_limiter.check(
         f"daily:{sess.id}", max_hits=30, window_sec=60
     ):
         raise HTTPException(status_code=429, detail="rate_limited")
 
-    challenge = get_today()
-    if body.challenge_id != challenge.id:
-        # Race: user opened yesterday's puzzle, submitted today.
-        raise HTTPException(status_code=410, detail="challenge_rolled_over")
+    # The daily limit is gone — any catalogue id is gradable, not just
+    # today's. Lookup is O(1) via the by-id index.
+    challenge = get_by_id(body.challenge_id)
+    if challenge is None:
+        raise HTTPException(status_code=404, detail="challenge_not_found")
 
     state = replay_position(challenge)
 
-    # Adapter for the puzzle. We seed it with the setup so analyze() reads
-    # the same position the rules engine has.
     adapter = await get_adapter(None)
     await adapter.start()
     await adapter.clear_board()
@@ -94,9 +146,6 @@ async def grade_answer(
     top_coords = [m.move.upper() for m in before.top_moves[:5]]
     user_coord = body.coord.upper()
 
-    # Apply the user's move via the rules engine — rejects suicide, ko,
-    # occupied — and via the adapter so the analyzer can re-read the
-    # position with the new stone.
     user_side = BLACK if challenge.to_move == "B" else WHITE
     try:
         new_state = play(state, Move(color=user_side, coord=body.coord))
@@ -115,10 +164,8 @@ async def grade_answer(
     except Exception as e:
         raise HTTPException(status_code=503, detail="analysis_failed") from e
 
-    # Normalise both winrates to the answerer's perspective so the drop is
-    # signed intuitively (positive drop = user's move was bad).
     user_wr_before = before.winrate
-    user_wr_after = 1.0 - after.winrate  # opp's POV → user's POV
+    user_wr_after = 1.0 - after.winrate
     drop = user_wr_before - user_wr_after
 
     if user_coord in top_coords:
@@ -130,8 +177,6 @@ async def grade_answer(
     else:
         verdict = "miss"
 
-    # Strictly an opening-style position has no captures; pass it through
-    # for completeness in case the catalogue grows fighting puzzles later.
     user_captures = new_state.captures.get(challenge.to_move, 0) - state.captures.get(
         challenge.to_move, 0
     )

@@ -162,8 +162,8 @@
   },
   "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "blunderTag": "Blunder", "coachTag": "This move", "winrateBlackShort": "B", "noBlundersFound": "No blunders found — solid game.", "modeLabel": "Review mode", "modeReview": "Watch", "modeLearn": "Learn", "altsAutoShown": "Showing alternatives", "blunderListTitle": "Blunders", "dialogSize": "Dialog size", "size": { "sm": "S", "md": "M", "lg": "L", "full": "Full" } },
   "daily": {
-    "eyebrow": "Today's puzzle",
-    "title": "Daily Challenge",
+    "eyebrow": "Puzzle",
+    "title": "Challenge",
     "fallbackPrompt": "Find the best move in this position.",
     "blackToMove": "Black to move",
     "whiteToMove": "White to move",
@@ -172,9 +172,22 @@
     "grading": "Grading…",
     "gradeFailed": "Grading failed",
     "tryAgain": "Try again",
+    "nextPuzzle": "Next puzzle",
+    "skipNext": "Skip",
     "recommended": "Recommended",
-    "navTitle": "Daily challenge",
+    "navTitle": "Challenge",
+    "filterBoard": "Board",
+    "filterTopic": "Type",
+    "filterDifficulty": "Level",
+    "any": "Any",
+    "noMatch": "No puzzles match this combination yet — adjust the filters.",
     "difficulty": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
+    "topic": {
+      "opening": "Opening",
+      "middle_game": "Middlegame",
+      "endgame": "Endgame",
+      "life_death": "Life & death"
+    },
     "verdict": {
       "best": "Best — matches KataGo's top move",
       "ok": "Good — close to the top",
@@ -185,7 +198,13 @@
     "prompts": {
       "ch-001": "White to move — Black has staked corners. Choose between invasion and counter-framework.",
       "ch-002": "Black to move — balance the left and right. Find the connecting move.",
-      "ch-003": "Black to move — all star points are taken. Step into the centre or settle a side?"
+      "ch-003": "Black to move — all star points are taken. Step into the centre or settle a side?",
+      "ch-004": "White to move — Black holds all four star points. Where to invade?",
+      "ch-005": "Black to move — find the move that decides life or death in the upper-left.",
+      "ch-006": "White to move — there's one big yose left. Spot the largest play.",
+      "ch-101": "Black to move — White has answered Black's framework. Find the natural next move.",
+      "ch-102": "White to move — Black is building central influence. Reduce or settle?",
+      "ch-103": "Black to move — sides and centre tangle. Where's the priority?"
     }
   },
   "history": {
