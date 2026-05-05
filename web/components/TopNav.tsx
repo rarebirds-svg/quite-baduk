@@ -108,6 +108,9 @@ export default function TopNav() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
+                  <Link href="/daily">{t("nav.daily")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/history">{t("nav.history")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

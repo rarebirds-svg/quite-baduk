@@ -1,6 +1,6 @@
 {
   "app": { "title": "AI Go" },
-  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "settings": "Settings", "admin": "Admin", "volume": "Vol. I" },
+  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "daily": "Daily Challenge", "settings": "Settings", "admin": "Admin", "volume": "Vol. I" },
   "admin": {
     "heading": "Admin console",
     "subtitle": "Live view of active sessions and games.",
@@ -161,6 +161,33 @@
     }
   },
   "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "startCoaching": "Coach this game", "coachingProgress": "Analyzing", "coachingDone": "Analysis ready", "blunderTag": "Blunder", "coachTag": "This move", "showAlt": "Show alternatives", "hideAlt": "Hide alternatives", "winrateBlackShort": "B", "blunderCountSuffix": "blunder(s)" },
+  "daily": {
+    "eyebrow": "Today's puzzle",
+    "title": "Daily Challenge",
+    "fallbackPrompt": "Find the best move in this position.",
+    "blackToMove": "Black to move",
+    "whiteToMove": "White to move",
+    "pickAMove": "Tap an empty intersection",
+    "submit": "Submit",
+    "grading": "Grading…",
+    "gradeFailed": "Grading failed",
+    "tryAgain": "Try again",
+    "recommended": "Recommended",
+    "navTitle": "Daily challenge",
+    "difficulty": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
+    "verdict": {
+      "best": "Best — matches KataGo's top move",
+      "ok": "Good — close to the top",
+      "weak": "Not bad — there's a better idea",
+      "miss": "Blunder — see the alternatives",
+      "illegal": "That intersection isn't legal"
+    },
+    "prompts": {
+      "ch-001": "White to move — Black has staked corners. Choose between invasion and counter-framework.",
+      "ch-002": "Black to move — balance the left and right. Find the connecting move.",
+      "ch-003": "Black to move — all star points are taken. Step into the centre or settle a side?"
+    }
+  },
   "history": {
     "total": "Total",
     "wins": "Wins",
