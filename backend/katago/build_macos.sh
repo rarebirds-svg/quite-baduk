@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
-# Build KataGo with Metal backend on Apple Silicon. Idempotent: checks
-# out a fresh clone into `vendor/KataGo` if missing, then re-runs cmake
-# only when the build/ directory is absent.
+# Build KataGo with the Metal backend on Apple Silicon.
+#
+# This is the from-source path for vendored builds (and matches what the
+# Homebrew bottle does internally). For most contributors `brew install
+# katago` followed by `ln -s /opt/homebrew/bin/katago bin/katago`
+# is the fastest way to get a Metal-accelerated binary — see README.md.
+#
+# Idempotent: skips clone if vendor/KataGo exists; skips mkdir build if
+# the build directory exists.
 set -euo pipefail
 
-KATAGO_VERSION="v1.15.3"
+# Metal backend support landed in KataGo v1.16.x — older tags (v1.15 and
+# below) fail at the cmake configure step with "Unrecognized backend: METAL".
+KATAGO_VERSION="v1.16.4"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENDOR="${SCRIPT_DIR}/vendor"
 SRC="${VENDOR}/KataGo"

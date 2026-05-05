@@ -49,3 +49,6 @@ backend/baduk.db-shm
 
 # 네이티브 실행 스크립트 런타임 (start.sh / stop.sh)
 .run/
+
+# KataGo runtime logs (gtp_example.cfg writes here when run from cwd)
+gtp_logs/
