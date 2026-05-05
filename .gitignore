@@ -36,6 +36,7 @@ e2e/test-results/
 
 # Claude Code — personal overrides (shared config is committed as .claude/settings.json)
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # Local SQLite (root-level dev DB)
 backend/baduk.db
@@ -45,3 +46,6 @@ backend/baduk.db-shm
 
 # Git worktrees (Superpowers convention)
 .worktrees/
+
+# 네이티브 실행 스크립트 런타임 (start.sh / stop.sh)
+.run/
