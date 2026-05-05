@@ -15,7 +15,8 @@ import random
 from dataclasses import dataclass
 
 from app.core.rules.board import BLACK, WHITE, Board
-from app.core.rules.engine import GameState, Move, play
+from app.core.rules.engine import GameState
+from app.core.rules.sgf_coord import gtp_to_xy
 
 TOPICS: tuple[str, ...] = (
     "opening",
@@ -151,6 +152,9 @@ CHALLENGES: tuple[DailyChallenge, ...] = (
         setup=(("B", "D4"), ("W", "F4"), ("B", "D6"))),
     _ch("ch-13-jo-2", size=13, to_move="B", difficulty="medium", topic="joseki",
         setup=(("B", "K4"), ("W", "K6"), ("B", "H4"), ("W", "K7"))),
+    _ch("ch-13-jo-3", size=13, to_move="W", difficulty="hard", topic="joseki",
+        setup=(("B", "K10"), ("W", "K12"), ("B", "J12"), ("W", "K11"),
+               ("B", "L11"), ("W", "L12"))),
     # ── 13×13 life_death ──────────────────────────────────────────────
     _ch("ch-13-ld-1", size=13, to_move="B", difficulty="easy", topic="life_death",
         setup=(("B", "B11"), ("B", "C11"), ("B", "C12"), ("W", "D11"),
@@ -158,12 +162,19 @@ CHALLENGES: tuple[DailyChallenge, ...] = (
     _ch("ch-13-ld-2", size=13, to_move="W", difficulty="medium", topic="life_death",
         setup=(("B", "L2"), ("B", "L3"), ("B", "L4"), ("B", "K4"),
                ("W", "M3"), ("W", "M4"), ("W", "K3"))),
+    _ch("ch-13-ld-3", size=13, to_move="B", difficulty="hard", topic="life_death",
+        setup=(("B", "B2"), ("B", "C2"), ("B", "D2"), ("B", "B3"),
+               ("W", "C3"), ("W", "D3"), ("W", "B4"), ("W", "E2"),
+               ("W", "E3"))),
     # ── 13×13 tesuji ──────────────────────────────────────────────────
     _ch("ch-13-te-1", size=13, to_move="B", difficulty="easy", topic="tesuji",
         setup=(("B", "G7"), ("W", "G8"), ("B", "H8"), ("W", "H7"))),
     _ch("ch-13-te-2", size=13, to_move="W", difficulty="medium", topic="tesuji",
         setup=(("B", "F6"), ("W", "G6"), ("B", "G7"), ("W", "H7"),
                ("B", "F7"), ("W", "H6"))),
+    _ch("ch-13-te-3", size=13, to_move="B", difficulty="hard", topic="tesuji",
+        setup=(("B", "F4"), ("W", "F5"), ("B", "G5"), ("W", "G6"),
+               ("B", "F6"), ("W", "G4"), ("B", "E5"))),
     # ── 13×13 middle_game ─────────────────────────────────────────────
     _ch("ch-13-mg-1", size=13, to_move="W", difficulty="easy", topic="middle_game",
         setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
@@ -175,14 +186,29 @@ CHALLENGES: tuple[DailyChallenge, ...] = (
         setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
                ("B", "D7"), ("W", "K7"), ("B", "G3"), ("W", "G11"))),
     # ── 13×13 endgame ─────────────────────────────────────────────────
+    _ch("ch-13-en-0", size=13, to_move="B", difficulty="easy", topic="endgame",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "G7"), ("W", "G4"), ("B", "G10"))),
     _ch("ch-13-en-1", size=13, to_move="W", difficulty="medium", topic="endgame",
         setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
                ("B", "G7"), ("W", "G4"), ("B", "G10"), ("W", "K7"),
                ("B", "D7"), ("W", "D11"), ("B", "C9"))),
+    _ch("ch-13-en-2", size=13, to_move="B", difficulty="hard", topic="endgame",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "G7"), ("W", "G4"), ("B", "G10"), ("W", "K7"),
+               ("B", "D7"), ("W", "D11"), ("B", "C9"), ("W", "L11"),
+               ("B", "L4"), ("W", "M10"))),
     # ── 13×13 capturing_race ──────────────────────────────────────────
+    _ch("ch-13-cr-0", size=13, to_move="W", difficulty="easy", topic="capturing_race",
+        setup=(("B", "B6"), ("B", "C6"), ("B", "D6"), ("W", "B7"),
+               ("W", "C7"), ("W", "D7"), ("B", "E6"), ("W", "E7"))),
     _ch("ch-13-cr-1", size=13, to_move="B", difficulty="medium", topic="capturing_race",
         setup=(("B", "C2"), ("B", "D2"), ("B", "E2"), ("W", "C3"),
                ("W", "D3"), ("W", "E3"), ("B", "F2"), ("W", "B3"))),
+    _ch("ch-13-cr-2", size=13, to_move="B", difficulty="hard", topic="capturing_race",
+        setup=(("B", "K2"), ("B", "L2"), ("B", "M2"), ("W", "K3"),
+               ("W", "L3"), ("W", "M3"), ("B", "J2"), ("W", "J3"),
+               ("B", "K4"))),
 
     # ── 19×19 opening ─────────────────────────────────────────────────
     _ch("ch-19-op-1", size=19, to_move="B", difficulty="easy", topic="opening",
@@ -199,14 +225,32 @@ CHALLENGES: tuple[DailyChallenge, ...] = (
     _ch("ch-19-jo-2", size=19, to_move="B", difficulty="medium", topic="joseki",
         setup=(("B", "D16"), ("W", "F17"), ("B", "F16"), ("W", "G16"),
                ("B", "F15"))),
+    _ch("ch-19-jo-3", size=19, to_move="W", difficulty="hard", topic="joseki",
+        setup=(("B", "Q16"), ("W", "Q14"), ("B", "P14"), ("W", "P13"),
+               ("B", "O14"), ("W", "Q13"), ("B", "P15"))),
     # ── 19×19 life_death ──────────────────────────────────────────────
+    _ch("ch-19-ld-0", size=19, to_move="B", difficulty="easy", topic="life_death",
+        setup=(("B", "C17"), ("B", "D17"), ("B", "D18"), ("W", "E17"),
+               ("W", "E18"), ("W", "C18"), ("W", "B17"))),
     _ch("ch-19-ld-1", size=19, to_move="B", difficulty="medium", topic="life_death",
         setup=(("B", "B17"), ("B", "C17"), ("B", "C18"), ("W", "D18"),
                ("W", "D17"), ("W", "B18"), ("W", "B16"))),
+    _ch("ch-19-ld-2", size=19, to_move="W", difficulty="hard", topic="life_death",
+        setup=(("B", "B2"), ("B", "C2"), ("B", "D2"), ("B", "B3"),
+               ("W", "C3"), ("W", "D3"), ("W", "B4"), ("W", "E2"),
+               ("W", "E3"))),
     # ── 19×19 tesuji ──────────────────────────────────────────────────
+    _ch("ch-19-te-0", size=19, to_move="B", difficulty="easy", topic="tesuji",
+        setup=(("B", "K8"), ("W", "K9"), ("B", "L9"), ("W", "L8"))),
     _ch("ch-19-te-1", size=19, to_move="B", difficulty="medium", topic="tesuji",
         setup=(("B", "K10"), ("W", "K11"), ("B", "L11"), ("W", "L10"))),
+    _ch("ch-19-te-2", size=19, to_move="W", difficulty="hard", topic="tesuji",
+        setup=(("B", "K10"), ("W", "L10"), ("B", "L11"), ("W", "M11"),
+               ("B", "K11"), ("W", "M10"))),
     # ── 19×19 middle_game ─────────────────────────────────────────────
+    _ch("ch-19-mg-0", size=19, to_move="B", difficulty="easy", topic="middle_game",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "K10"))),
     _ch("ch-19-mg-1", size=19, to_move="W", difficulty="medium", topic="middle_game",
         setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
                ("B", "Q10"), ("W", "C10"), ("B", "K3"))),
@@ -214,15 +258,29 @@ CHALLENGES: tuple[DailyChallenge, ...] = (
         setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
                ("B", "Q10"), ("W", "C10"), ("B", "K3"), ("W", "K17"))),
     # ── 19×19 endgame ─────────────────────────────────────────────────
+    _ch("ch-19-en-0", size=19, to_move="W", difficulty="easy", topic="endgame",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "Q10"), ("W", "D10"))),
+    _ch("ch-19-en-m", size=19, to_move="B", difficulty="medium", topic="endgame",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "Q10"), ("W", "C10"), ("B", "K3"), ("W", "K17"),
+               ("B", "F3"))),
     _ch("ch-19-en-1", size=19, to_move="W", difficulty="hard", topic="endgame",
         setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
                ("B", "Q10"), ("W", "C10"), ("B", "K3"), ("W", "K17"),
                ("B", "F3"), ("W", "C6"), ("B", "Q6"), ("W", "Q12"),
                ("B", "P12"))),
     # ── 19×19 capturing_race ──────────────────────────────────────────
+    _ch("ch-19-cr-0", size=19, to_move="W", difficulty="easy", topic="capturing_race",
+        setup=(("B", "B6"), ("B", "C6"), ("B", "D6"), ("W", "B7"),
+               ("W", "C7"), ("W", "D7"), ("B", "E6"), ("W", "E7"))),
     _ch("ch-19-cr-1", size=19, to_move="B", difficulty="medium", topic="capturing_race",
         setup=(("B", "B3"), ("B", "C3"), ("B", "D3"), ("W", "B4"),
                ("W", "C4"), ("W", "D4"), ("B", "E3"), ("W", "B2"))),
+    _ch("ch-19-cr-2", size=19, to_move="B", difficulty="hard", topic="capturing_race",
+        setup=(("B", "Q2"), ("B", "R2"), ("B", "S2"), ("W", "Q3"),
+               ("W", "R3"), ("W", "S3"), ("B", "P2"), ("W", "P3"),
+               ("B", "Q4"))),
 )
 
 _BY_ID: dict[str, DailyChallenge] = {c.id: c for c in CHALLENGES}
@@ -281,9 +339,30 @@ def pick_random(
 
 
 def replay_position(challenge: DailyChallenge) -> GameState:
-    state = GameState(board=Board(challenge.board_size), komi=6.5)
+    """Build the puzzle position by directly placing each setup stone.
+
+    We *don't* route through the rules engine's ``play()`` here because
+    puzzle setups frequently break strict turn alternation — life-and-
+    death and capturing-race positions naturally have several Black
+    stones in a row, then several White, etc. ``play()`` would refuse
+    them with NOT_YOUR_TURN. The setup describes a final position, not
+    a game; direct ``board.place()`` is the right primitive.
+
+    Captures aren't applied during placement either — V1 catalogue
+    positions are settled (every stone has a liberty), so this is a
+    no-op in practice. If a future puzzle relies on a setup that ought
+    to capture, switch to ``apply_captures(board, x, y, color)``.
+    """
+    board = Board(challenge.board_size)
     for color, coord in challenge.setup:
         c = BLACK if color == "B" else WHITE
-        state = play(state, Move(color=c, coord=coord))
-    state.to_move = BLACK if challenge.to_move == "B" else WHITE
-    return state
+        xy = gtp_to_xy(coord, board.size)
+        if xy is None:
+            raise ValueError(f"daily challenge {challenge.id}: bad coord {coord!r}")
+        x, y = xy
+        board = board.place(x, y, c)
+    return GameState(
+        board=board,
+        komi=6.5,
+        to_move=BLACK if challenge.to_move == "B" else WHITE,
+    )

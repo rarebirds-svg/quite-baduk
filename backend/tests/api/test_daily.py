@@ -104,17 +104,54 @@ async def test_random_endpoint_returns_match(client: AsyncClient) -> None:
     assert body["topic"] == "opening"
 
 
-@pytest.mark.asyncio
-async def test_random_endpoint_404_when_no_match(client: AsyncClient) -> None:
-    """A combo with no puzzles must 404 so the UI can disable that
-    option instead of guessing or hitting a 500."""
-    await client.post("/api/session", json={"nickname": "daily_nomatch"})
-    # 19x19 capturing_race / easy is intentionally empty in the V1 catalogue.
-    r = await client.get(
-        "/api/daily-challenge/random",
-        params={"board_size": 19, "topic": "capturing_race", "difficulty": "easy"},
+def test_catalogue_covers_every_filter_cell() -> None:
+    """Promise to the user: any (board × topic × difficulty) selection
+    has at least one puzzle. Drives the "절대 비어 있지 않다" guarantee
+    behind the filter UI."""
+    from app.services.daily_challenge import (
+        BOARD_SIZES,
+        DIFFICULTIES,
+        TOPICS,
+        filter_challenges,
     )
-    assert r.status_code == 404
+
+    missing: list[str] = []
+    for size in BOARD_SIZES:
+        for diff in DIFFICULTIES:
+            for topic in TOPICS:
+                if not filter_challenges(
+                    board_size=size, difficulty=diff, topic=topic
+                ):
+                    missing.append(f"{size}|{diff}|{topic}")
+    assert missing == [], (
+        f"Catalogue must cover every (size × difficulty × topic) cell; "
+        f"missing: {missing}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_random_endpoint_returns_match_for_every_cell(
+    client: AsyncClient,
+) -> None:
+    """Round-trip the same guarantee through the API: every concrete
+    triple resolves, never 404s. Catches the case where the catalogue
+    has data but a routing/filter bug skips it."""
+    from app.services.daily_challenge import (
+        BOARD_SIZES,
+        DIFFICULTIES,
+        TOPICS,
+    )
+    await client.post("/api/session", json={"nickname": "daily_cover"})
+    for size in BOARD_SIZES:
+        for diff in DIFFICULTIES:
+            for topic in TOPICS:
+                r = await client.get(
+                    "/api/daily-challenge/random",
+                    params={"board_size": size, "topic": topic, "difficulty": diff},
+                )
+                assert r.status_code == 200, (
+                    f"{size}/{diff}/{topic} returned {r.status_code}"
+                )
 
 
 @pytest.mark.asyncio
