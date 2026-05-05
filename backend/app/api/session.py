@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy import update as _sa_update
 from sqlalchemy.exc import IntegrityError
 
+from app.client_ip import client_ip as _client_key
 from app.config import settings
 from app.core.nickname import InvalidNickname, normalize, to_key, validate
 from app.deps import COOKIE_SESSION, CurrentSession, DbSession
@@ -25,13 +26,6 @@ from app.schemas.session import NicknameAvailability, SessionCreateRequest, Sess
 from app.session_registry import registry
 
 router = APIRouter(prefix="/api/session", tags=["session"])
-
-
-def _client_key(request: Request) -> str:
-    xff = request.headers.get("x-forwarded-for")
-    if xff:
-        return xff.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
 
 
 def _set_session_cookie(response: Response, token: str) -> None:
