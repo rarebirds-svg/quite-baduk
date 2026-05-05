@@ -69,17 +69,20 @@ export function openGameWS(
   onMessage: (m: WSMessage) => void,
   options: OpenGameWSOptions = {},
 ): GameWS {
-  // Prefer same-origin in the browser so the WS rides the same host as the
-  // page (works through tunnels, LAN access, and prod behind a reverse proxy
-  // that forwards /api/ws to the backend). Falls back to NEXT_PUBLIC_API_URL
-  // for server-side / non-window contexts.
+  // Order of resolution:
+  //   1. NEXT_PUBLIC_WS_URL — explicit override (set when the API rides on
+  //      a different host than the page, e.g. cloudflared quick tunnels for
+  //      external demo, or Capacitor mobile shell hitting api.<domain>).
+  //   2. window.location origin — same-origin WS, the normal browser path.
+  //   3. NEXT_PUBLIC_API_URL → ws:// — server-side / non-window contexts.
   const base =
-    typeof window !== "undefined"
+    process.env.NEXT_PUBLIC_WS_URL ||
+    (typeof window !== "undefined"
       ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`
       : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(
           /^http/,
           "ws",
-        );
+        ));
   const url = `${base}/api/ws/games/${gameId}`;
   const probeUrl = `/api/games/${gameId}`;
   let ws = new WebSocket(url);
