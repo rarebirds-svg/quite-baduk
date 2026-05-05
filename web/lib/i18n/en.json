@@ -160,7 +160,7 @@
       "rustic": "Self-taught, practical over theory — gut-fight Go"
     }
   },
-  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "startCoaching": "Coach this game", "coachingProgress": "Analyzing", "coachingDone": "Analysis ready", "blunderTag": "Blunder", "coachTag": "This move", "showAlt": "Show alternatives", "hideAlt": "Hide alternatives", "winrateBlackShort": "B", "blunderCountSuffix": "blunder(s)" },
+  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "startCoaching": "Coach this game", "coachingProgress": "Analyzing", "coachingDone": "Analysis ready", "blunderTag": "Blunder", "coachTag": "This move", "showAlt": "Show alternatives", "hideAlt": "Hide alternatives", "winrateBlackShort": "B", "blunderCountSuffix": "blunder(s)", "showAllBlunders": "Show all blunders", "hideAllBlunders": "Hide all blunders", "noBlundersFound": "No blunders found — solid game." },
   "daily": {
     "eyebrow": "Today's puzzle",
     "title": "Daily Challenge",

@@ -124,6 +124,11 @@ export default function ReviewPlayer({
   const [coachingActive, setCoachingActive] = useState(false);
   const [coachingProgress, setCoachingProgress] = useState<{ done: number; total: number } | null>(null);
   const [showAlternatives, setShowAlternatives] = useState(false);
+  // Persistent "all blunders" panel that the user can toggle once analysis
+  // is done. Stays open across move scrubs so the user can jump between
+  // problem moves; alternatives overlay is opened per-move from the panel
+  // itself or via the inline caption.
+  const [showAllBlunders, setShowAllBlunders] = useState(false);
   // Concurrency cap: KataGo per-move analysis is not free. Even cached, the
   // first review of a long game would otherwise fire 200 requests at once.
   const inFlightRef = useRef(0);
@@ -139,6 +144,7 @@ export default function ReviewPlayer({
     setCoachingActive(false);
     setCoachingProgress(null);
     setShowAlternatives(false);
+    setShowAllBlunders(false);
     (async () => {
       try {
         const g = await api<GameDetail>(`/api/games/${gameId}`);
@@ -404,7 +410,7 @@ export default function ReviewPlayer({
         )}
       </div>
 
-      <div className="flex items-center gap-3 -mt-1">
+      <div className="flex flex-wrap items-center gap-3 -mt-1">
         {!coachingActive ? (
           <Button
             size="sm"
@@ -420,13 +426,78 @@ export default function ReviewPlayer({
             {coachingProgress.total}
           </span>
         ) : (
-          <span className="font-sans text-xs uppercase tracking-label text-moss">
-            {t("review.coachingDone")}
-            {blunderMoves.length > 0 &&
-              ` · ${blunderMoves.length} ${t("review.blunderCountSuffix")}`}
-          </span>
+          <>
+            <span className="font-sans text-xs uppercase tracking-label text-moss">
+              {t("review.coachingDone")}
+              {blunderMoves.length > 0 &&
+                ` · ${blunderMoves.length} ${t("review.blunderCountSuffix")}`}
+            </span>
+            {/* Persistent access to the full coaching list. Stays visible
+                regardless of whether the per-move alternatives are open. */}
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto text-oxblood border-oxblood"
+              onClick={() => setShowAllBlunders((v) => !v)}
+              aria-pressed={showAllBlunders}
+              aria-controls="all-blunders-panel"
+            >
+              {showAllBlunders
+                ? t("review.hideAllBlunders")
+                : t("review.showAllBlunders")}
+            </Button>
+          </>
         )}
       </div>
+
+      {coachingActive && showAllBlunders && (
+        <div
+          id="all-blunders-panel"
+          className="border border-ink-faint divide-y divide-ink-faint"
+        >
+          {blunderMoves.length === 0 ? (
+            <div className="px-3 py-2 font-sans text-xs text-ink-mute">
+              {t("review.noBlundersFound")}
+            </div>
+          ) : (
+            blunderMoves.map((n) => {
+              const before = winratesBlack[n - 1];
+              const after = winratesBlack[n];
+              const m = game.moves[n - 1];
+              const d = moveDrop(before, after, m.color);
+              const isCurrent = n === idx;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => {
+                    setIdx(n);
+                    setPlaying(false);
+                    // Open alternatives for the move the user clicked
+                    // through to so the panel feels like a navigator.
+                    setShowAlternatives(true);
+                  }}
+                  className={
+                    "w-full text-left px-3 py-2 grid grid-cols-[auto_auto_1fr_auto] gap-3 items-baseline font-sans text-sm hover:bg-paper-deep transition-base " +
+                    (isCurrent ? "bg-paper-deep" : "")
+                  }
+                >
+                  <span className="font-mono tabular-nums text-xs text-ink-mute">
+                    #{n}
+                  </span>
+                  <span>{m.color === "B" ? "●" : "○"}</span>
+                  <span className="font-mono tabular-nums text-xs">
+                    {m.coord ?? "pass"}
+                  </span>
+                  <span className="font-mono tabular-nums text-xs text-oxblood">
+                    −{(d * 100).toFixed(1)}%
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm"

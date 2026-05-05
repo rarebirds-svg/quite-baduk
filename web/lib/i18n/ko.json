@@ -160,7 +160,7 @@
       "rustic": "정석보다 실전 감각으로 승부하는 야성적 행마"
     }
   },
-  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "play": "재생", "pause": "일시정지", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더", "startCoaching": "코칭 시작", "coachingProgress": "분석 중", "coachingDone": "분석 완료", "blunderTag": "악수", "coachTag": "이 수", "showAlt": "다른 변화도 보기", "hideAlt": "변화도 닫기", "winrateBlackShort": "흑", "blunderCountSuffix": "악수 발견" },
+  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "play": "재생", "pause": "일시정지", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더", "startCoaching": "코칭 시작", "coachingProgress": "분석 중", "coachingDone": "분석 완료", "blunderTag": "악수", "coachTag": "이 수", "showAlt": "다른 변화도 보기", "hideAlt": "변화도 닫기", "winrateBlackShort": "흑", "blunderCountSuffix": "악수 발견", "showAllBlunders": "전체 코칭 보기", "hideAllBlunders": "전체 코칭 닫기", "noBlundersFound": "악수가 발견되지 않았습니다 — 안정적인 대국이었어요." },
   "daily": {
     "eyebrow": "오늘의 한 수",
     "title": "일일 챌린지",
