@@ -20,17 +20,26 @@ def test_all_ranks_present():
 
 
 @pytest.mark.parametrize("rank,profile,visits", [
-    ("18k", "rank_18k", 1),
-    ("15k", "rank_15k", 1),
-    ("12k", "rank_12k", 1),
-    ("10k", "rank_10k", 2),
+    ("9k",  "rank_9k",  2),
+    ("8k",  "rank_8k",  3),
     ("7k",  "rank_7k",  4),
+    ("6k",  "rank_6k",  6),
     ("5k",  "rank_5k",  8),
+    ("4k",  "rank_4k",  12),
     ("3k",  "rank_3k",  16),
+    ("2k",  "rank_2k",  24),
     ("1k",  "rank_1k",  32),
     ("1d",  "rank_1d",  64),
+    ("2d",  "rank_2d",  96),
     ("3d",  "rank_3d",  128),
+    ("4d",  "rank_4d",  192),
     ("5d",  "rank_5d",  256),
+    # 6d..9d ride the v1.0 cap — base table is higher but min(256, …)
+    # in rank_to_config keeps them at 256.
+    ("6d",  "rank_6d",  256),
+    ("7d",  "rank_7d",  256),
+    ("8d",  "rank_8d",  256),
+    ("9d",  "rank_9d",  256),
 ])
 def test_rank_mapping(rank: str, profile: str, visits: int) -> None:
     cfg = rank_to_config(rank)
@@ -54,10 +63,11 @@ def test_config_frozen():
         cfg.rank = "1d"  # type: ignore[misc]
 
 
-@pytest.mark.parametrize("rank", ["2d", "4d", "6d", "7d", "8d", "9d", "9k", "8k", "6k", "4k", "2k"])
+@pytest.mark.parametrize("rank", ["18k", "15k", "12k", "10k"])
 def test_deprecated_ranks_raise_via_public_api(rank: str) -> None:
     """Ranks present in the visit table but withheld from v1.0's public set
-    must raise UnsupportedRank when callers go through ``rank_to_config``."""
+    must raise UnsupportedRank when callers go through ``rank_to_config``.
+    The public set is 9k..9d; 18k..10k are gated as too-easy floor."""
     with pytest.raises(UnsupportedRank):
         rank_to_config(rank)
 
@@ -81,16 +91,22 @@ def test_rank_to_config_caps_max_visits_at_256() -> None:
             )
 
 
-def test_supported_ranks_excludes_6d_and_7d() -> None:
+def test_supported_ranks_spans_9k_through_9d() -> None:
     from app.core.katago.strength import SUPPORTED_AI_RANKS
 
-    assert "6d" not in SUPPORTED_AI_RANKS
-    assert "7d" not in SUPPORTED_AI_RANKS
-    assert "5d" in SUPPORTED_AI_RANKS
+    # The full 9k..9d ladder is in. 18k..10k stay out (too-easy floor).
+    for r in (
+        "9k", "8k", "7k", "6k", "5k", "4k", "3k", "2k", "1k",
+        "1d", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d",
+    ):
+        assert r in SUPPORTED_AI_RANKS, f"{r} should be in the public set"
+    for r in ("18k", "15k", "12k", "10k"):
+        assert r not in SUPPORTED_AI_RANKS, f"{r} should be gated out"
 
 
-def test_unsupported_rank_raises() -> None:
+def test_floor_rank_raises() -> None:
+    """Below-9k floor remains gated."""
     from app.core.katago.strength import UnsupportedRank, rank_to_config
 
     with pytest.raises(UnsupportedRank):
-        rank_to_config("9d", "balanced", None)
+        rank_to_config("18k", "balanced", None)

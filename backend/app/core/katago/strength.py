@@ -70,13 +70,15 @@ _RANK_BASE_VISITS: dict[str, int] = {
 
 SUPPORTED_RANKS: tuple[str, ...] = tuple(_RANK_BASE_VISITS.keys())
 
-# Public v1.0 launch set — the rank picker exposes 18-kyu through 5-dan.
-# 6d/7d are temporarily withheld until the KataGo Metal pool's behaviour at
-# high visit counts has been profiled (see Plan 1 / Task A4). Every entry
-# here must have ``max_visits <= 256`` once style multipliers settle.
+# Public v1.0 launch set — the rank picker exposes 9-kyu through 9-dan.
+# 18k..10k are excluded as too-easy floor; 6d..9d are kept in the public
+# set with the standard 256-visit cap (see ``rank_to_config`` below). The
+# strength signal at the high-dan steps comes from the humanSL profile
+# (``rank_9d`` vs ``rank_6d``), since visits saturate at the cap. Every
+# entry here must have ``max_visits <= 256`` once style multipliers settle.
 SUPPORTED_AI_RANKS: tuple[str, ...] = (
-    "18k", "15k", "12k", "10k", "7k", "5k", "3k", "1k",
-    "1d", "3d", "5d",
+    "9k", "8k", "7k", "6k", "5k", "4k", "3k", "2k", "1k",
+    "1d", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d",
 )
 
 

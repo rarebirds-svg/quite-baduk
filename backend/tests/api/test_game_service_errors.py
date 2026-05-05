@@ -221,7 +221,9 @@ async def test_create_game_rejects_unsupported_rank(
         await create_game(
             db_session,
             session=s,
-            ai_rank="7d",
+            # 18k is below the public 9k..9d ladder — used to be in the
+            # set, now gated out as too-easy floor.
+            ai_rank="18k",
             handicap=0,
             user_color="black",
             board_size=9,

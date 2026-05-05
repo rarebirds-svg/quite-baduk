@@ -9,22 +9,29 @@ import {
 } from "@/components/ui/select";
 
 // Mirrors backend SUPPORTED_AI_RANKS in app/core/katago/strength.py.
-// v1.0 ships 18k..5d only — 6d/7d/9d ranks are temporarily withheld
-// until the Metal pool's high-visit behaviour is profiled (Plan 1
-// task A4). Granularity is sparse on purpose so users see meaningfully
-// different opponents at each step rather than a 16-stop slider.
+// v1.0 public ladder: 9-kyu through 9-dan. 18k..10k are gated out as a
+// too-easy floor; 6d..9d ride the same 256-visit cap as 5d, with the
+// strength difference coming from the humanSL profile (rank_6d vs
+// rank_9d) rather than visit count.
 export const RANKS = [
-  "18k",
-  "15k",
-  "12k",
-  "10k",
+  "9k",
+  "8k",
   "7k",
+  "6k",
   "5k",
+  "4k",
   "3k",
+  "2k",
   "1k",
   "1d",
+  "2d",
   "3d",
+  "4d",
   "5d",
+  "6d",
+  "7d",
+  "8d",
+  "9d",
 ] as const;
 export type Rank = (typeof RANKS)[number];
 
