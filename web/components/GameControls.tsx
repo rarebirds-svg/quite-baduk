@@ -120,10 +120,10 @@ export default function GameControls({
           onClick={onPass}
           disabled={disabled}
           variant="outline"
-          className="flex flex-col h-auto py-3 gap-1"
+          className="flex flex-col h-auto py-3 px-1 sm:px-2 gap-1 min-w-0"
         >
           <IconPass />
-          <span className="font-sans text-xs font-semibold uppercase tracking-label">
+          <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
             {t("game.pass")}
           </span>
         </Button>
@@ -131,10 +131,10 @@ export default function GameControls({
           onClick={onUndo}
           disabled={undoDisabled}
           variant="outline"
-          className="flex flex-col h-auto py-3 gap-1"
+          className="flex flex-col h-auto py-3 px-1 sm:px-2 gap-1 min-w-0"
         >
           <IconUndo />
-          <span className="font-sans text-xs font-semibold uppercase tracking-label">
+          <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
             {t("game.undo")}
             {typeof undosRemaining === "number" && (
               <span className="ml-1 font-mono tabular-nums text-ink-mute">
@@ -147,12 +147,12 @@ export default function GameControls({
           onClick={onHint}
           disabled={disabled || hintLoading}
           variant="outline"
-          className="flex flex-col h-auto py-3 gap-1 text-oxblood border-oxblood"
+          className="flex flex-col h-auto py-3 px-1 sm:px-2 gap-1 min-w-0 text-oxblood border-oxblood"
           aria-busy={hintLoading || undefined}
           aria-live="polite"
         >
           <IconHint />
-          <span className="font-sans text-xs font-semibold uppercase tracking-label">
+          <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
             {hintLoading ? t("game.hintLoading") : t("game.hint")}
           </span>
         </Button>
@@ -161,12 +161,12 @@ export default function GameControls({
             onClick={onEstimate}
             disabled={disabled || estimateLoading}
             variant="outline"
-            className="flex flex-col h-auto py-3 gap-1 text-gold border-gold"
+            className="flex flex-col h-auto py-3 px-1 sm:px-2 gap-1 min-w-0 text-gold border-gold"
             aria-busy={estimateLoading || undefined}
             aria-live="polite"
           >
             <IconEstimate />
-            <span className="font-sans text-xs font-semibold uppercase tracking-label">
+            <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
               {estimateLoading ? t("game.estimateLoading") : t("game.estimate")}
             </span>
           </Button>
@@ -176,11 +176,11 @@ export default function GameControls({
             onClick={onScoreRequest}
             disabled={scoreDisabled}
             variant="outline"
-            className="flex flex-col h-auto py-3 gap-1 data-[enabled=true]:border-moss data-[enabled=true]:text-moss"
+            className="flex flex-col h-auto py-3 px-1 sm:px-2 gap-1 min-w-0 data-[enabled=true]:border-moss data-[enabled=true]:text-moss"
             data-enabled={scoringAvailable ? "true" : "false"}
           >
             <IconScore />
-            <span className="font-sans text-xs font-semibold uppercase tracking-label">
+            <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
               {t("game.requestScoring")}
             </span>
           </Button>
@@ -189,10 +189,10 @@ export default function GameControls({
           onClick={onResign}
           disabled={disabled}
           variant="destructive"
-          className="flex flex-col h-auto py-3 gap-1"
+          className="flex flex-col h-auto py-3 px-1 sm:px-2 gap-1 min-w-0"
         >
           <IconResign />
-          <span className="font-sans text-xs font-semibold uppercase tracking-label">
+          <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
             {t("game.resign")}
           </span>
         </Button>
