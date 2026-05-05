@@ -33,10 +33,6 @@ interface AnalyzeResponse {
 }
 
 // Move-position N (after N moves played) → Black's POV winrate.
-// No handicap: after even N, Black is to move (so wr_black = wr).
-// Handicap H>0: B places H stones before move 1; first recorded move is W.
-//   After N recorded moves with handicap, side-to-move parity flips —
-//   B is to move when N is ODD.
 function blackWinrateAt(
   sideToMoveWinrate: number,
   moveNum: number,
@@ -49,7 +45,7 @@ function blackWinrateAt(
 }
 
 // Drop in the moving player's winrate from before to after their move.
-// Positive = the moving side LOST winrate (= mistake). Threshold elsewhere.
+// Positive = mistake (the side that moved lost winrate).
 function moveDrop(
   wrBlackBefore: number,
   wrBlackAfter: number,
@@ -60,7 +56,7 @@ function moveDrop(
     : wrBlackAfter - wrBlackBefore;
 }
 
-const BLUNDER_THRESHOLD = 0.10; // 10% winrate drop counts as a coaching note
+const BLUNDER_THRESHOLD = 0.10;
 
 function replay(
   size: number,
@@ -69,9 +65,7 @@ function replay(
   handicap = 0,
 ): string {
   const cells = Array.from({ length: totalCells(size) }, () => ".");
-  // Pre-place handicap stones — they are part of the position from move 0
-  // onward but never appear in the move log (the backend's rules engine
-  // places them directly without recording MoveRow entries).
+  // Pre-place handicap stones — never persisted as MoveRow entries.
   for (const coord of handicapStonesFor(size, handicap)) {
     const xy = gtpToXy(coord, size);
     if (!xy) continue;
@@ -91,16 +85,21 @@ function replay(
 
 export interface ReviewPlayerProps {
   gameId: number;
-  /** Default ~700ms — compact modals feel better slightly faster. */
   intervalMs?: number;
-  /** Auto-start playback on mount. Default true. */
   autoplay?: boolean;
 }
 
 /**
- * Self-contained kifu replay player. Fetches the game, renders the board,
- * and offers play/pause + scrubber + step controls. Designed to fit inside
- * dialogs / popups without pulling in the full review page's analysis UI.
+ * Self-contained kifu replay with a single "감상 / 학습" mode toggle.
+ *
+ * Review mode (default): plain replay — board, scrubber, nav buttons.
+ *
+ * Learn mode (opt-in): analysis runs in the background; blunder dots
+ * land on the scrubber as data arrives; whenever the current frame is
+ * a blunder the board paints KataGo's top alternatives automatically
+ * (no extra toggle), the caption strip explains the drop, and the
+ * full blunder list anchors the bottom of the panel so the user can
+ * jump between problem moves like a table of contents.
  */
 export default function ReviewPlayer({
   gameId,
@@ -112,25 +111,24 @@ export default function ReviewPlayer({
   const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
-  // Track the current gameId to cancel a stale fetch if the caller swaps
-  // games while one is in flight (clicking review on a different row).
   const activeId = useRef(gameId);
-  // Per-move analyses, indexed by move position (0 = empty board, N = after
-  // Nth move). Populated by the coaching pipeline below.
+
+  // Per-move analyses — populated lazily when the user enters learn mode.
+  // Once populated we don't drop them on mode toggle so flipping back to
+  // learn after browsing in review feels instant.
   const [winratesBlack, setWinratesBlack] = useState<Record<number, number>>({});
   const [topMovesAt, setTopMovesAt] = useState<
     Record<number, { move: string; winrate: number; visits: number }[]>
   >({});
-  const [coachingActive, setCoachingActive] = useState(false);
   const [coachingProgress, setCoachingProgress] = useState<{ done: number; total: number } | null>(null);
-  const [showAlternatives, setShowAlternatives] = useState(false);
-  // Persistent "all blunders" panel that the user can toggle once analysis
-  // is done. Stays open across move scrubs so the user can jump between
-  // problem moves; alternatives overlay is opened per-move from the panel
-  // itself or via the inline caption.
-  const [showAllBlunders, setShowAllBlunders] = useState(false);
-  // Concurrency cap: KataGo per-move analysis is not free. Even cached, the
-  // first review of a long game would otherwise fire 200 requests at once.
+  // Have we ever entered learn mode for this game? Drives the analysis
+  // lifecycle — once true, the pipeline runs to completion in the
+  // background even if the user toggles back to review while it works.
+  const [coachingStarted, setCoachingStarted] = useState(false);
+  // Single source of truth for the coaching UX: review (clean replay)
+  // vs learn (overlays + caption + blunder list all on together).
+  const [mode, setMode] = useState<"review" | "learn">("review");
+
   const inFlightRef = useRef(0);
 
   useEffect(() => {
@@ -141,10 +139,9 @@ export default function ReviewPlayer({
     setPlaying(false);
     setWinratesBlack({});
     setTopMovesAt({});
-    setCoachingActive(false);
+    setCoachingStarted(false);
     setCoachingProgress(null);
-    setShowAlternatives(false);
-    setShowAllBlunders(false);
+    setMode("review");
     (async () => {
       try {
         const g = await api<GameDetail>(`/api/games/${gameId}`);
@@ -159,14 +156,14 @@ export default function ReviewPlayer({
     })();
   }, [gameId, autoplay]);
 
-  // Coaching pipeline — sequential per-move analysis. Opt-in via the
-  // "코칭 시작" button so we don't surprise the user with engine load on
-  // every review open. Results land in `winratesBlack` keyed by move index.
+  // Analysis pipeline — runs once per game, kicked off when the user
+  // first enters learn mode. Sequential per-move analyze with a
+  // concurrency cap of 2 so the engine pool isn't starved.
   useEffect(() => {
-    if (!coachingActive || !game) return;
+    if (!coachingStarted || !game) return;
     let cancelled = false;
     const handicap = game.handicap ?? 0;
-    const total = game.moves.length + 1; // positions 0..N
+    const total = game.moves.length + 1;
     setCoachingProgress({ done: 0, total });
 
     const fetchOne = async (moveNum: number): Promise<void> => {
@@ -185,7 +182,7 @@ export default function ReviewPlayer({
         setWinratesBlack((prev) => ({ ...prev, [moveNum]: wrBlack }));
         setTopMovesAt((prev) => ({ ...prev, [moveNum]: r.top_moves }));
       } catch {
-        // Single-move failure is non-fatal — skip and keep going.
+        // Single-move failure is non-fatal.
       } finally {
         inFlightRef.current = Math.max(0, inFlightRef.current - 1);
       }
@@ -204,7 +201,7 @@ export default function ReviewPlayer({
     return () => {
       cancelled = true;
     };
-  }, [coachingActive, game, gameId]);
+  }, [coachingStarted, game, gameId]);
 
   useEffect(() => {
     if (!playing || !game) return;
@@ -231,10 +228,11 @@ export default function ReviewPlayer({
     return xy ? { x: xy[0], y: xy[1] } : null;
   }, [game, idx]);
 
-  // Blunder index list — computed unconditionally so the hook order is
-  // stable across the early returns below.
+  // Blunder index list — driven by whatever winrate data is available so
+  // dots can populate as analysis streams in, even mid-pipeline. Empty
+  // when not in learn mode so the scrubber stays clean.
   const blunderMoves = useMemo(() => {
-    if (!coachingActive || !game) return [] as number[];
+    if (mode !== "learn" || !game) return [] as number[];
     const out: number[] = [];
     for (let n = 1; n < game.moves.length + 1; n++) {
       const before = winratesBlack[n - 1];
@@ -245,7 +243,7 @@ export default function ReviewPlayer({
       if (d > BLUNDER_THRESHOLD) out.push(n);
     }
     return out;
-  }, [coachingActive, game, winratesBlack]);
+  }, [mode, game, winratesBlack]);
 
   if (error) {
     return (
@@ -255,16 +253,10 @@ export default function ReviewPlayer({
     );
   }
   if (!game) {
-    return (
-      <p className="text-sm text-ink-mute p-4 text-center">…</p>
-    );
+    return <p className="text-sm text-ink-mute p-4 text-center">…</p>;
   }
 
   const currentMove = idx > 0 ? game.moves[idx - 1] : null;
-
-  // Coaching read-outs for the move currently displayed (the one at idx).
-  // wrBefore = winrate AT position idx-1 (before that move),
-  // wrAfter = winrate AT position idx (after that move).
   const wrBefore =
     idx > 0 && idx - 1 in winratesBlack ? winratesBlack[idx - 1] : null;
   const wrAfter = idx in winratesBlack ? winratesBlack[idx] : null;
@@ -273,14 +265,17 @@ export default function ReviewPlayer({
       ? moveDrop(wrBefore, wrAfter, currentMove.color)
       : null;
   const isBlunder = drop !== null && drop > BLUNDER_THRESHOLD;
-  // Top moves at the position BEFORE the current move — i.e., the
-  // alternatives that the moving player passed up.
   const alternatives = idx > 0 ? topMovesAt[idx - 1] ?? [] : [];
 
-  // Render top alternatives as semi-transparent overlay markers. Reuses
-  // the Board overlay shape (primary/secondary/tertiary).
+  const learning = mode === "learn";
+  const analysisDone =
+    coachingProgress !== null &&
+    coachingProgress.done >= coachingProgress.total;
+
+  // Auto-overlay: in learn mode, whenever the current frame is a blunder
+  // and we have alternatives data, paint KataGo's top three. No toggle.
   const altOverlay =
-    showAlternatives && alternatives.length > 0
+    learning && isBlunder && alternatives.length > 0
       ? alternatives
           .slice(0, 3)
           .map((m, i) => {
@@ -310,10 +305,62 @@ export default function ReviewPlayer({
           )
       : undefined;
 
-  // (blunderMoves computed earlier — hook order keeps it before any early returns.)
+  const setLearnMode = () => {
+    setMode("learn");
+    if (!coachingStarted) setCoachingStarted(true);
+  };
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Mode toggle — single primary control. Clicking 학습 also kicks
+          off analysis the first time, so there's nothing else to start. */}
+      <div
+        role="radiogroup"
+        aria-label={t("review.modeLabel")}
+        className="inline-flex self-start border border-ink-faint"
+      >
+        <button
+          type="button"
+          role="radio"
+          aria-checked={mode === "review"}
+          onClick={() => setMode("review")}
+          className={
+            "px-3 py-1.5 font-sans text-xs uppercase tracking-label transition-base " +
+            (mode === "review"
+              ? "bg-ink text-paper"
+              : "text-ink-mute hover:text-ink")
+          }
+        >
+          {t("review.modeReview")}
+        </button>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={mode === "learn"}
+          onClick={setLearnMode}
+          className={
+            "px-3 py-1.5 font-sans text-xs uppercase tracking-label transition-base border-l border-ink-faint flex items-center gap-2 " +
+            (mode === "learn"
+              ? "bg-oxblood text-paper"
+              : "text-ink-mute hover:text-ink")
+          }
+        >
+          <span>{t("review.modeLearn")}</span>
+          {learning && coachingProgress && !analysisDone && (
+            <span className="font-mono tabular-nums text-[10px]">
+              {coachingProgress.done}/{coachingProgress.total}
+            </span>
+          )}
+          {learning && analysisDone && (
+            <span className="font-mono tabular-nums text-[10px]">
+              {blunderMoves.length}
+              <span className="ml-0.5">●</span>
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Header row */}
       <div className="flex items-baseline justify-between font-mono text-xs text-ink-mute">
         <span className="tabular-nums">
           {idx} / {game.moves.length}
@@ -325,7 +372,7 @@ export default function ReviewPlayer({
               </span>
             </span>
           )}
-          {wrAfter !== null && (
+          {learning && wrAfter !== null && (
             <span className="ml-3 text-ink-mute">
               {t("review.winrateBlackShort")}: {(wrAfter * 100).toFixed(1)}%
             </span>
@@ -346,7 +393,8 @@ export default function ReviewPlayer({
         />
       </div>
 
-      {currentMove && drop !== null && (
+      {/* Per-move caption — only in learn mode, only when we have data */}
+      {learning && currentMove && drop !== null && (
         <div
           className={
             "border px-3 py-2 font-sans text-sm flex items-baseline justify-between gap-3 " +
@@ -363,20 +411,15 @@ export default function ReviewPlayer({
             {drop > 0 ? "−" : "+"}
             {Math.abs(drop * 100).toFixed(1)}%
           </span>
-          {alternatives.length > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="ml-auto"
-              onClick={() => setShowAlternatives((v) => !v)}
-              aria-pressed={showAlternatives}
-            >
-              {showAlternatives ? t("review.hideAlt") : t("review.showAlt")}
-            </Button>
+          {isBlunder && alternatives.length > 0 && (
+            <span className="font-sans text-xs text-ink-mute ml-auto">
+              {t("review.altsAutoShown")}
+            </span>
           )}
         </div>
       )}
 
+      {/* Scrubber + blunder dots (only painted in learn mode) */}
       <div className="relative">
         <input
           type="range"
@@ -387,15 +430,12 @@ export default function ReviewPlayer({
           className="w-full accent-oxblood block"
           aria-label={t("review.scrubber")}
         />
-        {blunderMoves.length > 0 && (
+        {learning && blunderMoves.length > 0 && (
           <div
             aria-hidden="true"
             className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2"
           >
             {blunderMoves.map((n) => {
-              // Native range thumb has padding; matching exactly is tricky.
-              // Use percentage along the track — close enough at typical
-              // viewport widths.
               const pct = (n / game.moves.length) * 100;
               return (
                 <span
@@ -410,95 +450,7 @@ export default function ReviewPlayer({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 -mt-1">
-        {!coachingActive ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-oxblood border-oxblood"
-            onClick={() => setCoachingActive(true)}
-          >
-            {t("review.startCoaching")}
-          </Button>
-        ) : coachingProgress && coachingProgress.done < coachingProgress.total ? (
-          <span className="font-mono text-xs tabular-nums text-ink-mute">
-            {t("review.coachingProgress")} {coachingProgress.done} /{" "}
-            {coachingProgress.total}
-          </span>
-        ) : (
-          <>
-            <span className="font-sans text-xs uppercase tracking-label text-moss">
-              {t("review.coachingDone")}
-              {blunderMoves.length > 0 &&
-                ` · ${blunderMoves.length} ${t("review.blunderCountSuffix")}`}
-            </span>
-            {/* Persistent access to the full coaching list. Stays visible
-                regardless of whether the per-move alternatives are open. */}
-            <Button
-              size="sm"
-              variant="outline"
-              className="ml-auto text-oxblood border-oxblood"
-              onClick={() => setShowAllBlunders((v) => !v)}
-              aria-pressed={showAllBlunders}
-              aria-controls="all-blunders-panel"
-            >
-              {showAllBlunders
-                ? t("review.hideAllBlunders")
-                : t("review.showAllBlunders")}
-            </Button>
-          </>
-        )}
-      </div>
-
-      {coachingActive && showAllBlunders && (
-        <div
-          id="all-blunders-panel"
-          className="border border-ink-faint divide-y divide-ink-faint"
-        >
-          {blunderMoves.length === 0 ? (
-            <div className="px-3 py-2 font-sans text-xs text-ink-mute">
-              {t("review.noBlundersFound")}
-            </div>
-          ) : (
-            blunderMoves.map((n) => {
-              const before = winratesBlack[n - 1];
-              const after = winratesBlack[n];
-              const m = game.moves[n - 1];
-              const d = moveDrop(before, after, m.color);
-              const isCurrent = n === idx;
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => {
-                    setIdx(n);
-                    setPlaying(false);
-                    // Open alternatives for the move the user clicked
-                    // through to so the panel feels like a navigator.
-                    setShowAlternatives(true);
-                  }}
-                  className={
-                    "w-full text-left px-3 py-2 grid grid-cols-[auto_auto_1fr_auto] gap-3 items-baseline font-sans text-sm hover:bg-paper-deep transition-base " +
-                    (isCurrent ? "bg-paper-deep" : "")
-                  }
-                >
-                  <span className="font-mono tabular-nums text-xs text-ink-mute">
-                    #{n}
-                  </span>
-                  <span>{m.color === "B" ? "●" : "○"}</span>
-                  <span className="font-mono tabular-nums text-xs">
-                    {m.coord ?? "pass"}
-                  </span>
-                  <span className="font-mono tabular-nums text-xs text-oxblood">
-                    −{(d * 100).toFixed(1)}%
-                  </span>
-                </button>
-              );
-            })
-          )}
-        </div>
-      )}
-
+      {/* Nav controls — always visible regardless of mode */}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm"
           onClick={() => { setIdx(0); setPlaying(false); }}>
@@ -532,6 +484,59 @@ export default function ReviewPlayer({
           SGF
         </a>
       </div>
+
+      {/* Blunder list — appears in learn mode once we have any blunder
+          data. Stays visible across scrubs (no toggle); each row jumps. */}
+      {learning && analysisDone && (
+        <div className="border border-ink-faint divide-y divide-ink-faint">
+          <div className="px-3 py-2 flex items-baseline justify-between font-sans text-xs">
+            <span className="font-semibold uppercase tracking-label text-oxblood">
+              {t("review.blunderListTitle")}
+            </span>
+            <span className="font-mono tabular-nums text-ink-mute">
+              {blunderMoves.length}
+            </span>
+          </div>
+          {blunderMoves.length === 0 ? (
+            <div className="px-3 py-2 font-sans text-xs text-ink-mute">
+              {t("review.noBlundersFound")}
+            </div>
+          ) : (
+            blunderMoves.map((n) => {
+              const before = winratesBlack[n - 1];
+              const after = winratesBlack[n];
+              const m = game.moves[n - 1];
+              const d = moveDrop(before, after, m.color);
+              const isCurrent = n === idx;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => {
+                    setIdx(n);
+                    setPlaying(false);
+                  }}
+                  className={
+                    "w-full text-left px-3 py-2 grid grid-cols-[auto_auto_1fr_auto] gap-3 items-baseline font-sans text-sm hover:bg-paper-deep transition-base " +
+                    (isCurrent ? "bg-paper-deep" : "")
+                  }
+                >
+                  <span className="font-mono tabular-nums text-xs text-ink-mute">
+                    #{n}
+                  </span>
+                  <span>{m.color === "B" ? "●" : "○"}</span>
+                  <span className="font-mono tabular-nums text-xs">
+                    {m.coord ?? "pass"}
+                  </span>
+                  <span className="font-mono tabular-nums text-xs text-oxblood">
+                    −{(d * 100).toFixed(1)}%
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
     </div>
   );
 }
