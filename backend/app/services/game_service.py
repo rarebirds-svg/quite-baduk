@@ -162,6 +162,30 @@ async def create_game(
             await adapter.play(BLACK, coord)
         state.to_move = WHITE
 
+    # User chose White (no handicap) → AI (Black) opens. Without this, the
+    # WS handshake would just ship `to_move=B` and the user would stare at
+    # an empty board waiting on a move that never comes.
+    if handicap == 0 and user_color == "white":
+        try:
+            ai_first = await adapter.genmove(BLACK)
+        except Exception as e:
+            raise GameError("AI_OPENING_FAILED", str(e)) from e
+        coord = ai_first.lower()
+        if coord not in ("pass", "resign"):
+            try:
+                state = play(state, Move(color=BLACK, coord=ai_first))
+            except IllegalMoveError as e:
+                raise GameError("AI_ILLEGAL_MOVE", f"{ai_first}: {e}") from e
+            await _record_move(
+                db, game_id=game.id, move_number=1, color=BLACK,
+                coord=ai_first, captures=0,
+            )
+            game.move_count = 1
+            await db.commit()
+        # If the model improbably opens with pass/resign on an empty board,
+        # leave move_count=0 — the user can still play and the game flows
+        # through the normal place_move path.
+
     cache_state(game.id, state)
     set_adapter_owner(game.id)
     return game
