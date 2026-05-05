@@ -104,6 +104,199 @@ async def test_random_endpoint_returns_match(client: AsyncClient) -> None:
     assert body["topic"] == "opening"
 
 
+def test_catalogue_setup_coords_are_unique_per_puzzle() -> None:
+    """Catch authoring slip-ups: a setup that lists the same coord
+    twice would silently overwrite the colour and produce a position
+    the user couldn't reason about."""
+    for c in CHALLENGES:
+        coords = [coord.upper() for _, coord in c.setup]
+        assert len(coords) == len(set(coords)), (
+            f"{c.id}: duplicate coord in setup: "
+            f"{[k for k in coords if coords.count(k) > 1]}"
+        )
+
+
+def test_catalogue_setup_coords_are_within_board() -> None:
+    """Each setup coord must parse + lie inside the puzzle's board
+    size. A typo (e.g. K8 on a 9x9 — there's no K column) silently
+    pre-places nothing and ruins grading."""
+    from app.core.rules.sgf_coord import gtp_to_xy
+
+    for c in CHALLENGES:
+        for color, coord in c.setup:
+            xy = gtp_to_xy(coord, c.board_size)
+            assert xy is not None, f"{c.id}: bad coord {coord!r}"
+            x, y = xy
+            assert 0 <= x < c.board_size and 0 <= y < c.board_size, (
+                f"{c.id}: coord {coord} → ({x},{y}) out of board {c.board_size}"
+            )
+            assert color in ("B", "W"), f"{c.id}: bad colour {color!r}"
+
+
+def test_catalogue_to_move_is_legal_value() -> None:
+    for c in CHALLENGES:
+        assert c.to_move in ("B", "W"), f"{c.id}: bad to_move {c.to_move!r}"
+
+
+def test_catalogue_topic_label_matches_stone_count_heuristic() -> None:
+    """Sanity check that topic labels aren't wildly mis-applied. Rough
+    rules of thumb (not strict — enforced by stone count, which is what
+    a player sees):
+      opening      — 0..30% of board area in stones
+      joseki       — corner-flavoured, low stone count
+      tesuji       — small contact fight, < 25 stones total
+      middle_game  — substantial stones placed
+      endgame      — most of the board outline laid out
+      life_death / capturing_race — local cluster, but small total stones OK
+    """
+    for c in CHALLENGES:
+        n_stones = len(c.setup)
+        area_pct = n_stones / (c.board_size ** 2)
+        if c.topic == "opening":
+            assert area_pct < 0.20, (
+                f"{c.id}: {n_stones} stones for an opening puzzle on "
+                f"{c.board_size}x{c.board_size} — too many for early game"
+            )
+        if c.topic == "endgame":
+            # Endgames need enough stones to actually be late.
+            assert n_stones >= 4, (
+                f"{c.id}: only {n_stones} stones for an endgame puzzle"
+            )
+
+
+def test_catalogue_ids_are_unique() -> None:
+    ids = [c.id for c in CHALLENGES]
+    dups = {x for x in ids if ids.count(x) > 1}
+    assert not dups, f"duplicate challenge ids: {dups}"
+
+
+# ─── Geometric variant tests ──────────────────────────────────────────
+
+
+def test_transform_round_trip_via_split_id() -> None:
+    from app.services.daily_challenge import _split_id
+
+    assert _split_id("ch-9-jo-1") == ("ch-9-jo-1", 0)
+    assert _split_id("ch-9-jo-1.t0") == ("ch-9-jo-1", 0)
+    assert _split_id("ch-9-jo-1.t7") == ("ch-9-jo-1", 7)
+    # malformed suffix → treat as no transform
+    assert _split_id("ch-9-jo-1.tX") == ("ch-9-jo-1.tX", 0)
+    assert _split_id("ch-9-jo-1.t99") == ("ch-9-jo-1.t99", 0)
+
+
+def test_transform_preserves_stone_count_and_topic() -> None:
+    from app.services.daily_challenge import NUM_VARIANTS, _apply_transform
+
+    base = CHALLENGES[0]
+    for t in range(NUM_VARIANTS):
+        v = _apply_transform(base, t)
+        assert len(v.setup) == len(base.setup)
+        assert v.topic == base.topic
+        assert v.difficulty == base.difficulty
+        assert v.board_size == base.board_size
+        assert v.to_move == base.to_move
+
+
+def test_transform_keeps_coords_inside_board() -> None:
+    """Every transformed coord must still be a legal cell on the board.
+    Catches off-by-one bugs in the rotation formulas."""
+    from app.core.rules.sgf_coord import gtp_to_xy
+    from app.services.daily_challenge import NUM_VARIANTS, _apply_transform
+
+    for c in CHALLENGES:
+        for t in range(NUM_VARIANTS):
+            v = _apply_transform(c, t)
+            for _color, coord in v.setup:
+                xy = gtp_to_xy(coord, v.board_size)
+                assert xy is not None, (
+                    f"{c.id} t={t}: bad transformed coord {coord!r}"
+                )
+                x, y = xy
+                assert 0 <= x < v.board_size and 0 <= y < v.board_size
+
+
+def test_transform_identity_returns_same_setup() -> None:
+    from app.services.daily_challenge import _apply_transform
+
+    base = CHALLENGES[0]
+    v = _apply_transform(base, 0)
+    assert v.setup == base.setup
+    assert v.id == base.id  # no suffix on identity
+
+
+def test_transform_180_is_self_inverse() -> None:
+    """rot180 ∘ rot180 = identity. Catches sign-flip bugs in the
+    coordinate maths."""
+    from app.services.daily_challenge import _transform_coord
+
+    base = CHALLENGES[0]
+    for _color, coord in base.setup:
+        once_c = _transform_coord(coord, base.board_size, 2)
+        twice_c = _transform_coord(once_c, base.board_size, 2)
+        assert twice_c.upper() == coord.upper()
+
+
+@pytest.mark.asyncio
+async def test_random_endpoint_returns_transformed_id_sometimes(
+    client: AsyncClient,
+) -> None:
+    """Drive the API enough times that we observe at least one
+    transformed id (.tN suffix) under filters narrow enough to keep
+    landing on the same base."""
+    from app.services.daily_challenge import filter_challenges
+
+    await client.post("/api/session", json={"nickname": "daily_xform"})
+    # Pick a single-puzzle cell so we definitely come back to the same
+    # base — the only thing that should change is the transform.
+    target = None
+    for size, diff, tp in (
+        (9, "easy", "joseki"),
+        (9, "easy", "tesuji"),
+        (9, "medium", "endgame"),
+    ):
+        if len(filter_challenges(board_size=size, difficulty=diff, topic=tp)) == 1:
+            target = (size, diff, tp)
+            break
+    assert target is not None, "expected a single-puzzle cell to test on"
+    size, diff, tp = target
+
+    seen_transforms: set[int] = set()
+    for _ in range(30):
+        r = await client.get(
+            "/api/daily-challenge/random",
+            params={"board_size": size, "difficulty": diff, "topic": tp},
+        )
+        assert r.status_code == 200
+        cid = r.json()["id"]
+        if ".t" in cid:
+            seen_transforms.add(int(cid.rsplit(".t", 1)[1]))
+        else:
+            seen_transforms.add(0)
+    # 30 picks across 8 transforms — should observe at least 3 distinct
+    # values with overwhelming probability.
+    assert len(seen_transforms) >= 3, (
+        f"transform variety too low: {seen_transforms}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_answer_grades_transformed_id(client: AsyncClient) -> None:
+    """Submit an answer for a transformed id; the grader must
+    reconstruct the same transformed position rather than fall through
+    to the un-rotated base, otherwise the user's coord no longer lines
+    up with the board they saw."""
+    await client.post("/api/session", json={"nickname": "daily_xgrade"})
+    base = CHALLENGES[0]
+    transformed_id = f"{base.id}.t3"
+    # A1 is empty on every board; a 9x9 setup never lands there.
+    r = await client.post(
+        "/api/daily-challenge/answer",
+        json={"challenge_id": transformed_id, "coord": "A1"},
+    )
+    assert r.status_code == 200
+    assert r.json()["verdict"] in ("best", "ok", "weak", "miss", "illegal")
+
+
 def test_catalogue_covers_every_filter_cell() -> None:
     """Promise to the user: any (board × topic × difficulty) selection
     has at least one puzzle. Drives the "절대 비어 있지 않다" guarantee

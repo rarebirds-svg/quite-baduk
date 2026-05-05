@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 from app.core.rules.board import BLACK, WHITE, Board
 from app.core.rules.engine import GameState
-from app.core.rules.sgf_coord import gtp_to_xy
+from app.core.rules.sgf_coord import gtp_to_xy, xy_to_gtp
 
 TOPICS: tuple[str, ...] = (
     "opening",
@@ -286,6 +286,85 @@ CHALLENGES: tuple[DailyChallenge, ...] = (
 _BY_ID: dict[str, DailyChallenge] = {c.id: c for c in CHALLENGES}
 
 
+# ─── Geometric variants (D4 dihedral group) ───────────────────────────
+#
+# A Go board has the symmetry group of a square: 4 rotations × {id,
+# reflection} = 8 orientations. Two stones in geometrically equivalent
+# positions play the same go even though the move list looks different.
+# We exploit this to multiply the catalogue by ~8 without composing
+# new positions: every puzzle id can carry an optional ".t<idx>" suffix
+# (idx 0..7) which the resolver applies as a coordinate transform.
+
+NUM_VARIANTS = 8
+
+
+def _transform_xy(x: int, y: int, size: int, t: int) -> tuple[int, int]:
+    n = size - 1
+    # Eight elements of the dihedral group D4 over the board grid.
+    if t == 0:
+        return x, y                       # identity
+    if t == 1:
+        return n - y, x                   # rot 90 ccw
+    if t == 2:
+        return n - x, n - y               # rot 180
+    if t == 3:
+        return y, n - x                   # rot 270 ccw
+    if t == 4:
+        return n - x, y                   # flip across vertical axis
+    if t == 5:
+        return x, n - y                   # flip across horizontal axis
+    if t == 6:
+        return y, x                       # transpose (main diagonal)
+    if t == 7:
+        return n - y, n - x               # anti-transpose
+    raise ValueError(f"transform idx must be 0..7, got {t}")
+
+
+def _transform_coord(coord: str, size: int, t: int) -> str:
+    xy = gtp_to_xy(coord, size)
+    if xy is None:
+        return coord
+    nx, ny = _transform_xy(xy[0], xy[1], size, t)
+    return xy_to_gtp(nx, ny, size)
+
+
+def _apply_transform(base: DailyChallenge, t: int) -> DailyChallenge:
+    """Return a new DailyChallenge whose setup is the geometrically
+    transformed version of ``base``. Identity transform returns the
+    base unchanged. The id gains a ``.t<idx>`` suffix so the answer
+    endpoint can recover both pieces."""
+    if t == 0:
+        return base
+    new_setup = tuple(
+        (color, _transform_coord(coord, base.board_size, t))
+        for color, coord in base.setup
+    )
+    return DailyChallenge(
+        id=f"{base.id}.t{t}",
+        board_size=base.board_size,
+        setup=new_setup,
+        to_move=base.to_move,
+        difficulty=base.difficulty,
+        topic=base.topic,
+        prompt_key=base.prompt_key,
+    )
+
+
+def _split_id(challenge_id: str) -> tuple[str, int]:
+    """Parse a maybe-transformed id into (base_id, transform_idx).
+    Untransformed ids return transform 0."""
+    if ".t" not in challenge_id:
+        return challenge_id, 0
+    base, _, suffix = challenge_id.rpartition(".t")
+    try:
+        t = int(suffix)
+    except ValueError:
+        return challenge_id, 0
+    if not 0 <= t < NUM_VARIANTS:
+        return challenge_id, 0
+    return base, t
+
+
 def daily_index(today: _dt.date | None = None) -> int:
     today = today or _dt.date.today()
     epoch = _dt.date(1970, 1, 1)
@@ -297,7 +376,15 @@ def get_today(today: _dt.date | None = None) -> DailyChallenge:
 
 
 def get_by_id(challenge_id: str) -> DailyChallenge | None:
-    return _BY_ID.get(challenge_id)
+    """Resolve a (possibly transformed) id back to a concrete puzzle.
+    The grader uses this to reconstruct the exact position the user
+    saw — without it the user's answer would land on the un-rotated
+    variant and KataGo would grade against the wrong board."""
+    base_id, t = _split_id(challenge_id)
+    base = _BY_ID.get(base_id)
+    if base is None:
+        return None
+    return _apply_transform(base, t)
 
 
 def filter_challenges(
@@ -322,20 +409,51 @@ def pick_random(
     exclude_id: str | None = None,
     rng: random.Random | None = None,
 ) -> DailyChallenge | None:
-    """Random pick within filters. ``exclude_id`` removes one specific
-    puzzle from the candidate pool — used by the "다음 문제" flow so
-    the user doesn't get the same puzzle they just solved. If excluding
-    leaves zero matches we return ``None`` rather than silently falling
-    back to the excluded id; the caller decides whether to widen the
-    filters or surface a "no other puzzles" message."""
+    """Random pick within filters, with a random D4 transform applied
+    so the player sees a fresh-looking position even when the same base
+    is reused.
+
+    Two layers of "different from last time":
+      1. Prefer a different *base* puzzle when one exists in the filter.
+      2. Otherwise fall back to the same base with a different transform
+         (the user gets a rotated / mirrored version of the puzzle they
+         just solved — visually fresh, semantically the same).
+
+    Returns ``None`` only when the filter has zero base puzzles AND the
+    excluded base was the only one (i.e. literally nothing else to ship)."""
+    # Puzzle pick is non-cryptographic — Random() is appropriate here.
+    r: random.Random = rng if rng is not None else random.Random()  # noqa: S311
     matches = filter_challenges(
         board_size=board_size, difficulty=difficulty, topic=topic
     )
-    if exclude_id is not None:
-        matches = tuple(c for c in matches if c.id != exclude_id)
     if not matches:
         return None
-    return (rng or random).choice(matches)
+
+    excluded_base, excluded_t = (
+        _split_id(exclude_id) if exclude_id else (None, 0)
+    )
+
+    # Layer 1: prefer a different base.
+    other_bases = (
+        tuple(c for c in matches if c.id != excluded_base)
+        if excluded_base
+        else matches
+    )
+    if other_bases:
+        base = r.choice(other_bases)
+        t = r.randrange(NUM_VARIANTS)
+        return _apply_transform(base, t)
+
+    # Layer 2: same base, different transform.
+    if excluded_base:
+        same = tuple(c for c in matches if c.id == excluded_base)
+        if same:
+            base = same[0]
+            other_ts = [t for t in range(NUM_VARIANTS) if t != excluded_t]
+            t = r.choice(other_ts)
+            return _apply_transform(base, t)
+
+    return None
 
 
 def replay_position(challenge: DailyChallenge) -> GameState:
