@@ -62,7 +62,10 @@ async def todays_challenge(sess: CurrentSession) -> dict[str, Any]:
 
 # Pydantic-style enum validation via Literal — keeps query parsing tight
 # without coupling to a global Enum.
-_TopicQ = Literal["opening", "middle_game", "endgame", "life_death"]
+_TopicQ = Literal[
+    "opening", "joseki", "life_death", "tesuji",
+    "middle_game", "endgame", "capturing_race",
+]
 _DifficultyQ = Literal["easy", "medium", "hard"]
 
 

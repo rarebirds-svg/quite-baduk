@@ -184,9 +184,21 @@
     "difficulty": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
     "topic": {
       "opening": "Opening",
+      "joseki": "Joseki",
+      "life_death": "Life & death",
+      "tesuji": "Tesuji",
       "middle_game": "Middlegame",
       "endgame": "Endgame",
-      "life_death": "Life & death"
+      "capturing_race": "Capturing race"
+    },
+    "topicPrompt": {
+      "opening": "Opening — claim the biggest open area, keep the balance.",
+      "joseki": "Joseki — find the natural reply in the corner sequence.",
+      "life_death": "Life & death — the move that decides the group's fate.",
+      "tesuji": "Tesuji — the decisive tactical move (no group dies).",
+      "middle_game": "Middlegame — invade, reduce, or settle — pick the biggest move.",
+      "endgame": "Endgame — find the largest yose, weigh sente vs. gote.",
+      "capturing_race": "Capturing race — count the liberties and find the killing tempo."
     },
     "verdict": {
       "best": "Best — matches KataGo's top move",

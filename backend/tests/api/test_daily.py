@@ -106,12 +106,13 @@ async def test_random_endpoint_returns_match(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_random_endpoint_404_when_no_match(client: AsyncClient) -> None:
-    """No 19x19 puzzles in the V1 catalogue — request that combo and the
-    UI must see a 404 so it can disable the option, not a 500."""
+    """A combo with no puzzles must 404 so the UI can disable that
+    option instead of guessing or hitting a 500."""
     await client.post("/api/session", json={"nickname": "daily_nomatch"})
+    # 19x19 capturing_race / easy is intentionally empty in the V1 catalogue.
     r = await client.get(
         "/api/daily-challenge/random",
-        params={"board_size": 19},
+        params={"board_size": 19, "topic": "capturing_race", "difficulty": "easy"},
     )
     assert r.status_code == 404
 
@@ -125,7 +126,8 @@ async def test_catalogue_returns_options_and_counts(client: AsyncClient) -> None
     assert set(body["board_sizes"]) == {9, 13, 19}
     assert set(body["difficulties"]) == {"easy", "medium", "hard"}
     assert set(body["topics"]) == {
-        "opening", "middle_game", "endgame", "life_death",
+        "opening", "joseki", "life_death", "tesuji",
+        "middle_game", "endgame", "capturing_race",
     }
     # Counts present for every (size, difficulty, topic) cell.
     assert isinstance(body["counts"], dict)
@@ -140,11 +142,13 @@ async def test_answer_grades_non_today_challenge(client: AsyncClient) -> None:
     await client.post("/api/session", json={"nickname": "daily_other"})
     other = next(c for c in CHALLENGES if c.id != get_today().id)
     used = {coord.upper() for _, coord in other.setup}
+    # Pool of generic empty intersections that fit a 9x9 (smallest board)
+    # — works for any catalogue entry since 13/19 boards have these too.
     candidate = next(
         c for c in (
-            "A1", "B1", "F1", "H1", "J1", "L1", "M1",
+            "A1", "B1", "F1", "H1", "J1",
             "A9", "B9", "F9", "H9", "J9",
-        ) if c not in used
+        ) if c not in used and c not in {f"{coord}".upper() for _, coord in other.setup}
     )
     r = await client.post(
         "/api/daily-challenge/answer",

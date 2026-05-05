@@ -1,15 +1,12 @@
-"""Daily Baduk puzzle catalogue.
+"""Baduk puzzle catalogue.
 
 Each puzzle is a (color, coord) play sequence so the rules engine can
 rebuild the board deterministically. Puzzles carry a topic + difficulty
-+ board size, and the API layer can:
++ board size; KataGo grades the user's answer at request time.
 
-  * pick today's puzzle (legacy daily-challenge behaviour),
-  * pick a random puzzle within a filter (used by "다음 문제"),
-  * grade a candidate move against KataGo.
-
-The catalogue is hand-curated for V1 launch — once the turning-point
-extraction pipeline lands, we'll backfill from accumulated games.
+Topic taxonomy (V1 launch): the seven traditional Asian go-textbook
+chapters — opening / joseki / life_death / tesuji / middle_game /
+endgame / capturing_race. Frontend mirrors these strings.
 """
 from __future__ import annotations
 
@@ -20,8 +17,15 @@ from dataclasses import dataclass
 from app.core.rules.board import BLACK, WHITE, Board
 from app.core.rules.engine import GameState, Move, play
 
-# Public-set values. Frontend mirrors these strings.
-TOPICS: tuple[str, ...] = ("opening", "middle_game", "endgame", "life_death")
+TOPICS: tuple[str, ...] = (
+    "opening",
+    "joseki",
+    "life_death",
+    "tesuji",
+    "middle_game",
+    "endgame",
+    "capturing_race",
+)
 DIFFICULTIES: tuple[str, ...] = ("easy", "medium", "hard")
 BOARD_SIZES: tuple[int, ...] = (9, 13, 19)
 
@@ -31,144 +35,200 @@ class DailyChallenge:
     id: str
     board_size: int
     setup: tuple[tuple[str, str], ...]
-    to_move: str            # "B" or "W"
-    difficulty: str         # "easy" | "medium" | "hard"
-    topic: str              # see TOPICS above
-    prompt_key: str         # i18n key suffix consumed by the frontend
+    to_move: str         # "B" or "W"
+    difficulty: str      # "easy" | "medium" | "hard"
+    topic: str           # one of TOPICS
+    prompt_key: str      # i18n key — frontend resolves to a description
 
 
-# V1 catalogue. Hand-authored so each row is a real, gradable puzzle:
-# the answer comes from KataGo's analyze() at request time, not from
-# the catalogue, so positions only need to be coherent.
+def _ch(
+    id: str,
+    *,
+    size: int,
+    setup: tuple[tuple[str, str], ...],
+    to_move: str,
+    difficulty: str,
+    topic: str,
+) -> DailyChallenge:
+    """Builder. Most new puzzles share a topic-level prompt — the per-id
+    prompt key is reserved for entries that need bespoke flavour text."""
+    return DailyChallenge(
+        id=id,
+        board_size=size,
+        setup=setup,
+        to_move=to_move,
+        difficulty=difficulty,
+        topic=topic,
+        prompt_key=f"daily.topicPrompt.{topic}",
+    )
+
+
+# V1 catalogue. Hand-authored to populate every (size × topic) combo at
+# at least one difficulty so the filter UI doesn't dead-end. KataGo
+# grades, so positions only need to be coherent — not literature.
 CHALLENGES: tuple[DailyChallenge, ...] = (
-    # ── 9x9 ─────────────────────────────────────────────────────────────
-    DailyChallenge(
-        id="ch-001",
-        board_size=9,
-        setup=(
-            ("B", "E5"), ("W", "C3"), ("B", "G7"),
-            ("W", "G3"), ("B", "C7"),
-        ),
-        to_move="W",
-        difficulty="easy",
-        topic="opening",
-        prompt_key="daily.prompts.ch001",
-    ),
-    DailyChallenge(
-        id="ch-002",
-        board_size=9,
-        setup=(
-            ("B", "E5"), ("W", "G5"), ("B", "E7"),
-            ("W", "G7"), ("B", "E3"), ("W", "G3"),
-        ),
-        to_move="B",
-        difficulty="medium",
-        topic="middle_game",
-        prompt_key="daily.prompts.ch002",
-    ),
-    DailyChallenge(
-        id="ch-003",
-        board_size=9,
-        setup=(
-            ("B", "C5"), ("W", "G5"), ("B", "E3"),
-            ("W", "E7"), ("B", "G7"), ("W", "C3"),
-            ("B", "G3"), ("W", "C7"),
-        ),
-        to_move="B",
-        difficulty="hard",
-        topic="middle_game",
-        prompt_key="daily.prompts.ch003",
-    ),
-    DailyChallenge(
-        id="ch-004",
-        board_size=9,
-        setup=(
-            ("B", "E5"), ("W", "C5"), ("B", "G5"),
-            ("W", "C3"), ("B", "G3"), ("W", "C7"),
-            ("B", "G7"),
-        ),
-        to_move="W",
-        difficulty="easy",
-        topic="opening",
-        prompt_key="daily.prompts.ch004",
-    ),
-    DailyChallenge(
-        id="ch-005",
-        board_size=9,
-        # Tight cluster: black wraps a corner; white must find a poke
-        # before the corner finishes settling.
-        setup=(
-            ("B", "C7"), ("W", "D7"), ("B", "C8"),
-            ("W", "D8"), ("B", "C6"), ("W", "D6"),
-            ("B", "B7"), ("W", "E7"),
-        ),
-        to_move="B",
-        difficulty="medium",
-        topic="life_death",
-        prompt_key="daily.prompts.ch005",
-    ),
-    DailyChallenge(
-        id="ch-006",
-        board_size=9,
-        # Endgame-flavoured: stones largely settled; one big yose left.
-        setup=(
-            ("B", "E5"), ("W", "C3"), ("B", "G7"),
-            ("W", "G3"), ("B", "C7"), ("W", "E3"),
-            ("B", "C5"), ("W", "G5"), ("B", "E7"),
-            ("W", "D2"), ("B", "F8"),
-        ),
-        to_move="W",
-        difficulty="medium",
-        topic="endgame",
-        prompt_key="daily.prompts.ch006",
-    ),
-    # ── 13x13 ───────────────────────────────────────────────────────────
-    DailyChallenge(
-        id="ch-101",
-        board_size=13,
-        setup=(
-            ("B", "D4"), ("W", "K10"), ("B", "K4"),
-            ("W", "D10"),
-        ),
-        to_move="B",
-        difficulty="easy",
-        topic="opening",
-        prompt_key="daily.prompts.ch101",
-    ),
-    DailyChallenge(
-        id="ch-102",
-        board_size=13,
-        setup=(
-            ("B", "D4"), ("W", "K10"), ("B", "K4"),
-            ("W", "D10"), ("B", "G7"), ("W", "G4"),
-            ("B", "G10"),
-        ),
-        to_move="W",
-        difficulty="medium",
-        topic="middle_game",
-        prompt_key="daily.prompts.ch102",
-    ),
-    DailyChallenge(
-        id="ch-103",
-        board_size=13,
-        setup=(
-            ("B", "D4"), ("W", "K10"), ("B", "K4"),
-            ("W", "D10"), ("B", "D7"), ("W", "K7"),
-            ("B", "G3"), ("W", "G11"),
-        ),
-        to_move="B",
-        difficulty="hard",
-        topic="middle_game",
-        prompt_key="daily.prompts.ch103",
-    ),
+    # ── 9×9 opening ───────────────────────────────────────────────────
+    _ch("ch-9-op-1", size=9, to_move="W", difficulty="easy", topic="opening",
+        setup=(("B", "E5"), ("W", "C3"), ("B", "G7"), ("W", "G3"), ("B", "C7"))),
+    _ch("ch-9-op-2", size=9, to_move="W", difficulty="medium", topic="opening",
+        setup=(("B", "E5"), ("W", "C5"), ("B", "G5"), ("W", "C3"),
+               ("B", "G3"), ("W", "C7"), ("B", "G7"))),
+    _ch("ch-9-op-3", size=9, to_move="B", difficulty="hard", topic="opening",
+        setup=(("B", "C3"), ("W", "G7"), ("B", "G3"), ("W", "C7"))),
+    # ── 9×9 joseki ────────────────────────────────────────────────────
+    _ch("ch-9-jo-1", size=9, to_move="W", difficulty="easy", topic="joseki",
+        setup=(("B", "C3"), ("W", "C5"), ("B", "E3"))),
+    _ch("ch-9-jo-2", size=9, to_move="B", difficulty="medium", topic="joseki",
+        setup=(("B", "C7"), ("W", "C5"), ("B", "E7"), ("W", "C8"))),
+    _ch("ch-9-jo-3", size=9, to_move="W", difficulty="hard", topic="joseki",
+        setup=(("B", "G3"), ("W", "G5"), ("B", "E3"), ("W", "G7"), ("B", "F5"))),
+    # ── 9×9 life_death ────────────────────────────────────────────────
+    _ch("ch-9-ld-1", size=9, to_move="B", difficulty="easy", topic="life_death",
+        setup=(("B", "B7"), ("B", "B8"), ("B", "C7"), ("W", "D7"),
+               ("W", "D8"), ("W", "C6"), ("W", "B6"))),
+    _ch("ch-9-ld-2", size=9, to_move="B", difficulty="medium", topic="life_death",
+        setup=(("B", "C7"), ("W", "D7"), ("B", "C8"), ("W", "D8"),
+               ("B", "C6"), ("W", "D6"), ("B", "B7"), ("W", "E7"))),
+    _ch("ch-9-ld-3", size=9, to_move="W", difficulty="hard", topic="life_death",
+        setup=(("B", "B2"), ("B", "C2"), ("B", "D2"), ("B", "B3"),
+               ("W", "C3"), ("W", "D3"), ("W", "B4"), ("W", "E2"))),
+    # ── 9×9 tesuji ────────────────────────────────────────────────────
+    _ch("ch-9-te-1", size=9, to_move="B", difficulty="easy", topic="tesuji",
+        setup=(("B", "D5"), ("W", "E5"), ("B", "E4"), ("W", "D4"))),
+    _ch("ch-9-te-2", size=9, to_move="W", difficulty="medium", topic="tesuji",
+        setup=(("B", "C5"), ("W", "D5"), ("B", "D6"), ("W", "E6"),
+               ("B", "C6"), ("W", "E5"))),
+    _ch("ch-9-te-3", size=9, to_move="B", difficulty="hard", topic="tesuji",
+        setup=(("B", "F4"), ("W", "F5"), ("B", "G5"), ("W", "G6"),
+               ("B", "F6"), ("W", "G4"), ("B", "E5"))),
+    # ── 9×9 middle_game ───────────────────────────────────────────────
+    _ch("ch-9-mg-1", size=9, to_move="B", difficulty="easy", topic="middle_game",
+        setup=(("B", "E5"), ("W", "G5"), ("B", "C5"), ("W", "E7"),
+               ("B", "E3"))),
+    _ch("ch-9-mg-2", size=9, to_move="B", difficulty="medium", topic="middle_game",
+        setup=(("B", "E5"), ("W", "G5"), ("B", "E7"), ("W", "G7"),
+               ("B", "E3"), ("W", "G3"))),
+    _ch("ch-9-mg-3", size=9, to_move="B", difficulty="hard", topic="middle_game",
+        setup=(("B", "C5"), ("W", "G5"), ("B", "E3"), ("W", "E7"),
+               ("B", "G7"), ("W", "C3"), ("B", "G3"), ("W", "C7"))),
+    # ── 9×9 endgame ───────────────────────────────────────────────────
+    _ch("ch-9-en-1", size=9, to_move="W", difficulty="easy", topic="endgame",
+        setup=(("B", "E5"), ("W", "C3"), ("B", "G7"), ("W", "G3"),
+               ("B", "C7"), ("W", "E3"), ("B", "C5"), ("W", "G5"),
+               ("B", "E7"), ("W", "D2"), ("B", "F8"))),
+    _ch("ch-9-en-2", size=9, to_move="B", difficulty="medium", topic="endgame",
+        setup=(("B", "C3"), ("W", "G3"), ("B", "C7"), ("W", "G7"),
+               ("B", "E5"), ("W", "E3"), ("B", "E7"), ("W", "B5"),
+               ("B", "C5"), ("W", "H5"), ("B", "G5"), ("W", "F2"))),
+    _ch("ch-9-en-3", size=9, to_move="W", difficulty="hard", topic="endgame",
+        setup=(("B", "C3"), ("W", "G3"), ("B", "C7"), ("W", "G7"),
+               ("B", "E5"), ("W", "B5"), ("B", "C5"), ("W", "H5"),
+               ("B", "G5"), ("W", "E3"), ("B", "E7"), ("W", "F2"),
+               ("B", "B3"))),
+    # ── 9×9 capturing_race ────────────────────────────────────────────
+    _ch("ch-9-cr-1", size=9, to_move="B", difficulty="easy", topic="capturing_race",
+        setup=(("B", "B5"), ("B", "C5"), ("B", "D5"), ("W", "B6"),
+               ("W", "C6"), ("W", "D6"), ("B", "E5"), ("W", "E6"))),
+    _ch("ch-9-cr-2", size=9, to_move="W", difficulty="medium", topic="capturing_race",
+        setup=(("B", "C2"), ("B", "C3"), ("B", "C4"), ("W", "D2"),
+               ("W", "D3"), ("W", "D4"), ("B", "B3"), ("W", "E3"))),
+    _ch("ch-9-cr-3", size=9, to_move="B", difficulty="hard", topic="capturing_race",
+        setup=(("B", "G2"), ("B", "G3"), ("B", "G4"), ("W", "H2"),
+               ("W", "H3"), ("W", "H4"), ("B", "F3"), ("W", "G5"),
+               ("B", "F4"))),
+
+    # ── 13×13 opening ─────────────────────────────────────────────────
+    _ch("ch-13-op-1", size=13, to_move="B", difficulty="easy", topic="opening",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"))),
+    _ch("ch-13-op-2", size=13, to_move="W", difficulty="medium", topic="opening",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "G7"))),
+    _ch("ch-13-op-3", size=13, to_move="B", difficulty="hard", topic="opening",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "G7"), ("W", "G4"), ("B", "G10"), ("W", "K7"))),
+    # ── 13×13 joseki ──────────────────────────────────────────────────
+    _ch("ch-13-jo-1", size=13, to_move="W", difficulty="easy", topic="joseki",
+        setup=(("B", "D4"), ("W", "F4"), ("B", "D6"))),
+    _ch("ch-13-jo-2", size=13, to_move="B", difficulty="medium", topic="joseki",
+        setup=(("B", "K4"), ("W", "K6"), ("B", "H4"), ("W", "K7"))),
+    # ── 13×13 life_death ──────────────────────────────────────────────
+    _ch("ch-13-ld-1", size=13, to_move="B", difficulty="easy", topic="life_death",
+        setup=(("B", "B11"), ("B", "C11"), ("B", "C12"), ("W", "D11"),
+               ("W", "D12"), ("W", "B12"), ("W", "B10"))),
+    _ch("ch-13-ld-2", size=13, to_move="W", difficulty="medium", topic="life_death",
+        setup=(("B", "L2"), ("B", "L3"), ("B", "L4"), ("B", "K4"),
+               ("W", "M3"), ("W", "M4"), ("W", "K3"))),
+    # ── 13×13 tesuji ──────────────────────────────────────────────────
+    _ch("ch-13-te-1", size=13, to_move="B", difficulty="easy", topic="tesuji",
+        setup=(("B", "G7"), ("W", "G8"), ("B", "H8"), ("W", "H7"))),
+    _ch("ch-13-te-2", size=13, to_move="W", difficulty="medium", topic="tesuji",
+        setup=(("B", "F6"), ("W", "G6"), ("B", "G7"), ("W", "H7"),
+               ("B", "F7"), ("W", "H6"))),
+    # ── 13×13 middle_game ─────────────────────────────────────────────
+    _ch("ch-13-mg-1", size=13, to_move="W", difficulty="easy", topic="middle_game",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "G7"))),
+    _ch("ch-13-mg-2", size=13, to_move="W", difficulty="medium", topic="middle_game",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "G7"), ("W", "G4"), ("B", "G10"))),
+    _ch("ch-13-mg-3", size=13, to_move="B", difficulty="hard", topic="middle_game",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "D7"), ("W", "K7"), ("B", "G3"), ("W", "G11"))),
+    # ── 13×13 endgame ─────────────────────────────────────────────────
+    _ch("ch-13-en-1", size=13, to_move="W", difficulty="medium", topic="endgame",
+        setup=(("B", "D4"), ("W", "K10"), ("B", "K4"), ("W", "D10"),
+               ("B", "G7"), ("W", "G4"), ("B", "G10"), ("W", "K7"),
+               ("B", "D7"), ("W", "D11"), ("B", "C9"))),
+    # ── 13×13 capturing_race ──────────────────────────────────────────
+    _ch("ch-13-cr-1", size=13, to_move="B", difficulty="medium", topic="capturing_race",
+        setup=(("B", "C2"), ("B", "D2"), ("B", "E2"), ("W", "C3"),
+               ("W", "D3"), ("W", "E3"), ("B", "F2"), ("W", "B3"))),
+
+    # ── 19×19 opening ─────────────────────────────────────────────────
+    _ch("ch-19-op-1", size=19, to_move="B", difficulty="easy", topic="opening",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"))),
+    _ch("ch-19-op-2", size=19, to_move="W", difficulty="medium", topic="opening",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "K10"))),
+    _ch("ch-19-op-3", size=19, to_move="B", difficulty="hard", topic="opening",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "Q10"), ("W", "C10"))),
+    # ── 19×19 joseki ──────────────────────────────────────────────────
+    _ch("ch-19-jo-1", size=19, to_move="W", difficulty="easy", topic="joseki",
+        setup=(("B", "Q16"), ("W", "Q14"), ("B", "P14"))),
+    _ch("ch-19-jo-2", size=19, to_move="B", difficulty="medium", topic="joseki",
+        setup=(("B", "D16"), ("W", "F17"), ("B", "F16"), ("W", "G16"),
+               ("B", "F15"))),
+    # ── 19×19 life_death ──────────────────────────────────────────────
+    _ch("ch-19-ld-1", size=19, to_move="B", difficulty="medium", topic="life_death",
+        setup=(("B", "B17"), ("B", "C17"), ("B", "C18"), ("W", "D18"),
+               ("W", "D17"), ("W", "B18"), ("W", "B16"))),
+    # ── 19×19 tesuji ──────────────────────────────────────────────────
+    _ch("ch-19-te-1", size=19, to_move="B", difficulty="medium", topic="tesuji",
+        setup=(("B", "K10"), ("W", "K11"), ("B", "L11"), ("W", "L10"))),
+    # ── 19×19 middle_game ─────────────────────────────────────────────
+    _ch("ch-19-mg-1", size=19, to_move="W", difficulty="medium", topic="middle_game",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "Q10"), ("W", "C10"), ("B", "K3"))),
+    _ch("ch-19-mg-2", size=19, to_move="B", difficulty="hard", topic="middle_game",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "Q10"), ("W", "C10"), ("B", "K3"), ("W", "K17"))),
+    # ── 19×19 endgame ─────────────────────────────────────────────────
+    _ch("ch-19-en-1", size=19, to_move="W", difficulty="hard", topic="endgame",
+        setup=(("B", "Q16"), ("W", "D4"), ("B", "D16"), ("W", "Q4"),
+               ("B", "Q10"), ("W", "C10"), ("B", "K3"), ("W", "K17"),
+               ("B", "F3"), ("W", "C6"), ("B", "Q6"), ("W", "Q12"),
+               ("B", "P12"))),
+    # ── 19×19 capturing_race ──────────────────────────────────────────
+    _ch("ch-19-cr-1", size=19, to_move="B", difficulty="medium", topic="capturing_race",
+        setup=(("B", "B3"), ("B", "C3"), ("B", "D3"), ("W", "B4"),
+               ("W", "C4"), ("W", "D4"), ("B", "E3"), ("W", "B2"))),
 )
 
-# id → challenge for O(1) lookup in the answer endpoint.
 _BY_ID: dict[str, DailyChallenge] = {c.id: c for c in CHALLENGES}
 
 
 def daily_index(today: _dt.date | None = None) -> int:
-    """Deterministic index used by the legacy "today's puzzle" endpoint."""
     today = today or _dt.date.today()
     epoch = _dt.date(1970, 1, 1)
     return (today.toordinal() - epoch.toordinal()) % len(CHALLENGES)
@@ -188,8 +248,6 @@ def filter_challenges(
     difficulty: str | None = None,
     topic: str | None = None,
 ) -> tuple[DailyChallenge, ...]:
-    """Return the subset of the catalogue matching every supplied filter.
-    Unset filters are wildcards. Returns the matches in catalogue order."""
     return tuple(
         c for c in CHALLENGES
         if (board_size is None or c.board_size == board_size)
@@ -205,8 +263,6 @@ def pick_random(
     topic: str | None = None,
     rng: random.Random | None = None,
 ) -> DailyChallenge | None:
-    """Random pick within the filter. None when no match exists so the
-    caller can return a graceful "no puzzle for that combo" response."""
     matches = filter_challenges(
         board_size=board_size, difficulty=difficulty, topic=topic
     )
@@ -216,8 +272,6 @@ def pick_random(
 
 
 def replay_position(challenge: DailyChallenge) -> GameState:
-    """Apply the setup plays in order and leave the state with the right
-    side-to-move set."""
     state = GameState(board=Board(challenge.board_size), komi=6.5)
     for color, coord in challenge.setup:
         c = BLACK if color == "B" else WHITE

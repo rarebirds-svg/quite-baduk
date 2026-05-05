@@ -184,9 +184,21 @@
     "difficulty": { "easy": "쉬움", "medium": "보통", "hard": "어려움" },
     "topic": {
       "opening": "포석",
-      "middle_game": "중반 대세",
-      "endgame": "마무리",
-      "life_death": "사활"
+      "joseki": "정석",
+      "life_death": "사활",
+      "tesuji": "맥",
+      "middle_game": "중반",
+      "endgame": "끝내기",
+      "capturing_race": "수상전"
+    },
+    "topicPrompt": {
+      "opening": "포석 단계 — 가장 큰 자리, 전판 균형을 잡아보세요.",
+      "joseki": "정석 — 귀에서 자연스러운 흑백의 응수를 골라보세요.",
+      "life_death": "사활 — 그룹의 생사를 결정짓는 한 수를 찾아보세요.",
+      "tesuji": "맥 — 사활은 아니지만 결정적인 한 수를 찾아보세요.",
+      "middle_game": "중반 — 침투할지, 삭감할지, 굳힐지 — 가장 큰 한 수.",
+      "endgame": "끝내기 — 가장 큰 끝내기 자리, 선·후수 가치를 비교해보세요.",
+      "capturing_race": "수상전 — 두 그룹의 수읽기 경쟁에서 결정타를 찾아보세요."
     },
     "verdict": {
       "best": "정답 — KataGo의 최선수와 일치",

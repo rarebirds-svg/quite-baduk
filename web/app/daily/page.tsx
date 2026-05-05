@@ -14,7 +14,14 @@ interface SetupPlay {
   coord: string;
 }
 
-type Topic = "opening" | "middle_game" | "endgame" | "life_death";
+type Topic =
+  | "opening"
+  | "joseki"
+  | "life_death"
+  | "tesuji"
+  | "middle_game"
+  | "endgame"
+  | "capturing_race";
 type Difficulty = "easy" | "medium" | "hard";
 type BoardSize = 9 | 13 | 19;
 
@@ -45,7 +52,15 @@ interface AnswerResponse {
   detail?: string;
 }
 
-const TOPIC_OPTIONS: Topic[] = ["opening", "middle_game", "endgame", "life_death"];
+const TOPIC_OPTIONS: Topic[] = [
+  "opening",
+  "joseki",
+  "life_death",
+  "tesuji",
+  "middle_game",
+  "endgame",
+  "capturing_race",
+];
 const DIFF_OPTIONS: Difficulty[] = ["easy", "medium", "hard"];
 const SIZE_OPTIONS: BoardSize[] = [9, 13, 19];
 
@@ -287,8 +302,10 @@ export default function DailyChallengePage() {
         title={t("daily.title")}
         subtitle={
           challenge
-            ? t(`daily.prompts.${challenge.id}` as const) ||
-              t("daily.fallbackPrompt")
+            ? // The backend supplies an i18n key directly (e.g.
+              // "daily.topicPrompt.opening"); fall back to the generic
+              // copy if the dictionary doesn't carry it for any reason.
+              t(challenge.prompt_key as never) || t("daily.fallbackPrompt")
             : t("daily.fallbackPrompt")
         }
         size="compact"
