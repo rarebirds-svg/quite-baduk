@@ -73,7 +73,22 @@ export function openGameWS(
   let ws = new WebSocket(url);
   let closed = false;
 
+  // P0-11: outbound queue. Any send() while the socket isn't OPEN is
+  // buffered and flushed once the (re)connection settles. Capped so a
+  // long disconnect can't accumulate without bound; oldest is dropped
+  // first because the freshest game intent (latest hint/score request)
+  // is what the user actually still expects to see honored.
+  const PENDING_LIMIT = 32;
+  const pending: string[] = [];
+
+  const flushPending = () => {
+    while (pending.length > 0 && ws.readyState === WebSocket.OPEN) {
+      ws.send(pending.shift()!);
+    }
+  };
+
   const handlers = () => {
+    ws.onopen = () => flushPending();
     ws.onmessage = (ev) => {
       try {
         onMessage(JSON.parse(ev.data));
@@ -108,10 +123,18 @@ export function openGameWS(
 
   return {
     send(msg) {
-      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+      const data = JSON.stringify(msg);
+      if (!closed && ws.readyState === WebSocket.OPEN) {
+        ws.send(data);
+        return;
+      }
+      if (closed) return;
+      pending.push(data);
+      while (pending.length > PENDING_LIMIT) pending.shift();
     },
     close() {
       closed = true;
+      pending.length = 0;
       ws.close();
     }
   };
