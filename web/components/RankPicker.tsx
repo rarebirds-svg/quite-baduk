@@ -8,25 +8,23 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+// Mirrors backend SUPPORTED_AI_RANKS in app/core/katago/strength.py.
+// v1.0 ships 18k..5d only — 6d/7d/9d ranks are temporarily withheld
+// until the Metal pool's high-visit behaviour is profiled (Plan 1
+// task A4). Granularity is sparse on purpose so users see meaningfully
+// different opponents at each step rather than a 16-stop slider.
 export const RANKS = [
-  "9k",
-  "8k",
+  "18k",
+  "15k",
+  "12k",
+  "10k",
   "7k",
-  "6k",
   "5k",
-  "4k",
   "3k",
-  "2k",
   "1k",
   "1d",
-  "2d",
   "3d",
-  "4d",
   "5d",
-  "6d",
-  "7d",
-  "8d",
-  "9d",
 ] as const;
 export type Rank = (typeof RANKS)[number];
 
