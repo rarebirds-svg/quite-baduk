@@ -316,7 +316,14 @@ class KataGoAdapter:
             # KATAGO_ANALYZE_MAX_DEADLINE_SEC (default 15s).
             import os
             max_deadline = float(os.getenv("KATAGO_ANALYZE_MAX_DEADLINE_SEC", "15"))
-            deadline_s = max(2.0, min(max_deadline, max_visits * 0.05))
+            # Floor of 6s. The previous 2s floor caused the first 1–2 calls
+            # after a fresh KataGo Metal subprocess (cold JIT compile) to
+            # time out with zero info lines, sending the parser to the
+            # default-0.5 path and surfacing as the alternating-winrate
+            # bug seen on the live demo. Warm calls return on the 0.5s
+            # settle window, so the higher floor only costs latency on
+            # the cold-start window.
+            deadline_s = max(6.0, min(max_deadline, max_visits * 0.05))
             cmd = f"kata-analyze {side} interval 200 maxmoves 5 ownership true\n"
             stdin.write(cmd.encode())
             await stdin.drain()
