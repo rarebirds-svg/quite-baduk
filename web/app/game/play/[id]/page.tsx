@@ -78,6 +78,20 @@ export default function PlayPage() {
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [aiResigned, setAiResigned] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
+  // Preferred kifu dialog size — persisted so the user's choice sticks
+  // across game opens. "full" is a near-viewport overlay for serious review;
+  // S/M/L scale the max-width so the board has room without dominating.
+  type KifuSize = "sm" | "md" | "lg" | "full";
+  const [kifuSize, setKifuSize] = useState<KifuSize>(() => {
+    if (typeof window === "undefined") return "md";
+    const v = window.localStorage.getItem("baduk.kifuSize");
+    return v === "sm" || v === "md" || v === "lg" || v === "full" ? v : "md";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("baduk.kifuSize", kifuSize);
+    }
+  }, [kifuSize]);
   // Track the move_count we are optimistically anticipating. If the server
   // sends back a stale state (e.g. an initial handshake that arrived after
   // the user already clicked, or a reconnect mid-flight), we ignore its
@@ -681,9 +695,44 @@ export default function PlayPage() {
           if (!open) setKifuOpen(false);
         }}
       >
-        <DialogContent className="max-w-3xl">
+        <DialogContent
+          className={
+            kifuSize === "full"
+              ? "max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh] overflow-y-auto"
+              : kifuSize === "lg"
+              ? "max-w-5xl"
+              : kifuSize === "sm"
+              ? "max-w-xl"
+              : "max-w-3xl"
+          }
+        >
           <DialogHeader>
-            <DialogTitle>{t("game.kifuDialogTitle")}</DialogTitle>
+            <div className="flex items-center justify-between gap-3">
+              <DialogTitle>{t("game.kifuDialogTitle")}</DialogTitle>
+              <div
+                role="radiogroup"
+                aria-label={t("review.dialogSize")}
+                className="flex items-center gap-1 font-sans text-[10px] sm:text-xs uppercase tracking-tight"
+              >
+                {(["sm", "md", "lg", "full"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    role="radio"
+                    aria-checked={kifuSize === s}
+                    onClick={() => setKifuSize(s)}
+                    className={
+                      "px-2 py-1 border transition-base " +
+                      (kifuSize === s
+                        ? "border-oxblood text-oxblood bg-paper-deep"
+                        : "border-ink-faint text-ink-mute hover:border-ink-mute")
+                    }
+                  >
+                    {t(`review.size.${s}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
           </DialogHeader>
           {kifuOpen && <ReviewPlayer gameId={gameId} />}
         </DialogContent>
