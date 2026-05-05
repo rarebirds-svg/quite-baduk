@@ -109,3 +109,41 @@ export function applyMoveWithCaptures(
 
   return cells.join("");
 }
+
+// Mirror of backend HANDICAP_TABLES (app/core/rules/handicap.py).
+// Used by the review player to repaint handicap stones, since the move
+// log only stores recorded plays — handicap stones are pre-placed by
+// the rules engine and never persisted as MoveRow.
+export const HANDICAP_STONES: Record<number, Record<number, string[]>> = {
+  9: {
+    2: ["C3", "G7"],
+    3: ["C3", "G7", "G3"],
+    4: ["C3", "G7", "G3", "C7"],
+    5: ["C3", "G7", "G3", "C7", "E5"],
+  },
+  13: {
+    2: ["D4", "K10"],
+    3: ["D4", "K10", "K4"],
+    4: ["D4", "K10", "K4", "D10"],
+    5: ["D4", "K10", "K4", "D10", "G7"],
+    6: ["D4", "K10", "K4", "D10", "D7", "K7"],
+    7: ["D4", "K10", "K4", "D10", "D7", "K7", "G7"],
+    8: ["D4", "K10", "K4", "D10", "D7", "K7", "G4", "G10"],
+    9: ["D4", "K10", "K4", "D10", "D7", "K7", "G4", "G10", "G7"],
+  },
+  19: {
+    2: ["D16", "Q4"],
+    3: ["D16", "Q4", "Q16"],
+    4: ["D4", "D16", "Q4", "Q16"],
+    5: ["D4", "D16", "Q4", "Q16", "K10"],
+    6: ["D4", "D16", "Q4", "Q16", "D10", "Q10"],
+    7: ["D4", "D16", "Q4", "Q16", "D10", "Q10", "K10"],
+    8: ["D4", "D16", "Q4", "Q16", "D10", "Q10", "K4", "K16"],
+    9: ["D4", "D16", "Q4", "Q16", "D10", "Q10", "K4", "K10", "K16"],
+  },
+};
+
+export function handicapStonesFor(size: number, count: number): string[] {
+  if (count <= 0) return [];
+  return HANDICAP_STONES[size]?.[count] ?? [];
+}

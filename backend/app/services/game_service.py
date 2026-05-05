@@ -391,8 +391,21 @@ async def place_move(
                 #      noisy read can't end the game; the user has plies
                 #      in between to play into a recovery. Persisted in
                 #      games.loss_streak so it survives reconnects.
+                # Handicap games are inherently lopsided at game-start (the
+                # whole point) — the AI is *supposed* to play from behind
+                # for many ply. Tighten every gate so a 9-stone game doesn't
+                # get bailed on at move 30 with a "well, I'm 100 points down"
+                # shrug. Each handicap stone widens the min-move window by
+                # ~15 ply and drops both confidence thresholds; the streak
+                # required to actually resign rises from 3 to 5.
+                is_handicap = (game.handicap or 0) > 0
                 ai_winrate_shallow = 1.0 - wr
-                resign_min_moves = max(20, new_state.board.size * 2)
+                resign_min_moves = max(
+                    20,
+                    new_state.board.size * 2 + (game.handicap or 0) * 15,
+                )
+                shallow_resign_threshold = 0.015 if is_handicap else 0.03
+                deep_resign_threshold = 0.005 if is_handicap else 0.01
                 is_normal_ai_move = (
                     ai_move is not None
                     and ai_move.lower() not in ("pass", "resign")
@@ -401,7 +414,7 @@ async def place_move(
                 if (
                     is_normal_ai_move
                     and len(new_state.move_history) >= resign_min_moves
-                    and ai_winrate_shallow < 0.03
+                    and ai_winrate_shallow < shallow_resign_threshold
                 ):
                     try:
                         deep = await adapter.analyze(
@@ -410,7 +423,7 @@ async def place_move(
                         deep_ai_wr = 1.0 - float(deep.winrate)
                     except Exception:
                         deep_ai_wr = 1.0
-                    deep_confirms_loss = deep_ai_wr < 0.01
+                    deep_confirms_loss = deep_ai_wr < deep_resign_threshold
 
                 if deep_confirms_loss:
                     game.loss_streak = (game.loss_streak or 0) + 1
@@ -421,7 +434,7 @@ async def place_move(
                     if game.loss_streak:
                         game.loss_streak = 0
 
-                RESIGN_STREAK_THRESHOLD = 3
+                RESIGN_STREAK_THRESHOLD = 5 if is_handicap else 3
                 if game.loss_streak >= RESIGN_STREAK_THRESHOLD:
                     game.status = "resigned"
                     game.winner = "user"

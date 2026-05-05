@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Board from "@/components/Board";
 import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { gtpToXy, totalCells } from "@/lib/board";
+import { gtpToXy, handicapStonesFor, totalCells } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 
 interface MoveEntryRaw {
@@ -62,8 +62,22 @@ function moveDrop(
 
 const BLUNDER_THRESHOLD = 0.10; // 10% winrate drop counts as a coaching note
 
-function replay(size: number, moves: MoveEntryRaw[], upto: number): string {
+function replay(
+  size: number,
+  moves: MoveEntryRaw[],
+  upto: number,
+  handicap = 0,
+): string {
   const cells = Array.from({ length: totalCells(size) }, () => ".");
+  // Pre-place handicap stones — they are part of the position from move 0
+  // onward but never appear in the move log (the backend's rules engine
+  // places them directly without recording MoveRow entries).
+  for (const coord of handicapStonesFor(size, handicap)) {
+    const xy = gtpToXy(coord, size);
+    if (!xy) continue;
+    const [x, y] = xy;
+    cells[y * size + x] = "B";
+  }
   for (let i = 0; i < Math.min(upto, moves.length); i++) {
     const m = moves[i];
     if (m.is_undone || !m.coord || m.coord === "pass") continue;
@@ -196,7 +210,10 @@ export default function ReviewPlayer({
   }, [playing, game, idx, intervalMs]);
 
   const board = useMemo(
-    () => (game ? replay(game.board_size, game.moves, idx) : ""),
+    () =>
+      game
+        ? replay(game.board_size, game.moves, idx, game.handicap ?? 0)
+        : "",
     [game, idx],
   );
   const lastMove = useMemo(() => {
