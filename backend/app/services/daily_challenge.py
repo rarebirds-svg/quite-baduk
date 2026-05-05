@@ -261,11 +261,20 @@ def pick_random(
     board_size: int | None = None,
     difficulty: str | None = None,
     topic: str | None = None,
+    exclude_id: str | None = None,
     rng: random.Random | None = None,
 ) -> DailyChallenge | None:
+    """Random pick within filters. ``exclude_id`` removes one specific
+    puzzle from the candidate pool — used by the "다음 문제" flow so
+    the user doesn't get the same puzzle they just solved. If excluding
+    leaves zero matches we return ``None`` rather than silently falling
+    back to the excluded id; the caller decides whether to widen the
+    filters or surface a "no other puzzles" message."""
     matches = filter_challenges(
         board_size=board_size, difficulty=difficulty, topic=topic
     )
+    if exclude_id is not None:
+        matches = tuple(c for c in matches if c.id != exclude_id)
     if not matches:
         return None
     return (rng or random).choice(matches)

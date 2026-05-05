@@ -181,6 +181,7 @@
     "filterDifficulty": "Level",
     "any": "Any",
     "noMatch": "No puzzles match this combination yet — adjust the filters.",
+    "noOtherMatch": "No other puzzles in this combination. Loosen the filters or try again.",
     "difficulty": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
     "topic": {
       "opening": "Opening",

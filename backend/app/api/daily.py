@@ -75,14 +75,33 @@ async def random_challenge(
     board_size: Annotated[int | None, Query(ge=9, le=19)] = None,
     difficulty: Annotated[_DifficultyQ | None, Query()] = None,
     topic: Annotated[_TopicQ | None, Query()] = None,
+    exclude_id: Annotated[str | None, Query(max_length=64)] = None,
 ) -> dict[str, Any]:
-    """Random puzzle from the catalogue under the supplied filters. 404
-    when no row matches so the UI can surface "이 조합엔 아직 문제 없음"."""
-    challenge = pick_random(
+    """Random puzzle from the catalogue under the supplied filters.
+
+    ``exclude_id`` removes one entry from the pool — used so "다음 문제"
+    never returns the puzzle the user just solved. Two distinct 404s:
+      * "no_match" — the filter has no puzzles at all.
+      * "no_other_match" — the filter has only the excluded puzzle. The
+        client can surface "이 조합엔 다른 문제가 없어요" without giving
+        up on the current screen.
+    """
+    # Probe with no exclusion so we can distinguish "filter is empty"
+    # from "filter has only the excluded id".
+    base_match = pick_random(
         board_size=board_size, difficulty=difficulty, topic=topic
     )
-    if challenge is None:
+    if base_match is None:
         raise HTTPException(status_code=404, detail="no_match")
+
+    challenge = pick_random(
+        board_size=board_size,
+        difficulty=difficulty,
+        topic=topic,
+        exclude_id=exclude_id,
+    )
+    if challenge is None:
+        raise HTTPException(status_code=404, detail="no_other_match")
     return _serialise(challenge)
 
 

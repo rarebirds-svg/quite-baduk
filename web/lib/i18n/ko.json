@@ -181,6 +181,7 @@
     "filterDifficulty": "난이도",
     "any": "전체",
     "noMatch": "이 조합엔 아직 문제가 없어요. 필터를 조정해보세요.",
+    "noOtherMatch": "이 조합엔 다른 문제가 없어요. 필터를 풀거나 다시 풀어보세요.",
     "difficulty": { "easy": "쉬움", "medium": "보통", "hard": "어려움" },
     "topic": {
       "opening": "포석",

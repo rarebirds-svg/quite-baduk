@@ -149,36 +149,52 @@ export default function DailyChallengePage() {
     }
   }, [topic]);
 
-  // Fetch a puzzle: with filters → /random, without filters → /today.
-  const fetchPuzzle = useCallback(async () => {
-    setError(null);
-    setNoMatch(false);
-    setCandidate(null);
-    setResult(null);
-    try {
-      const params = new URLSearchParams();
-      if (boardSize !== null) params.set("board_size", String(boardSize));
-      if (difficulty !== null) params.set("difficulty", difficulty);
-      if (topic !== null) params.set("topic", topic);
-      const hasFilter = params.toString().length > 0;
-      const url = hasFilter
-        ? `/api/daily-challenge/random?${params.toString()}`
-        : `/api/daily-challenge`;
-      const c = await api<Challenge>(url);
-      setChallenge(c);
-    } catch (e) {
-      // 404 on /random when no puzzles match → show empty state.
-      const status = (e as { status?: number })?.status;
-      if (status === 404) {
-        setChallenge(null);
-        setNoMatch(true);
-      } else {
-        setError("load_failed");
+  // Fetch a puzzle.
+  //   filters present  → /random (optionally excluding a specific id so
+  //                      "다음 문제" doesn't repeat what was just solved)
+  //   no filters       → /today
+  // The `excludeId` argument is only honoured when filters are also set;
+  // /today is deterministic and has nothing to exclude against.
+  const fetchPuzzle = useCallback(
+    async (excludeId?: string) => {
+      setError(null);
+      setNoMatch(false);
+      setCandidate(null);
+      setResult(null);
+      try {
+        const params = new URLSearchParams();
+        if (boardSize !== null) params.set("board_size", String(boardSize));
+        if (difficulty !== null) params.set("difficulty", difficulty);
+        if (topic !== null) params.set("topic", topic);
+        const hasFilter = params.toString().length > 0;
+        if (hasFilter && excludeId) params.set("exclude_id", excludeId);
+        const url = hasFilter
+          ? `/api/daily-challenge/random?${params.toString()}`
+          : `/api/daily-challenge`;
+        const c = await api<Challenge>(url);
+        setChallenge(c);
+      } catch (e) {
+        const err = e as { status?: number; code?: string };
+        if (err.status === 404) {
+          // "no_other_match" → the filter has only the excluded puzzle.
+          // Keep the current puzzle on screen and tell the user there
+          // isn't a sibling. "no_match" → the filter is genuinely empty.
+          if (err.code === "no_other_match") {
+            toast.message(t("daily.noOtherMatch"));
+          } else {
+            setChallenge(null);
+            setNoMatch(true);
+          }
+        } else {
+          setError("load_failed");
+        }
       }
-    }
-  }, [boardSize, difficulty, topic]);
+    },
+    [boardSize, difficulty, topic, t],
+  );
 
-  // Refetch when filters change.
+  // Refetch when filters change. Filter changes always fetch fresh (no
+  // exclusion); only "다음 문제" / "건너뛰기" pass an exclude_id.
   useEffect(() => {
     fetchPuzzle();
   }, [fetchPuzzle]);
@@ -229,7 +245,10 @@ export default function DailyChallengePage() {
   };
 
   const nextPuzzle = () => {
-    fetchPuzzle();
+    // Pass the current id as exclude so the random pick guarantees a
+    // different puzzle (when one exists). With no filters active there's
+    // nothing to exclude — /today is deterministic — so we just refetch.
+    fetchPuzzle(challenge?.id);
   };
 
   // Helper: is a particular filter value actually populated in the

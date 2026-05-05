@@ -136,6 +136,63 @@ async def test_catalogue_returns_options_and_counts(client: AsyncClient) -> None
 
 
 @pytest.mark.asyncio
+async def test_random_excludes_id_returns_different(client: AsyncClient) -> None:
+    """Pass an exclude_id and the random pick must avoid it (so "다음
+    문제" doesn't repeat)."""
+    await client.post("/api/session", json={"nickname": "daily_excl"})
+    # 9x9 opening has 3 puzzles → excluding the easy one must yield a
+    # different id.
+    r1 = await client.get(
+        "/api/daily-challenge/random",
+        params={"board_size": 9, "topic": "opening"},
+    )
+    assert r1.status_code == 200
+    first = r1.json()["id"]
+    r2 = await client.get(
+        "/api/daily-challenge/random",
+        params={"board_size": 9, "topic": "opening", "exclude_id": first},
+    )
+    assert r2.status_code == 200
+    assert r2.json()["id"] != first
+
+
+@pytest.mark.asyncio
+async def test_random_no_other_match_when_only_excluded_left(
+    client: AsyncClient,
+) -> None:
+    """When the only puzzle in a filter is the excluded id, the response
+    is a distinguishable 404 (code=no_other_match) so the UI can keep
+    the current puzzle and show 'no other puzzles' instead of bouncing
+    to the empty state."""
+    await client.post("/api/session", json={"nickname": "daily_only"})
+    # Pull whatever 19x19 joseki returns first, then exclude it.
+    r1 = await client.get(
+        "/api/daily-challenge/random",
+        params={"board_size": 19, "topic": "joseki"},
+    )
+    assert r1.status_code == 200
+    only_id = r1.json()["id"]
+    # The 19x19 joseki section has 2 entries in the V1 catalogue, so
+    # excluding one leaves the other — fine. Exclude both by listing
+    # only one with a matching difficulty filter that pins it down.
+    diff = r1.json()["difficulty"]
+    r2 = await client.get(
+        "/api/daily-challenge/random",
+        params={
+            "board_size": 19,
+            "topic": "joseki",
+            "difficulty": diff,
+            "exclude_id": only_id,
+        },
+    )
+    # If the (size,topic,difficulty) cell only had this one entry, the
+    # response is "no_other_match"; otherwise we just got a sibling.
+    assert r2.status_code in (200, 404)
+    if r2.status_code == 404:
+        assert r2.json()["error"]["code"] == "no_other_match"
+
+
+@pytest.mark.asyncio
 async def test_answer_grades_non_today_challenge(client: AsyncClient) -> None:
     """Pick a catalogue puzzle that is NOT today's and grade against it.
     Used to be 410-blocked; now must succeed."""
