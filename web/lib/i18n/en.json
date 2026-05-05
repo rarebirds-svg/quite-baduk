@@ -105,6 +105,7 @@
     "aiPassedScoredTitle": "AI proposed scoring",
     "requestScoring": "Score game", "scoringBreakdown": "Scoring",
     "estimate": "Estimate", "estimateLoading": "Estimating…", "estimateTitle": "Score estimate", "estimateWinrate": "Black winrate", "estimateScoreLead": "Score lead", "heatmapToggle": "Heatmap", "heatmapOn": "On", "heatmapOff": "Off",
+    "playerDetail": "Player details", "selectPlayer": "Pick this player",
     "blackTerritory": "Black territory", "whiteTerritory": "White territory",
     "blackCaptures": "Black captures", "whiteCaptures": "White captures",
     "komiLabel": "Komi", "totalLabel": "Total", "winnerLabel": "Winner", "confirmResignTitle": "Resign?", "confirmResignDesc": "End this game as a loss; the record is saved.", "cancel": "Cancel", "close": "Close", "confirm": "OK",
@@ -159,7 +160,7 @@
       "rustic": "Self-taught, practical over theory — gut-fight Go"
     }
   },
-  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber" },
+  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "startCoaching": "Coach this game", "coachingProgress": "Analyzing", "coachingDone": "Analysis ready", "blunderTag": "Blunder", "coachTag": "This move", "showAlt": "Show alternatives", "hideAlt": "Hide alternatives", "winrateBlackShort": "B", "blunderCountSuffix": "blunder(s)" },
   "history": {
     "total": "Total",
     "wins": "Wins",

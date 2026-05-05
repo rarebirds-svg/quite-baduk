@@ -105,6 +105,7 @@
     "aiPassedScoredTitle": "AI가 계가를 제안했습니다",
     "requestScoring": "계가 신청", "scoringBreakdown": "계가 결과",
     "estimate": "예상 형세", "estimateLoading": "추정 중…", "estimateTitle": "예상 형세", "estimateWinrate": "흑 승률", "estimateScoreLead": "예상 점수 차", "heatmapToggle": "히트맵", "heatmapOn": "켜기", "heatmapOff": "끄기",
+    "playerDetail": "기사 정보", "selectPlayer": "이 기사 선택",
     "blackTerritory": "흑 집", "whiteTerritory": "백 집",
     "blackCaptures": "흑 따냄", "whiteCaptures": "백 따냄",
     "komiLabel": "덤", "totalLabel": "합계", "winnerLabel": "승자", "confirmResignTitle": "기권하시겠습니까?", "confirmResignDesc": "현재 대국을 기권으로 종료합니다. 기보는 저장됩니다.", "cancel": "취소", "close": "닫기", "confirm": "확인",
@@ -159,7 +160,7 @@
       "rustic": "정석보다 실전 감각으로 승부하는 야성적 행마"
     }
   },
-  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "play": "재생", "pause": "일시정지", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더" },
+  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "play": "재생", "pause": "일시정지", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더", "startCoaching": "코칭 시작", "coachingProgress": "분석 중", "coachingDone": "분석 완료", "blunderTag": "악수", "coachTag": "이 수", "showAlt": "다른 변화도 보기", "hideAlt": "변화도 닫기", "winrateBlackShort": "흑", "blunderCountSuffix": "악수 발견" },
   "history": {
     "total": "총 대국",
     "wins": "승",
