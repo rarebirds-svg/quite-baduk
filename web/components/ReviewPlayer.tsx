@@ -15,6 +15,7 @@ interface MoveEntryRaw {
 interface GameDetail {
   id: number;
   board_size: number;
+  handicap?: number;
   moves: MoveEntryRaw[];
   result: string | null;
   user_nickname?: string | null;
@@ -24,6 +25,42 @@ interface GameDetail {
   started_at?: string;
   finished_at?: string | null;
 }
+
+interface AnalyzeResponse {
+  winrate: number; // [0,1] — side-to-move's perspective at moveNum
+  top_moves: { move: string; winrate: number; visits: number }[];
+  ownership: number[];
+}
+
+// Move-position N (after N moves played) → Black's POV winrate.
+// No handicap: after even N, Black is to move (so wr_black = wr).
+// Handicap H>0: B places H stones before move 1; first recorded move is W.
+//   After N recorded moves with handicap, side-to-move parity flips —
+//   B is to move when N is ODD.
+function blackWinrateAt(
+  sideToMoveWinrate: number,
+  moveNum: number,
+  handicap: number,
+): number {
+  const sideToMoveIsBlack = handicap > 0
+    ? moveNum % 2 === 1
+    : moveNum % 2 === 0;
+  return sideToMoveIsBlack ? sideToMoveWinrate : 1 - sideToMoveWinrate;
+}
+
+// Drop in the moving player's winrate from before to after their move.
+// Positive = the moving side LOST winrate (= mistake). Threshold elsewhere.
+function moveDrop(
+  wrBlackBefore: number,
+  wrBlackAfter: number,
+  color: "B" | "W",
+): number {
+  return color === "B"
+    ? wrBlackBefore - wrBlackAfter
+    : wrBlackAfter - wrBlackBefore;
+}
+
+const BLUNDER_THRESHOLD = 0.10; // 10% winrate drop counts as a coaching note
 
 function replay(size: number, moves: MoveEntryRaw[], upto: number): string {
   const cells = Array.from({ length: totalCells(size) }, () => ".");
@@ -64,6 +101,18 @@ export default function ReviewPlayer({
   // Track the current gameId to cancel a stale fetch if the caller swaps
   // games while one is in flight (clicking review on a different row).
   const activeId = useRef(gameId);
+  // Per-move analyses, indexed by move position (0 = empty board, N = after
+  // Nth move). Populated by the coaching pipeline below.
+  const [winratesBlack, setWinratesBlack] = useState<Record<number, number>>({});
+  const [topMovesAt, setTopMovesAt] = useState<
+    Record<number, { move: string; winrate: number; visits: number }[]>
+  >({});
+  const [coachingActive, setCoachingActive] = useState(false);
+  const [coachingProgress, setCoachingProgress] = useState<{ done: number; total: number } | null>(null);
+  const [showAlternatives, setShowAlternatives] = useState(false);
+  // Concurrency cap: KataGo per-move analysis is not free. Even cached, the
+  // first review of a long game would otherwise fire 200 requests at once.
+  const inFlightRef = useRef(0);
 
   useEffect(() => {
     activeId.current = gameId;
@@ -71,6 +120,11 @@ export default function ReviewPlayer({
     setError(null);
     setIdx(0);
     setPlaying(false);
+    setWinratesBlack({});
+    setTopMovesAt({});
+    setCoachingActive(false);
+    setCoachingProgress(null);
+    setShowAlternatives(false);
     (async () => {
       try {
         const g = await api<GameDetail>(`/api/games/${gameId}`);
@@ -84,6 +138,53 @@ export default function ReviewPlayer({
       }
     })();
   }, [gameId, autoplay]);
+
+  // Coaching pipeline — sequential per-move analysis. Opt-in via the
+  // "코칭 시작" button so we don't surprise the user with engine load on
+  // every review open. Results land in `winratesBlack` keyed by move index.
+  useEffect(() => {
+    if (!coachingActive || !game) return;
+    let cancelled = false;
+    const handicap = game.handicap ?? 0;
+    const total = game.moves.length + 1; // positions 0..N
+    setCoachingProgress({ done: 0, total });
+
+    const fetchOne = async (moveNum: number): Promise<void> => {
+      while (inFlightRef.current >= 2) {
+        await new Promise((r) => setTimeout(r, 50));
+        if (cancelled) return;
+      }
+      inFlightRef.current += 1;
+      try {
+        const r = await api<AnalyzeResponse>(
+          `/api/games/${gameId}/analyze?moveNum=${moveNum}`,
+          { method: "POST" },
+        );
+        if (cancelled) return;
+        const wrBlack = blackWinrateAt(r.winrate, moveNum, handicap);
+        setWinratesBlack((prev) => ({ ...prev, [moveNum]: wrBlack }));
+        setTopMovesAt((prev) => ({ ...prev, [moveNum]: r.top_moves }));
+      } catch {
+        // Single-move failure is non-fatal — skip and keep going.
+      } finally {
+        inFlightRef.current = Math.max(0, inFlightRef.current - 1);
+      }
+    };
+
+    (async () => {
+      let done = 0;
+      for (let n = 0; n < total; n++) {
+        await fetchOne(n);
+        if (cancelled) return;
+        done += 1;
+        setCoachingProgress({ done, total });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [coachingActive, game, gameId]);
 
   useEffect(() => {
     if (!playing || !game) return;
@@ -107,6 +208,22 @@ export default function ReviewPlayer({
     return xy ? { x: xy[0], y: xy[1] } : null;
   }, [game, idx]);
 
+  // Blunder index list — computed unconditionally so the hook order is
+  // stable across the early returns below.
+  const blunderMoves = useMemo(() => {
+    if (!coachingActive || !game) return [] as number[];
+    const out: number[] = [];
+    for (let n = 1; n < game.moves.length + 1; n++) {
+      const before = winratesBlack[n - 1];
+      const after = winratesBlack[n];
+      if (before === undefined || after === undefined) continue;
+      const m = game.moves[n - 1];
+      const d = moveDrop(before, after, m.color);
+      if (d > BLUNDER_THRESHOLD) out.push(n);
+    }
+    return out;
+  }, [coachingActive, game, winratesBlack]);
+
   if (error) {
     return (
       <p className="text-sm text-oxblood p-4 text-center">
@@ -122,6 +239,56 @@ export default function ReviewPlayer({
 
   const currentMove = idx > 0 ? game.moves[idx - 1] : null;
 
+  // Coaching read-outs for the move currently displayed (the one at idx).
+  // wrBefore = winrate AT position idx-1 (before that move),
+  // wrAfter = winrate AT position idx (after that move).
+  const wrBefore =
+    idx > 0 && idx - 1 in winratesBlack ? winratesBlack[idx - 1] : null;
+  const wrAfter = idx in winratesBlack ? winratesBlack[idx] : null;
+  const drop =
+    currentMove && wrBefore !== null && wrAfter !== null
+      ? moveDrop(wrBefore, wrAfter, currentMove.color)
+      : null;
+  const isBlunder = drop !== null && drop > BLUNDER_THRESHOLD;
+  // Top moves at the position BEFORE the current move — i.e., the
+  // alternatives that the moving player passed up.
+  const alternatives = idx > 0 ? topMovesAt[idx - 1] ?? [] : [];
+
+  // Render top alternatives as semi-transparent overlay markers. Reuses
+  // the Board overlay shape (primary/secondary/tertiary).
+  const altOverlay =
+    showAlternatives && alternatives.length > 0
+      ? alternatives
+          .slice(0, 3)
+          .map((m, i) => {
+            const xy = gtpToXy(m.move, game.board_size);
+            if (!xy) return null;
+            return {
+              x: xy[0],
+              y: xy[1],
+              color:
+                i === 0
+                  ? ("primary" as const)
+                  : i === 1
+                  ? ("secondary" as const)
+                  : ("tertiary" as const),
+              label: `${(m.winrate * 100).toFixed(0)}%`,
+            };
+          })
+          .filter(
+            (
+              x,
+            ): x is {
+              x: number;
+              y: number;
+              color: "primary" | "secondary" | "tertiary";
+              label: string;
+            } => x !== null,
+          )
+      : undefined;
+
+  // (blunderMoves computed earlier — hook order keeps it before any early returns.)
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between font-mono text-xs text-ink-mute">
@@ -135,6 +302,11 @@ export default function ReviewPlayer({
               </span>
             </span>
           )}
+          {wrAfter !== null && (
+            <span className="ml-3 text-ink-mute">
+              {t("review.winrateBlackShort")}: {(wrAfter * 100).toFixed(1)}%
+            </span>
+          )}
         </span>
         <span className="text-ink-faint">
           {game.user_nickname ?? "—"} · {game.ai_player ?? game.ai_rank ?? ""}
@@ -143,18 +315,101 @@ export default function ReviewPlayer({
       </div>
 
       <div className="max-w-[min(560px,100%)] mx-auto">
-        <Board size={game.board_size} board={board} lastMove={lastMove} />
+        <Board
+          size={game.board_size}
+          board={board}
+          lastMove={lastMove}
+          overlay={altOverlay}
+        />
       </div>
 
-      <input
-        type="range"
-        min={0}
-        max={game.moves.length}
-        value={idx}
-        onChange={(e) => { setIdx(Number(e.target.value)); setPlaying(false); }}
-        className="w-full accent-oxblood"
-        aria-label={t("review.scrubber")}
-      />
+      {currentMove && drop !== null && (
+        <div
+          className={
+            "border px-3 py-2 font-sans text-sm flex items-baseline justify-between gap-3 " +
+            (isBlunder
+              ? "border-oxblood text-oxblood bg-paper-deep"
+              : "border-ink-faint text-ink-mute")
+          }
+          aria-live="polite"
+        >
+          <span className="font-semibold tracking-label uppercase text-xs">
+            {isBlunder ? t("review.blunderTag") : t("review.coachTag")}
+          </span>
+          <span className="font-mono tabular-nums text-xs">
+            {drop > 0 ? "−" : "+"}
+            {Math.abs(drop * 100).toFixed(1)}%
+          </span>
+          {alternatives.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto"
+              onClick={() => setShowAlternatives((v) => !v)}
+              aria-pressed={showAlternatives}
+            >
+              {showAlternatives ? t("review.hideAlt") : t("review.showAlt")}
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="relative">
+        <input
+          type="range"
+          min={0}
+          max={game.moves.length}
+          value={idx}
+          onChange={(e) => { setIdx(Number(e.target.value)); setPlaying(false); }}
+          className="w-full accent-oxblood block"
+          aria-label={t("review.scrubber")}
+        />
+        {blunderMoves.length > 0 && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2"
+          >
+            {blunderMoves.map((n) => {
+              // Native range thumb has padding; matching exactly is tricky.
+              // Use percentage along the track — close enough at typical
+              // viewport widths.
+              const pct = (n / game.moves.length) * 100;
+              return (
+                <span
+                  key={n}
+                  className="absolute -translate-x-1/2 h-2 w-2 rounded-full bg-oxblood"
+                  style={{ left: `${pct}%` }}
+                  title={`#${n} ${t("review.blunderTag")}`}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3 -mt-1">
+        {!coachingActive ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-oxblood border-oxblood"
+            onClick={() => setCoachingActive(true)}
+          >
+            {t("review.startCoaching")}
+          </Button>
+        ) : coachingProgress && coachingProgress.done < coachingProgress.total ? (
+          <span className="font-mono text-xs tabular-nums text-ink-mute">
+            {t("review.coachingProgress")} {coachingProgress.done} /{" "}
+            {coachingProgress.total}
+          </span>
+        ) : (
+          <span className="font-sans text-xs uppercase tracking-label text-moss">
+            {t("review.coachingDone")}
+            {blunderMoves.length > 0 &&
+              ` · ${blunderMoves.length} ${t("review.blunderCountSuffix")}`}
+          </span>
+        )}
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm"
