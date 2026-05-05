@@ -93,11 +93,13 @@ async def test_user_black_creates_game_with_no_moves_yet(
 
 
 @pytest.mark.asyncio
-async def test_handicap_creates_game_with_no_moves_yet(
+async def test_handicap_creates_game_with_white_ai_opener(
     db_session: AsyncSession,
 ) -> None:
-    """Handicap path forces user_color=black (handicap stones for user) so
-    the AI doesn't open — same as the user-black path. Don't regress this."""
+    """Handicap path forces user_color=black + pre-places Black handicap
+    stones, then it's White's turn. The AI (White) must open before the
+    WS handshake — same blank-board-wait bug as the user-white case, just
+    with the colours flipped."""
     set_adapter(MockKataGoAdapter())
     s = await _make_session(db_session, nickname="hcap1")
     game = await create_game(
@@ -110,4 +112,18 @@ async def test_handicap_creates_game_with_no_moves_yet(
     )
 
     assert game.user_color == "black"
-    assert game.move_count == 0
+    assert game.move_count == 1, (
+        "AI (White) must open after Black's handicap stones are placed."
+    )
+
+    moves = (
+        await db_session.execute(
+            select(MoveRow).where(MoveRow.game_id == game.id).order_by(
+                MoveRow.move_number.asc()
+            )
+        )
+    ).scalars().all()
+    assert len(moves) == 1
+    assert moves[0].color == "W"
+    assert moves[0].coord is not None
+    assert moves[0].coord.lower() not in ("pass", "resign")

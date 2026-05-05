@@ -162,22 +162,28 @@ async def create_game(
             await adapter.play(BLACK, coord)
         state.to_move = WHITE
 
-    # User chose White (no handicap) → AI (Black) opens. Without this, the
-    # WS handshake would just ship `to_move=B` and the user would stare at
-    # an empty board waiting on a move that never comes.
-    if handicap == 0 and user_color == "white":
+    # If the AI is on move at game-start, run its opener inline. Two
+    # cases hit this:
+    #   * user_color="white" + handicap=0 — even game, AI (Black) opens.
+    #   * handicap > 0 — user is forced Black (above), Black's handicap
+    #     stones are pre-placed, and the very next move is White (AI).
+    # Without this the WS handshake would just ship `to_move = ai_side`
+    # and the user would stare at the board waiting on a move that never
+    # comes.
+    ai_side = WHITE if user_color == "black" else BLACK
+    if state.to_move == ai_side:
         try:
-            ai_first = await adapter.genmove(BLACK)
+            ai_first = await adapter.genmove(ai_side)
         except Exception as e:
             raise GameError("AI_OPENING_FAILED", str(e)) from e
         coord = ai_first.lower()
         if coord not in ("pass", "resign"):
             try:
-                state = play(state, Move(color=BLACK, coord=ai_first))
+                state = play(state, Move(color=ai_side, coord=ai_first))
             except IllegalMoveError as e:
                 raise GameError("AI_ILLEGAL_MOVE", f"{ai_first}: {e}") from e
             await _record_move(
-                db, game_id=game.id, move_number=1, color=BLACK,
+                db, game_id=game.id, move_number=1, color=ai_side,
                 coord=ai_first, captures=0,
             )
             game.move_count = 1
