@@ -20,6 +20,11 @@ export interface GameControlsProps {
   disabled?: boolean;
   undosRemaining?: number;
   scoringAvailable?: boolean;
+  /**
+   * True while a hint request is in flight. The hint button shows a
+   * loading label and is disabled to prevent double-tap re-fetches.
+   */
+  hintLoading?: boolean;
 }
 
 export default function GameControls({
@@ -31,6 +36,7 @@ export default function GameControls({
   disabled,
   undosRemaining,
   scoringAvailable,
+  hintLoading,
 }: GameControlsProps) {
   const t = useT();
   const undoDisabled =
@@ -58,7 +64,7 @@ export default function GameControls({
       }
       if (k === "h") {
         e.preventDefault();
-        onHint();
+        if (!hintLoading) onHint();
       }
       if (k === "s" && onScoreRequest && !scoreDisabled) {
         e.preventDefault();
@@ -67,7 +73,17 @@ export default function GameControls({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onPass, onResign, onUndo, onHint, onScoreRequest, disabled, undoDisabled, scoreDisabled]);
+  }, [
+    onPass,
+    onResign,
+    onUndo,
+    onHint,
+    onScoreRequest,
+    disabled,
+    undoDisabled,
+    scoreDisabled,
+    hintLoading,
+  ]);
 
   const showScoreButton = Boolean(onScoreRequest);
   return (
@@ -102,13 +118,15 @@ export default function GameControls({
         </Button>
         <Button
           onClick={onHint}
-          disabled={disabled}
+          disabled={disabled || hintLoading}
           variant="outline"
           className="flex flex-col h-auto py-3 gap-1 text-oxblood border-oxblood"
+          aria-busy={hintLoading || undefined}
+          aria-live="polite"
         >
           <IconHint />
           <span className="font-sans text-xs font-semibold uppercase tracking-label">
-            {t("game.hint")}
+            {hintLoading ? t("game.hintLoading") : t("game.hint")}
           </span>
         </Button>
         {showScoreButton && (
