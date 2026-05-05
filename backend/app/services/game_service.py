@@ -76,6 +76,19 @@ class ScoringDetail:
     white_points: frozenset[tuple[int, int]] = frozenset()
     dame_points: frozenset[tuple[int, int]] = frozenset()
     dead_stones: frozenset[tuple[int, int]] = frozenset()
+    # Row-major ownership read (length board_size**2, values in [-1, 1]).
+    # Surfaced so the score-result sheet can render an optional heatmap
+    # — same data the dead-stone inference already consumed.
+    ownership: tuple[float, ...] = ()
+
+
+@dataclass
+class EstimateResult:
+    """Mid-game OGS-style score estimate. Distinct from ScoringDetail in
+    that the game is not finalized — caller can keep playing afterward."""
+    winrate_black: float
+    score_lead_black: float
+    ownership: tuple[float, ...]  # row-major, length board_size**2, [-1, 1]
 
 
 async def _user_side(game: Game) -> str:
@@ -440,6 +453,7 @@ async def place_move(
                     white_points=result_obj.white_points,
                     dame_points=result_obj.dame_points,
                     dead_stones=frozenset(dead_stones),
+                    ownership=tuple(analysis.ownership),
                 )
             except Exception:
                 # If anything fails we leave the game open; the pass is
@@ -570,6 +584,48 @@ async def score_by_request(
         white_points=result.white_points,
         dame_points=result.dame_points,
         dead_stones=frozenset(dead_stones),
+        ownership=tuple(analysis.ownership),
+    )
+
+
+async def estimate_score(
+    db: AsyncSession, *, game: Game, session: Session
+) -> EstimateResult:
+    """Mid-game score estimate (OGS-style "Estimate Score").
+
+    Returns winrate, score lead, and the full ownership read without
+    finalizing the game. Distinct from score_by_request — no endgame
+    gating, no DB mutation. The caller can keep playing afterward.
+    """
+    if game.session_id != session.id:
+        raise GameError("FORBIDDEN")
+    if game.status != "active":
+        raise GameError("GAME_NOT_ACTIVE", game.status)
+
+    state = get_cached_state(game.id) or await _replay_state(db, game)
+    adapter = await get_adapter(game.id)
+    await adapter.start()
+
+    try:
+        analysis = await adapter.analyze(side=state.to_move, max_visits=64)
+    except Exception as e:
+        raise GameError("ANALYSIS_FAILED", str(e)) from e
+
+    # adapter.analyze reports winrate / score_lead from the side-to-move's
+    # perspective. Normalise to Black so the UI can render a single axis.
+    wr = float(analysis.winrate)
+    sl = float(analysis.score_lead)
+    if state.to_move == BLACK:
+        wr_black = wr
+        sl_black = sl
+    else:
+        wr_black = 1.0 - wr
+        sl_black = -sl
+
+    return EstimateResult(
+        winrate_black=wr_black,
+        score_lead_black=sl_black,
+        ownership=tuple(analysis.ownership),
     )
 
 

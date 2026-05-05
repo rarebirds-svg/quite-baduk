@@ -24,6 +24,7 @@ export default function Board({
   disabled,
   overlay,
   territoryMarkers,
+  ownership,
 }: {
   size: number;
   board: string;
@@ -37,6 +38,10 @@ export default function Board({
     dame?: Pt[];
     deadStones?: Pt[];
   };
+  // Row-major KataGo ownership read (length size*size, [-1, 1]).
+  // When provided, paints a translucent heatmap behind the stones —
+  // positive = Black-controlled, negative = White-controlled.
+  ownership?: number[];
 }) {
   const CELL = 30;
   const pad = CELL;
@@ -166,6 +171,31 @@ export default function Board({
             fill={palette.starInk}
           />
         ))
+      )}
+
+      {ownership && ownership.length === size * size && (
+        <g aria-hidden="true">
+          {ownership.map((val, idx) => {
+            // Skip near-neutral cells so the board stays readable.
+            if (Math.abs(val) < 0.1) return null;
+            const xi = idx % size;
+            const yi = Math.floor(idx / size);
+            const cx = pad + xi * CELL;
+            const cy = pad + yi * CELL;
+            const a = Math.min(0.45, Math.abs(val) * 0.5);
+            const fill = val > 0 ? `rgba(8, 6, 6, ${a})` : `rgba(253, 252, 248, ${a})`;
+            return (
+              <rect
+                key={`own-${idx}`}
+                x={cx - CELL / 2 + 1}
+                y={cy - CELL / 2 + 1}
+                width={CELL - 2}
+                height={CELL - 2}
+                fill={fill}
+              />
+            );
+          })}
+        </g>
       )}
 
       {[...Array(size).keys()].map((i) => {

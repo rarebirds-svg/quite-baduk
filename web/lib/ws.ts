@@ -15,6 +15,17 @@ export interface ScoreResultMsg {
   white_points: [number, number][];
   dame_points: [number, number][];
   dead_stones: [number, number][];
+  // Row-major ownership read (length board_size**2, [-1, 1]). Surfaced so
+  // the score-result sheet can render an optional heatmap; empty when the
+  // server skipped the analysis (older clients also tolerate absence).
+  ownership?: number[];
+}
+
+export interface EstimateResultMsg {
+  type: "estimate_result";
+  winrate_black: number;        // [0, 1] Black's perspective
+  score_lead_black: number;     // signed: positive = Black ahead
+  ownership: number[];          // row-major board_size**2, [-1, 1]
 }
 
 export type WSMessage =
@@ -34,6 +45,7 @@ export type WSMessage =
   | { type: "winrate"; winrate_black: number; score_lead_black?: number }
   | { type: "game_over"; result: string; winner: string; reason?: "ai_resigned" | "user_resigned" }
   | ScoreResultMsg
+  | EstimateResultMsg
   | { type: "error"; code: string; detail?: string };
 
 export interface GameWS {

@@ -13,7 +13,13 @@ from app.core.rules.engine import GameState
 from app.deps import COOKIE_SESSION, DbSession
 from app.models import Game, Session
 from app.rate_limit import rate_limiter
-from app.services.game_service import GameError, place_move, score_by_request, undo_move
+from app.services.game_service import (
+    GameError,
+    estimate_score,
+    place_move,
+    score_by_request,
+    undo_move,
+)
 
 router = APIRouter(tags=["ws"])
 
@@ -270,6 +276,7 @@ async def ws_game(
                             "white_points": _serialize_points(d.white_points),
                             "dame_points": _serialize_points(d.dame_points),
                             "dead_stones": _serialize_points(d.dead_stones),
+                            "ownership": list(d.ownership),
                         })
                     if result.game_over:
                         # Annotate how the game ended so the client can pick
@@ -307,11 +314,30 @@ async def ws_game(
                         "white_points": _serialize_points(detail.white_points),
                         "dame_points": _serialize_points(detail.dame_points),
                         "dead_stones": _serialize_points(detail.dead_stones),
+                        "ownership": list(detail.ownership),
                     })
                     await websocket.send_json({
                         "type": "game_over",
                         "result": detail.result_str,
                         "winner": game.winner or "",
+                    })
+                elif mtype == "estimate_request":
+                    # OGS-style mid-game score estimate. Cheap rate limit so a
+                    # tap-spam can't flood the engine; per-session, not
+                    # per-game, so opening many tabs doesn't multiply load.
+                    if not await rate_limiter.check(
+                        f"ws_estimate:{sess.id}", max_hits=12, window_sec=60
+                    ):
+                        await websocket.send_json(
+                            {"type": "error", "code": "rate_limited"}
+                        )
+                        continue
+                    estimate = await estimate_score(db, game=game, session=sess)
+                    await websocket.send_json({
+                        "type": "estimate_result",
+                        "winrate_black": estimate.winrate_black,
+                        "score_lead_black": estimate.score_lead_black,
+                        "ownership": list(estimate.ownership),
                     })
                 elif mtype == "undo":
                     if not await rate_limiter.check(

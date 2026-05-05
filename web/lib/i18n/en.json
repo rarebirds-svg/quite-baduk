@@ -104,6 +104,7 @@
     "aiPassed": "AI passed",
     "aiPassedScoredTitle": "AI proposed scoring",
     "requestScoring": "Score game", "scoringBreakdown": "Scoring",
+    "estimate": "Estimate", "estimateLoading": "Estimating…", "estimateTitle": "Score estimate", "estimateWinrate": "Black winrate", "estimateScoreLead": "Score lead", "heatmapToggle": "Heatmap", "heatmapOn": "On", "heatmapOff": "Off",
     "blackTerritory": "Black territory", "whiteTerritory": "White territory",
     "blackCaptures": "Black captures", "whiteCaptures": "White captures",
     "komiLabel": "Komi", "totalLabel": "Total", "winnerLabel": "Winner", "confirmResignTitle": "Resign?", "confirmResignDesc": "End this game as a loss; the record is saved.", "cancel": "Cancel", "close": "Close", "confirm": "OK",

@@ -104,6 +104,7 @@
     "aiPassed": "AI가 패스했습니다",
     "aiPassedScoredTitle": "AI가 계가를 제안했습니다",
     "requestScoring": "계가 신청", "scoringBreakdown": "계가 결과",
+    "estimate": "예상 형세", "estimateLoading": "추정 중…", "estimateTitle": "예상 형세", "estimateWinrate": "흑 승률", "estimateScoreLead": "예상 점수 차", "heatmapToggle": "히트맵", "heatmapOn": "켜기", "heatmapOff": "끄기",
     "blackTerritory": "흑 집", "whiteTerritory": "백 집",
     "blackCaptures": "흑 따냄", "whiteCaptures": "백 따냄",
     "komiLabel": "덤", "totalLabel": "합계", "winnerLabel": "승자", "confirmResignTitle": "기권하시겠습니까?", "confirmResignDesc": "현재 대국을 기권으로 종료합니다. 기보는 저장됩니다.", "cancel": "취소", "close": "닫기", "confirm": "확인",

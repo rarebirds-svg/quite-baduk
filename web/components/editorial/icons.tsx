@@ -48,6 +48,16 @@ export const IconScore = ({ size = 16, ...props }: IconProps) => (
   </svg>
 );
 
+export const IconEstimate = ({ size = 16, ...props }: IconProps) => (
+  // Quartered board: a quick "look at the territory split" glyph that
+  // pairs with IconScore (full grid). Distinct enough to read at 16px.
+  <svg {...svgBase(size)} aria-hidden="true" {...props}>
+    <rect x="4" y="4" width="16" height="16" rx="1" />
+    <rect x="4" y="4" width="8" height="8" fill="currentColor" opacity="0.25" />
+    <rect x="12" y="12" width="8" height="8" fill="currentColor" opacity="0.25" />
+  </svg>
+);
+
 export const IconHandicap = ({ size = 16, ...props }: IconProps) => (
   <svg {...svgBase(size)} aria-hidden="true" {...props}>
     <circle cx="7" cy="7" r="1.5" fill="currentColor" />

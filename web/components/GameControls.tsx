@@ -8,6 +8,7 @@ import {
   IconUndo,
   IconHint,
   IconScore,
+  IconEstimate,
 } from "@/components/editorial/icons";
 import { useT } from "@/lib/i18n";
 
@@ -17,6 +18,7 @@ export interface GameControlsProps {
   onUndo: () => void;
   onHint: () => void;
   onScoreRequest?: () => void;
+  onEstimate?: () => void;
   disabled?: boolean;
   undosRemaining?: number;
   scoringAvailable?: boolean;
@@ -25,6 +27,11 @@ export interface GameControlsProps {
    * loading label and is disabled to prevent double-tap re-fetches.
    */
   hintLoading?: boolean;
+  /**
+   * True while a mid-game score estimate is in flight. Same UX as
+   * hintLoading — disable + label swap.
+   */
+  estimateLoading?: boolean;
 }
 
 export default function GameControls({
@@ -33,10 +40,12 @@ export default function GameControls({
   onUndo,
   onHint,
   onScoreRequest,
+  onEstimate,
   disabled,
   undosRemaining,
   scoringAvailable,
   hintLoading,
+  estimateLoading,
 }: GameControlsProps) {
   const t = useT();
   const undoDisabled =
@@ -66,6 +75,10 @@ export default function GameControls({
         e.preventDefault();
         if (!hintLoading) onHint();
       }
+      if (k === "e" && onEstimate) {
+        e.preventDefault();
+        if (!estimateLoading) onEstimate();
+      }
       if (k === "s" && onScoreRequest && !scoreDisabled) {
         e.preventDefault();
         onScoreRequest();
@@ -78,17 +91,31 @@ export default function GameControls({
     onResign,
     onUndo,
     onHint,
+    onEstimate,
     onScoreRequest,
     disabled,
     undoDisabled,
     scoreDisabled,
     hintLoading,
+    estimateLoading,
   ]);
 
   const showScoreButton = Boolean(onScoreRequest);
+  const showEstimateButton = Boolean(onEstimate);
+  // 4 base + estimate + scoring → up to 6 columns. Tight on phones; the
+  // labels truncate cleanly via uppercase tracking.
+  const cols =
+    4 + (showEstimateButton ? 1 : 0) + (showScoreButton ? 1 : 0);
+  const gridClass =
+    cols === 6
+      ? "grid-cols-6"
+      : cols === 5
+      ? "grid-cols-5"
+      : "grid-cols-4";
+
   return (
     <div className="flex flex-col gap-2 border-t border-ink-faint pt-3">
-      <div className={`grid gap-2 ${showScoreButton ? "grid-cols-5" : "grid-cols-4"}`}>
+      <div className={`grid gap-2 ${gridClass}`}>
         <Button
           onClick={onPass}
           disabled={disabled}
@@ -129,6 +156,21 @@ export default function GameControls({
             {hintLoading ? t("game.hintLoading") : t("game.hint")}
           </span>
         </Button>
+        {showEstimateButton && (
+          <Button
+            onClick={onEstimate}
+            disabled={disabled || estimateLoading}
+            variant="outline"
+            className="flex flex-col h-auto py-3 gap-1 text-gold border-gold"
+            aria-busy={estimateLoading || undefined}
+            aria-live="polite"
+          >
+            <IconEstimate />
+            <span className="font-sans text-xs font-semibold uppercase tracking-label">
+              {estimateLoading ? t("game.estimateLoading") : t("game.estimate")}
+            </span>
+          </Button>
+        )}
         {showScoreButton && (
           <Button
             onClick={onScoreRequest}
@@ -159,6 +201,9 @@ export default function GameControls({
         <KeybindHint keys={["P"]} description={t("game.pass")} />
         <KeybindHint keys={["U"]} description={t("game.undo")} />
         <KeybindHint keys={["H"]} description={t("game.hint")} />
+        {showEstimateButton && (
+          <KeybindHint keys={["E"]} description={t("game.estimate")} />
+        )}
         {showScoreButton && (
           <KeybindHint keys={["S"]} description={t("game.requestScoring")} />
         )}

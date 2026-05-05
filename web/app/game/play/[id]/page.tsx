@@ -4,7 +4,13 @@ import { useParams, useRouter } from "next/navigation";
 import Board from "@/components/Board";
 import GameControls from "@/components/GameControls";
 import AnalysisOverlay from "@/components/AnalysisOverlay";
-import { openGameWS, type WSMessage, type GameWS, type ScoreResultMsg } from "@/lib/ws";
+import {
+  openGameWS,
+  type WSMessage,
+  type GameWS,
+  type ScoreResultMsg,
+  type EstimateResultMsg,
+} from "@/lib/ws";
 import { useGameStore, UNDO_LIMIT, emaWinrate } from "@/store/gameStore";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
@@ -65,6 +71,11 @@ export default function PlayPage() {
   const [confirmPass, setConfirmPass] = useState(false);
   const [scoringDetail, setScoringDetail] =
     useState<ScoreResultMsg | null>(null);
+  // Mid-game OGS-style estimate. Null until the user taps "예상 형세".
+  const [estimate, setEstimate] = useState<EstimateResultMsg | null>(null);
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  // Drives the heatmap overlay on Board for both estimate AND scoring sheets.
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [aiResigned, setAiResigned] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
   // Track the move_count we are optimistically anticipating. If the server
@@ -149,6 +160,9 @@ export default function PlayPage() {
         g.set({ lastAiMove: msg.coord, aiThinking: false });
       } else if (msg.type === "score_result") {
         setScoringDetail(msg);
+      } else if (msg.type === "estimate_result") {
+        setEstimate(msg);
+        setEstimateLoading(false);
       } else if (msg.type === "game_over") {
         g.set({ gameOver: true, result: msg.result, aiThinking: false });
         if (msg.reason === "ai_resigned") setAiResigned(true);
@@ -164,6 +178,8 @@ export default function PlayPage() {
         // Drop the optimistic advance so future state messages aren't
         // filtered out as stale.
         expectedMoveCount.current = g.moveCount;
+        // An estimate request can fail on rate-limit; clear its spinner.
+        setEstimateLoading(false);
         toast.error(t(`errors.${msg.code}`));
       }
     }, {
@@ -183,6 +199,9 @@ export default function PlayPage() {
       setReady(false);
       setAiResigned(false);
       setScoringDetail(null);
+      setEstimate(null);
+      setEstimateLoading(false);
+      setShowHeatmap(false);
       expectedMoveCount.current = 0;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -251,6 +270,11 @@ export default function PlayPage() {
     }
     g.set({ error: null });
     wsRef.current?.send({ type: "score_request" });
+  };
+  const requestEstimate = () => {
+    if (estimateLoading || g.gameOver || g.aiThinking) return;
+    setEstimateLoading(true);
+    wsRef.current?.send({ type: "estimate_request" });
   };
   const resign = async () => {
     setConfirmResign(false);
@@ -331,6 +355,16 @@ export default function PlayPage() {
       }
     : undefined;
 
+  // Heatmap source: prefer the live mid-game estimate when both are open,
+  // otherwise fall back to the scoring sheet's ownership read.
+  const heatmapOwnership: number[] | undefined = useMemo(() => {
+    if (!showHeatmap) return undefined;
+    if (estimate && estimate.ownership.length > 0) return estimate.ownership;
+    if (scoringDetail?.ownership && scoringDetail.ownership.length > 0)
+      return scoringDetail.ownership;
+    return undefined;
+  }, [showHeatmap, estimate, scoringDetail]);
+
   return (
     <div className="flex flex-col gap-4 py-4 md:grid md:grid-cols-[minmax(0,1fr)_280px] md:gap-8">
       <div className="flex flex-col gap-4">
@@ -358,6 +392,7 @@ export default function PlayPage() {
           disabled={!ready || g.aiThinking || g.gameOver}
           overlay={overlay}
           territoryMarkers={territoryMarkers}
+          ownership={heatmapOwnership}
         />
         <PlayerCaption
           color={meta?.user_color === "white" ? "white" : "black"}
@@ -378,10 +413,12 @@ export default function PlayPage() {
           onUndo={undo}
           onHint={hintMe}
           onScoreRequest={requestScoring}
+          onEstimate={requestEstimate}
           disabled={g.gameOver || g.aiThinking}
           undosRemaining={Math.max(0, UNDO_LIMIT - g.undoCount)}
           scoringAvailable={g.endgamePhase && !g.gameOver}
           hintLoading={hintLoading}
+          estimateLoading={estimateLoading}
         />
 
         {g.gameOver && (
@@ -542,8 +579,96 @@ export default function PlayPage() {
               </div>
             </div>
           )}
+          {scoringDetail?.ownership && scoringDetail.ownership.length > 0 && (
+            <div className="mt-4 flex items-center justify-between border-t border-ink-faint pt-3">
+              <span className="font-sans text-xs font-semibold uppercase tracking-label text-ink-mute">
+                {t("game.heatmapToggle")}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => setShowHeatmap((v) => !v)}
+                aria-pressed={showHeatmap}
+                className="h-8 px-3 text-xs"
+              >
+                {showHeatmap ? t("game.heatmapOn") : t("game.heatmapOff")}
+              </Button>
+            </div>
+          )}
           <div className="flex justify-end mt-6">
             <Button onClick={() => setScoringDetail(null)}>
+              {t("game.close")}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet
+        modal={false}
+        open={estimate !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEstimate(null);
+            // Hide the heatmap on close unless the score sheet is also open.
+            if (!scoringDetail) setShowHeatmap(false);
+          }
+        }}
+      >
+        <SheetContent
+          side="right"
+          overlay={false}
+          className="w-full sm:max-w-sm"
+        >
+          <div className="flex flex-col gap-1 mb-2">
+            <SheetTitle className="font-serif text-lg font-semibold text-ink">
+              {t("game.estimateTitle")}
+            </SheetTitle>
+            <SheetDescription className="font-mono text-2xl tabular-nums text-ink">
+              {estimate
+                ? `${(estimate.winrate_black * 100).toFixed(1)}%`
+                : ""}
+            </SheetDescription>
+          </div>
+          {estimate && (
+            <div className="flex flex-col gap-3 font-mono tabular-nums text-sm mt-4">
+              <div className="grid grid-cols-2 gap-2 border-b border-ink-faint pb-2">
+                <span className="text-ink-mute">{t("game.estimateWinrate")}</span>
+                <span className="text-right">
+                  {(estimate.winrate_black * 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <span className="text-ink-mute">{t("game.estimateScoreLead")}</span>
+                <span className="text-right">
+                  {(() => {
+                    const lead = estimate.score_lead_black;
+                    if (Math.abs(lead) < 0.05) return t("game.evenPosition");
+                    const prefix = lead > 0 ? "B+" : "W+";
+                    return `${prefix}${Math.abs(lead).toFixed(1)}`;
+                  })()}
+                </span>
+              </div>
+            </div>
+          )}
+          <div className="mt-4 flex items-center justify-between border-t border-ink-faint pt-3">
+            <span className="font-sans text-xs font-semibold uppercase tracking-label text-ink-mute">
+              {t("game.heatmapToggle")}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setShowHeatmap((v) => !v)}
+              aria-pressed={showHeatmap}
+              className="h-8 px-3 text-xs"
+            >
+              {showHeatmap ? t("game.heatmapOn") : t("game.heatmapOff")}
+            </Button>
+          </div>
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={() => {
+                setEstimate(null);
+                if (!scoringDetail) setShowHeatmap(false);
+              }}
+            >
               {t("game.close")}
             </Button>
           </div>
