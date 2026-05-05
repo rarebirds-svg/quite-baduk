@@ -3,7 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Board from "@/components/Board";
 import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { gtpToXy, handicapStonesFor, totalCells } from "@/lib/board";
+import {
+  applyMoveWithCaptures,
+  gtpToXy,
+  handicapStonesFor,
+  totalCells,
+} from "@/lib/board";
 import { Button } from "@/components/ui/button";
 
 interface MoveEntryRaw {
@@ -64,23 +69,28 @@ function replay(
   upto: number,
   handicap = 0,
 ): string {
-  const cells = Array.from({ length: totalCells(size) }, () => ".");
-  // Pre-place handicap stones — never persisted as MoveRow entries.
+  // Start from an empty board; pre-place handicap stones (never
+  // persisted as MoveRow entries on the backend).
+  let board = ".".repeat(totalCells(size));
   for (const coord of handicapStonesFor(size, handicap)) {
     const xy = gtpToXy(coord, size);
     if (!xy) continue;
-    const [x, y] = xy;
-    cells[y * size + x] = "B";
+    const cells = board.split("");
+    cells[xy[1] * size + xy[0]] = "B";
+    board = cells.join("");
   }
+  // Apply each move via applyMoveWithCaptures so captured opponent
+  // groups vanish exactly as they did during the live game. Without
+  // this, the replay board accumulates dead stones that the player
+  // already took off the board in real time.
   for (let i = 0; i < Math.min(upto, moves.length); i++) {
     const m = moves[i];
     if (m.is_undone || !m.coord || m.coord === "pass") continue;
     const xy = gtpToXy(m.coord, size);
     if (!xy) continue;
-    const [x, y] = xy;
-    cells[y * size + x] = m.color;
+    board = applyMoveWithCaptures(board, size, xy[0], xy[1], m.color);
   }
-  return cells.join("");
+  return board;
 }
 
 export interface ReviewPlayerProps {
@@ -360,6 +370,29 @@ export default function ReviewPlayer({
         </button>
       </div>
 
+      {/* Learn-mode status banner. Always visible while learning so the
+          difference from review mode is obvious even before the first
+          analysis result lands. */}
+      {learning && (
+        <div className="flex items-center gap-3 border border-oxblood bg-paper-deep px-3 py-2 font-sans text-xs">
+          <span className="font-semibold uppercase tracking-label text-oxblood">
+            {t("review.modeLearn")}
+          </span>
+          <span className="text-ink-mute">
+            {!coachingProgress
+              ? t("review.coachingProgress") + " 0 / —"
+              : !analysisDone
+              ? `${t("review.coachingProgress")} ${coachingProgress.done} / ${coachingProgress.total}`
+              : `${t("review.coachingDone")} · ${blunderMoves.length} ${t("review.blunderTag")}`}
+          </span>
+          {analysisDone && wrAfter !== null && (
+            <span className="ml-auto font-mono tabular-nums text-ink">
+              {t("review.winrateBlackShort")} {(wrAfter * 100).toFixed(1)}%
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Header row */}
       <div className="flex items-baseline justify-between font-mono text-xs text-ink-mute">
         <span className="tabular-nums">
@@ -372,11 +405,6 @@ export default function ReviewPlayer({
               </span>
             </span>
           )}
-          {learning && wrAfter !== null && (
-            <span className="ml-3 text-ink-mute">
-              {t("review.winrateBlackShort")}: {(wrAfter * 100).toFixed(1)}%
-            </span>
-          )}
         </span>
         <span className="text-ink-faint">
           {game.user_nickname ?? "—"} · {game.ai_player ?? game.ai_rank ?? ""}
@@ -384,7 +412,14 @@ export default function ReviewPlayer({
         </span>
       </div>
 
-      <div className="max-w-[min(560px,100%)] mx-auto">
+      {/* Board frame: oxblood accent ring in learn mode so the user
+          can tell at a glance which mode the panel is in. */}
+      <div
+        className={
+          "max-w-[min(560px,100%)] mx-auto " +
+          (learning ? "ring-1 ring-oxblood ring-offset-2 ring-offset-paper" : "")
+        }
+      >
         <Board
           size={game.board_size}
           board={board}
@@ -485,19 +520,26 @@ export default function ReviewPlayer({
         </a>
       </div>
 
-      {/* Blunder list — appears in learn mode once we have any blunder
-          data. Stays visible across scrubs (no toggle); each row jumps. */}
-      {learning && analysisDone && (
+      {/* Blunder list — appears in learn mode immediately, even before
+          analysis lands a single result. Pre-analysis it shows a
+          progress placeholder; otherwise rows + the running count. */}
+      {learning && (
         <div className="border border-ink-faint divide-y divide-ink-faint">
           <div className="px-3 py-2 flex items-baseline justify-between font-sans text-xs">
             <span className="font-semibold uppercase tracking-label text-oxblood">
               {t("review.blunderListTitle")}
             </span>
             <span className="font-mono tabular-nums text-ink-mute">
-              {blunderMoves.length}
+              {analysisDone ? blunderMoves.length : "…"}
             </span>
           </div>
-          {blunderMoves.length === 0 ? (
+          {!analysisDone ? (
+            <div className="px-3 py-2 font-sans text-xs text-ink-mute">
+              {coachingProgress
+                ? `${t("review.coachingProgress")} ${coachingProgress.done} / ${coachingProgress.total}`
+                : t("review.coachingProgress") + "…"}
+            </div>
+          ) : blunderMoves.length === 0 ? (
             <div className="px-3 py-2 font-sans text-xs text-ink-mute">
               {t("review.noBlundersFound")}
             </div>
