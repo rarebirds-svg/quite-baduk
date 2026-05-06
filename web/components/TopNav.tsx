@@ -68,7 +68,7 @@ export default function TopNav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
         <Link href="/game/new" className="flex items-center gap-2" aria-label={t("app.title")}>
           <BrandMark size={20} />
-          <span className="font-serif text-lg font-semibold tracking-tight">Baduk</span>
+          <span className="font-serif text-lg font-semibold tracking-tight">K-Baduk</span>
           <span aria-hidden className="h-3 w-px bg-ink-faint" />
           <span className="font-mono text-[10px] uppercase tracking-label text-ink-mute">
             {t("nav.volume")}

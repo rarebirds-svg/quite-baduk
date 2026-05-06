@@ -19,7 +19,7 @@ export const BrandMark = React.forwardRef<SVGSVGElement, BrandMarkProps>(
       fill="none"
       className={cn("text-ink", className)}
       role="img"
-      aria-label="Baduk"
+      aria-label="K-Baduk"
       {...props}
     >
       <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1" />

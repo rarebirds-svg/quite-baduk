@@ -1,5 +1,5 @@
 {
-  "app": { "title": "AI 바둑" },
+  "app": { "title": "K-Baduk:조용한 승부" },
   "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "daily": "일일 챌린지", "settings": "설정", "admin": "관리자", "volume": "Vol. I" },
   "admin": {
     "heading": "관리자 콘솔",

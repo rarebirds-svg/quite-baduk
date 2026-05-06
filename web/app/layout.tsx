@@ -11,13 +11,13 @@ import { Toaster } from "sonner";
 // --paper dark:  rgb(28 25 23)   = #1C1917   (from globals.css .dark)
 
 export const metadata: Metadata = {
-  title: { default: "Baduk — 조용한 승부", template: "%s — Baduk" },
+  title: { default: "K-Baduk:조용한 승부", template: "%s — K-Baduk" },
   description: "KataGo Human-SL과 두는 한국식 바둑 (9×9 · 13×13 · 19×19)",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Baduk",
+    title: "K-Baduk",
   },
   icons: {
     icon: [
