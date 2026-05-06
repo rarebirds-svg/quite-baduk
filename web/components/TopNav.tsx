@@ -65,12 +65,18 @@ export default function TopNav() {
 
   return (
     <nav className="border-b border-ink-faint bg-paper">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
-        <Link href="/game/new" className="flex items-center gap-2" aria-label={t("app.title")}>
+      <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
+        <Link
+          href="/game/new"
+          className="flex shrink-0 items-center gap-2"
+          aria-label={t("app.title")}
+        >
           <BrandMark size={20} />
-          <span className="font-serif text-lg font-semibold tracking-tight">K-Baduk</span>
-          <span aria-hidden className="h-3 w-px bg-ink-faint" />
-          <span className="font-mono text-[10px] uppercase tracking-label text-ink-mute">
+          <span className="whitespace-nowrap font-serif text-lg font-semibold tracking-tight">
+            K-Baduk
+          </span>
+          <span aria-hidden className="hidden h-3 w-px bg-ink-faint sm:inline-block" />
+          <span className="hidden font-mono text-[10px] uppercase tracking-label text-ink-mute sm:inline">
             {t("nav.volume")}
           </span>
         </Link>
@@ -78,10 +84,10 @@ export default function TopNav() {
         <div className="ml-auto flex items-center gap-2">
           {session && (
             <>
-              <Button asChild size="sm" variant="outline">
+              <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/game/new">{t("nav.newGame")}</Link>
               </Button>
-              <Button asChild size="sm" variant="outline">
+              <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/daily">{t("nav.daily")}</Link>
               </Button>
             </>
@@ -90,7 +96,7 @@ export default function TopNav() {
           <button
             onClick={() => setLocale(locale === "ko" ? "en" : "ko")}
             aria-label="Toggle language"
-            className="flex h-9 w-9 items-center justify-center border border-ink-faint font-mono text-[10px] font-semibold uppercase tracking-label text-ink-mute hover:bg-paper-deep"
+            className="flex h-9 w-9 shrink-0 items-center justify-center border border-ink-faint font-mono text-[10px] font-semibold uppercase tracking-label text-ink-mute hover:bg-paper-deep"
           >
             {locale === "ko" ? "EN" : "KO"}
           </button>
@@ -98,7 +104,7 @@ export default function TopNav() {
           <button
             onClick={() => setTheme(nextTheme)}
             aria-label={`Theme: ${theme}`}
-            className="flex h-9 w-9 items-center justify-center border border-ink-faint text-ink-mute hover:bg-paper-deep hover:text-ink"
+            className="flex h-9 w-9 shrink-0 items-center justify-center border border-ink-faint text-ink-mute hover:bg-paper-deep hover:text-ink"
           >
             <ThemeIcon size={16} strokeWidth={1.5} />
           </button>
@@ -106,12 +112,19 @@ export default function TopNav() {
           {session && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <span aria-hidden className="h-2 w-2 rounded-full bg-ink" />
-                  {session.nickname}
+                <Button variant="ghost" size="sm" className="max-w-[6rem] gap-2 truncate sm:max-w-none">
+                  <span aria-hidden className="h-2 w-2 shrink-0 rounded-full bg-ink" />
+                  <span className="truncate">{session.nickname}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild className="sm:hidden">
+                  <Link href="/game/new">{t("nav.newGame")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="sm:hidden">
+                  <Link href="/daily">{t("nav.daily")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="sm:hidden" />
                 <DropdownMenuItem asChild>
                   <Link href="/history">{t("nav.history")}</Link>
                 </DropdownMenuItem>

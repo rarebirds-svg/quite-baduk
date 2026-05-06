@@ -151,7 +151,7 @@ export default function NicknameGate() {
         </p>
         <h1
           ref={headingRef}
-          className="font-serif italic text-5xl md:text-7xl leading-[1.15] text-ink whitespace-nowrap"
+          className="break-keep font-serif italic text-4xl leading-[1.15] text-ink sm:whitespace-nowrap sm:text-5xl md:text-7xl"
         >
           {headline}
         </h1>

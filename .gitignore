@@ -52,3 +52,10 @@ backend/baduk.db-shm
 
 # KataGo runtime logs (gtp_example.cfg writes here when run from cwd)
 gtp_logs/
+
+# 작업별 임시 작업물 (rule 7 — Plan + Checklist + Context Notes)
+checklist.md
+context-notes.md
+
+# 모바일 점검 스크린샷 산출물
+e2e/screenshots-mobile/
