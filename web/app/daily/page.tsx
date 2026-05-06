@@ -150,11 +150,10 @@ export default function DailyChallengePage() {
   }, [topic]);
 
   // Fetch a puzzle.
-  //   filters present  → /random (optionally excluding a specific id so
-  //                      "다음 문제" doesn't repeat what was just solved)
-  //   no filters       → /today
-  // The `excludeId` argument is only honoured when filters are also set;
-  // /today is deterministic and has nothing to exclude against.
+  //   excludeId 또는 필터 있음  → /random (해당 id 제외, 필터 적용)
+  //   둘 다 없음              → /today (deterministic 오늘 퍼즐)
+  // excludeId 만 있고 필터가 없을 때도 /random 으로 가야 한다 — /today 는
+  // deterministic 이라 같은 퍼즐을 돌려주기 때문에 "건너뛰기" 가 동작 안 함.
   const fetchPuzzle = useCallback(
     async (excludeId?: string) => {
       setError(null);
@@ -166,9 +165,9 @@ export default function DailyChallengePage() {
         if (boardSize !== null) params.set("board_size", String(boardSize));
         if (difficulty !== null) params.set("difficulty", difficulty);
         if (topic !== null) params.set("topic", topic);
-        const hasFilter = params.toString().length > 0;
-        if (hasFilter && excludeId) params.set("exclude_id", excludeId);
-        const url = hasFilter
+        if (excludeId) params.set("exclude_id", excludeId);
+        const useRandom = params.toString().length > 0;
+        const url = useRandom
           ? `/api/daily-challenge/random?${params.toString()}`
           : `/api/daily-challenge`;
         const c = await api<Challenge>(url);
