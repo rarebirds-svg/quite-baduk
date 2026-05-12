@@ -384,28 +384,31 @@ async def place_move(
                 #      19x19 = 40. Below this, winrate reads are too
                 #      unstable to trust.
                 #   2. Two-stage eval: the 32-visit shallow read serves as
-                #      a *trigger* (< 3%), not a decision. A deeper
-                #      200-visit re-analysis must agree (< 1%).
-                #   3. Loss-streak: the deep-confirmed sub-1% condition
-                #      must hold for three consecutive AI turns. One
-                #      noisy read can't end the game; the user has plies
-                #      in between to play into a recovery. Persisted in
-                #      games.loss_streak so it survives reconnects.
+                #      a *trigger* (< 0.3%), not a decision. A deeper
+                #      200-visit re-analysis must agree (< 0.1%).
+                #   3. Loss-streak: the deep-confirmed sub-0.1% condition
+                #      must hold for seven consecutive AI turns. The bar is
+                #      deliberately high — the UX preference is "play to
+                #      the end" rather than concede on a noisy read. The
+                #      gate exists only as a guardrail against truly
+                #      hopeless positions (>40 points down, no swing
+                #      potential). Persisted in games.loss_streak so it
+                #      survives reconnects.
                 # Handicap games are inherently lopsided at game-start (the
                 # whole point) — the AI is *supposed* to play from behind
                 # for many ply. Tighten every gate so a 9-stone game doesn't
                 # get bailed on at move 30 with a "well, I'm 100 points down"
                 # shrug. Each handicap stone widens the min-move window by
-                # ~15 ply and drops both confidence thresholds; the streak
-                # required to actually resign rises from 3 to 5.
+                # ~15 ply and halves both confidence thresholds; the streak
+                # required to actually resign rises from 7 to 12.
                 is_handicap = (game.handicap or 0) > 0
                 ai_winrate_shallow = 1.0 - wr
                 resign_min_moves = max(
                     20,
                     new_state.board.size * 2 + (game.handicap or 0) * 15,
                 )
-                shallow_resign_threshold = 0.015 if is_handicap else 0.03
-                deep_resign_threshold = 0.005 if is_handicap else 0.01
+                shallow_resign_threshold = 0.0015 if is_handicap else 0.003
+                deep_resign_threshold = 0.0005 if is_handicap else 0.001
                 is_normal_ai_move = (
                     ai_move is not None
                     and ai_move.lower() not in ("pass", "resign")
@@ -434,7 +437,7 @@ async def place_move(
                     if game.loss_streak:
                         game.loss_streak = 0
 
-                RESIGN_STREAK_THRESHOLD = 5 if is_handicap else 3
+                RESIGN_STREAK_THRESHOLD = 12 if is_handicap else 7
                 if game.loss_streak >= RESIGN_STREAK_THRESHOLD:
                     game.status = "resigned"
                     game.winner = "user"

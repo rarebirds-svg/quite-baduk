@@ -45,8 +45,9 @@ class Game(Base):
         Integer, nullable=False, default=0, server_default="0"
     )
     # Consecutive post-AI plies where the deep (200-visit) analysis said
-    # AI winrate < 1%. Auto-resign only fires when the streak hits 3,
-    # protecting against single-read noise (especially on 9x9).
+    # AI winrate < 0.1%. Auto-resign only fires when the streak hits 7,
+    # protecting against single-read noise and reflecting the UX
+    # preference for "play to the end" over early concession.
     loss_streak: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )
