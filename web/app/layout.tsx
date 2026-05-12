@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import TopNav from "@/components/TopNav";
 import AuthGate from "@/components/AuthGate";
-import SessionBeacon from "@/components/SessionBeacon";
 import { ThemeProviderClient } from "@/components/ThemeProviderClient";
 import { fontVariables } from "@/lib/fonts";
 import { Toaster } from "sonner";
@@ -55,7 +54,6 @@ export default function RootLayout({
       </head>
       <body className="bg-paper text-ink">
         <ThemeProviderClient>
-          <SessionBeacon />
           <AuthGate>
             <TopNav />
             <main className="p-4 max-w-7xl mx-auto">{children}</main>
