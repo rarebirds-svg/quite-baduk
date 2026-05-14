@@ -137,6 +137,10 @@ Email + bcrypt password, JWT (access + refresh) in HttpOnly cookies. `app/securi
 
 Phase 2/3의 독립적 화면은 `editorial-implementer`를 병렬 호출해 동시 작업. 구현 완료 후 `design-token-guardian` + `visual-qa`로 일괄 리뷰.
 
+## 외부 스킬 호환성 메모
+
+- `vercel-react-best-practices` 적용 시 — 본 리포는 **React 18.3 + Next.js 14.2**. React 19 / Next.js 15 전제 규칙은 적용 전 호환성 확인 필요. 의심 후보. `rendering-activity` (React 19 `<Activity>`), `server-after-nonblocking` (Next.js 15 `after()`), `react-view-transitions` 계열 (Next.js 15+). 카테고리 1~4 (워터폴·번들·서버·클라이언트)는 대부분 React 18에서 유효. 카테고리 7 (JS 마이크로 최적화)은 핫패스 아니면 적용 보류 — 가독성 손해가 흔함.
+
 ## Environment
 
 Backend reads from `backend/.env` (see `.env.example`). Root `.env` is consumed by `docker-compose.yml` and passed to the backend container. Key vars: `KATAGO_MOCK` (skip model download — use for all dev and tests), `JWT_SECRET` (must be strong in prod), `DB_PATH`, `KATAGO_*` paths, `CORS_ORIGINS`.
