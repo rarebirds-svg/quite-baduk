@@ -194,7 +194,8 @@ export default function PlayPage() {
         expectedMoveCount.current = g.moveCount;
         // An estimate request can fail on rate-limit; clear its spinner.
         setEstimateLoading(false);
-        toast.error(t(`errors.${msg.code}`));
+        const errKey = msg.code && !/^\d+$/.test(msg.code) ? msg.code : "server_error";
+        toast.error(t(`errors.${errKey}`));
       }
     }, {
       onAuthLost: () => {

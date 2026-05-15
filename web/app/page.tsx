@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { api, ApiError } from "@/lib/api";
+import { api, errorMessageKey } from "@/lib/api";
 import { useAuthStore, type Session } from "@/store/authStore";
 import { useT } from "@/lib/i18n";
 import { BrandMark } from "@/components/editorial/BrandMark";
@@ -71,11 +71,7 @@ export default function NicknameGate() {
       setSession(sess);
       router.replace("/game/new");
     } catch (e) {
-      if (e instanceof ApiError) {
-        setError(t(`errors.${e.code === "409" ? "nickname_taken" : e.code === "422" ? "invalid_nickname" : e.code || "validation"}`));
-      } else {
-        setError(t("errors.validation"));
-      }
+      setError(t(`errors.${errorMessageKey(e)}`));
     } finally {
       setSubmitting(false);
     }

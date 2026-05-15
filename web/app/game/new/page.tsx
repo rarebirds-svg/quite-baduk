@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/lib/i18n";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, errorMessageKey } from "@/lib/api";
 import type { BoardSize } from "@/lib/board";
 import { Hero } from "@/components/editorial/Hero";
 import { Button } from "@/components/ui/button";
@@ -114,12 +114,11 @@ export default function NewGamePage() {
       });
       router.push(`/game/play/${res.id}`);
     } catch (e: unknown) {
-      const code = (e as ApiError).code || "validation";
-      if ((e as ApiError).status === 401) {
+      if (e instanceof ApiError && e.status === 401) {
         router.replace("/");
         return;
       }
-      toast.error(t(`errors.${code}`));
+      toast.error(t(`errors.${errorMessageKey(e)}`));
     } finally {
       setBusy(false);
     }
