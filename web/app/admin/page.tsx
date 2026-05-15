@@ -89,6 +89,18 @@ function fmtTime(iso: string): string {
   }
 }
 
+function fmtDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  } catch {
+    return "";
+  }
+}
+
 function duration(startIso: string, endIso: string): string {
   try {
     const ms = new Date(endIso).getTime() - new Date(startIso).getTime();
@@ -98,19 +110,6 @@ function duration(startIso: string, endIso: string): string {
     if (m < 60) return `${m}m ${s % 60}s`;
     const h = Math.floor(m / 60);
     return `${h}h ${m % 60}m`;
-  } catch {
-    return "";
-  }
-}
-
-function fmtRelative(iso: string): string {
-  try {
-    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-    if (diff < 5) return "now";
-    if (diff < 60) return `${diff}s`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-    return `${Math.floor(diff / 86400)}d`;
   } catch {
     return "";
   }
@@ -127,7 +126,22 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<GameFilter>("all");
   const [forbidden, setForbidden] = useState(false);
   const [reviewGameId, setReviewGameId] = useState<number | null>(null);
-  const [, setTick] = useState(0);
+  const [disconnectingId, setDisconnectingId] = useState<number | null>(null);
+
+  const disconnectSession = async (s: AdminSessionRow) => {
+    const confirmMsg = t("admin.confirmDisconnect").replace("{nickname}", s.nickname);
+    if (!window.confirm(confirmMsg)) return;
+    setDisconnectingId(s.id);
+    try {
+      await api(`/api/admin/sessions/${s.id}`, { method: "DELETE" });
+      setSessions((prev) => (prev ? prev.filter((row) => row.id !== s.id) : prev));
+    } catch (e) {
+      const code = e instanceof ApiError ? e.code : "error";
+      window.alert(t("admin.disconnectFailed").replace("{code}", code));
+    } finally {
+      setDisconnectingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!session) {
@@ -160,12 +174,9 @@ export default function AdminPage() {
     };
     poll();
     const id = setInterval(poll, REFRESH_SEC * 1000);
-    // Tick once per second to refresh the "last seen N s ago" relative labels.
-    const tickId = setInterval(() => setTick((n) => n + 1), 1000);
     return () => {
       cancelled = true;
       clearInterval(id);
-      clearInterval(tickId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, filter]);
@@ -302,13 +313,14 @@ export default function AdminPage() {
                 <th className="text-left p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colLastSeen")}</th>
                 <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colActive")}</th>
                 <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colGames")}</th>
+                <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">{t("admin.colAction")}</th>
               </tr>
             </thead>
             <tbody>
               {sessions === null ? (
-                <tr><td colSpan={6} className="p-4 text-center text-ink-faint">…</td></tr>
+                <tr><td colSpan={7} className="p-4 text-center text-ink-faint">…</td></tr>
               ) : sessions.length === 0 ? (
-                <tr><td colSpan={6} className="p-4 text-center text-ink-faint">{t("admin.empty")}</td></tr>
+                <tr><td colSpan={7} className="p-4 text-center text-ink-faint">{t("admin.empty")}</td></tr>
               ) : (
                 sessions.map((s) => (
                   <tr key={s.id} className="border-b border-ink-faint/40">
@@ -327,10 +339,26 @@ export default function AdminPage() {
                         {s.nickname}
                       </Link>
                     </td>
-                    <td className="p-2 tabular-nums text-ink-mute">{fmtTime(s.created_at)}</td>
-                    <td className="p-2 tabular-nums text-ink-mute">{fmtRelative(s.last_seen_at)}</td>
+                    <td className="p-2 tabular-nums text-ink-mute">
+                      <div>{fmtDate(s.created_at)}</div>
+                      <div className="text-ink-faint">{fmtTime(s.created_at)}</div>
+                    </td>
+                    <td className="p-2 tabular-nums text-ink-mute">
+                      <div>{fmtDate(s.last_seen_at)}</div>
+                      <div className="text-ink-faint">{fmtTime(s.last_seen_at)}</div>
+                    </td>
                     <td className="p-2 text-right tabular-nums">{s.active_game_count}</td>
                     <td className="p-2 text-right tabular-nums">{s.game_count}</td>
+                    <td className="p-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => disconnectSession(s)}
+                        disabled={disconnectingId === s.id}
+                        className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {disconnectingId === s.id ? "…" : t("admin.disconnect")}
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -450,7 +478,10 @@ export default function AdminPage() {
                     <td className="p-2 text-right tabular-nums">{g.move_count}</td>
                     <td className="p-2 text-right tabular-nums">{g.undo_count}</td>
                     <td className="p-2 text-right tabular-nums">{g.hint_count}</td>
-                    <td className="p-2 tabular-nums text-ink-mute">{fmtTime(g.started_at)}</td>
+                    <td className="p-2 tabular-nums text-ink-mute">
+                      <div>{fmtDate(g.started_at)}</div>
+                      <div className="text-ink-faint">{fmtTime(g.started_at)}</div>
+                    </td>
                     <td className="p-2 tabular-nums text-ink-mute">
                       {g.finished_at ? duration(g.started_at, g.finished_at) : "—"}
                     </td>

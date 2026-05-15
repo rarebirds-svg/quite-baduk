@@ -216,3 +216,56 @@ async def test_admin_endpoints_401_without_session(client: AsyncClient) -> None:
         await fresh.aclose()
     # silence unused-import lint
     _ = ASGITransport
+
+
+@pytest.mark.asyncio
+async def test_admin_disconnect_session_removes_row_and_ends_history(
+    client: AsyncClient,
+) -> None:
+    """Admin DELETE /api/admin/sessions/{id} kills a live session: row gone,
+    history row's ended_at set with admin_disconnect reason, and the
+    nickname becomes available again."""
+    await _signup(client, ADMIN_NICK)
+    other = AsyncClient(transport=client._transport, base_url=client.base_url)
+    try:
+        r = await other.post("/api/session", json={"nickname": "victim_user"})
+        assert r.status_code == 201
+
+        sessions = (await client.get("/api/admin/sessions")).json()
+        victim_sid = next(s["id"] for s in sessions if s["nickname"] == "victim_user")
+
+        r = await client.delete(f"/api/admin/sessions/{victim_sid}")
+        assert r.status_code == 204
+
+        sessions_after = (await client.get("/api/admin/sessions")).json()
+        assert not any(s["id"] == victim_sid for s in sessions_after)
+
+        history = (await client.get("/api/admin/login-history")).json()
+        row = next(
+            (h for h in history if h["session_id"] == victim_sid),
+            None,
+        )
+        assert row is not None
+        assert row["ended_at"] is not None
+        assert row["end_reason"] == "admin_disconnect"
+
+        # Idempotent — second call on the now-gone session still 204s.
+        r2 = await client.delete(f"/api/admin/sessions/{victim_sid}")
+        assert r2.status_code == 204
+
+        # Nickname is released, so the same name can be claimed again.
+        retry = AsyncClient(transport=client._transport, base_url=client.base_url)
+        try:
+            r3 = await retry.post("/api/session", json={"nickname": "victim_user"})
+            assert r3.status_code == 201, r3.text
+        finally:
+            await retry.aclose()
+    finally:
+        await other.aclose()
+
+
+@pytest.mark.asyncio
+async def test_admin_disconnect_non_admin_forbidden(client: AsyncClient) -> None:
+    await _signup(client, "not_admin")
+    r = await client.delete("/api/admin/sessions/9999")
+    assert r.status_code == 403

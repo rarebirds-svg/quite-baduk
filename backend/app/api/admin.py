@@ -8,12 +8,15 @@ from pathlib import Path
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import case, func, select
+from sqlalchemy import delete as _sa_delete
+from sqlalchemy import update as _sa_update
 
 from app.api.ws import _connections as _ws_connections
 from app.config import settings
 from app.deps import AdminSession, CurrentSession, DbSession, is_admin
 from app.engine_pool import get_adapter
 from app.models import Game, Session, SessionHistory
+from app.session_registry import registry
 
 # Captured at module import so the admin console can show "backend uptime"
 # (the FastAPI app itself doesn't expose a boot timestamp).
@@ -533,3 +536,75 @@ async def session_detail(
             for r in history_rows
         ],
     )
+
+
+@router.delete("/sessions/{session_id}", status_code=204)
+async def disconnect_session(
+    session_id: int,
+    _: AdminSession,
+    db: DbSession,
+) -> None:
+    """Admin-forced session termination. Closes any open WS for this
+    session's games, marks the audit row(s) as ended, removes the live
+    Session row, and releases the nickname so the user can re-claim it.
+
+    Mirrors the user-driven `/api/session/end` flow but is keyed by
+    session_id rather than the caller's cookie. Idempotent — repeated
+    calls on an already-ended session return 204."""
+    sess = (
+        await db.execute(select(Session).where(Session.id == session_id))
+    ).scalar_one_or_none()
+    if sess is None:
+        # Already gone — ensure any orphan history row is closed too, then
+        # return 204 so the admin UI's optimistic refresh is a no-op.
+        await db.execute(
+            _sa_update(SessionHistory)
+            .where(
+                SessionHistory.session_id == session_id,
+                SessionHistory.ended_at.is_(None),
+            )
+            .values(
+                ended_at=datetime.utcnow(),
+                end_reason="admin_disconnect",
+            )
+        )
+        await db.commit()
+        return
+
+    key = sess.nickname_key
+    await db.execute(
+        _sa_update(SessionHistory)
+        .where(
+            SessionHistory.session_id == sess.id,
+            SessionHistory.ended_at.is_(None),
+        )
+        .values(
+            ended_at=datetime.utcnow(),
+            end_reason="admin_disconnect",
+        )
+    )
+    await db.execute(_sa_delete(Session).where(Session.id == sess.id))
+    await db.commit()
+    await registry.release(key)
+
+    # Proactively close any open WS so the client sees the disconnect
+    # immediately instead of waiting up to HEARTBEAT_SECONDS for the
+    # next session-existence check.
+    game_ids = (
+        await db.execute(select(Game.id).where(Game.session_id == sess.id))
+    ).scalars().all()
+    for gid in game_ids:
+        ws = _ws_connections.get(gid)
+        if ws is None:
+            continue
+        try:
+            await ws.send_json(
+                {"type": "error", "code": "SESSION_EXPIRED"}
+            )
+        except Exception:  # noqa: S110 (best-effort; client may already be gone)
+            pass
+        try:
+            await ws.close()
+        except Exception:  # noqa: S110
+            pass
+        _ws_connections.pop(gid, None)
