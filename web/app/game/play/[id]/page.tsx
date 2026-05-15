@@ -747,13 +747,14 @@ export default function PlayPage() {
       >
         <DialogContent
           className={
-            kifuSize === "full"
-              ? "max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh] overflow-y-auto"
+            "max-h-[90vh] overflow-y-auto " +
+            (kifuSize === "full"
+              ? "max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh]"
               : kifuSize === "lg"
               ? "max-w-5xl"
               : kifuSize === "sm"
               ? "max-w-xl"
-              : "max-w-3xl"
+              : "max-w-3xl")
           }
         >
           <DialogHeader>
