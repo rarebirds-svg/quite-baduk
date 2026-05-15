@@ -160,6 +160,10 @@ export default function PlayerPicker({ value, onChange }: PlayerPickerProps) {
         ))}
       </div>
 
+      <p className="font-sans text-xs text-ink-faint leading-relaxed border-t border-ink-faint pt-3">
+        {t("game.playerNamesDisclaimer")}
+      </p>
+
       <Dialog
         open={detailOf !== null}
         onOpenChange={(open) => {

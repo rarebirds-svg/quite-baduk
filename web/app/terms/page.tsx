@@ -13,8 +13,10 @@ const dicts = { ko, en } as const;
 const SECTION_ORDER = [
   "intro",
   "account",
+  "nickname",
   "prohibited",
   "aiDisclaimer",
+  "aiPlayerNames",
   "serviceChanges",
   "ip",
   "jurisdiction",

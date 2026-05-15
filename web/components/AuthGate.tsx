@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { useAuthStore, type Session } from "@/store/authStore";
 
-const PUBLIC_PATHS = new Set(["/"]);
+const PUBLIC_PATHS = new Set(["/", "/privacy", "/terms"]);
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
