@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { Button } from "@/components/ui/button";
+import { attemptNavigation } from "@/lib/hooks/useNavigationGuard";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -47,6 +48,7 @@ export default function TopNav() {
   if (pathname === "/") return null;
 
   const endSession = async () => {
+    if (!(await attemptNavigation())) return;
     try {
       await api("/api/session/end", { method: "POST" });
     } catch {}

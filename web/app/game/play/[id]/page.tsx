@@ -40,6 +40,10 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  useNavigationGuard,
+  resolveNavigation,
+} from "@/lib/hooks/useNavigationGuard";
 
 interface GameMeta {
   board_size: number;
@@ -77,6 +81,7 @@ export default function PlayPage() {
   // Drives the heatmap overlay on Board for both estimate AND scoring sheets.
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [aiResigned, setAiResigned] = useState(false);
+  const [pendingLeave, setPendingLeave] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
   // Preferred kifu dialog size — persisted so the user's choice sticks
   // across game opens. "full" is a near-viewport overlay for serious review;
@@ -98,6 +103,11 @@ export default function PlayPage() {
   // board so the optimistic stone doesn't get wiped.
   const expectedMoveCount = useRef<number>(0);
   const [ready, setReady] = useState(false);
+
+  useNavigationGuard({
+    when: ready && !g.gameOver,
+    onRequest: () => setPendingLeave(true),
+  });
 
   useEffect(() => {
     api<GameMeta>(`/api/games/${gameId}`).then((detail) => {
@@ -518,6 +528,45 @@ export default function PlayPage() {
             </Button>
             <Button variant="destructive" onClick={resign}>
               {t("game.resign")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={pendingLeave}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingLeave(false);
+            resolveNavigation(false);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("game.unloadGuardTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("game.unloadGuardBody")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setPendingLeave(false);
+                resolveNavigation(false);
+              }}
+            >
+              {t("game.unloadGuardCancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setPendingLeave(false);
+                resolveNavigation(true);
+              }}
+            >
+              {t("game.unloadGuardConfirm")}
             </Button>
           </div>
         </DialogContent>
