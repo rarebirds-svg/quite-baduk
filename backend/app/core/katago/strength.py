@@ -72,10 +72,12 @@ SUPPORTED_RANKS: tuple[str, ...] = tuple(_RANK_BASE_VISITS.keys())
 
 # Public v1.0 launch set — the rank picker exposes 9-kyu through 9-dan.
 # 18k..10k are excluded as too-easy floor; 6d..9d are kept in the public
-# set with the standard 256-visit cap (see ``rank_to_config`` below). The
+# set with the standard 128-visit cap (see ``rank_to_config`` below). The
 # strength signal at the high-dan steps comes from the humanSL profile
 # (``rank_9d`` vs ``rank_6d``), since visits saturate at the cap. Every
-# entry here must have ``max_visits <= 256`` once style multipliers settle.
+# entry here must have ``max_visits <= 128`` once style multipliers settle.
+# The cap was halved from 256 → 128 for faster response time on M-series
+# Metal; humanSL play barely changes since the policy network dominates.
 SUPPORTED_AI_RANKS: tuple[str, ...] = (
     "9k", "8k", "7k", "6k", "5k", "4k", "3k", "2k", "1k",
     "1d", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d",
@@ -111,7 +113,7 @@ def rank_to_config(
     prof = style_to_profile(effective_style, rank)
     human_sl_profile = resolve_human_sl_profile(effective_style, rank)
 
-    visits = max(1, min(256, int(round(base_visits * prof.visits_multiplier))))
+    visits = max(1, min(128, int(round(base_visits * prof.visits_multiplier))))
     return StrengthConfig(
         rank=rank,
         human_sl_profile=human_sl_profile,

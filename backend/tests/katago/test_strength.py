@@ -32,14 +32,14 @@ def test_all_ranks_present():
     ("1d",  "rank_1d",  64),
     ("2d",  "rank_2d",  96),
     ("3d",  "rank_3d",  128),
-    ("4d",  "rank_4d",  192),
-    ("5d",  "rank_5d",  256),
-    # 6d..9d ride the v1.0 cap — base table is higher but min(256, …)
-    # in rank_to_config keeps them at 256.
-    ("6d",  "rank_6d",  256),
-    ("7d",  "rank_7d",  256),
-    ("8d",  "rank_8d",  256),
-    ("9d",  "rank_9d",  256),
+    ("4d",  "rank_4d",  128),
+    # 5d..9d ride the v1.0 cap — base table is higher but min(128, …)
+    # in rank_to_config keeps them at 128.
+    ("5d",  "rank_5d",  128),
+    ("6d",  "rank_6d",  128),
+    ("7d",  "rank_7d",  128),
+    ("8d",  "rank_8d",  128),
+    ("9d",  "rank_9d",  128),
 ])
 def test_rank_mapping(rank: str, profile: str, visits: int) -> None:
     cfg = rank_to_config(rank)
@@ -72,8 +72,8 @@ def test_deprecated_ranks_raise_via_public_api(rank: str) -> None:
         rank_to_config(rank)
 
 
-def test_rank_to_config_caps_max_visits_at_256() -> None:
-    """Every supported rank x style must have max_visits <= 256 in v1.0."""
+def test_rank_to_config_caps_max_visits_at_128() -> None:
+    """Every supported rank x style must have max_visits <= 128 in v1.0."""
     from app.core.katago.strength import (
         SUPPORTED_AI_RANKS,
         rank_to_config,
@@ -83,7 +83,7 @@ def test_rank_to_config_caps_max_visits_at_256() -> None:
     for rank in SUPPORTED_AI_RANKS:
         for style in SUPPORTED_STYLES:
             cfg = rank_to_config(rank, style, None)
-            assert cfg.max_visits <= 256, (
+            assert cfg.max_visits <= 128, (
                 f"{rank} x {style} exceeds the v1.0 cap (got {cfg.max_visits})"
             )
             assert cfg.max_visits >= 1, (

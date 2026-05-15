@@ -72,7 +72,10 @@ STYLES: dict[StyleId, StyleProfile] = {
     "combative": StyleProfile(
         id="combative",
         profile_template="rank_{rank}",
-        visits_multiplier=1.75,
+        # 1.75 → 1.25 to bring combative response time in line with other
+        # styles. With the 128-visit cap, the multiplier mostly affects
+        # short-rank games where compute is cheap anyway.
+        visits_multiplier=1.25,
         slug="combative",
     ),
     "speed": StyleProfile(

@@ -42,7 +42,7 @@ def test_classical_uses_preaz_and_honours_rank():
 def test_combative_amplifies_visits():
     cfg = rank_to_config("5k", "combative")
     assert cfg.human_sl_profile == "rank_5k"
-    assert cfg.max_visits == 14  # 8 * 1.75 = 14
+    assert cfg.max_visits == 10  # 8 * 1.25 = 10
 
 
 def test_speed_reduces_visits_but_stays_at_least_one():
@@ -92,8 +92,8 @@ def test_player_profile_follows_rank_not_proyear():
     # not 2012-pro-level.
     cfg = rank_to_config("5k", "balanced", "lee_sedol")
     assert cfg.human_sl_profile == "rank_5k"  # combative template = rank_{rank}
-    # Combative visits multiplier still applies: 8 * 1.75 = 14.
-    assert cfg.max_visits == 14
+    # Combative visits multiplier still applies: 8 * 1.25 = 10.
+    assert cfg.max_visits == 10
 
 
 def test_player_style_wins_over_passed_style():
@@ -101,7 +101,7 @@ def test_player_style_wins_over_passed_style():
     # The player's STYLE wins — so profile family + visits come from combative.
     cfg = rank_to_config("5k", "territorial", "lee_sedol")
     assert cfg.human_sl_profile == "rank_5k"  # combative
-    assert cfg.max_visits == 14  # 1.75x
+    assert cfg.max_visits == 10  # 1.25x
 
 
 def test_unknown_player_falls_back_to_passed_style():

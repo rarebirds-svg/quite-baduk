@@ -34,7 +34,6 @@ class Player:
 _PLAYERS: tuple[Player, ...] = (
     # 실리형 (territorial)
     Player("lee_changho",       "territorial", 1998),
-    Player("cho_chikun",        "territorial", 1984),
     Player("kobayashi_koichi",  "territorial", 1988),
     # 세력형 (influence)
     Player("takemiya_masaki",   "influence",   1986),
@@ -43,6 +42,7 @@ _PLAYERS: tuple[Player, ...] = (
     # 전투형 (combative)
     Player("yoo_changhyuk",     "combative",   1998),
     Player("sakata_eio",        "combative",   1962),
+    Player("cho_chikun",        "combative",   1984),
     Player("lee_sedol",         "combative",   2012),
     Player("gu_li",             "combative",   2010),
     # 속기형 (speed)

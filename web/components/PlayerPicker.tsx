@@ -58,9 +58,9 @@ export const PLAYER_META: Record<PlayerId, { proyear: number }> = {
 
 // Grouped in the same order the picker should display.
 export const PLAYER_GROUPS: { style: AiStyle; players: PlayerId[] }[] = [
-  { style: "territorial", players: ["lee_changho", "cho_chikun", "kobayashi_koichi"] },
+  { style: "territorial", players: ["lee_changho", "kobayashi_koichi"] },
   { style: "influence",   players: ["takemiya_masaki", "fujisawa_shuko", "otake_hideo"] },
-  { style: "combative",   players: ["yoo_changhyuk", "sakata_eio", "lee_sedol", "gu_li"] },
+  { style: "combative",   players: ["yoo_changhyuk", "sakata_eio", "cho_chikun", "lee_sedol", "gu_li"] },
   { style: "speed",       players: ["cho_hunhyun", "kato_masao"] },
   { style: "classical",   players: ["go_seigen", "kitani_minoru"] },
   { style: "balanced",    players: ["park_junghwan", "shin_jinseo", "ke_jie"] },
