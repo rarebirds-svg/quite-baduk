@@ -12,6 +12,10 @@
     "colGames": "Games",
     "colActive": "Active",
     "colLive": "WS",
+    "colAction": "Action",
+    "disconnect": "Disconnect",
+    "confirmDisconnect": "Disconnect {nickname}'s session? Any open game WS will be closed.",
+    "disconnectFailed": "Could not disconnect session ({code}).",
     "colGameId": "Game",
     "colStatus": "Status",
     "colResult": "Result",
@@ -59,29 +63,59 @@
     "backToConsole": "← Back to admin",
     "reviewDialogTitle": "Kifu review"
   },
-  "home": { "heading": "Baduk, a quiet contest", "sub": "Korean-rules Go against KataGo Human-SL. 9×9 · 13×13 · 19×19.", "startButton": "New game", "ctaHistory": "Recent games", "sectionRecent": "Recent games", "sectionEmpty": "No games yet. Start your first.",
+  "home": {
     "masthead": "VOL. I",
     "edition": "Today's edition · Fresh kifu",
     "hero": {
       "heading1": "A game, a piece of literature.",
-      "sub1": "18-kyu through 7-dan, modeled on real human play. KataGo's Human-SL network is your opponent.",
+      "sub1": "9-kyu to 9-dan, modeled on real human play. KataGo's Human-SL network is your opponent.",
       "heading2": "Find your own style.",
       "sub2": "Lee Chang-ho's endgame, Cho Chikun's fighting, Shin Jinseo's balance — pick from 18 masters across 7 styles.",
       "heading3": "Read the universe in a single stone.",
       "sub3": "Live winrate, score lead, dame-fill detection, auto dead-stone scoring — quiet but deep positional judgment.",
       "heading4": "Silence on the board, calculation in the mind.",
       "sub4": "Korean rules, half-point komi, auto dead-stone marking. KataGo reads the weight of every move with you.",
-      "heading5": "From 18-kyu curiosity to 7-dan stillness.",
-      "sub5": "Rank-specific human models plus per-master styles — today, pick the opponent that suits your mood."
+      "heading5": "From 9-kyu curiosity to 9-dan stillness.",
+      "sub5": "Rank-specific human models plus per-master styles — today, pick the opponent that suits your mood.",
+      "heading6": "A current begins with one move.",
+      "sub6": "Every move forks a variation — ko or ladder, life or capture — and KataGo reads the resulting shape with you.",
+      "heading7": "A small universe of nine lines.",
+      "sub7": "From a 9×9 study board to a full 19×19 game — the same engine meets you across all three sizes.",
+      "heading8": "The weight of one stone, the balance of two colors.",
+      "sub8": "Even games up to a nine-stone handicap — narrow the gap with stones; the AI plays both colors with the same honesty.",
+      "heading9": "No single right answer, but moves that come close.",
+      "sub9": "KataGo shows how close each move came to its top choice; Learn mode unfolds the better lines too.",
+      "heading10": "Today's move, today's breath.",
+      "sub10": "Opening, joseki, life & death, tesuji, middle game, endgame, capturing race — find the best move on a fresh position every day.",
+      "heading11": "A kifu is the player's trace.",
+      "sub11": "Every game can be downloaded as SGF and replayed line by line in review mode.",
+      "heading12": "Do you still remember the tremor of your first move?",
+      "sub12": "A ladder from 9-kyu to 9-dan — each step you climb becomes its own record.",
+      "heading13": "Even the AI hesitates, as humans do.",
+      "sub13": "Human-SL is not a best-move calculator — it mirrors human hesitation and style, and sometimes wanders with you.",
+      "heading14": "A cup of tea, a single game.",
+      "sub14": "Nickname-only ephemeral sessions — no timer, no ads, no notifications. Just a quiet match.",
+      "heading15": "The endgame decides everything.",
+      "sub15": "The dame-fill phase is detected automatically, and Korean half-point komi keeps every last point heavy.",
+      "heading16": "Review is the second game.",
+      "sub16": "Blunder marks, suggested moves, autoplay — even a lost game shows the next path.",
+      "heading17": "An opponent in the shape of your style.",
+      "sub17": "Seven style models — from balanced to rustic — pick the opponent that fits today's mood.",
+      "heading18": "Four boards, one grain.",
+      "sub18": "Paper, wood, kaya, slate — pick the surface you love and meet the same engine on it.",
+      "heading19": "A dark room, a bright move.",
+      "sub19": "Light and dark modes share the same paper grain — at dawn or at noon, the kifu flows the same.",
+      "heading20": "Reading deepens in silence.",
+      "sub20": "Time to lean in without interruption — beside you, KataGo quietly weighs each move."
     },
     "valueTitle1": "Truly human-like AI",
-    "valueDesc1": "Not a labeled difficulty — an actual Human-SL network trained on real games at that rank, 18-kyu to 7-dan.",
+    "valueDesc1": "Not a labeled difficulty — an actual Human-SL network trained on real games at that rank, 9-kyu to 9-dan.",
     "valueTitle2": "Master lineage",
     "valueDesc2": "Seven play styles and 18 historic masters — Lee Chang-ho, Cho Chikun, Shin Jinseo, Ke Jie, and more.",
     "valueTitle3": "Deep positional read",
     "valueDesc3": "Live winrate and score lead, endgame-phase detection, and KataGo-ownership-driven dead-stone scoring.",
     "scrollHint": "Enter a nickname below to begin",
-    "footerNote": "Your nickname lives only in a session cookie — clearing the browser forgets it.",
+    "footerNote": "Nickname-based ephemeral session — auto-expires after 1 hour of inactivity. See the Privacy Policy for full data retention details.",
     "footerPrivacy": "Privacy Policy",
     "footerTerms": "Terms of Service"
   },
@@ -92,8 +126,8 @@
     "nicknameAvailable": "Available",
     "nicknameTaken": "This nickname is already in use",
     "nicknameInvalid": "2–32 characters, text only",
-    "privacyNote": "All records are deleted automatically when the browser is closed.",
-    "ephemeralNote": "This list shows only the current session's games. Closing the browser will erase them.",
+    "privacyNote": "Nickname sessions auto-expire after 1 hour of inactivity. Game-history deletion can be requested per the procedure in the Privacy Policy.",
+    "ephemeralNote": "This list shows games played in the current session. Kifu records are kept on the server; for deletion, follow the procedure in the Privacy Policy.",
     "endSession": "End session",
     "expiredTitle": "Your session has expired",
     "expiredDesc": "Please set a nickname to continue"
@@ -110,11 +144,13 @@
     "blackCaptures": "Black captures", "whiteCaptures": "White captures",
     "komiLabel": "Komi", "totalLabel": "Total", "winnerLabel": "Winner", "confirmResignTitle": "Resign?", "confirmResignDesc": "End this game as a loss; the record is saved.", "cancel": "Cancel", "close": "Close", "confirm": "OK",
     "confirmPassTitle": "Pass?", "confirmPassDesc": "If the AI passes right after you, the game is scored immediately. If endgame plays remain, cancel and keep playing.",
+    "unloadGuardTitle": "Leave the game?", "unloadGuardBody": "The game isn't finished yet. If you leave this page, you may not be able to return to it.", "unloadGuardConfirm": "Leave", "unloadGuardCancel": "Keep playing",
     "aiStyle": "Style", "sectionStyle": "Style",
     "aiPlayer": "AI opponent", "aiPlayerHint": "Choose a style", "sectionPlayer": "AI opponent",
+    "playerNamesDisclaimer": "Player names shown here are style references only; this service is not affiliated with, endorsed by, or sponsored by any listed player. The AI uses the generic Human-SL model and is not trained on any individual player's games. See the Terms of Service section 'Use of player names in AI style selection' for details and rights-holder contact.",
     "players": {
       "lee_changho":      { "name": "Lee Chang-ho",        "bio": "‘Stone Buddha’ — half-point endgame mastery" },
-      "cho_chikun":       { "name": "Cho Chikun",          "bio": "“Play with your life on the line” — relentless territorial play" },
+      "cho_chikun":       { "name": "Cho Chikun",          "bio": "“Play with your life on the line” — relentless fighting and reading" },
       "kobayashi_koichi": { "name": "Kobayashi Koichi",    "bio": "Low-altitude flying — thoroughly territorial opening" },
       "takemiya_masaki":  { "name": "Takemiya Masaki",     "bio": "Founder of Cosmic Style, grand central moyo" },
       "fujisawa_shuko":   { "name": "Fujisawa Shuko",      "bio": "Original, majestic openings; mentor to a generation" },
@@ -143,9 +179,9 @@
     },
     "aiStyleRep": {
       "balanced": "Park Junghwan · Shin Jinseo · Ke Jie",
-      "territorial": "Lee Chang-ho · Cho Chikun · Kobayashi Koichi",
+      "territorial": "Lee Chang-ho · Kobayashi Koichi",
       "influence": "Takemiya Masaki · Fujisawa Shuko",
-      "combative": "Lee Sedol · Yoo Changhyuk · Sakata Eio",
+      "combative": "Lee Sedol · Yoo Changhyuk · Sakata Eio · Cho Chikun",
       "speed": "Cho Hunhyun · Kato Masao",
       "classical": "Go Seigen · Kitani Minoru",
       "rustic": "Seo Bongsoo"
@@ -160,7 +196,7 @@
       "rustic": "Self-taught, practical over theory — gut-fight Go"
     }
   },
-  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "blunderTag": "Blunder", "coachTag": "This move", "winrateBlackShort": "B", "noBlundersFound": "No blunders found — solid game.", "modeLabel": "Review mode", "modeReview": "Watch", "modeLearn": "Learn", "altsAutoShown": "Showing alternatives", "blunderListTitle": "Blunders", "dialogSize": "Dialog size", "size": { "sm": "S", "md": "M", "lg": "L", "full": "Full" } },
+  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "blunderTag": "Blunder", "coachTag": "This move", "winrateBlackShort": "B", "noBlundersFound": "No blunders found — solid game.", "modeLabel": "Review mode", "modeReview": "Watch", "modeLearn": "Learn", "altsAutoShown": "Showing alternatives", "blunderListTitle": "Blunders", "dialogSize": "Dialog size", "size": { "sm": "S", "md": "M", "lg": "L", "full": "Full" }, "soundOn": "Sound on", "soundOff": "Sound off", "sideBlack": "Black winrate", "sideWhite": "White winrate", "bestMove": "AI best" },
   "daily": {
     "eyebrow": "Puzzle",
     "title": "Challenge",
@@ -169,6 +205,7 @@
     "whiteToMove": "White to move",
     "pickAMove": "Tap an empty intersection",
     "submit": "Submit",
+    "cancelMove": "Undo move",
     "grading": "Grading…",
     "gradeFailed": "Grading failed",
     "tryAgain": "Try again",
@@ -255,7 +292,7 @@
     "eyebrow": "Policy",
     "intro": "Baduk takes your privacy seriously. This policy explains what data we collect, why we collect it, how long we keep it, and the rights you have over it.",
     "lastUpdated": "Last updated",
-    "lastUpdatedDate": "2026-05-03",
+    "lastUpdatedDate": "2026-05-11",
     "backHome": "Back to home",
     "sections": {
       "collect": {
@@ -265,7 +302,7 @@
           "Game history: board size, handicap, your colour, scores, win/loss, move sequence (kifu), start and end times",
           "Session token (HttpOnly cookie, opaque random value — not a JWT)",
           "Connection time and last-activity time (auto-purged after 1 hour of inactivity)",
-          "Server logs: IP address (rate-limiting and abuse prevention only), request path, response time — auto-deleted within 14 days",
+          "Server logs: IP address (rate-limiting and abuse prevention only), request path, response time — see the Retention section below for retention details",
           "What we do NOT collect: email, phone number, payment details, location, device identifiers, profile photo"
         ]
       },
@@ -283,7 +320,7 @@
         "items": [
           "Session token: discarded after 1 hour of inactivity or on explicit logout",
           "Game history: kept with a nickname snapshot; deleted on user request (see rights below)",
-          "Server logs: auto-deleted 14 days after collection"
+          "Server logs: emitted as JSON to standard output; rotation and deletion follow the log-collection workload's retention configuration in the production environment (the exact retention window depends on the operations infrastructure)."
         ]
       },
       "thirdParty": {
@@ -336,14 +373,14 @@
     "eyebrow": "Terms",
     "intro": "These terms govern your use of the Baduk service and set out the rights and obligations of the operator and users.",
     "lastUpdated": "Last updated",
-    "lastUpdatedDate": "2026-05-03",
+    "lastUpdatedDate": "2026-05-11",
     "backHome": "Back to home",
     "sections": {
       "intro": {
         "title": "About the service",
         "items": [
-          "'Baduk' is a free web and mobile service for playing Go against the KataGo Human-SL model.",
-          "Twelve strength levels are available — 18-kyu through 7-dan — with even games and 2–9 stone handicaps.",
+          "'Baduk' is a free web service for playing Go against the KataGo Human-SL model.",
+          "Eighteen strength levels are supported — 9-kyu through 9-dan — with even games or handicap games (2–9 stones on 13×13 and 19×19; 2–5 stones on 9×9).",
           "Three board sizes are supported: 9×9, 13×13, and 19×19."
         ]
       },
@@ -352,14 +389,26 @@
         "items": [
           "No email or password registration is required — a nickname alone creates a temporary session.",
           "Sessions expire automatically after 1 hour of inactivity.",
-          "If the same nickname is used in a new session, the new session replaces the existing one."
+          "A nickname already in use cannot be claimed by a new session (the API responds with HTTP 409); the existing session must expire or be explicitly logged out before the same nickname can be reused."
+        ]
+      },
+      "nickname": {
+        "title": "Nickname rules",
+        "items": [
+          "Length must be between 2 and 32 characters; the limit is applied after Unicode NFKC normalisation and trimming surrounding whitespace.",
+          "Disallowed characters — any whitespace (space, tab, newline, NBSP), control characters, emoji and pictographs, regional-indicator (flag) symbols, skin-tone and combining selectors (including ZWJ), and other invisible joiners. Hangul, Latin letters, digits, ordinary punctuation, and common symbols may be combined freely.",
+          "Nickname equivalence is decided by NFKC normalisation and case-folding. For example, 'GoMaster' and 'gomaster', or full-width 'Ｇｏ' and half-width 'Go', are treated as the same nickname and cannot both be registered at the same time.",
+          "The following nicknames may be restricted from use or registration — (a) impersonation of others or expressions that may be mistaken for staff, administrators, or an official account; (b) profanity, hate speech, discriminatory, sexual, or violent expressions; (c) advertising, spam, or external URLs; (d) expressions that infringe a third party's trademark, copyright, or personality rights; (e) expressions that violate applicable law; (f) nicknames reserved or designated by the operator (used for administrator identification and system messages).",
+          "If a nickname matches the criteria above, the operator may reclaim or block it without prior notice and may refuse the creation of new sessions under the same nickname or its variants. In cases of repeated violations, access may be restricted at the IP level.",
+          "Inappropriate nicknames may be reported to support@baduk.example. The operator will review and act within 7 business days.",
+          "A nickname is held temporarily only while a session is active and confers no permanent ownership. After the session expires, the same nickname may be claimed by another user, so returning under the same nickname is not guaranteed."
         ]
       },
       "prohibited": {
         "title": "Prohibited conduct",
         "items": [
           "Automated bots or scripts that generate high request volumes",
-          "Impersonation nicknames or nicknames containing offensive or hateful language",
+          "Registering or using a nickname that violates the Nickname rules section",
           "Exploiting service vulnerabilities or deliberately overloading the infrastructure",
           "Any other conduct that violates applicable law or seriously disrupts the service"
         ]
@@ -369,6 +418,16 @@
         "items": [
           "KataGo Human-SL is an AI model; its evaluations and hints are for reference only.",
           "The AI's analysis does not guarantee correct play and is provided for educational and recreational purposes."
+        ]
+      },
+      "aiPlayerNames": {
+        "title": "Use of player names in AI style selection",
+        "items": [
+          "The AI style selection screen lists the names of 18 real professional Go players to help convey style categories. These names are used solely as classification references for non-commercial, educational guidance.",
+          "This service has no official affiliation, endorsement, or sponsorship from any listed player or from organisations such as the Korea Baduk Association, the Nihon Ki-in, or the Chinese Weiqi Association, and does not present itself as having such a relationship.",
+          "The KataGo Human-SL model used here is a generic, rank-trained model — it has not been trained on any individual player's game records and does not impersonate that player.",
+          "References are limited to well-known nicknames and publicly known stylistic evaluations; no player's photograph, signature, voice, or personal logo is used.",
+          "This section reflects considerations under Article 2(1)(t) of the Korean Unfair Competition Prevention and Trade Secret Protection Act and related personality-rights principles. A listed player or a legitimate rights-holder may write to support@baduk.example to request a change or removal of any name; the operator will review within 7 business days (faster for urgent matters) and remove the listing immediately upon a verified reasonable objection."
         ]
       },
       "serviceChanges": {
@@ -425,6 +484,7 @@
     "INVALID_COORD": "Invalid coordinate",
     "INVALID_UNDO_STEPS": "Invalid undo steps",
     "AI_ILLEGAL_MOVE": "The AI attempted an illegal move. Please contact the admin.",
-    "validation_error": "Invalid input"
+    "validation_error": "Invalid input",
+    "server_error": "A server error occurred. Please try again in a moment"
   }
 }
