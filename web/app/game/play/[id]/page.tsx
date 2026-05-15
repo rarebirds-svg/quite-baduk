@@ -747,9 +747,9 @@ export default function PlayPage() {
       >
         <DialogContent
           className={
-            "max-h-[90vh] overflow-y-auto " +
+            "flex flex-col gap-0 overflow-hidden max-h-[90dvh] " +
             (kifuSize === "full"
-              ? "max-w-[95vw] w-[95vw] max-h-[95vh] h-[95vh]"
+              ? "max-w-[95vw] w-[95vw] h-[95dvh] max-h-[95dvh]"
               : kifuSize === "lg"
               ? "max-w-5xl"
               : kifuSize === "sm"
@@ -757,7 +757,7 @@ export default function PlayPage() {
               : "max-w-3xl")
           }
         >
-          <DialogHeader>
+          <DialogHeader className="shrink-0">
             <div className="flex items-center justify-between gap-3">
               <DialogTitle>{t("game.kifuDialogTitle")}</DialogTitle>
               <div
@@ -785,7 +785,9 @@ export default function PlayPage() {
               </div>
             </div>
           </DialogHeader>
-          {kifuOpen && <ReviewPlayer gameId={gameId} />}
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pt-4">
+            {kifuOpen && <ReviewPlayer gameId={gameId} />}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
