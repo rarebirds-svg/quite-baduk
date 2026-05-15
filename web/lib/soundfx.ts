@@ -1,8 +1,8 @@
 const STORAGE_KEY = "sfx:stone";
 const SAMPLES = [
-  "/sounds/stone-1.mp3",
-  "/sounds/stone-2.mp3",
-  "/sounds/stone-3.mp3",
+  "/sounds/stone-1.mp3?v=2",
+  "/sounds/stone-2.mp3?v=2",
+  "/sounds/stone-3.mp3?v=2",
 ];
 const POOL_SIZE = 3;
 
