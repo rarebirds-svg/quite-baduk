@@ -35,10 +35,10 @@ export default function NewGamePage() {
   // freely via the PlayerPicker.
   const [aiPlayer, setAiPlayer] = useState<PlayerId | null>(null);
   const [handicap, setHandicap] = useState(0);
-  // userColor stays null until the user rolls — for an even (호선) game the
-  // traditional method of deciding stones is nigiri (random), so the form
-  // requires a roll before "Start" is allowed. Default null also keeps SSR
-  // and first client render in sync (no Math.random at module scope).
+  // userColor is auto-seeded with nigiri (random) on mount alongside
+  // aiPlayer; users can still re-roll via the picker to change it. Null is
+  // only the initial SSR/first-render value to avoid a hydration mismatch
+  // — Math.random at module scope would diverge between server and client.
   const [userColor, setUserColor] = useState<"black" | "white" | null>(null);
   const [authed, setAuthed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
@@ -53,11 +53,12 @@ export default function NewGamePage() {
       : undefined
   ) ?? "balanced";
 
-  // Seed the random AI player after mount. Putting Math.random in the
-  // initial useState call would diverge between SSR and the first client
-  // render and trigger a hydration mismatch.
+  // Seed both random picks (AI player + user color) after mount. Putting
+  // Math.random in the initial useState calls would diverge between SSR
+  // and the first client render and trigger a hydration mismatch.
   useEffect(() => {
     setAiPlayer(randomPlayerId());
+    setUserColor(Math.random() < 0.5 ? "black" : "white");
   }, []);
 
   useEffect(() => {
