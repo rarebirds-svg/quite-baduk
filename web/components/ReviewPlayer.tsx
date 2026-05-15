@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 import Board from "@/components/Board";
 import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
@@ -10,6 +11,11 @@ import {
   totalCells,
 } from "@/lib/board";
 import { Button } from "@/components/ui/button";
+import {
+  isStoneSoundEnabled,
+  playStoneClick,
+  setStoneSoundEnabled,
+} from "@/lib/soundfx";
 
 interface MoveEntryRaw {
   move_number: number;
@@ -139,6 +145,18 @@ export default function ReviewPlayer({
   // vs learn (overlays + caption + blunder list all on together).
   const [mode, setMode] = useState<"review" | "learn">("review");
 
+  const [soundOn, setSoundOn] = useState(true);
+  useEffect(() => {
+    setSoundOn(isStoneSoundEnabled());
+  }, []);
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setStoneSoundEnabled(next);
+  };
+
+  const prevIdxRef = useRef(0);
+
   const inFlightRef = useRef(0);
 
   useEffect(() => {
@@ -221,6 +239,15 @@ export default function ReviewPlayer({
     }, intervalMs);
     return () => clearInterval(id);
   }, [playing, game, idx, intervalMs]);
+
+  useEffect(() => {
+    const prev = prevIdxRef.current;
+    prevIdxRef.current = idx;
+    if (!game || idx <= prev || idx <= 0) return;
+    const m = game.moves[idx - 1];
+    if (!m || m.is_undone || !m.coord || m.coord === "pass" || m.coord === "resign") return;
+    playStoneClick();
+  }, [idx, game]);
 
   const board = useMemo(
     () =>
@@ -416,7 +443,7 @@ export default function ReviewPlayer({
           can tell at a glance which mode the panel is in. */}
       <div
         className={
-          "max-w-[min(560px,100%)] mx-auto " +
+          "w-full mx-auto " +
           (learning ? "ring-1 ring-oxblood ring-offset-2 ring-offset-paper" : "")
         }
       >
@@ -424,6 +451,7 @@ export default function ReviewPlayer({
           size={game.board_size}
           board={board}
           lastMove={lastMove}
+          lastMoveBlunder={learning && isBlunder}
           overlay={altOverlay}
         />
       </div>
@@ -432,24 +460,54 @@ export default function ReviewPlayer({
       {learning && currentMove && drop !== null && (
         <div
           className={
-            "border px-3 py-2 font-sans text-sm flex items-baseline justify-between gap-3 " +
+            "border px-3 py-2 font-sans text-sm flex flex-col gap-1 " +
             (isBlunder
               ? "border-oxblood text-oxblood bg-paper-deep"
               : "border-ink-faint text-ink-mute")
           }
           aria-live="polite"
         >
-          <span className="font-semibold tracking-label uppercase text-xs">
-            {isBlunder ? t("review.blunderTag") : t("review.coachTag")}
-          </span>
-          <span className="font-mono tabular-nums text-xs">
-            {drop > 0 ? "−" : "+"}
-            {Math.abs(drop * 100).toFixed(1)}%
-          </span>
-          {isBlunder && alternatives.length > 0 && (
-            <span className="font-sans text-xs text-ink-mute ml-auto">
-              {t("review.altsAutoShown")}
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="font-semibold tracking-label uppercase text-xs">
+              {isBlunder ? t("review.blunderTag") : t("review.coachTag")}
             </span>
+            <span className="font-mono tabular-nums text-xs">
+              {drop > 0 ? "−" : "+"}
+              {Math.abs(drop * 100).toFixed(1)}%
+            </span>
+          </div>
+          {isBlunder && (
+            <div className="font-sans text-xs leading-relaxed text-ink">
+              {(() => {
+                const sideKey = currentMove.color === "B" ? "review.sideBlack" : "review.sideWhite";
+                const wrFrom =
+                  wrBefore !== null
+                    ? (currentMove.color === "B" ? wrBefore : 1 - wrBefore) * 100
+                    : null;
+                const wrTo =
+                  wrAfter !== null
+                    ? (currentMove.color === "B" ? wrAfter : 1 - wrAfter) * 100
+                    : null;
+                const best = alternatives[0];
+                return (
+                  <>
+                    <span>{t(sideKey)} </span>
+                    {wrFrom !== null && wrTo !== null && (
+                      <span className="font-mono tabular-nums">
+                        {wrFrom.toFixed(1)}% → {wrTo.toFixed(1)}%
+                      </span>
+                    )}
+                    {best && (
+                      <>
+                        {" · "}
+                        <span>{t("review.bestMove")} </span>
+                        <span className="font-mono tabular-nums">{best.move}</span>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
           )}
         </div>
       )}
@@ -510,11 +568,26 @@ export default function ReviewPlayer({
           onClick={() => { setIdx(game.moves.length); setPlaying(false); }}>
           {t("review.last")}
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleSound}
+          aria-pressed={soundOn}
+          aria-label={soundOn ? t("review.soundOff") : t("review.soundOn")}
+          className="ml-auto px-2"
+          title={soundOn ? t("review.soundOff") : t("review.soundOn")}
+        >
+          {soundOn ? (
+            <Volume2 size={16} strokeWidth={1.5} />
+          ) : (
+            <VolumeX size={16} strokeWidth={1.5} />
+          )}
+        </Button>
         <a
           href={`/api/games/${gameId}/sgf`}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto self-center font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
+          className="self-center font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
         >
           SGF
         </a>
