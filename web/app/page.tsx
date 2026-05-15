@@ -10,7 +10,10 @@ import { RuleDivider } from "@/components/editorial/RuleDivider";
 
 type CheckResp = { available: boolean; reason?: "taken" | "invalid" };
 
-const HERO_SLOTS = [1, 2, 3, 4, 5] as const;
+const HERO_SLOTS = [
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+] as const;
 
 function pickHeroSlot(): (typeof HERO_SLOTS)[number] {
   return HERO_SLOTS[Math.floor(Math.random() * HERO_SLOTS.length)];
@@ -125,7 +128,10 @@ export default function NicknameGate() {
     // Tiny decorative "edition number" — stable per mount so it doesn't
     // churn with re-renders but rotates across visits.
     if (heroSlot === null) return "I";
-    return ["I", "II", "III", "IV", "V"][heroSlot - 1] ?? "I";
+    return [
+      "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
+      "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX",
+    ][heroSlot - 1] ?? "I";
   }, [heroSlot]);
 
   return (
