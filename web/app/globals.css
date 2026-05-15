@@ -120,6 +120,12 @@
   [data-state="open"].ed-anim-slide-right { animation: ed-slide-in-from-right 200ms ease-out }
   [data-state="closed"].ed-anim-slide-right { animation: ed-slide-out-to-right 200ms ease-out }
 
+  /* Sheets positioned at the bottom on mobile — slide-right is jarring there. */
+  @media (max-width: 639px) {
+    [data-state="open"].ed-anim-slide-right { animation: ed-fade-in 200ms ease-out }
+    [data-state="closed"].ed-anim-slide-right { animation: ed-fade-out 200ms ease-out }
+  }
+
   @keyframes ed-linear-slide {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
