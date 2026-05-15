@@ -481,6 +481,13 @@ export default function DailyChallengePage() {
                 >
                   {t("daily.skipNext")}
                 </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setCandidate(null)}
+                  disabled={!candidate || busy}
+                >
+                  {t("daily.cancelMove")}
+                </Button>
                 <Button onClick={submit} disabled={!candidate || busy}>
                   {busy ? t("daily.grading") : t("daily.submit")}
                 </Button>
