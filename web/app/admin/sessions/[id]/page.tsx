@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
+import { formatRank } from "@/components/RankPicker";
 import { useAuthStore } from "@/store/authStore";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -94,6 +95,7 @@ const REFRESH_SEC = 5;
 
 export default function AdminSessionDetailPage() {
   const t = useT();
+  const [locale] = useLocale();
   const params = useParams<{ id: string }>();
   const sessionId = parseInt(params.id, 10);
   const router = useRouter();
@@ -263,10 +265,10 @@ export default function AdminSessionDetailPage() {
                         <td className="p-2 text-right tabular-nums">{g.board_size}×{g.board_size}</td>
                         <td className="p-2 text-right tabular-nums">{g.handicap}</td>
                         <td className="p-2 text-ink-mute">
-                          {g.user_rank ?? <span className="text-ink-faint">—</span>}
+                          {g.user_rank ? formatRank(g.user_rank, locale) : <span className="text-ink-faint">—</span>}
                         </td>
                         <td className="p-2 text-ink-mute">
-                          {g.ai_player ?? g.ai_rank} · {g.ai_style}
+                          {g.ai_player ?? formatRank(g.ai_rank, locale)} · {g.ai_style}
                         </td>
                         <td className="p-2 text-right tabular-nums">{g.move_count}</td>
                         <td className="p-2 text-right tabular-nums">{g.undo_count}</td>

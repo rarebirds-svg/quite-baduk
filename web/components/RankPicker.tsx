@@ -35,8 +35,9 @@ export const RANKS = [
 ] as const;
 export type Rank = (typeof RANKS)[number];
 
-export function formatRank(r: Rank, locale: "ko" | "en"): string {
+export function formatRank(r: Rank | string, locale: "ko" | "en"): string {
   if (locale !== "ko") return r;
+  if (!/^\d+[kd]$/.test(r)) return r;
   const n = parseInt(r, 10);
   return r.endsWith("d") ? `${n}단` : `${n}급`;
 }
