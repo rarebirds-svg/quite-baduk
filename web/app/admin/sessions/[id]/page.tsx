@@ -267,7 +267,7 @@ export default function AdminSessionDetailPage() {
                         <td className="p-2 text-ink-mute">
                           {g.user_rank ? formatRank(g.user_rank, locale) : <span className="text-ink-faint">—</span>}
                         </td>
-                        <td className="p-2 text-ink-mute">
+                        <td className="p-2 text-ink-mute whitespace-nowrap">
                           <div>{g.ai_player ? t(`game.players.${g.ai_player}.name`) : formatRank(g.ai_rank, locale)}</div>
                           <div className="text-ink-faint text-xs">{t(`game.aiStyleName.${g.ai_style}`)}</div>
                         </td>
