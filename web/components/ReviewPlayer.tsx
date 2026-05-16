@@ -283,6 +283,25 @@ export default function ReviewPlayer({
     return out;
   }, [mode, game, winratesBlack]);
 
+  // Mid-tier "주의 (noticeable)" swings — between SWING_NOTICE (3pp) and
+  // BLUNDER_THRESHOLD (10pp). Painted as small gold dots on the scrubber
+  // so the user gets a sense of swing density even outside the big
+  // turning points.
+  const noticeableSwings = useMemo(() => {
+    if (mode !== "learn" || !game) return [] as { n: number; drop: number }[];
+    const out: { n: number; drop: number }[] = [];
+    for (let n = 1; n < game.moves.length + 1; n++) {
+      const before = winratesBlack[n - 1];
+      const after = winratesBlack[n];
+      if (before === undefined || after === undefined) continue;
+      const m = game.moves[n - 1];
+      const d = moveDrop(before, after, m.color);
+      const mag = Math.abs(d);
+      if (mag >= 0.03 && mag <= BLUNDER_THRESHOLD) out.push({ n, drop: d });
+    }
+    return out;
+  }, [mode, game, winratesBlack]);
+
   if (error) {
     return (
       <p className="text-sm text-oxblood p-4 text-center">
@@ -305,6 +324,11 @@ export default function ReviewPlayer({
   const isBlunder = drop !== null && drop > BLUNDER_THRESHOLD;
   const isDecisive = drop !== null && drop < -BLUNDER_THRESHOLD;
   const isTurning = isBlunder || isDecisive;
+  // Mid-tier swing: noticeable (3pp+) but not a true 승부처 (10pp+).
+  // Shown in gold so users see it as "주의할 만한 변화"가 있었다는 시각 단서로.
+  const SWING_NOTICE = 0.03;
+  const isNoticeable =
+    drop !== null && !isTurning && Math.abs(drop) >= SWING_NOTICE;
   const alternatives = idx > 0 ? topMovesAt[idx - 1] ?? [] : [];
 
   const learning = mode === "learn";
@@ -467,8 +491,14 @@ export default function ReviewPlayer({
         />
       </div>
 
-      {/* Per-move caption — only in learn mode, only when we have data */}
-      {learning && currentMove && drop !== null && (
+      {/* Per-move caption — always when we have winrate data (regardless
+          of mode). Color escalates by magnitude:
+            < 3pp           → 회색 (소소한 변동)
+            3–10pp          → gold (주의할 만한 swing)
+            > 10pp 패착     → oxblood
+            > 10pp 승착     → moss
+      */}
+      {currentMove && drop !== null && (
         <div
           className={
             "border px-3 py-2 font-sans text-sm flex flex-col gap-1 " +
@@ -476,6 +506,8 @@ export default function ReviewPlayer({
               ? "border-oxblood text-oxblood bg-paper-deep"
               : isDecisive
               ? "border-moss text-moss bg-paper-deep"
+              : isNoticeable
+              ? "border-gold text-gold"
               : "border-ink-faint text-ink-mute")
           }
           aria-live="polite"
@@ -540,11 +572,25 @@ export default function ReviewPlayer({
           className="w-full accent-oxblood block"
           aria-label={t("review.scrubber")}
         />
-        {learning && turningPoints.length > 0 && (
+        {learning && (turningPoints.length > 0 || noticeableSwings.length > 0) && (
           <div
             aria-hidden="true"
             className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2"
           >
+            {/* gold dots first (smaller) so oxblood / moss turning dots
+                draw over them when the move qualifies as both — keeps the
+                stronger signal visible. */}
+            {noticeableSwings.map(({ n, drop: d }) => {
+              const pct = (n / game.moves.length) * 100;
+              return (
+                <span
+                  key={`n-${n}`}
+                  className="absolute -translate-x-1/2 top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-gold"
+                  style={{ left: `${pct}%` }}
+                  title={`#${n} ${(d > 0 ? "−" : "+") + Math.abs(d * 100).toFixed(1)}%`}
+                />
+              );
+            })}
             {turningPoints.map(({ n, drop: d }) => {
               const pct = (n / game.moves.length) * 100;
               const kind = d > 0 ? "blunder" : "decisive";
