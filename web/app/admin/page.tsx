@@ -367,9 +367,12 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
-        <div className="mt-3">
+        <div className="mt-3 flex gap-4">
           <Link href="/admin/login-history" className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline">
             {t("admin.viewLoginHistory")}
+          </Link>
+          <Link href="/admin/stats" className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline">
+            {t("admin.viewStats")}
           </Link>
         </div>
       </section>

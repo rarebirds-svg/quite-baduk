@@ -2,7 +2,7 @@
 admin nickname (see ``deps.ADMIN_NICKNAME_KEYS``) can call these."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from fastapi import APIRouter
@@ -114,6 +114,40 @@ class AdminEngineHealth(BaseModel):
     human_model_name: str | None
     config_path: str | None
     backend_started_at: datetime
+
+
+class DailyBucket(BaseModel):
+    date: str  # ISO YYYY-MM-DD
+    count: int
+
+
+class DailyGameBucket(BaseModel):
+    date: str
+    started: int
+    finished: int
+
+
+class HourlyBucket(BaseModel):
+    hour: int  # 0..23
+    count: int
+
+
+class LabeledCount(BaseModel):
+    label: str
+    count: int
+
+
+class AdminStats(BaseModel):
+    daily_logins: list[DailyBucket]
+    daily_games: list[DailyGameBucket]
+    hourly_activity: list[HourlyBucket]  # 24 entries, 0..23
+    rank_distribution: list[LabeledCount]
+    ai_player_picks: list[LabeledCount]
+    ai_style_picks: list[LabeledCount]
+    board_size_picks: list[LabeledCount]
+    handicap_picks: list[LabeledCount]
+    window_days_daily: int
+    window_days_hourly: int
 
 
 @router.get("/me", response_model=AdminIdentity)
@@ -608,3 +642,145 @@ async def disconnect_session(
         except Exception:  # noqa: S110
             pass
         _ws_connections.pop(gid, None)
+
+
+@router.get("/stats", response_model=AdminStats)
+async def stats(
+    _: AdminSession,
+    db: DbSession,
+    days: int = 30,
+    hourly_days: int = 7,
+    top: int = 10,
+) -> AdminStats:
+    """Activity stats — daily/weekly trends and pick distributions for the
+    admin dashboard. All windows are inclusive of today (UTC) so the
+    rightmost bucket is "so far today"."""
+    days = max(1, min(days, 90))
+    hourly_days = max(1, min(hourly_days, 30))
+    top = max(1, min(top, 50))
+
+    today = date.today()
+    daily_start = today - timedelta(days=days - 1)
+    hourly_cutoff = datetime.utcnow() - timedelta(days=hourly_days)
+
+    # ── Daily logins (from SessionHistory) ────────────────────────────────
+    login_rows = (
+        await db.execute(
+            select(
+                func.date(SessionHistory.created_at).label("d"),
+                func.count(SessionHistory.id),
+            )
+            .where(SessionHistory.created_at >= datetime.combine(daily_start, datetime.min.time()))
+            .group_by("d")
+        )
+    ).all()
+    login_by_day = {str(r[0]): int(r[1]) for r in login_rows}
+
+    # ── Daily games (started + finished) ──────────────────────────────────
+    started_rows = (
+        await db.execute(
+            select(func.date(Game.started_at).label("d"), func.count(Game.id))
+            .where(Game.started_at >= datetime.combine(daily_start, datetime.min.time()))
+            .group_by("d")
+        )
+    ).all()
+    finished_rows = (
+        await db.execute(
+            select(func.date(Game.finished_at).label("d"), func.count(Game.id))
+            .where(
+                Game.finished_at.is_not(None),
+                Game.finished_at >= datetime.combine(daily_start, datetime.min.time()),
+            )
+            .group_by("d")
+        )
+    ).all()
+    started_by_day = {str(r[0]): int(r[1]) for r in started_rows}
+    finished_by_day = {str(r[0]): int(r[1]) for r in finished_rows}
+
+    daily_logins: list[DailyBucket] = []
+    daily_games: list[DailyGameBucket] = []
+    for i in range(days):
+        d = daily_start + timedelta(days=i)
+        key = d.isoformat()
+        daily_logins.append(DailyBucket(date=key, count=login_by_day.get(key, 0)))
+        daily_games.append(
+            DailyGameBucket(
+                date=key,
+                started=started_by_day.get(key, 0),
+                finished=finished_by_day.get(key, 0),
+            )
+        )
+
+    # ── Hourly activity (by hour-of-day across recent N days, login events) ─
+    hourly_rows = (
+        await db.execute(
+            select(
+                func.strftime("%H", SessionHistory.created_at).label("h"),
+                func.count(SessionHistory.id),
+            )
+            .where(SessionHistory.created_at >= hourly_cutoff)
+            .group_by("h")
+        )
+    ).all()
+    hourly_by_h = {int(r[0]): int(r[1]) for r in hourly_rows}
+    hourly_activity = [
+        HourlyBucket(hour=h, count=hourly_by_h.get(h, 0)) for h in range(24)
+    ]
+
+    # ── Rank / AI / board / handicap pick distributions ───────────────────
+    def _bucket(rows: list[tuple[str | None, int]]) -> list[LabeledCount]:
+        return [
+            LabeledCount(label=str(r[0]) if r[0] is not None else "—", count=int(r[1]))
+            for r in rows[:top]
+        ]
+
+    rank_rows = (
+        await db.execute(
+            select(Game.user_rank, func.count(Game.id))
+            .where(Game.user_rank.is_not(None))
+            .group_by(Game.user_rank)
+            .order_by(func.count(Game.id).desc())
+        )
+    ).all()
+    ai_player_rows = (
+        await db.execute(
+            select(Game.ai_player, func.count(Game.id))
+            .where(Game.ai_player.is_not(None))
+            .group_by(Game.ai_player)
+            .order_by(func.count(Game.id).desc())
+        )
+    ).all()
+    ai_style_rows = (
+        await db.execute(
+            select(Game.ai_style, func.count(Game.id))
+            .group_by(Game.ai_style)
+            .order_by(func.count(Game.id).desc())
+        )
+    ).all()
+    board_rows = (
+        await db.execute(
+            select(Game.board_size, func.count(Game.id))
+            .group_by(Game.board_size)
+            .order_by(func.count(Game.id).desc())
+        )
+    ).all()
+    handicap_rows = (
+        await db.execute(
+            select(Game.handicap, func.count(Game.id))
+            .group_by(Game.handicap)
+            .order_by(Game.handicap)
+        )
+    ).all()
+
+    return AdminStats(
+        daily_logins=daily_logins,
+        daily_games=daily_games,
+        hourly_activity=hourly_activity,
+        rank_distribution=_bucket(rank_rows),  # type: ignore[arg-type]
+        ai_player_picks=_bucket(ai_player_rows),  # type: ignore[arg-type]
+        ai_style_picks=_bucket(ai_style_rows),  # type: ignore[arg-type]
+        board_size_picks=_bucket([(str(r[0]), int(r[1])) for r in board_rows]),
+        handicap_picks=_bucket([(str(r[0]), int(r[1])) for r in handicap_rows]),
+        window_days_daily=days,
+        window_days_hourly=hourly_days,
+    )

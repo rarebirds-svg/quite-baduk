@@ -55,6 +55,7 @@ async def test_admin_endpoints_403_for_non_admin(client: AsyncClient) -> None:
         "/api/admin/sessions",
         "/api/admin/login-history",
         "/api/admin/engine",
+        "/api/admin/stats",
     ):
         r = await client.get(path)
         assert r.status_code == 403, f"{path} should require admin"
@@ -269,3 +270,62 @@ async def test_admin_disconnect_non_admin_forbidden(client: AsyncClient) -> None
     await _signup(client, "not_admin")
     r = await client.delete("/api/admin/sessions/9999")
     assert r.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_admin_stats_empty(client: AsyncClient) -> None:
+    """Stats endpoint returns full shape even when there's nothing to bucket."""
+    await _signup(client, ADMIN_NICK)
+    r = await client.get("/api/admin/stats?days=7&hourly_days=3&top=5")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["window_days_daily"] == 7
+    assert body["window_days_hourly"] == 3
+    assert len(body["daily_logins"]) == 7
+    assert all(isinstance(b["count"], int) and b["count"] >= 0 for b in body["daily_logins"])
+    assert len(body["daily_games"]) == 7
+    assert len(body["hourly_activity"]) == 24
+    assert {b["hour"] for b in body["hourly_activity"]} == set(range(24))
+    # Lists are present (may be empty depending on test data)
+    for key in (
+        "rank_distribution",
+        "ai_player_picks",
+        "ai_style_picks",
+        "board_size_picks",
+        "handicap_picks",
+    ):
+        assert key in body
+        assert isinstance(body[key], list)
+
+
+@pytest.mark.asyncio
+async def test_admin_stats_with_games(client: AsyncClient) -> None:
+    """Picks reflect the games created in this session."""
+    await _signup(client, ADMIN_NICK)
+    await _create_game(client, ai_rank="5k")
+    await _create_game(client, ai_rank="3d", handicap=2)
+    r = await client.get("/api/admin/stats")
+    assert r.status_code == 200
+    body = r.json()
+    # Today's started count should be >= 2 (two games we just created).
+    today_iso = (await client.get("/api/admin/summary")).json()  # warm-up
+    _ = today_iso
+    today_bucket = body["daily_games"][-1]
+    assert today_bucket["started"] >= 2
+    # AI style "balanced" is the default; expect it to show up.
+    styles = {row["label"] for row in body["ai_style_picks"]}
+    assert "balanced" in styles
+    # Two board sizes default to 19×19 — should appear in board picks.
+    boards = {row["label"] for row in body["board_size_picks"]}
+    assert "19" in boards
+
+
+@pytest.mark.asyncio
+async def test_admin_stats_window_clamped(client: AsyncClient) -> None:
+    """Out-of-range days values get clamped without 4xx."""
+    await _signup(client, ADMIN_NICK)
+    r = await client.get("/api/admin/stats?days=999&hourly_days=999")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["window_days_daily"] <= 90
+    assert body["window_days_hourly"] <= 30
