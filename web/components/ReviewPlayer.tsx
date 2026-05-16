@@ -30,6 +30,7 @@ interface GameDetail {
   moves: MoveEntryRaw[];
   result: string | null;
   user_nickname?: string | null;
+  user_color?: "black" | "white";
   ai_player?: string | null;
   ai_style?: string;
   ai_rank?: string;
@@ -447,24 +448,46 @@ export default function ReviewPlayer({
         </div>
       )}
 
-      {/* Header row */}
-      <div className="flex items-baseline justify-between font-mono text-xs text-ink-mute">
-        <span className="tabular-nums">
-          {idx} / {game.moves.length}
-          {currentMove && (
-            <span className="ml-2 text-ink">
-              {currentMove.color === "B" ? "●" : "○"}{" "}
-              <span className="tabular-nums">
-                {currentMove.coord ?? "pass"}
-              </span>
+      {/* Header row — left: scrubber position + current move marker.
+          Right: 흑/백 식별 (돌 모양 + 닉네임). user_color로 사용자/AI 매칭. */}
+      {(() => {
+        const userIsBlack = (game.user_color ?? "black") === "black";
+        const userLabel = game.user_nickname ?? "—";
+        const aiLabel = game.ai_player
+          ? t(`game.players.${game.ai_player}.name`)
+          : game.ai_rank ?? "AI";
+        const blackName = userIsBlack ? userLabel : aiLabel;
+        const whiteName = userIsBlack ? aiLabel : userLabel;
+        return (
+          <div className="flex flex-wrap items-baseline justify-between gap-2 font-mono text-xs text-ink-mute">
+            <span className="tabular-nums">
+              {idx} / {game.moves.length}
+              {currentMove && (
+                <span className="ml-2 text-ink">
+                  {currentMove.color === "B" ? "●" : "○"}{" "}
+                  <span className="tabular-nums">
+                    {currentMove.coord ?? "pass"}
+                  </span>
+                </span>
+              )}
             </span>
-          )}
-        </span>
-        <span className="text-ink-faint">
-          {game.user_nickname ?? "—"} · {game.ai_player ?? game.ai_rank ?? ""}
-          {game.result ? ` · ${game.result}` : ""}
-        </span>
-      </div>
+            <span className="flex items-baseline gap-2 text-ink">
+              <span className="inline-flex items-baseline gap-1">
+                <span className="text-ink">●</span>
+                <span className="font-sans text-xs">{blackName}</span>
+              </span>
+              <span className="text-ink-faint">vs</span>
+              <span className="inline-flex items-baseline gap-1">
+                <span className="text-ink">○</span>
+                <span className="font-sans text-xs">{whiteName}</span>
+              </span>
+              {game.result && (
+                <span className="text-ink-faint ml-1">· {game.result}</span>
+              )}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* Board frame: oxblood accent ring in learn mode so the user
           can tell at a glance which mode the panel is in. */}
