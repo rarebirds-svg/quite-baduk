@@ -186,6 +186,10 @@ export default function PlayPage() {
         setScoringDetail(msg);
       } else if (msg.type === "estimate_result") {
         setEstimate(msg);
+        // Auto-show the heatmap when the sheet opens — that's the whole
+        // point of asking for an estimate, otherwise users see only the
+        // numeric metrics and assume the heatmap is broken.
+        setShowHeatmap(true);
         setEstimateLoading(false);
       } else if (msg.type === "game_over") {
         g.set({ gameOver: true, result: msg.result, aiThinking: false });
@@ -654,7 +658,7 @@ export default function PlayPage() {
                 aria-pressed={showHeatmap}
                 className="h-8 px-3 text-xs"
               >
-                {showHeatmap ? t("game.heatmapOn") : t("game.heatmapOff")}
+                {showHeatmap ? t("game.heatmapOff") : t("game.heatmapOn")}
               </Button>
             </div>
           )}
