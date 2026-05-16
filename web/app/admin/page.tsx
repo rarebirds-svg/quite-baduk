@@ -123,9 +123,12 @@ export default function AdminPage() {
   const { session, isAdmin, setIsAdmin } = useAuthStore();
   const [sessions, setSessions] = useState<AdminSessionRow[] | null>(null);
   const [games, setGames] = useState<AdminGameRow[] | null>(null);
+  const [gamesTotal, setGamesTotal] = useState(0);
   const [summary, setSummary] = useState<AdminSummary | null>(null);
   const [engine, setEngine] = useState<AdminEngineHealth | null>(null);
   const [filter, setFilter] = useState<GameFilter>("all");
+  const [gamesPage, setGamesPage] = useState(0);
+  const GAMES_PAGE_SIZE = 25;
   const [forbidden, setForbidden] = useState(false);
   const [reviewGameId, setReviewGameId] = useState<number | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<number | null>(null);
@@ -153,15 +156,22 @@ export default function AdminPage() {
     let cancelled = false;
     const poll = async () => {
       try {
-        const [s, g, sum, eng] = await Promise.all([
+        const params = new URLSearchParams();
+        if (filter !== "all") params.set("status_", filter);
+        params.set("limit", String(GAMES_PAGE_SIZE));
+        params.set("offset", String(gamesPage * GAMES_PAGE_SIZE));
+        const [s, gPage, sum, eng] = await Promise.all([
           api<AdminSessionRow[]>("/api/admin/sessions"),
-          api<AdminGameRow[]>(`/api/admin/games${filter === "all" ? "" : `?status_=${filter}`}`),
+          api<{ rows: AdminGameRow[]; total: number; offset: number; limit: number }>(
+            `/api/admin/games?${params.toString()}`,
+          ),
           api<AdminSummary>("/api/admin/summary"),
           api<AdminEngineHealth>("/api/admin/engine"),
         ]);
         if (cancelled) return;
         setSessions(s);
-        setGames(g);
+        setGames(gPage.rows);
+        setGamesTotal(gPage.total);
         setSummary(sum);
         setEngine(eng);
         setIsAdmin(true);
@@ -181,7 +191,14 @@ export default function AdminPage() {
       clearInterval(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, filter]);
+  }, [session, filter, gamesPage]);
+
+  // Reset to page 0 when the filter changes so we don't land on an
+  // empty page (e.g. were on page 4 of "all", switched to "resigned"
+  // which only has 12 rows total).
+  useEffect(() => {
+    setGamesPage(0);
+  }, [filter]);
 
   const liveCount = useMemo(() => sessions?.filter((s) => s.is_connected_ws).length ?? 0, [sessions]);
   const activeGameCount = useMemo(() => games?.filter((g) => g.status === "active").length ?? 0, [games]);
@@ -509,6 +526,50 @@ export default function AdminPage() {
             </tbody>
           </table>
         </div>
+        {gamesTotal > 0 && (
+          <div className="mt-3 flex items-baseline justify-between font-sans text-xs text-ink-mute">
+            <span className="font-mono tabular-nums">
+              {t("admin.pageRange")
+                .replace("{from}", String(gamesPage * GAMES_PAGE_SIZE + 1))
+                .replace(
+                  "{to}",
+                  String(
+                    Math.min(
+                      (gamesPage + 1) * GAMES_PAGE_SIZE,
+                      gamesTotal,
+                    ),
+                  ),
+                )
+                .replace("{total}", String(gamesTotal))}
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setGamesPage((p) => Math.max(0, p - 1))}
+                disabled={gamesPage === 0}
+                className="px-2 py-1 border border-ink-faint text-ink uppercase tracking-label disabled:opacity-40 disabled:cursor-not-allowed hover:border-ink-mute transition-base"
+              >
+                {t("admin.prevPage")}
+              </button>
+              <span className="self-center font-mono tabular-nums">
+                {gamesPage + 1} /{" "}
+                {Math.max(1, Math.ceil(gamesTotal / GAMES_PAGE_SIZE))}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setGamesPage((p) =>
+                    (p + 1) * GAMES_PAGE_SIZE < gamesTotal ? p + 1 : p,
+                  )
+                }
+                disabled={(gamesPage + 1) * GAMES_PAGE_SIZE >= gamesTotal}
+                className="px-2 py-1 border border-ink-faint text-ink uppercase tracking-label disabled:opacity-40 disabled:cursor-not-allowed hover:border-ink-mute transition-base"
+              >
+                {t("admin.nextPage")}
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       <Dialog

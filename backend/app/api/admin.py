@@ -104,6 +104,13 @@ class AdminSessionDetail(BaseModel):
     history: list[AdminLoginRow]  # all login events for this nickname_key
 
 
+class AdminGamesPage(BaseModel):
+    rows: list[AdminGameRow]
+    total: int
+    offset: int
+    limit: int
+
+
 class AdminEngineHealth(BaseModel):
     mode: str  # "mock" | "real"
     is_alive: bool
@@ -330,16 +337,33 @@ async def list_sessions(
     ]
 
 
-@router.get("/games", response_model=list[AdminGameRow])
+@router.get("/games", response_model=AdminGamesPage)
 async def list_games(
     _: AdminSession,
     db: DbSession,
     status_: str | None = None,
-    limit: int = 100,
-) -> list[AdminGameRow]:
-    q = select(Game).order_by(Game.started_at.desc()).limit(max(1, min(limit, 500)))
+    limit: int = 50,
+    offset: int = 0,
+) -> AdminGamesPage:
+    """Paginated recent-games list. `limit` is clamped to [1, 500] and
+    `offset` to non-negative — clients page by incrementing offset by
+    limit. Total reflects rows matching `status_` (so the indicator stays
+    correct as the user filters)."""
+    effective_limit = max(1, min(limit, 500))
+    effective_offset = max(0, offset)
+
+    base = select(Game)
     if status_:
-        q = q.where(Game.status == status_)
+        base = base.where(Game.status == status_)
+
+    total_q = select(func.count()).select_from(base.subquery())
+    total = int((await db.execute(total_q)).scalar() or 0)
+
+    q = (
+        base.order_by(Game.started_at.desc())
+        .limit(effective_limit)
+        .offset(effective_offset)
+    )
     games = (await db.execute(q)).scalars().all()
 
     sids = {g.session_id for g in games if g.session_id is not None}
@@ -348,7 +372,7 @@ async def list_games(
         sr = await db.execute(select(Session.id, Session.nickname).where(Session.id.in_(sids)))
         nick_by_sid = {sid: nick for sid, nick in sr.all()}
 
-    return [
+    rows = [
         AdminGameRow(
             id=g.id,
             session_id=g.session_id,
@@ -376,6 +400,12 @@ async def list_games(
         )
         for g in games
     ]
+    return AdminGamesPage(
+        rows=rows,
+        total=total,
+        offset=effective_offset,
+        limit=effective_limit,
+    )
 
 
 @router.get("/login-history", response_model=list[AdminLoginRow])

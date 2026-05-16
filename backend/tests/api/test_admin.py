@@ -90,10 +90,12 @@ async def test_admin_games_list_includes_user_rank(client: AsyncClient) -> None:
     await _create_game(client)
     r = await client.get("/api/admin/games")
     assert r.status_code == 200
-    rows = r.json()
-    assert len(rows) == 1
-    assert "user_rank" in rows[0]
-    assert rows[0]["ai_rank"] == "5k"
+    body = r.json()
+    assert body["total"] == 1
+    assert body["offset"] == 0
+    assert len(body["rows"]) == 1
+    assert "user_rank" in body["rows"][0]
+    assert body["rows"][0]["ai_rank"] == "5k"
 
 
 @pytest.mark.asyncio
@@ -105,12 +107,40 @@ async def test_admin_games_status_filter(client: AsyncClient) -> None:
 
     active = await client.get("/api/admin/games?status_=active")
     assert active.status_code == 200
-    assert all(g["status"] == "active" for g in active.json())
+    assert all(g["status"] == "active" for g in active.json()["rows"])
 
     resigned = await client.get("/api/admin/games?status_=resigned")
     assert resigned.status_code == 200
-    assert all(g["status"] == "resigned" for g in resigned.json())
-    assert len(resigned.json()) == 1
+    rbody = resigned.json()
+    assert all(g["status"] == "resigned" for g in rbody["rows"])
+    assert rbody["total"] == 1
+
+
+@pytest.mark.asyncio
+async def test_admin_games_pagination(client: AsyncClient) -> None:
+    """offset + limit page through games; total reflects the filter."""
+    await _signup(client, ADMIN_NICK)
+    for _ in range(5):
+        await _create_game(client)
+
+    r1 = await client.get("/api/admin/games?limit=2&offset=0")
+    assert r1.status_code == 200
+    p1 = r1.json()
+    assert p1["total"] == 5
+    assert p1["offset"] == 0
+    assert p1["limit"] == 2
+    assert len(p1["rows"]) == 2
+
+    r2 = await client.get("/api/admin/games?limit=2&offset=2")
+    p2 = r2.json()
+    assert p2["offset"] == 2
+    assert len(p2["rows"]) == 2
+    # Pages don't overlap.
+    assert {g["id"] for g in p1["rows"]}.isdisjoint({g["id"] for g in p2["rows"]})
+
+    r3 = await client.get("/api/admin/games?limit=2&offset=4")
+    p3 = r3.json()
+    assert len(p3["rows"]) == 1  # last page has the leftover game
 
 
 @pytest.mark.asyncio
