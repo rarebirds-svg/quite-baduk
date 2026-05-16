@@ -323,6 +323,7 @@ async def test_admin_stats_empty(client: AsyncClient) -> None:
         "ai_style_picks",
         "board_size_picks",
         "handicap_picks",
+        "nickname_summary",
     ):
         assert key in body
         assert isinstance(body[key], list)
@@ -348,6 +349,29 @@ async def test_admin_stats_with_games(client: AsyncClient) -> None:
     # Two board sizes default to 19×19 — should appear in board picks.
     boards = {row["label"] for row in body["board_size_picks"]}
     assert "19" in boards
+
+
+@pytest.mark.asyncio
+async def test_admin_stats_nickname_summary(client: AsyncClient) -> None:
+    """Nickname summary aggregates games + W/L per user_nickname."""
+    await _signup(client, ADMIN_NICK)
+    gid1 = await _create_game(client)
+    gid2 = await _create_game(client)
+    # Resign one — that becomes a loss for the user (winner = ai).
+    await client.post(f"/api/games/{gid1}/resign")
+    # Leave the other active.
+    _ = gid2
+
+    r = await client.get("/api/admin/stats")
+    assert r.status_code == 200
+    summary = r.json()["nickname_summary"]
+    row = next((s for s in summary if s["nickname"] == ADMIN_NICK), None)
+    assert row is not None, summary
+    assert row["games"] == 2
+    assert row["losses"] == 1
+    assert row["wins"] == 0
+    assert row["decisive"] == 1
+    assert row["win_rate"] == 0.0
 
 
 @pytest.mark.asyncio

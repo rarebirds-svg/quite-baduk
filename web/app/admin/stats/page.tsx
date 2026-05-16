@@ -27,6 +27,14 @@ interface LabeledCount {
   label: string;
   count: number;
 }
+interface NicknameSummary {
+  nickname: string;
+  games: number;
+  wins: number;
+  losses: number;
+  decisive: number;
+  win_rate: number;
+}
 interface AdminStats {
   daily_logins: DailyBucket[];
   daily_games: DailyGameBucket[];
@@ -36,6 +44,7 @@ interface AdminStats {
   ai_style_picks: LabeledCount[];
   board_size_picks: LabeledCount[];
   handicap_picks: LabeledCount[];
+  nickname_summary: NicknameSummary[];
   window_days_daily: number;
   window_days_hourly: number;
 }
@@ -210,8 +219,67 @@ export default function AdminStatsPage() {
               <LabeledBarList rows={stats.handicap_picks} />
             </section>
           </div>
+
+          <RuleDivider weight="faint" />
+
+          <section>
+            <h2 className="font-serif text-xl mb-3">{t("admin.statsNicknames")}</h2>
+            <NicknameTable rows={stats.nickname_summary} t={t} />
+          </section>
         </>
       )}
+    </div>
+  );
+}
+
+function NicknameTable({
+  rows,
+  t,
+}: {
+  rows: NicknameSummary[];
+  t: (key: string) => string;
+}) {
+  if (rows.length === 0) {
+    return <p className="text-xs text-ink-faint font-sans">—</p>;
+  }
+  return (
+    <div className="overflow-x-auto border border-ink-faint">
+      <table className="w-full font-mono text-sm">
+        <thead>
+          <tr className="border-b border-ink-faint bg-paper-deep text-ink-mute">
+            <th className="text-left p-2 font-sans text-xs font-semibold uppercase tracking-label">
+              {t("admin.colNickname")}
+            </th>
+            <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">
+              {t("admin.colGames")}
+            </th>
+            <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">
+              {t("admin.statsWins")}
+            </th>
+            <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">
+              {t("admin.statsLosses")}
+            </th>
+            <th className="text-right p-2 font-sans text-xs font-semibold uppercase tracking-label">
+              {t("admin.statsWinRate")}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.nickname} className="border-b border-ink-faint/40">
+              <td className="p-2 font-sans text-ink">{r.nickname}</td>
+              <td className="p-2 text-right tabular-nums">{r.games}</td>
+              <td className="p-2 text-right tabular-nums text-moss">{r.wins}</td>
+              <td className="p-2 text-right tabular-nums text-oxblood">{r.losses}</td>
+              <td className="p-2 text-right tabular-nums text-ink-mute">
+                {r.decisive > 0
+                  ? `${(r.win_rate * 100).toFixed(1)}%`
+                  : "—"}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

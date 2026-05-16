@@ -144,6 +144,15 @@ class LabeledCount(BaseModel):
     count: int
 
 
+class NicknameSummary(BaseModel):
+    nickname: str
+    games: int
+    wins: int  # Game.winner == "user"
+    losses: int  # Game.winner == "ai"
+    decisive: int  # wins + losses (excludes in-progress)
+    win_rate: float  # over decisive games, 0..1 (0.0 when decisive == 0)
+
+
 class AdminStats(BaseModel):
     daily_logins: list[DailyBucket]
     daily_games: list[DailyGameBucket]
@@ -153,6 +162,7 @@ class AdminStats(BaseModel):
     ai_style_picks: list[LabeledCount]
     board_size_picks: list[LabeledCount]
     handicap_picks: list[LabeledCount]
+    nickname_summary: list[NicknameSummary]
     window_days_daily: int
     window_days_hourly: int
 
@@ -802,6 +812,37 @@ async def stats(
         )
     ).all()
 
+    # ── Per-nickname games + W/L (lifetime, not windowed) ────────────────
+    nickname_rows = (
+        await db.execute(
+            select(
+                Game.user_nickname,
+                func.count(Game.id),
+                func.coalesce(func.sum(case((Game.winner == "user", 1), else_=0)), 0),
+                func.coalesce(func.sum(case((Game.winner == "ai", 1), else_=0)), 0),
+            )
+            .where(Game.user_nickname.is_not(None))
+            .group_by(Game.user_nickname)
+            .order_by(func.count(Game.id).desc())
+            .limit(top)
+        )
+    ).all()
+    nickname_summary: list[NicknameSummary] = []
+    for nick, total_games, wins, losses in nickname_rows:
+        wins_i = int(wins)
+        losses_i = int(losses)
+        decisive_i = wins_i + losses_i
+        nickname_summary.append(
+            NicknameSummary(
+                nickname=str(nick),
+                games=int(total_games),
+                wins=wins_i,
+                losses=losses_i,
+                decisive=decisive_i,
+                win_rate=(wins_i / decisive_i) if decisive_i else 0.0,
+            )
+        )
+
     return AdminStats(
         daily_logins=daily_logins,
         daily_games=daily_games,
@@ -811,6 +852,7 @@ async def stats(
         ai_style_picks=_bucket(ai_style_rows),  # type: ignore[arg-type]
         board_size_picks=_bucket([(str(r[0]), int(r[1])) for r in board_rows]),
         handicap_picks=_bucket([(str(r[0]), int(r[1])) for r in handicap_rows]),
+        nickname_summary=nickname_summary,
         window_days_daily=days,
         window_days_hourly=hourly_days,
     )
