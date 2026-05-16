@@ -475,7 +475,8 @@ export default function AdminPage() {
                       {g.user_rank ? formatRank(g.user_rank, locale) : <span className="text-ink-faint">—</span>}
                     </td>
                     <td className="p-2 text-ink-mute">
-                      {g.ai_player ?? formatRank(g.ai_rank, locale)} · {g.ai_style}
+                      <div>{g.ai_player ? t(`game.players.${g.ai_player}.name`) : formatRank(g.ai_rank, locale)}</div>
+                      <div className="text-ink-faint text-xs">{t(`game.aiStyleName.${g.ai_style}`)}</div>
                     </td>
                     <td className="p-2 text-right tabular-nums">{g.move_count}</td>
                     <td className="p-2 text-right tabular-nums">{g.undo_count}</td>
