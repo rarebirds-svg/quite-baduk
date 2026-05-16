@@ -12,6 +12,7 @@
     "colGames": "대국 수",
     "colActive": "진행 중",
     "colLive": "WS",
+    "colUserRank": "급/단",
     "colAction": "조치",
     "disconnect": "끊기",
     "confirmDisconnect": "{nickname} 세션을 끊겠습니까. 진행 중인 대국의 WS도 닫힙니다.",

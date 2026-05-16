@@ -12,6 +12,7 @@
     "colGames": "Games",
     "colActive": "Active",
     "colLive": "WS",
+    "colUserRank": "Level",
     "colAction": "Action",
     "disconnect": "Disconnect",
     "confirmDisconnect": "Disconnect {nickname}'s session? Any open game WS will be closed.",
