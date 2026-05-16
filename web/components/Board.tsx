@@ -20,7 +20,7 @@ export default function Board({
   size,
   board,
   lastMove = null,
-  lastMoveBlunder = false,
+  lastMoveKind = null,
   onClick,
   disabled,
   overlay,
@@ -30,7 +30,10 @@ export default function Board({
   size: number;
   board: string;
   lastMove?: { x: number; y: number } | null;
-  lastMoveBlunder?: boolean;
+  // "blunder" — 패착 (mover lost ground), oxblood emphasis ring.
+  // "decisive" — 승착 (mover gained ground), moss emphasis ring.
+  // null/undefined — standard thin oxblood "this is the last move" ring.
+  lastMoveKind?: "blunder" | "decisive" | null;
   onClick?: (x: number, y: number) => void;
   disabled?: boolean;
   overlay?: OverlayItem[];
@@ -271,29 +274,35 @@ export default function Board({
         );
       })}
 
-      {lastMove && (
-        <>
-          <circle
-            cx={pad + lastMove.x * CELL}
-            cy={pad + lastMove.y * CELL}
-            r={CELL * 0.38}
-            fill="none"
-            stroke="rgb(var(--oxblood))"
-            strokeWidth={lastMoveBlunder ? 3 : 1.5}
-          />
-          {lastMoveBlunder && (
+      {lastMove && (() => {
+        const emphasis = lastMoveKind === "blunder" || lastMoveKind === "decisive";
+        const stroke = lastMoveKind === "decisive"
+          ? "rgb(var(--moss))"
+          : "rgb(var(--oxblood))";
+        return (
+          <>
             <circle
               cx={pad + lastMove.x * CELL}
               cy={pad + lastMove.y * CELL}
-              r={CELL * 0.5}
+              r={CELL * 0.38}
               fill="none"
-              stroke="rgb(var(--oxblood))"
-              strokeWidth={1.5}
-              strokeDasharray="2 2"
+              stroke={stroke}
+              strokeWidth={emphasis ? 3 : 1.5}
             />
-          )}
-        </>
-      )}
+            {emphasis && (
+              <circle
+                cx={pad + lastMove.x * CELL}
+                cy={pad + lastMove.y * CELL}
+                r={CELL * 0.5}
+                fill="none"
+                stroke={stroke}
+                strokeWidth={1.5}
+                strokeDasharray="2 2"
+              />
+            )}
+          </>
+        );
+      })()}
 
       {overlay?.map((o, i) => {
         const stroke = resolveOverlayColor(o.color);

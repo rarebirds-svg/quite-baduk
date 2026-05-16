@@ -265,19 +265,20 @@ export default function ReviewPlayer({
     return xy ? { x: xy[0], y: xy[1] } : null;
   }, [game, idx]);
 
-  // Blunder index list — driven by whatever winrate data is available so
-  // dots can populate as analysis streams in, even mid-pipeline. Empty
-  // when not in learn mode so the scrubber stays clean.
-  const blunderMoves = useMemo(() => {
-    if (mode !== "learn" || !game) return [] as number[];
-    const out: number[] = [];
+  // Turning-point index — every move whose |winrate swing| exceeds the
+  // threshold, regardless of direction. The sign distinguishes 패착
+  // (the mover lost ground, d > 0) from 승착 (the mover gained, d < 0).
+  // Populates progressively as analysis streams in.
+  const turningPoints = useMemo(() => {
+    if (mode !== "learn" || !game) return [] as { n: number; drop: number }[];
+    const out: { n: number; drop: number }[] = [];
     for (let n = 1; n < game.moves.length + 1; n++) {
       const before = winratesBlack[n - 1];
       const after = winratesBlack[n];
       if (before === undefined || after === undefined) continue;
       const m = game.moves[n - 1];
       const d = moveDrop(before, after, m.color);
-      if (d > BLUNDER_THRESHOLD) out.push(n);
+      if (Math.abs(d) > BLUNDER_THRESHOLD) out.push({ n, drop: d });
     }
     return out;
   }, [mode, game, winratesBlack]);
@@ -302,6 +303,8 @@ export default function ReviewPlayer({
       ? moveDrop(wrBefore, wrAfter, currentMove.color)
       : null;
   const isBlunder = drop !== null && drop > BLUNDER_THRESHOLD;
+  const isDecisive = drop !== null && drop < -BLUNDER_THRESHOLD;
+  const isTurning = isBlunder || isDecisive;
   const alternatives = idx > 0 ? topMovesAt[idx - 1] ?? [] : [];
 
   const learning = mode === "learn";
@@ -390,7 +393,7 @@ export default function ReviewPlayer({
           )}
           {learning && analysisDone && (
             <span className="font-mono tabular-nums text-[10px]">
-              {blunderMoves.length}
+              {turningPoints.length}
               <span className="ml-0.5">●</span>
             </span>
           )}
@@ -410,7 +413,7 @@ export default function ReviewPlayer({
               ? t("review.coachingProgress") + " 0 / —"
               : !analysisDone
               ? `${t("review.coachingProgress")} ${coachingProgress.done} / ${coachingProgress.total}`
-              : `${t("review.coachingDone")} · ${blunderMoves.length} ${t("review.blunderTag")}`}
+              : `${t("review.coachingDone")} · ${turningPoints.length} ${t("review.turningPointTag")}`}
           </span>
           {analysisDone && wrAfter !== null && (
             <span className="ml-auto font-mono tabular-nums text-ink">
@@ -451,7 +454,15 @@ export default function ReviewPlayer({
           size={game.board_size}
           board={board}
           lastMove={lastMove}
-          lastMoveBlunder={learning && isBlunder}
+          lastMoveKind={
+            learning
+              ? isBlunder
+                ? "blunder"
+                : isDecisive
+                ? "decisive"
+                : null
+              : null
+          }
           overlay={altOverlay}
         />
       </div>
@@ -463,20 +474,26 @@ export default function ReviewPlayer({
             "border px-3 py-2 font-sans text-sm flex flex-col gap-1 " +
             (isBlunder
               ? "border-oxblood text-oxblood bg-paper-deep"
+              : isDecisive
+              ? "border-moss text-moss bg-paper-deep"
               : "border-ink-faint text-ink-mute")
           }
           aria-live="polite"
         >
           <div className="flex items-baseline justify-between gap-3">
             <span className="font-semibold tracking-label uppercase text-xs">
-              {isBlunder ? t("review.blunderTag") : t("review.coachTag")}
+              {isBlunder
+                ? t("review.blunderTag")
+                : isDecisive
+                ? t("review.decisiveTag")
+                : t("review.coachTag")}
             </span>
             <span className="font-mono tabular-nums text-xs">
               {drop > 0 ? "−" : "+"}
               {Math.abs(drop * 100).toFixed(1)}%
             </span>
           </div>
-          {isBlunder && (
+          {isTurning && (
             <div className="font-sans text-xs leading-relaxed text-ink">
               {(() => {
                 const sideKey = currentMove.color === "B" ? "review.sideBlack" : "review.sideWhite";
@@ -497,7 +514,7 @@ export default function ReviewPlayer({
                         {wrFrom.toFixed(1)}% → {wrTo.toFixed(1)}%
                       </span>
                     )}
-                    {best && (
+                    {isBlunder && best && (
                       <>
                         {" · "}
                         <span>{t("review.bestMove")} </span>
@@ -523,19 +540,23 @@ export default function ReviewPlayer({
           className="w-full accent-oxblood block"
           aria-label={t("review.scrubber")}
         />
-        {learning && blunderMoves.length > 0 && (
+        {learning && turningPoints.length > 0 && (
           <div
             aria-hidden="true"
             className="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2"
           >
-            {blunderMoves.map((n) => {
+            {turningPoints.map(({ n, drop: d }) => {
               const pct = (n / game.moves.length) * 100;
+              const kind = d > 0 ? "blunder" : "decisive";
               return (
                 <span
                   key={n}
-                  className="absolute -translate-x-1/2 h-2 w-2 rounded-full bg-oxblood"
+                  className={
+                    "absolute -translate-x-1/2 h-2 w-2 rounded-full " +
+                    (kind === "blunder" ? "bg-oxblood" : "bg-moss")
+                  }
                   style={{ left: `${pct}%` }}
-                  title={`#${n} ${t("review.blunderTag")}`}
+                  title={`#${n} ${kind === "blunder" ? t("review.blunderTag") : t("review.decisiveTag")}`}
                 />
               );
             })}
@@ -593,17 +614,16 @@ export default function ReviewPlayer({
         </a>
       </div>
 
-      {/* Blunder list — appears in learn mode immediately, even before
-          analysis lands a single result. Pre-analysis it shows a
-          progress placeholder; otherwise rows + the running count. */}
+      {/* Turning-point list — 패착 (blunder) and 승착 (decisive) both
+          surfaced as the analysis pipeline streams in. */}
       {learning && (
         <div className="border border-ink-faint divide-y divide-ink-faint">
           <div className="px-3 py-2 flex items-baseline justify-between font-sans text-xs">
             <span className="font-semibold uppercase tracking-label text-oxblood">
-              {t("review.blunderListTitle")}
+              {t("review.turningPointListTitle")}
             </span>
             <span className="font-mono tabular-nums text-ink-mute">
-              {analysisDone ? blunderMoves.length : "…"}
+              {analysisDone ? turningPoints.length : "…"}
             </span>
           </div>
           {!analysisDone ? (
@@ -612,17 +632,17 @@ export default function ReviewPlayer({
                 ? `${t("review.coachingProgress")} ${coachingProgress.done} / ${coachingProgress.total}`
                 : t("review.coachingProgress") + "…"}
             </div>
-          ) : blunderMoves.length === 0 ? (
+          ) : turningPoints.length === 0 ? (
             <div className="px-3 py-2 font-sans text-xs text-ink-mute">
-              {t("review.noBlundersFound")}
+              {t("review.noTurningPointsFound")}
             </div>
           ) : (
-            blunderMoves.map((n) => {
-              const before = winratesBlack[n - 1];
-              const after = winratesBlack[n];
+            turningPoints.map(({ n, drop: d }) => {
               const m = game.moves[n - 1];
-              const d = moveDrop(before, after, m.color);
               const isCurrent = n === idx;
+              const kind = d > 0 ? "blunder" : "decisive";
+              const tone = kind === "blunder" ? "text-oxblood" : "text-moss";
+              const label = kind === "blunder" ? t("review.blunderTag") : t("review.decisiveTag");
               return (
                 <button
                   key={n}
@@ -632,7 +652,7 @@ export default function ReviewPlayer({
                     setPlaying(false);
                   }}
                   className={
-                    "w-full text-left px-3 py-2 grid grid-cols-[auto_auto_1fr_auto] gap-3 items-baseline font-sans text-sm hover:bg-paper-deep transition-base " +
+                    "w-full text-left px-3 py-2 grid grid-cols-[auto_auto_auto_1fr_auto] gap-3 items-baseline font-sans text-sm hover:bg-paper-deep transition-base " +
                     (isCurrent ? "bg-paper-deep" : "")
                   }
                 >
@@ -640,11 +660,14 @@ export default function ReviewPlayer({
                     #{n}
                   </span>
                   <span>{m.color === "B" ? "●" : "○"}</span>
+                  <span className={"font-semibold tracking-label uppercase text-[10px] " + tone}>
+                    {label}
+                  </span>
                   <span className="font-mono tabular-nums text-xs">
                     {m.coord ?? "pass"}
                   </span>
-                  <span className="font-mono tabular-nums text-xs text-oxblood">
-                    −{(d * 100).toFixed(1)}%
+                  <span className={"font-mono tabular-nums text-xs " + tone}>
+                    {d > 0 ? "−" : "+"}{Math.abs(d * 100).toFixed(1)}%
                   </span>
                 </button>
               );
