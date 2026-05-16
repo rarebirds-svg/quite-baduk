@@ -481,7 +481,7 @@ export default function AdminPage() {
                     <td className="p-2 text-right tabular-nums">{g.move_count}</td>
                     <td className="p-2 text-right tabular-nums">{g.undo_count}</td>
                     <td className="p-2 text-right tabular-nums">{g.hint_count}</td>
-                    <td className="p-2 tabular-nums text-ink-mute">
+                    <td className="p-2 tabular-nums text-ink-mute whitespace-nowrap">
                       <div>{fmtDate(g.started_at)}</div>
                       <div className="text-ink-faint">{fmtTime(g.started_at)}</div>
                     </td>
