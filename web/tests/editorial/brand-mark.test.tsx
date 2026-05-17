@@ -6,7 +6,7 @@ describe("BrandMark", () => {
   it("renders an SVG with aria-label", () => {
     const { container } = render(<BrandMark />);
     const svg = container.querySelector("svg");
-    expect(svg).toHaveAttribute("aria-label", "K-Baduk");
+    expect(svg).toHaveAttribute("aria-label", "Inkbaduk");
     expect(svg).toHaveAttribute("width", "20");
   });
 

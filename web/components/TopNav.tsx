@@ -75,7 +75,7 @@ export default function TopNav() {
         >
           <BrandMark size={20} />
           <span className="whitespace-nowrap font-serif text-lg font-semibold tracking-tight">
-            K-Baduk
+            Inkbaduk
           </span>
           <span aria-hidden className="hidden h-3 w-px bg-ink-faint sm:inline-block" />
           <span className="hidden font-mono text-[10px] uppercase tracking-label text-ink-mute sm:inline">

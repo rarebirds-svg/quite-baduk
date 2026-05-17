@@ -1,5 +1,5 @@
 {
-  "app": { "title": "K-Baduk:조용한 승부" },
+  "app": { "title": "Inkbaduk · Quiet Game" },
   "nav": { "home": "Home", "newGame": "New Game", "history": "History", "daily": "Daily Challenge", "settings": "Settings", "admin": "Admin", "volume": "Vol. I" },
   "admin": {
     "heading": "Admin console",

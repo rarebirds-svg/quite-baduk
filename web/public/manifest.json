@@ -1,7 +1,7 @@
 {
-  "name": "K-Baduk:조용한 승부",
-  "short_name": "K-Baduk",
-  "description": "K-Baduk — KataGo Human-SL을 상대로 한 판",
+  "name": "Inkbaduk · 조용한 승부",
+  "short_name": "Inkbaduk",
+  "description": "Inkbaduk — KataGo Human-SL을 상대로 한 판",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
