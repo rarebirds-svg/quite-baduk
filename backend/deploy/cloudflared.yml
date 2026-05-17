@@ -1,6 +1,8 @@
-# Cloudflare Tunnel routing for baduk.
+# Cloudflare Tunnel routing for Inkbaduk.
 #
-# Replace __TUNNEL_UUID__, __USER_HOME__, and __DOMAIN__ during deploy.
+# Replace __TUNNEL_UUID__, __USER_HOME__, __DOMAIN__ during deploy.
+# 다중 hostname (브랜드 교체 후 구 도메인 유지 등) 운영 시 ingress 블록을
+# 각 hostname마다 두 줄(/api/* + frontend)씩 복제. catch-all은 마지막에 한 번.
 # See deploy/README.md "Cloudflare Tunnel" section for full setup.
 #
 # Single-origin path-split: same hostname serves the Next.js app and the
@@ -12,14 +14,20 @@ tunnel: __TUNNEL_UUID__
 credentials-file: __USER_HOME__/.cloudflared/__TUNNEL_UUID__.json
 
 ingress:
-  # Backend (FastAPI) — REST under /api/* and WebSocket under /api/ws/*
+  # Primary hostname — Backend (/api/*) + Frontend
   - hostname: __DOMAIN__
     path: ^/api(/.*)?$
     service: http://127.0.0.1:8000
-
-  # Frontend (Next.js)
   - hostname: __DOMAIN__
     service: http://127.0.0.1:3000
+
+  # (옵션) Apex + www 또는 레거시 hostname을 같이 운영하려면 동일 패턴으로
+  # 블록을 추가하고, CORS_ORIGINS 환경변수에 각 origin을 함께 등록할 것.
+  # - hostname: www.__DOMAIN__
+  #   path: ^/api(/.*)?$
+  #   service: http://127.0.0.1:8000
+  # - hostname: www.__DOMAIN__
+  #   service: http://127.0.0.1:3000
 
   # Catch-all
   - service: http_status:404
