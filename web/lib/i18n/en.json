@@ -357,7 +357,7 @@
       "rights": {
         "title": "Your rights",
         "items": [
-          "Access, correction, or deletion requests: support@baduk.example",
+          "Access, correction, or deletion requests: poporyfamily@gmail.com",
           "Nickname change: create a new nickname session",
           "Game history deletion: email the address above with your nickname — processed within 7 business days"
         ]
@@ -367,7 +367,7 @@
         "items": [
           "Users under 14 years of age must have a legal guardian's consent before using the service.",
           "By registering a nickname you confirm that you are 14 or older.",
-          "If guardian consent is required, please contact support@baduk.example."
+          "If guardian consent is required, please contact poporyfamily@gmail.com."
         ]
       },
       "cookies": {
@@ -387,7 +387,7 @@
       "contact": {
         "title": "Privacy contact",
         "items": [
-          "Email: support@baduk.example"
+          "Email: poporyfamily@gmail.com"
         ]
       }
     }
@@ -424,7 +424,7 @@
           "Nickname equivalence is decided by NFKC normalisation and case-folding. For example, 'GoMaster' and 'gomaster', or full-width 'Ｇｏ' and half-width 'Go', are treated as the same nickname and cannot both be registered at the same time.",
           "The following nicknames may be restricted from use or registration — (a) impersonation of others or expressions that may be mistaken for staff, administrators, or an official account; (b) profanity, hate speech, discriminatory, sexual, or violent expressions; (c) advertising, spam, or external URLs; (d) expressions that infringe a third party's trademark, copyright, or personality rights; (e) expressions that violate applicable law; (f) nicknames reserved or designated by the operator (used for administrator identification and system messages).",
           "If a nickname matches the criteria above, the operator may reclaim or block it without prior notice and may refuse the creation of new sessions under the same nickname or its variants. In cases of repeated violations, access may be restricted at the IP level.",
-          "Inappropriate nicknames may be reported to support@baduk.example. The operator will review and act within 7 business days.",
+          "Inappropriate nicknames may be reported to poporyfamily@gmail.com. The operator will review and act within 7 business days.",
           "A nickname is held temporarily only while a session is active and confers no permanent ownership. After the session expires, the same nickname may be claimed by another user, so returning under the same nickname is not guaranteed."
         ]
       },
@@ -451,7 +451,7 @@
           "This service has no official affiliation, endorsement, or sponsorship from any listed player or from organisations such as the Korea Baduk Association, the Nihon Ki-in, or the Chinese Weiqi Association, and does not present itself as having such a relationship.",
           "The KataGo Human-SL model used here is a generic, rank-trained model — it has not been trained on any individual player's game records and does not impersonate that player.",
           "References are limited to well-known nicknames and publicly known stylistic evaluations; no player's photograph, signature, voice, or personal logo is used.",
-          "This section reflects considerations under Article 2(1)(t) of the Korean Unfair Competition Prevention and Trade Secret Protection Act and related personality-rights principles. A listed player or a legitimate rights-holder may write to support@baduk.example to request a change or removal of any name; the operator will review within 7 business days (faster for urgent matters) and remove the listing immediately upon a verified reasonable objection."
+          "This section reflects considerations under Article 2(1)(t) of the Korean Unfair Competition Prevention and Trade Secret Protection Act and related personality-rights principles. A listed player or a legitimate rights-holder may write to poporyfamily@gmail.com to request a change or removal of any name; the operator will review within 7 business days (faster for urgent matters) and remove the listing immediately upon a verified reasonable objection."
         ]
       },
       "serviceChanges": {
@@ -479,7 +479,7 @@
       "contact": {
         "title": "Contact",
         "items": [
-          "Email: support@baduk.example"
+          "Email: poporyfamily@gmail.com"
         ]
       }
     }
