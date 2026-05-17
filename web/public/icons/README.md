@@ -1,8 +1,9 @@
-# Icon Placeholders — Replace Before App Store Submission
+# Inkbaduk Icons
 
-These PNG files are **solid-color placeholders** (#F5EFE6, the Editorial Hardcover paper background).
-They are valid PNG files and will render a blank beige square. They must be replaced by the designer
-before any App Store or Play Store submission.
+PNG icons for PWA·iOS·Android. Generated programmatically from
+`backend/scripts/generate_brand_icons.py`. Re-run that script after any
+brand visual change. Source colors come from `web/app/globals.css` —
+paper `#F5EFE6`, ink `#1A1715`.
 
 ## Required files
 

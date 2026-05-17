@@ -25,6 +25,19 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  openGraph: {
+    title: "Inkbaduk · 조용한 승부",
+    description: "KataGo Human-SL과 두는 한국식 바둑 (9×9 · 13×13 · 19×19)",
+    siteName: "Inkbaduk",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Inkbaduk" }],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Inkbaduk · 조용한 승부",
+    description: "KataGo Human-SL과 두는 한국식 바둑",
+    images: ["/og-image.png"],
+  },
   formatDetection: { telephone: false },
 };
 
