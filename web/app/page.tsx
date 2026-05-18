@@ -221,7 +221,7 @@ export default function NicknameGate() {
         <p className="font-sans text-xs text-ink-faint leading-relaxed">
           {t("home.footerNote")}
         </p>
-        <div className="mt-3 flex items-center gap-4">
+        <div className="mt-3 flex items-center gap-4 flex-wrap">
           <Link
             href="/privacy"
             className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
@@ -234,6 +234,13 @@ export default function NicknameGate() {
             className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
           >
             {t("home.footerTerms")}
+          </Link>
+          <span className="text-ink-faint text-xs" aria-hidden="true">·</span>
+          <Link
+            href="/support"
+            className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
+          >
+            {t("home.footerSupport")}
           </Link>
         </div>
       </footer>

@@ -19,6 +19,7 @@ import { useT, useLocale } from "@/lib/i18n";
 import { formatRank, type Rank } from "@/components/RankPicker";
 import { playStoneClick } from "@/lib/soundfx";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
+import { SupportNudge } from "@/components/SupportNudge";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { DataBlock } from "@/components/editorial/DataBlock";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -451,16 +452,19 @@ export default function PlayPage() {
         />
 
         {g.gameOver && (
-          <div className="border border-ink p-4 font-serif text-lg flex items-center">
-            <span>{t("game.result")}: {g.result || ""}</span>
-            <button
-              type="button"
-              className="ml-3 font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
-              onClick={() => setKifuOpen(true)}
-            >
-              {t("game.viewKifu")}
-            </button>
-          </div>
+          <>
+            <div className="border border-ink p-4 font-serif text-lg flex items-center">
+              <span>{t("game.result")}: {g.result || ""}</span>
+              <button
+                type="button"
+                className="ml-3 font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
+                onClick={() => setKifuOpen(true)}
+              >
+                {t("game.viewKifu")}
+              </button>
+            </div>
+            <SupportNudge context="game-end" />
+          </>
         )}
       </div>
 

@@ -7,6 +7,7 @@ import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { Button } from "@/components/ui/button";
 import { gtpToXy, totalCells, xyToGtp } from "@/lib/board";
+import { SupportNudge } from "@/components/SupportNudge";
 import { toast } from "sonner";
 
 interface SetupPlay {
@@ -495,6 +496,7 @@ export default function DailyChallengePage() {
             </div>
           )}
 
+          {result && <SupportNudge context="daily-result" />}
           {result && (
             <div
               className={
