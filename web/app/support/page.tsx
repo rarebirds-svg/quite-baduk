@@ -77,9 +77,14 @@ export default function SupportPage() {
         subtitle={t("support.subtitle")}
       />
 
-      <p className="font-sans text-sm text-ink leading-relaxed max-w-prose">
-        {t("support.intro")}
-      </p>
+      <div className="space-y-3 max-w-prose">
+        <p className="font-sans text-sm text-ink leading-relaxed">
+          {t("support.intro")}
+        </p>
+        <p className="font-sans text-sm text-ink leading-relaxed">
+          {t("support.intro2")}
+        </p>
+      </div>
 
       <RuleDivider weight="strong" />
 

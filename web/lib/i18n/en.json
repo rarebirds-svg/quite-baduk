@@ -515,7 +515,8 @@
   "support": {
     "heading": "Support Inkbaduk",
     "subtitle": "Help carry the running cost",
-    "intro": "Inkbaduk runs without ads, subscriptions, or accounts. Every feature is open to everyone, supporter or not. But servers, domain, and backups cost a small amount each month, and one person runs all of this. If the site is useful to you, sending a coffee-sized contribution through any of the channels below lets us keep going.",
+    "intro": "Inkbaduk runs without ads, subscriptions, or accounts. Every feature is open to everyone, and supporters and non-supporters share the same experience.",
+    "intro2": "Servers, domain, and backups cost a small amount each month, and one person runs all of this. If the site speaks to you, please consider sending a coffee through any of the channels below — those small gestures keep this place alive.",
     "howSection": "How to support",
     "memoHint": "Add a display name in the transfer memo and we'll list you on the supporters page. (\"Anonymous\" just bumps the counter by one.)",
     "tossLabel": "Toss (Korea)",
