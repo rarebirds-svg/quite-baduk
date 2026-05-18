@@ -1,7 +1,7 @@
 {
-  "tossId": "___FILL_IN___",
+  "kakaoPayQr": "___FILL_IN___",
   "bankName": "___FILL_IN___",
   "bankAccount": "___FILL_IN___",
   "bankOwner": "___FILL_IN___",
-  "stripeLink": ""
+  "paypalMe": ""
 }

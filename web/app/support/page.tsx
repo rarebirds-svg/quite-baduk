@@ -7,45 +7,77 @@ import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { Button } from "@/components/ui/button";
 import supportConfig from "@/data/support-config.json";
 
-interface SupportRowProps {
-  label: string;
-  value: string;
-  hint?: string;
+const PLACEHOLDER = "___FILL_IN___";
+
+function isMissing(v: string | undefined | null): boolean {
+  return !v || v === PLACEHOLDER;
 }
 
-function SupportRow({ label, value, hint }: SupportRowProps) {
+interface SupportRowProps {
+  label: string;
+  /** Plain-text value users would copy (e.g., 계좌번호). */
+  copyValue?: string;
+  /** Outbound link (e.g., 카카오페이 QR 링크, PayPal.me). */
+  href?: string;
+  /** Visible string under the label — falls back to copyValue or href host. */
+  displayValue?: string;
+  hint?: string;
+  pendingLabel: string;
+}
+
+function SupportRow({
+  label,
+  copyValue,
+  href,
+  displayValue,
+  hint,
+  pendingLabel,
+}: SupportRowProps) {
   const [copied, setCopied] = useState(false);
+
+  const placeholder = isMissing(copyValue) && isMissing(href);
   const onCopy = async () => {
+    if (!copyValue || isMissing(copyValue)) return;
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(copyValue);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Clipboard refused (insecure context, permission) — quietly skip.
+      // Clipboard refused — quietly skip.
     }
   };
-  const isPlaceholder = value === "___FILL_IN___" || value === "";
+
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-ink-faint py-3 last:border-b-0">
       <div className="flex flex-col gap-0.5 min-w-0">
         <span className="font-sans text-xs font-semibold uppercase tracking-label text-ink-mute">
           {label}
         </span>
-        <span
-          className={
-            "font-mono text-sm break-all " +
-            (isPlaceholder ? "text-ink-faint italic" : "text-ink")
-          }
-        >
-          {isPlaceholder ? "(준비 중)" : value}
-        </span>
+        {placeholder ? (
+          <span className="font-mono text-sm italic text-ink-faint">
+            {pendingLabel}
+          </span>
+        ) : href && !isMissing(href) ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-sm text-oxblood hover:underline break-all"
+          >
+            {displayValue ?? href}
+          </a>
+        ) : (
+          <span className="font-mono text-sm text-ink break-all">
+            {displayValue ?? copyValue}
+          </span>
+        )}
         {hint && (
           <span className="font-sans text-xs text-ink-faint leading-relaxed mt-1">
             {hint}
           </span>
         )}
       </div>
-      {!isPlaceholder && (
+      {copyValue && !isMissing(copyValue) && (
         <Button
           variant="outline"
           size="sm"
@@ -63,12 +95,21 @@ function SupportRow({ label, value, hint }: SupportRowProps) {
 export default function SupportPage() {
   const t = useT();
   const cfg = supportConfig as {
-    tossId: string;
+    kakaoPayQr: string;
     bankName: string;
     bankAccount: string;
     bankOwner: string;
-    stripeLink: string;
+    paypalMe: string;
   };
+
+  const bankValue =
+    !isMissing(cfg.bankName) && !isMissing(cfg.bankAccount)
+      ? `${cfg.bankName} ${cfg.bankAccount}`
+      : "";
+  const bankHint =
+    !isMissing(cfg.bankOwner)
+      ? `${t("support.bankOwnerLabel")} ${cfg.bankOwner}`
+      : undefined;
 
   return (
     <div className="space-y-6">
@@ -96,39 +137,25 @@ export default function SupportPage() {
 
         <div className="border border-ink-faint px-4">
           <SupportRow
-            label={t("support.tossLabel")}
-            value={cfg.tossId}
-            hint={t("support.tossHint")}
+            label={t("support.kakaoPayLabel")}
+            href={cfg.kakaoPayQr}
+            displayValue={t("support.kakaoPayOpenLink")}
+            hint={t("support.kakaoPayHint")}
+            pendingLabel={t("support.pending")}
           />
           <SupportRow
             label={t("support.bankLabel")}
-            value={
-              cfg.bankName && cfg.bankAccount
-                ? `${cfg.bankName} ${cfg.bankAccount}`
-                : ""
-            }
-            hint={
-              cfg.bankOwner && cfg.bankOwner !== "___FILL_IN___"
-                ? `${t("support.bankOwnerLabel")} ${cfg.bankOwner}`
-                : undefined
-            }
+            copyValue={bankValue}
+            hint={bankHint}
+            pendingLabel={t("support.pending")}
           />
-          {cfg.stripeLink ? (
-            <SupportRow
-              label={t("support.stripeLabel")}
-              value={cfg.stripeLink}
-              hint={t("support.stripeHint")}
-            />
-          ) : (
-            <div className="border-b border-ink-faint py-3 last:border-b-0">
-              <span className="font-sans text-xs font-semibold uppercase tracking-label text-ink-mute">
-                {t("support.stripeLabel")}
-              </span>
-              <p className="font-sans text-xs text-ink-faint italic mt-1">
-                {t("support.stripePending")}
-              </p>
-            </div>
-          )}
+          <SupportRow
+            label={t("support.paypalLabel")}
+            href={cfg.paypalMe}
+            displayValue={cfg.paypalMe ? cfg.paypalMe.replace(/^https?:\/\//, "") : ""}
+            hint={t("support.paypalHint")}
+            pendingLabel={t("support.pending")}
+          />
         </div>
       </section>
 
