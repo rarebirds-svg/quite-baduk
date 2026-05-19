@@ -144,6 +144,66 @@ async def test_admin_games_pagination(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_admin_games_nickname_filter(client: AsyncClient) -> None:
+    """Substring nickname search narrows the result set + total."""
+    await _signup(client, ADMIN_NICK)
+    await _create_game(client)
+    # Another user with a distinct nickname.
+    other = AsyncClient(transport=client._transport, base_url=client.base_url)
+    try:
+        await _signup(other, "alice_player")
+        await _create_game(other)
+
+        # ADMIN_NICK partial substring matches their own games.
+        r = await client.get(f"/api/admin/games?nickname={ADMIN_NICK}")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["total"] == 1
+        assert all(g["nickname"] == ADMIN_NICK for g in body["rows"])
+
+        # Substring "alice" finds the other player.
+        r2 = await client.get("/api/admin/games?nickname=alice")
+        assert r2.json()["total"] == 1
+        assert r2.json()["rows"][0]["nickname"] == "alice_player"
+
+        # No match → empty result, total 0.
+        r3 = await client.get("/api/admin/games?nickname=nobody_here_xyz")
+        body3 = r3.json()
+        assert body3["total"] == 0
+        assert body3["rows"] == []
+    finally:
+        await other.aclose()
+
+
+@pytest.mark.asyncio
+async def test_admin_games_date_range(client: AsyncClient) -> None:
+    """from_date / to_date constrains started_at; invalid dates are ignored."""
+    import datetime as _dt
+    await _signup(client, ADMIN_NICK)
+    await _create_game(client)
+
+    today = _dt.date.today().isoformat()
+    tomorrow = (_dt.date.today() + _dt.timedelta(days=1)).isoformat()
+    yesterday = (_dt.date.today() - _dt.timedelta(days=1)).isoformat()
+
+    # today..today inclusive — includes the game.
+    r = await client.get(f"/api/admin/games?from_date={today}&to_date={today}")
+    assert r.json()["total"] == 1
+
+    # tomorrow..tomorrow — excludes today's game.
+    r2 = await client.get(f"/api/admin/games?from_date={tomorrow}&to_date={tomorrow}")
+    assert r2.json()["total"] == 0
+
+    # yesterday..today — includes.
+    r3 = await client.get(f"/api/admin/games?from_date={yesterday}&to_date={today}")
+    assert r3.json()["total"] == 1
+
+    # Garbage date → ignored, behaves like no filter.
+    r4 = await client.get("/api/admin/games?from_date=not-a-date")
+    assert r4.json()["total"] == 1
+
+
+@pytest.mark.asyncio
 async def test_admin_sessions_list(client: AsyncClient) -> None:
     await _signup(client, ADMIN_NICK)
     r = await client.get("/api/admin/sessions")

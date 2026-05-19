@@ -127,8 +127,12 @@ export default function AdminPage() {
   const [summary, setSummary] = useState<AdminSummary | null>(null);
   const [engine, setEngine] = useState<AdminEngineHealth | null>(null);
   const [filter, setFilter] = useState<GameFilter>("all");
+  const [nicknameSearch, setNicknameSearch] = useState("");
+  const [nicknameDebounced, setNicknameDebounced] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [gamesPage, setGamesPage] = useState(0);
-  const GAMES_PAGE_SIZE = 25;
+  const GAMES_PAGE_SIZE = 10;
   const [forbidden, setForbidden] = useState(false);
   const [reviewGameId, setReviewGameId] = useState<number | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<number | null>(null);
@@ -158,6 +162,9 @@ export default function AdminPage() {
       try {
         const params = new URLSearchParams();
         if (filter !== "all") params.set("status_", filter);
+        if (nicknameDebounced) params.set("nickname", nicknameDebounced);
+        if (fromDate) params.set("from_date", fromDate);
+        if (toDate) params.set("to_date", toDate);
         params.set("limit", String(GAMES_PAGE_SIZE));
         params.set("offset", String(gamesPage * GAMES_PAGE_SIZE));
         const [s, gPage, sum, eng] = await Promise.all([
@@ -191,14 +198,20 @@ export default function AdminPage() {
       clearInterval(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, filter, gamesPage]);
+  }, [session, filter, gamesPage, nicknameDebounced, fromDate, toDate]);
 
-  // Reset to page 0 when the filter changes so we don't land on an
+  // Debounce nickname search so we don't refetch on every keystroke.
+  useEffect(() => {
+    const id = setTimeout(() => setNicknameDebounced(nicknameSearch.trim()), 350);
+    return () => clearTimeout(id);
+  }, [nicknameSearch]);
+
+  // Reset to page 0 when any filter changes so we don't land on an
   // empty page (e.g. were on page 4 of "all", switched to "resigned"
   // which only has 12 rows total).
   useEffect(() => {
     setGamesPage(0);
-  }, [filter]);
+  }, [filter, nicknameDebounced, fromDate, toDate]);
 
   const liveCount = useMemo(() => sessions?.filter((s) => s.is_connected_ws).length ?? 0, [sessions]);
   const activeGameCount = useMemo(() => games?.filter((g) => g.status === "active").length ?? 0, [games]);
@@ -397,7 +410,7 @@ export default function AdminPage() {
       <RuleDivider weight="faint" className="my-8" />
 
       <section>
-        <div className="flex items-baseline justify-between mb-3">
+        <div className="flex items-baseline justify-between mb-3 gap-3 flex-wrap">
           <h2 className="font-serif text-xl">{t("admin.sectionGames")}</h2>
           <div className="flex gap-1 text-xs font-sans">
             {GAME_FILTERS.map((f) => {
@@ -429,6 +442,55 @@ export default function AdminPage() {
               );
             })}
           </div>
+        </div>
+        <div className="mb-3 flex gap-2 flex-wrap items-end font-sans text-xs">
+          <label className="flex flex-col gap-1">
+            <span className="text-ink-mute uppercase tracking-label">
+              {t("admin.filterNickname")}
+            </span>
+            <input
+              type="text"
+              value={nicknameSearch}
+              onChange={(e) => setNicknameSearch(e.target.value)}
+              placeholder={t("admin.filterNicknamePh")}
+              className="border border-ink-faint bg-paper px-2 py-1 font-mono text-sm w-44 focus:outline-none focus:border-ink"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-ink-mute uppercase tracking-label">
+              {t("admin.filterFrom")}
+            </span>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="border border-ink-faint bg-paper px-2 py-1 font-mono text-sm focus:outline-none focus:border-ink"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-ink-mute uppercase tracking-label">
+              {t("admin.filterTo")}
+            </span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="border border-ink-faint bg-paper px-2 py-1 font-mono text-sm focus:outline-none focus:border-ink"
+            />
+          </label>
+          {(nicknameSearch || fromDate || toDate) && (
+            <button
+              type="button"
+              onClick={() => {
+                setNicknameSearch("");
+                setFromDate("");
+                setToDate("");
+              }}
+              className="border border-ink-faint px-2 py-1 text-ink-mute hover:bg-paper-deep transition-base self-end h-[30px]"
+            >
+              {t("admin.filterClear")}
+            </button>
+          )}
         </div>
         <div className="overflow-x-auto border border-ink-faint">
           <table className="w-full font-mono text-sm">

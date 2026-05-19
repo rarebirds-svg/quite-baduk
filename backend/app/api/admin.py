@@ -352,19 +352,48 @@ async def list_games(
     _: AdminSession,
     db: DbSession,
     status_: str | None = None,
+    nickname: str | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
     limit: int = 50,
     offset: int = 0,
 ) -> AdminGamesPage:
     """Paginated recent-games list. `limit` is clamped to [1, 500] and
     `offset` to non-negative — clients page by incrementing offset by
-    limit. Total reflects rows matching `status_` (so the indicator stays
-    correct as the user filters)."""
+    limit. Total reflects every filter (so the indicator stays correct).
+
+    Filters:
+    - status_: "active" / "finished" / "resigned"
+    - nickname: substring match against user_nickname (case-insensitive)
+    - from_date / to_date: ISO YYYY-MM-DD inclusive range on started_at.
+      Invalid dates are silently ignored.
+    """
     effective_limit = max(1, min(limit, 500))
     effective_offset = max(0, offset)
 
     base = select(Game)
     if status_:
         base = base.where(Game.status == status_)
+    if nickname:
+        base = base.where(Game.user_nickname.ilike(f"%{nickname}%"))
+    if from_date:
+        try:
+            d = date.fromisoformat(from_date)
+            base = base.where(
+                Game.started_at >= datetime.combine(d, datetime.min.time())
+            )
+        except ValueError:
+            pass
+    if to_date:
+        try:
+            d = date.fromisoformat(to_date)
+            # End of day → use the next day at 00:00 as exclusive upper bound.
+            next_day = d + timedelta(days=1)
+            base = base.where(
+                Game.started_at < datetime.combine(next_day, datetime.min.time())
+            )
+        except ValueError:
+            pass
 
     total_q = select(func.count()).select_from(base.subquery())
     total = int((await db.execute(total_q)).scalar() or 0)
