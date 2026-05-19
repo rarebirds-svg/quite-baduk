@@ -94,13 +94,15 @@ function SupportRow({
 
 export default function SupportPage() {
   const t = useT();
-  const cfg = supportConfig as {
+  // 모든 필드는 선택사항으로 다룬다 — JSON 스키마가 운영자 손에 따라
+  // 부분만 채워질 수 있고, 누락된 채널은 "(준비 중)"으로 렌더링.
+  const cfg = supportConfig as Partial<{
     kakaoPayQr: string;
     bankName: string;
     bankAccount: string;
     bankOwner: string;
     paypalMe: string;
-  };
+  }>;
 
   const bankValue =
     !isMissing(cfg.bankName) && !isMissing(cfg.bankAccount)
