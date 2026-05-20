@@ -1,6 +1,22 @@
 {
   "app": { "title": "Inkbaduk · 조용한 승부" },
-  "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "daily": "일일 챌린지", "settings": "설정", "admin": "관리자", "volume": "Vol. I" },
+  "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "daily": "일일 챌린지", "spectate": "관전", "settings": "설정", "admin": "관리자", "volume": "Vol. I" },
+  "spectate": {
+    "heading": "관전",
+    "subtitle": "진행 중이거나 끝난 대국을 둘러보세요",
+    "empty": "관전할 수 있는 대국이 없습니다.",
+    "liveSection": "진행 중",
+    "endedSection": "종료된 대국",
+    "noLive": "지금 진행 중인 대국이 없습니다.",
+    "noEnded": "종료된 대국이 없습니다.",
+    "liveBadge": "LIVE",
+    "movesSuffix": "수",
+    "watchHeading": "관전",
+    "backToList": "관전 목록",
+    "notFound": "관전할 수 없는 대국입니다. 종료되지 않은 채 세션이 끊긴 대국은 관전 목록에 나타나지 않습니다.",
+    "toLive": "현재 국면",
+    "behindLive": "지난 수를 보는 중 — 현재 국면 버튼으로 따라잡기"
+  },
   "admin": {
     "heading": "관리자 콘솔",
     "subtitle": "현재 세션과 대국 현황을 실시간으로 모니터링합니다.",
@@ -441,6 +457,14 @@
           "닉네임 사용 규칙을 위반하는 닉네임의 등록·사용",
           "서비스 취약점 악용 및 의도적 부하 유발",
           "기타 관련 법령 위반 또는 서비스 운영에 심각한 지장을 주는 행위"
+        ]
+      },
+      "spectate": {
+        "title": "대국 공개 관전",
+        "items": [
+          "진행 중이거나 종료된 대국은 다른 이용자가 관전할 수 있도록 관전 목록에 공개될 수 있습니다.",
+          "관전 화면에는 닉네임, AI 상대, 판 크기, 수순이 표시되며 그 외 개인정보는 노출되지 않습니다.",
+          "공개를 원하지 않으시면 poporyfamily@gmail.com 로 해당 대국의 제외를 요청하실 수 있습니다."
         ]
       },
       "aiDisclaimer": {

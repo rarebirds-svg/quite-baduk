@@ -15,6 +15,7 @@ const SECTION_ORDER = [
   "account",
   "nickname",
   "prohibited",
+  "spectate",
   "aiDisclaimer",
   "aiPlayerNames",
   "serviceChanges",

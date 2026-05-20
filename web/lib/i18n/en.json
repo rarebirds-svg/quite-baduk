@@ -1,6 +1,22 @@
 {
   "app": { "title": "Inkbaduk · Quiet Game" },
-  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "daily": "Daily Challenge", "settings": "Settings", "admin": "Admin", "volume": "Vol. I" },
+  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "daily": "Daily Challenge", "spectate": "Spectate", "settings": "Settings", "admin": "Admin", "volume": "Vol. I" },
+  "spectate": {
+    "heading": "Spectate",
+    "subtitle": "Browse games in progress or already finished",
+    "empty": "No games available to spectate.",
+    "liveSection": "In progress",
+    "endedSection": "Finished",
+    "noLive": "No games are in progress right now.",
+    "noEnded": "No finished games.",
+    "liveBadge": "LIVE",
+    "movesSuffix": " moves",
+    "watchHeading": "Spectate",
+    "backToList": "Spectate list",
+    "notFound": "This game cannot be spectated. Games whose session ended before finishing are not shown.",
+    "toLive": "To live",
+    "behindLive": "Viewing an earlier move — tap To live to catch up"
+  },
   "admin": {
     "heading": "Admin console",
     "subtitle": "Live view of active sessions and games.",
@@ -441,6 +457,14 @@
           "Registering or using a nickname that violates the Nickname rules section",
           "Exploiting service vulnerabilities or deliberately overloading the infrastructure",
           "Any other conduct that violates applicable law or seriously disrupts the service"
+        ]
+      },
+      "spectate": {
+        "title": "Public spectating of games",
+        "items": [
+          "Games in progress or already finished may appear in the public spectate list for other users to watch.",
+          "The spectate view shows the nickname, AI opponent, board size, and move sequence — no other personal information is exposed.",
+          "If you do not want a game shown, you may request its removal at poporyfamily@gmail.com."
         ]
       },
       "aiDisclaimer": {

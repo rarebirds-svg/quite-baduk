@@ -92,6 +92,9 @@ export default function TopNav() {
               <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/daily">{t("nav.daily")}</Link>
               </Button>
+              <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
+                <Link href="/spectate">{t("nav.spectate")}</Link>
+              </Button>
             </>
           )}
 
@@ -125,6 +128,9 @@ export default function TopNav() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="sm:hidden">
                   <Link href="/daily">{t("nav.daily")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="sm:hidden">
+                  <Link href="/spectate">{t("nav.spectate")}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="sm:hidden" />
                 <DropdownMenuItem asChild>
