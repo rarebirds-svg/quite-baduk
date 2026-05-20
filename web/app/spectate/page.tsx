@@ -9,11 +9,13 @@ import { useAuthStore } from "@/store/authStore";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { formatRank } from "@/components/RankPicker";
+import { CountryFlag } from "@/components/CountryFlag";
 
 interface SpectateRow {
   id: number;
   user_nickname: string | null;
   user_rank: string | null;
+  user_country: string | null;
   ai_player: string | null;
   ai_rank: string;
   ai_style: string;
@@ -152,13 +154,16 @@ function SpectateGrid({
               className="block border border-ink-faint p-3 hover:bg-paper-deep transition-base"
             >
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-sans text-sm text-ink">
-                  {blackName}
-                  {blackRank && (
-                    <span className="text-ink-faint text-xs"> ({blackRank})</span>
-                  )}
-                  <span className="text-ink-faint"> vs </span>
-                  {aiName}
+                <span className="font-sans text-sm text-ink inline-flex items-baseline gap-1.5">
+                  <CountryFlag code={r.user_country} />
+                  <span>
+                    {blackName}
+                    {blackRank && (
+                      <span className="text-ink-faint text-xs"> ({blackRank})</span>
+                    )}
+                    <span className="text-ink-faint"> vs </span>
+                    {aiName}
+                  </span>
                 </span>
                 {live ? (
                   <span className="inline-flex items-center gap-1 font-sans text-[10px] uppercase tracking-label text-moss shrink-0">

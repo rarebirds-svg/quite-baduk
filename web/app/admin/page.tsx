@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank } from "@/components/RankPicker";
+import { CountryFlag } from "@/components/CountryFlag";
 import { useAuthStore } from "@/store/authStore";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -20,6 +21,7 @@ import {
 interface AdminSessionRow {
   id: number;
   nickname: string;
+  country: string | null;
   created_at: string;
   last_seen_at: string;
   game_count: number;
@@ -40,6 +42,7 @@ interface AdminGameRow {
   ai_style: string;
   ai_player: string | null;
   user_rank: string | null;
+  user_country: string | null;
   move_count: number;
   undo_count: number;
   hint_count: number;
@@ -367,7 +370,8 @@ export default function AdminPage() {
                       )}
                     </td>
                     <td className="p-2 font-sans text-ink">
-                      <Link href={`/admin/sessions/${s.id}`} className="hover:underline text-oxblood">
+                      <Link href={`/admin/sessions/${s.id}`} className="hover:underline text-oxblood inline-flex items-baseline gap-1.5">
+                        <CountryFlag code={s.country} />
                         {s.nickname}
                       </Link>
                     </td>
@@ -532,14 +536,17 @@ export default function AdminPage() {
                         <span className="text-ink-faint">—</span>
                       )}
                     </td>
-                    <td className="p-2 font-sans text-ink">
-                      {g.session_id ? (
-                        <Link href={`/admin/sessions/${g.session_id}`} className="text-oxblood hover:underline">
-                          {g.nickname ?? "—"}
-                        </Link>
-                      ) : (
-                        <span className="text-ink-mute">{g.nickname ?? "—"}</span>
-                      )}
+                    <td className="p-2 font-sans text-ink whitespace-nowrap">
+                      <span className="inline-flex items-baseline gap-1.5">
+                        <CountryFlag code={g.user_country} />
+                        {g.session_id ? (
+                          <Link href={`/admin/sessions/${g.session_id}`} className="text-oxblood hover:underline">
+                            {g.nickname ?? "—"}
+                          </Link>
+                        ) : (
+                          <span className="text-ink-mute">{g.nickname ?? "—"}</span>
+                        )}
+                      </span>
                     </td>
                     <td className="p-2">
                       {g.winner === "user" ? (

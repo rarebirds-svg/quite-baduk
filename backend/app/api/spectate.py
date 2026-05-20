@@ -37,6 +37,7 @@ class SpectateRow(BaseModel):
     id: int
     user_nickname: str | None
     user_rank: str | None
+    user_country: str | None
     ai_player: str | None
     ai_rank: str
     ai_style: str
@@ -78,6 +79,7 @@ async def list_spectatable(
                 id=g.id,
                 user_nickname=g.user_nickname,
                 user_rank=g.user_rank,
+                user_country=g.user_country,
                 ai_player=g.ai_player,
                 ai_rank=g.ai_rank,
                 ai_style=g.ai_style,

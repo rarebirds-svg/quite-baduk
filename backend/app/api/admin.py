@@ -28,6 +28,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 class AdminSessionRow(BaseModel):
     id: int
     nickname: str
+    country: str | None = None
     created_at: datetime
     last_seen_at: datetime
     game_count: int
@@ -49,6 +50,7 @@ class AdminGameRow(BaseModel):
     ai_style: str
     ai_player: str | None
     user_rank: str | None
+    user_country: str | None = None
     move_count: int
     undo_count: int
     hint_count: int
@@ -337,6 +339,7 @@ async def list_sessions(
         AdminSessionRow(
             id=s.id,
             nickname=s.nickname,
+            country=s.country,
             created_at=s.created_at,
             last_seen_at=s.last_seen_at,
             game_count=int(total_rows.get(s.id, 0)),
@@ -430,6 +433,7 @@ async def list_games(
             ai_style=g.ai_style,
             ai_player=g.ai_player,
             user_rank=g.user_rank,
+            user_country=g.user_country,
             move_count=g.move_count,
             undo_count=g.undo_count,
             hint_count=g.hint_count,
@@ -551,6 +555,7 @@ async def session_detail(
         live_row = AdminSessionRow(
             id=live.id,
             nickname=live.nickname,
+            country=live.country,
             created_at=live.created_at,
             last_seen_at=live.last_seen_at,
             game_count=int(total_games),
@@ -582,6 +587,7 @@ async def session_detail(
             ai_style=g.ai_style,
             ai_player=g.ai_player,
             user_rank=g.user_rank,
+            user_country=g.user_country,
             move_count=g.move_count,
             undo_count=g.undo_count,
             hint_count=g.hint_count,
@@ -728,7 +734,10 @@ async def stats(
     hourly_days = max(1, min(hourly_days, 30))
     top = max(1, min(top, 50))
 
-    today = date.today()
+    # UTC — Game.started_at is server_default=func.now() (UTC in SQLite),
+    # and the daily buckets group by func.date() (also UTC). Using a local
+    # date here would offset every bucket by a day for part of each day.
+    today = datetime.utcnow().date()
     daily_start = today - timedelta(days=days - 1)
     hourly_cutoff = datetime.utcnow() - timedelta(days=hourly_days)
 

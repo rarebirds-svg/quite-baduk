@@ -5,6 +5,7 @@ import Board from "@/components/Board";
 import { api } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank } from "@/components/RankPicker";
+import { CountryFlag } from "@/components/CountryFlag";
 import {
   applyMoveWithCaptures,
   gtpToXy,
@@ -32,6 +33,7 @@ interface GameDetail {
   result: string | null;
   user_nickname?: string | null;
   user_rank?: string | null;
+  user_country?: string | null;
   user_color?: "black" | "white";
   ai_player?: string | null;
   ai_style?: string;
@@ -484,11 +486,13 @@ export default function ReviewPlayer({
             <span className="flex items-baseline gap-2 text-ink">
               <span className="inline-flex items-baseline gap-1">
                 <span className="text-ink">●</span>
+                {userIsBlack && <CountryFlag code={game.user_country} />}
                 <span className="font-sans text-xs">{blackName}</span>
               </span>
               <span className="text-ink-faint">vs</span>
               <span className="inline-flex items-baseline gap-1">
                 <span className="text-ink">○</span>
+                {!userIsBlack && <CountryFlag code={game.user_country} />}
                 <span className="font-sans text-xs">{whiteName}</span>
               </span>
               {game.result && (

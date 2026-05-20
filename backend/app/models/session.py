@@ -21,6 +21,9 @@ class Session(Base):
     nickname_key: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     last_seen_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    # 2-letter ISO 3166-1 country from Cloudflare's CF-IPCountry header,
+    # captured once at session creation. Null in dev / non-Cloudflare paths.
+    country: Mapped[str | None] = mapped_column(String(2), nullable=True)
 
     # We intentionally do NOT cascade-delete games when a session ends or is
     # purged — history should survive the session. The DB-level FK is

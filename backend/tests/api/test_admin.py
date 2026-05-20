@@ -182,9 +182,12 @@ async def test_admin_games_date_range(client: AsyncClient) -> None:
     await _signup(client, ADMIN_NICK)
     await _create_game(client)
 
-    today = _dt.date.today().isoformat()
-    tomorrow = (_dt.date.today() + _dt.timedelta(days=1)).isoformat()
-    yesterday = (_dt.date.today() - _dt.timedelta(days=1)).isoformat()
+    # UTC — Game.started_at is stored UTC, so the date filter must compare
+    # against the UTC date, not the test machine's local date.
+    utc_today = _dt.datetime.utcnow().date()
+    today = utc_today.isoformat()
+    tomorrow = (utc_today + _dt.timedelta(days=1)).isoformat()
+    yesterday = (utc_today - _dt.timedelta(days=1)).isoformat()
 
     # today..today inclusive — includes the game.
     r = await client.get(f"/api/admin/games?from_date={today}&to_date={today}")

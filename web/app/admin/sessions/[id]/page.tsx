@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank } from "@/components/RankPicker";
+import { CountryFlag } from "@/components/CountryFlag";
 import { useAuthStore } from "@/store/authStore";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -20,6 +21,7 @@ import {
 interface AdminSessionRow {
   id: number;
   nickname: string;
+  country: string | null;
   created_at: string;
   last_seen_at: string;
   game_count: number;
@@ -39,6 +41,7 @@ interface AdminGameRow {
   ai_style: string;
   ai_player: string | null;
   user_rank: string | null;
+  user_country: string | null;
   move_count: number;
   undo_count: number;
   hint_count: number;

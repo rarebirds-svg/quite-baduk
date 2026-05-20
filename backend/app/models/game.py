@@ -53,6 +53,9 @@ class Game(Base):
     )
     user_nickname: Mapped[str | None] = mapped_column(String(32), nullable=True)
     user_rank: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    # Snapshot of the session's country at game creation — survives session
+    # deletion, mirroring the user_nickname snapshot rationale (migration 0008).
+    user_country: Mapped[str | None] = mapped_column(String(2), nullable=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     sgf_cache: Mapped[str | None] = mapped_column(Text, nullable=True)

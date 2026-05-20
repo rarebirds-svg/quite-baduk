@@ -47,6 +47,7 @@ class GameSummary(BaseModel):
     hint_count: int = 0
     user_nickname: str | None = None
     user_rank: str | None = None
+    user_country: str | None = None
     started_at: datetime
     finished_at: datetime | None
 

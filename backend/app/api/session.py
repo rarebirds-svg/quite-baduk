@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy import update as _sa_update
 from sqlalchemy.exc import IntegrityError
 
+from app.client_ip import client_country as _client_country
 from app.client_ip import client_ip as _client_key
 from app.config import settings
 from app.core.nickname import InvalidNickname, normalize, to_key, validate
@@ -80,7 +81,12 @@ async def create_session(
 
     try:
         token = secrets.token_urlsafe(32)
-        sess = Session(token=token, nickname=display, nickname_key=key)
+        sess = Session(
+            token=token,
+            nickname=display,
+            nickname_key=key,
+            country=_client_country(request),
+        )
         db.add(sess)
         try:
             await db.commit()

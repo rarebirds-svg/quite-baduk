@@ -135,6 +135,7 @@ async def create_game(
         session_id=session.id,
         user_nickname=session.nickname,
         user_rank=user_rank,
+        user_country=session.country,
         ai_rank=ai_rank,
         ai_style=resolved_style,
         ai_player=ai_player if resolved_player else None,
