@@ -162,7 +162,7 @@ export default function SupportPage() {
 
       <section className="space-y-3 max-w-prose">
         <h2 className="font-serif text-xl">{t("support.disclaimerSection")}</h2>
-        <p className="font-sans text-sm text-ink-mute leading-relaxed">
+        <p className="font-sans text-sm text-ink-mute leading-relaxed whitespace-pre-line">
           {t("support.disclaimerBody")}
         </p>
       </section>
