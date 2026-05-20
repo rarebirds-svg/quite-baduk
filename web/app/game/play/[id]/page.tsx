@@ -20,6 +20,7 @@ import { formatRank, type Rank } from "@/components/RankPicker";
 import { playStoneClick } from "@/lib/soundfx";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { SupportNudge } from "@/components/SupportNudge";
+import { HintNudge } from "@/components/HintNudge";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { DataBlock } from "@/components/editorial/DataBlock";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -72,6 +73,10 @@ export default function PlayPage() {
     useState<{ move: string; winrate: number; visits: number }[]>([]);
   const [hintWinrate, setHintWinrate] = useState<number | null>(null);
   const [hintLoading, setHintLoading] = useState(false);
+  // 힌트 발견 유도 — A: 첫 대국 1회 코치마크, B: 같은 자리 장고 시 프롬프트.
+  const [hintCoachmark, setHintCoachmark] = useState(false);
+  const [hintHesitation, setHintHesitation] = useState(false);
+  const hesitationShown = useRef(false);
   const [confirmResign, setConfirmResign] = useState(false);
   const [confirmPass, setConfirmPass] = useState(false);
   const [scoringDetail, setScoringDetail] =
@@ -109,6 +114,27 @@ export default function PlayPage() {
     when: ready && !g.gameOver,
     onRequest: () => setPendingLeave(true),
   });
+
+  // A — 첫 대국 1회 힌트 코치마크. localStorage에 본 기록이 없으면 표시.
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("inkbaduk:hint-coachmark-seen") !== "1") {
+        setHintCoachmark(true);
+      }
+    } catch {
+      // localStorage 차단 시 코치마크 생략 — 핵심 흐름엔 영향 없음.
+    }
+  }, []);
+
+  // B — 망설임 프롬프트. 사용자 차례에서 30초 장고 시 대국당 1회 노출.
+  useEffect(() => {
+    if (!ready || g.gameOver || g.aiThinking || hesitationShown.current) return;
+    const id = setTimeout(() => {
+      setHintHesitation(true);
+      hesitationShown.current = true;
+    }, 30_000);
+    return () => clearTimeout(id);
+  }, [ready, g.gameOver, g.aiThinking, g.moveCount]);
 
   useEffect(() => {
     api<GameMeta>(`/api/games/${gameId}`).then((detail) => {
@@ -315,8 +341,20 @@ export default function PlayPage() {
       toast.error(t("errors.validation"));
     }
   };
+  const dismissCoachmark = () => {
+    setHintCoachmark(false);
+    try {
+      window.localStorage.setItem("inkbaduk:hint-coachmark-seen", "1");
+    } catch {
+      // localStorage 차단 — 다음 대국에 다시 보일 뿐, 무해.
+    }
+  };
+
   const hintMe = async () => {
     if (hintLoading) return; // ignore double-taps
+    // 힌트를 한 번 쓰면 안내 카드는 역할을 다한 것 — 모두 닫는다.
+    if (hintCoachmark) dismissCoachmark();
+    setHintHesitation(false);
     setHintLoading(true);
     try {
       const r = await api<{
@@ -436,6 +474,23 @@ export default function PlayPage() {
               : ""
           }
         />
+
+        {hintCoachmark && !g.gameOver && (
+          <HintNudge
+            message={t("game.hintCoachmark")}
+            onDismiss={dismissCoachmark}
+            dismissLabel={t("game.hintNudgeDismiss")}
+          />
+        )}
+        {hintHesitation && !g.gameOver && !g.aiThinking && (
+          <HintNudge
+            message={t("game.hintHesitation")}
+            actionLabel={t("game.hint")}
+            onAction={hintMe}
+            onDismiss={() => setHintHesitation(false)}
+            dismissLabel={t("game.hintNudgeDismiss")}
+          />
+        )}
 
         <GameControls
           onPass={pass}
