@@ -12,7 +12,7 @@ import { Toaster } from "sonner";
 // 검색엔진 소유 확인 토큰 — 운영자가 Search Console / 서치어드바이저
 // 발급값으로 교체. 빈 값이면 해당 verification 메타태그는 출력되지 않음.
 const GOOGLE_SITE_VERIFICATION = "";
-const NAVER_SITE_VERIFICATION = "";
+const NAVER_SITE_VERIFICATION = "2d39122f22d380e4b46daa65a00d0c7b0f4ff786";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://inkbaduk.com"),
