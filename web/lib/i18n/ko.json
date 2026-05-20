@@ -212,7 +212,8 @@
       "park_junghwan":    { "name": "박정환",              "bio": "두터움과 실리의 균형, 정교한 중반 운영" },
       "shin_jinseo":      { "name": "신진서",              "bio": "AI 시대의 대표 주자, 정확도 높은 균형 감각" },
       "ke_jie":           { "name": "커제(柯潔)",          "bio": "공격적이면서 균형 잡힌 현대형 기풍" },
-      "seo_bongsoo":      { "name": "서봉수",              "bio": "된장바둑, 독학·야성적 실전 감각" }
+      "seo_bongsoo":      { "name": "서봉수",              "bio": "된장바둑, 독학·야성적 실전 감각" },
+      "choi_cheolhan":    { "name": "최철한",              "bio": "독사, 끈질긴 전투와 사석 감각의 토종 야전형" }
     },
     "aiStyleName": {
       "balanced": "균형형",
@@ -230,7 +231,7 @@
       "combative": "이세돌 · 유창혁 · 사카타 에이오 · 조치훈",
       "speed": "조훈현 · 가토 마사오",
       "classical": "오청원 · 기타니 미노루",
-      "rustic": "서봉수"
+      "rustic": "서봉수 · 최철한"
     },
     "aiStyleDesc": {
       "balanced": "실리·세력·전투를 상황에 맞게 구사하는 현대적 종합형",

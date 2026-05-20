@@ -29,7 +29,8 @@ export type PlayerId =
   | "park_junghwan"
   | "shin_jinseo"
   | "ke_jie"
-  | "seo_bongsoo";
+  | "seo_bongsoo"
+  | "choi_cheolhan";
 
 // Career-peak year — surfaced as a tiny mono badge so the picker reads as
 // a roster of distinct eras rather than a flat list. Source of truth lives
@@ -54,6 +55,7 @@ export const PLAYER_META: Record<PlayerId, { proyear: number }> = {
   shin_jinseo:       { proyear: 2023 },
   ke_jie:            { proyear: 2019 },
   seo_bongsoo:       { proyear: 1992 },
+  choi_cheolhan:     { proyear: 2005 },
 };
 
 // Grouped in the same order the picker should display.
@@ -64,7 +66,7 @@ export const PLAYER_GROUPS: { style: AiStyle; players: PlayerId[] }[] = [
   { style: "speed",       players: ["cho_hunhyun", "kato_masao"] },
   { style: "classical",   players: ["go_seigen", "kitani_minoru"] },
   { style: "balanced",    players: ["park_junghwan", "shin_jinseo", "ke_jie"] },
-  { style: "rustic",      players: ["seo_bongsoo"] },
+  { style: "rustic",      players: ["seo_bongsoo", "choi_cheolhan"] },
 ];
 
 export const ALL_PLAYER_IDS: readonly PlayerId[] = PLAYER_GROUPS.flatMap(

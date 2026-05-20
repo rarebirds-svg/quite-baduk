@@ -212,7 +212,8 @@
       "park_junghwan":    { "name": "Park Junghwan",       "bio": "Balanced thickness/territory; refined middlegame" },
       "shin_jinseo":      { "name": "Shin Jinseo",         "bio": "AI-era standard-bearer — precision endgames" },
       "ke_jie":           { "name": "Ke Jie",              "bio": "Aggressive yet balanced modern style" },
-      "seo_bongsoo":      { "name": "Seo Bongsoo",         "bio": "‘Doenjang Go’ — self-taught, gut-fight Go" }
+      "seo_bongsoo":      { "name": "Seo Bongsoo",         "bio": "‘Doenjang Go’ — self-taught, gut-fight Go" },
+      "choi_cheolhan":    { "name": "Choi Cheolhan",       "bio": "‘The Viper’ — relentless fighting and capturing-race instinct" }
     },
     "aiStyleName": {
       "balanced": "Balanced",
@@ -230,7 +231,7 @@
       "combative": "Lee Sedol · Yoo Changhyuk · Sakata Eio · Cho Chikun",
       "speed": "Cho Hunhyun · Kato Masao",
       "classical": "Go Seigen · Kitani Minoru",
-      "rustic": "Seo Bongsoo"
+      "rustic": "Seo Bongsoo · Choi Cheolhan"
     },
     "aiStyleDesc": {
       "balanced": "Modern all-rounder — territory, influence, fighting as the position calls for",

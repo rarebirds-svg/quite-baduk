@@ -57,6 +57,7 @@ _PLAYERS: tuple[Player, ...] = (
     Player("ke_jie",            "balanced",    2019),
     # 토종·야전형 (rustic)
     Player("seo_bongsoo",       "rustic",      1992),
+    Player("choi_cheolhan",     "rustic",      2005),
 )
 
 
