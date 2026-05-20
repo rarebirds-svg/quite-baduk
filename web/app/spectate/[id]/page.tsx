@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
 import { formatRank } from "@/components/RankPicker";
 import { CountryFlag } from "@/components/CountryFlag";
+import { PLAYER_COUNTRY, type PlayerId } from "@/components/PlayerPicker";
 
 interface MoveEntryRaw {
   move_number: number;
@@ -153,6 +154,14 @@ export default function SpectateWatchPage() {
   const blackName = userIsBlack ? `${userLabel}${userRankLabel}` : aiLabel;
   const whiteName = userIsBlack ? aiLabel : `${userLabel}${userRankLabel}`;
 
+  // 기존 대국은 country가 비어 한국 국기로 폴백. AI는 기풍 기사 국적.
+  const userCountry = game.user_country ?? "KR";
+  const aiCountry = game.ai_player
+    ? PLAYER_COUNTRY[game.ai_player as PlayerId]
+    : null;
+  const blackCountry = userIsBlack ? userCountry : aiCountry;
+  const whiteCountry = userIsBlack ? aiCountry : userCountry;
+
   const atLive = idx >= game.moves.length;
 
   return (
@@ -174,13 +183,13 @@ export default function SpectateWatchPage() {
         <span className="flex items-baseline gap-2 text-ink">
           <span className="inline-flex items-baseline gap-1">
             <span>●</span>
-            {userIsBlack && <CountryFlag code={game.user_country} />}
+            <CountryFlag code={blackCountry} />
             <span className="font-sans text-xs">{blackName}</span>
           </span>
           <span className="text-ink-faint">vs</span>
           <span className="inline-flex items-baseline gap-1">
             <span>○</span>
-            {!userIsBlack && <CountryFlag code={game.user_country} />}
+            <CountryFlag code={whiteCountry} />
             <span className="font-sans text-xs">{whiteName}</span>
           </span>
           {isLive ? (

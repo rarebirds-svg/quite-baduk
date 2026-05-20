@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { formatRank } from "@/components/RankPicker";
+import { PLAYER_COUNTRY, type PlayerId } from "@/components/PlayerPicker";
 import { CountryFlag } from "@/components/CountryFlag";
 
 interface SpectateRow {
@@ -147,6 +148,12 @@ function SpectateGrid({
         const aiName = r.ai_player
           ? t(`game.players.${r.ai_player}.name`)
           : formatRank(r.ai_rank, locale);
+        // 기존 대국은 country가 비어 있어 한국 국기로 폴백. AI는 기풍
+        // 기사의 국적, 랭크 전용 AI는 국기 생략.
+        const userCountry = r.user_country ?? "KR";
+        const aiCountry = r.ai_player
+          ? PLAYER_COUNTRY[r.ai_player as PlayerId]
+          : null;
         return (
           <li key={r.id}>
             <Link
@@ -155,13 +162,16 @@ function SpectateGrid({
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="font-sans text-sm text-ink inline-flex items-baseline gap-1.5">
-                  <CountryFlag code={r.user_country} />
+                  <CountryFlag code={userCountry} />
                   <span>
                     {blackName}
                     {blackRank && (
                       <span className="text-ink-faint text-xs"> ({blackRank})</span>
                     )}
-                    <span className="text-ink-faint"> vs </span>
+                  </span>
+                  <span className="text-ink-faint">vs</span>
+                  <CountryFlag code={aiCountry} />
+                  <span>
                     {aiName}
                   </span>
                 </span>

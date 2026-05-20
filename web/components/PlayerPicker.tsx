@@ -58,6 +58,30 @@ export const PLAYER_META: Record<PlayerId, { proyear: number }> = {
   choi_cheolhan:     { proyear: 2005 },
 };
 
+// 각 기사의 국적 (2-letter ISO) — 관전·복기 화면에서 AI 상대 국기 표기에 쓴다.
+// 오청원(go_seigen)은 중국 출생·일본 활동의 경계적 인물이라 출생지 기준 CN.
+export const PLAYER_COUNTRY: Record<PlayerId, string> = {
+  lee_changho:      "KR",
+  cho_chikun:       "KR",
+  kobayashi_koichi: "JP",
+  takemiya_masaki:  "JP",
+  fujisawa_shuko:   "JP",
+  otake_hideo:      "JP",
+  yoo_changhyuk:    "KR",
+  sakata_eio:       "JP",
+  lee_sedol:        "KR",
+  gu_li:            "CN",
+  cho_hunhyun:      "KR",
+  kato_masao:       "JP",
+  go_seigen:        "CN",
+  kitani_minoru:    "JP",
+  park_junghwan:    "KR",
+  shin_jinseo:      "KR",
+  ke_jie:           "CN",
+  seo_bongsoo:      "KR",
+  choi_cheolhan:    "KR",
+};
+
 // Grouped in the same order the picker should display.
 export const PLAYER_GROUPS: { style: AiStyle; players: PlayerId[] }[] = [
   { style: "territorial", players: ["lee_changho", "kobayashi_koichi"] },
