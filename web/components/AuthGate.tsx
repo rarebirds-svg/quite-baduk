@@ -35,10 +35,13 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, [pathname, router, setSession]);
 
-  if (!ready) return null;
-  // Public path: render either the form (no session) or let the page redirect.
+  // Public path: always render children — even during SSR / before the
+  // session check resolves. This is what puts the landing-page body into
+  // the initial HTML so search crawlers (notably Naver's Yeti, which is
+  // weak at running JS) can index real content instead of a blank shell.
   if (PUBLIC_PATHS.has(pathname)) return <>{children}</>;
-  // Protected path: block render until session is resolved.
-  if (!session) return null;
+  // Protected path: block render until the session check resolves, then
+  // require a session (the effect above redirects unauthenticated users).
+  if (!ready || !session) return null;
   return <>{children}</>;
 }
