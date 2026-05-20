@@ -120,12 +120,9 @@ export default function SupportPage() {
         subtitle={t("support.subtitle")}
       />
 
-      <div className="space-y-3 max-w-prose">
-        <p className="font-sans text-sm text-ink leading-relaxed">
+      <div className="max-w-prose">
+        <p className="font-sans text-sm text-ink leading-relaxed whitespace-pre-line">
           {t("support.intro")}
-        </p>
-        <p className="font-sans text-sm text-ink leading-relaxed">
-          {t("support.intro2")}
         </p>
       </div>
 
