@@ -85,13 +85,13 @@ export default function PlayPage() {
   const [pendingLeave, setPendingLeave] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
   // Preferred kifu dialog size — persisted so the user's choice sticks
-  // across game opens. "full" is a near-viewport overlay for serious review;
-  // S/M/L scale the max-width so the board has room without dominating.
-  type KifuSize = "sm" | "md" | "lg" | "full";
+  // across game opens. 소/중/대 scale the dialog max-width so the board
+  // has room without dominating the viewport.
+  type KifuSize = "sm" | "md" | "lg";
   const [kifuSize, setKifuSize] = useState<KifuSize>(() => {
     if (typeof window === "undefined") return "md";
     const v = window.localStorage.getItem("baduk.kifuSize");
-    return v === "sm" || v === "md" || v === "lg" || v === "full" ? v : "md";
+    return v === "sm" || v === "md" || v === "lg" ? v : "md";
   });
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -756,9 +756,7 @@ export default function PlayPage() {
         <DialogContent
           className={
             "flex flex-col gap-0 overflow-hidden max-h-[90dvh] " +
-            (kifuSize === "full"
-              ? "max-w-[95vw] w-[95vw] h-[95dvh] max-h-[95dvh]"
-              : kifuSize === "lg"
+            (kifuSize === "lg"
               ? "max-w-5xl"
               : kifuSize === "sm"
               ? "max-w-xl"
@@ -773,7 +771,7 @@ export default function PlayPage() {
                 aria-label={t("review.dialogSize")}
                 className="flex items-center gap-1 font-sans text-[10px] sm:text-xs uppercase tracking-tight"
               >
-                {(["sm", "md", "lg", "full"] as const).map((s) => (
+                {(["sm", "md", "lg"] as const).map((s) => (
                   <button
                     key={s}
                     type="button"

@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import Board from "@/components/Board";
 import { api } from "@/lib/api";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
+import { formatRank } from "@/components/RankPicker";
 import {
   applyMoveWithCaptures,
   gtpToXy,
@@ -30,6 +31,7 @@ interface GameDetail {
   moves: MoveEntryRaw[];
   result: string | null;
   user_nickname?: string | null;
+  user_rank?: string | null;
   user_color?: "black" | "white";
   ai_player?: string | null;
   ai_style?: string;
@@ -124,6 +126,7 @@ export default function ReviewPlayer({
   autoplay = true,
 }: ReviewPlayerProps) {
   const t = useT();
+  const [locale] = useLocale();
   const [game, setGame] = useState<GameDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
@@ -452,10 +455,17 @@ export default function ReviewPlayer({
           Right: 흑/백 식별 (돌 모양 + 닉네임). user_color로 사용자/AI 매칭. */}
       {(() => {
         const userIsBlack = (game.user_color ?? "black") === "black";
-        const userLabel = game.user_nickname ?? "—";
+        const userRankSuffix = game.user_rank
+          ? ` (${formatRank(game.user_rank, locale)})`
+          : "";
+        const userLabel = `${game.user_nickname ?? "—"}${userRankSuffix}`;
         const aiLabel = game.ai_player
-          ? t(`game.players.${game.ai_player}.name`)
-          : game.ai_rank ?? "AI";
+          ? `${t(`game.players.${game.ai_player}.name`)}${
+              game.ai_rank ? ` (${formatRank(game.ai_rank, locale)})` : ""
+            }`
+          : game.ai_rank
+          ? formatRank(game.ai_rank, locale)
+          : "AI";
         const blackName = userIsBlack ? userLabel : aiLabel;
         const whiteName = userIsBlack ? aiLabel : userLabel;
         return (
