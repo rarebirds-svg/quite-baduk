@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import TopNav from "@/components/TopNav";
+import Footer from "@/components/Footer";
 import AuthGate from "@/components/AuthGate";
 import { ThemeProviderClient } from "@/components/ThemeProviderClient";
 import { fontVariables } from "@/lib/fonts";
@@ -139,8 +140,13 @@ export default function RootLayout({
       <body className="bg-paper text-ink">
         <ThemeProviderClient>
           <AuthGate>
-            <TopNav />
-            <main className="p-4 max-w-7xl mx-auto">{children}</main>
+            <div className="flex min-h-dvh flex-col">
+              <TopNav />
+              <main className="p-4 max-w-7xl mx-auto w-full flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
           </AuthGate>
           <Toaster position="top-center" richColors={false} closeButton />
         </ThemeProviderClient>

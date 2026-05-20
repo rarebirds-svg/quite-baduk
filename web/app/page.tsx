@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { api, errorMessageKey } from "@/lib/api";
 import { useAuthStore, type Session } from "@/store/authStore";
 import { useT } from "@/lib/i18n";
@@ -186,6 +185,9 @@ export default function NicknameGate() {
               {hint}
             </p>
             {error && <p role="alert" className="mt-1 text-sm text-oxblood">{error}</p>}
+            <p className="mt-2 font-sans text-xs text-ink-faint leading-relaxed">
+              {t("home.footerNote")}
+            </p>
           </div>
           <button
             type="submit"
@@ -217,33 +219,6 @@ export default function NicknameGate() {
         </div>
       </section>
 
-      <footer className="mt-20 pt-6 border-t border-ink-faint">
-        <p className="font-sans text-xs text-ink-faint leading-relaxed">
-          {t("home.footerNote")}
-        </p>
-        <div className="mt-3 flex items-center gap-4 flex-wrap">
-          <Link
-            href="/privacy"
-            className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
-          >
-            {t("home.footerPrivacy")}
-          </Link>
-          <span className="text-ink-faint text-xs" aria-hidden="true">·</span>
-          <Link
-            href="/terms"
-            className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
-          >
-            {t("home.footerTerms")}
-          </Link>
-          <span className="text-ink-faint text-xs" aria-hidden="true">·</span>
-          <Link
-            href="/support"
-            className="font-sans text-xs text-ink-faint transition-base hover:text-oxblood"
-          >
-            {t("home.footerSupport")}
-          </Link>
-        </div>
-      </footer>
     </div>
   );
 }

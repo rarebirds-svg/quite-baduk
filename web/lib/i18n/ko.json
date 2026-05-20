@@ -1,6 +1,7 @@
 {
   "app": { "title": "Inkbaduk · 조용한 승부" },
   "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "daily": "일일 챌린지", "spectate": "관전", "settings": "설정", "admin": "관리자", "volume": "Vol. I" },
+  "footer": { "tagline": "KataGo Human-SL과 두는 한국식 바둑", "navLabel": "사이트 정보" },
   "spectate": {
     "heading": "관전",
     "subtitle": "진행 중이거나 끝난 대국을 둘러보세요",
