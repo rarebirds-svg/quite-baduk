@@ -9,10 +9,21 @@ import { Toaster } from "sonner";
 // --paper light: rgb(245 239 230) = #F5EFE6  (from globals.css :root)
 // --paper dark:  rgb(28 25 23)   = #1C1917   (from globals.css .dark)
 
-// 검색엔진 소유 확인 토큰 — 운영자가 Search Console / 서치어드바이저
-// 발급값으로 교체. 빈 값이면 해당 verification 메타태그는 출력되지 않음.
+// 검색엔진 소유 확인 토큰 — 운영자가 각 웹마스터 도구 발급값으로 교체.
+// 빈 값이면 해당 verification 메타태그는 출력되지 않는다.
+// Google: DNS TXT 방식이라 코드 불필요(빈 값 유지).
+// Naver: searchadvisor.naver.com HTML 태그.
+// Baidu: ziyuan.baidu.com HTML 태그 — 단 계정 생성에 중국 본토 휴대폰
+//        번호가 필요해 사실상 보류 상태. 토큰을 얻으면 여기에 넣는다.
 const GOOGLE_SITE_VERIFICATION = "";
 const NAVER_SITE_VERIFICATION = "2d39122f22d380e4b46daa65a00d0c7b0f4ff786";
+const BAIDU_SITE_VERIFICATION = "";
+
+const OTHER_VERIFICATION: Record<string, string> = {};
+if (NAVER_SITE_VERIFICATION)
+  OTHER_VERIFICATION["naver-site-verification"] = NAVER_SITE_VERIFICATION;
+if (BAIDU_SITE_VERIFICATION)
+  OTHER_VERIFICATION["baidu-site-verification"] = BAIDU_SITE_VERIFICATION;
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://inkbaduk.com"),
@@ -66,8 +77,8 @@ export const metadata: Metadata = {
     ...(GOOGLE_SITE_VERIFICATION
       ? { google: GOOGLE_SITE_VERIFICATION }
       : {}),
-    ...(NAVER_SITE_VERIFICATION
-      ? { other: { "naver-site-verification": NAVER_SITE_VERIFICATION } }
+    ...(Object.keys(OTHER_VERIFICATION).length
+      ? { other: OTHER_VERIFICATION }
       : {}),
   },
   formatDetection: { telephone: false },
