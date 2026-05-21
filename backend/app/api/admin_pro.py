@@ -48,6 +48,7 @@ async def upload_pro_games(
     inserted = 0
     skipped = 0
     failed: list[str] = []
+    seen: set[str] = set()
     for f in files:
         raw = (await f.read()).decode("utf-8", errors="replace")
         try:
@@ -62,10 +63,11 @@ async def upload_pro_games(
                 )
             )
         ).scalar_one_or_none()
-        if dup is not None:
+        if parsed.content_hash in seen or dup is not None:
             skipped += 1
             continue
         db.add(ProGame.from_parsed(parsed, collection="recent"))
+        seen.add(parsed.content_hash)
         inserted += 1
     await db.commit()
     return UploadResult(inserted=inserted, skipped=skipped, failed=failed)

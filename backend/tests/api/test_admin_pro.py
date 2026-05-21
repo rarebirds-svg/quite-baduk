@@ -46,6 +46,18 @@ async def test_admin_uploads_and_dedups(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_admin_upload_dedups_within_batch(client: AsyncClient) -> None:
+    await _signup(client, "대공")
+    r = await client.post(
+        "/api/admin/pro-games",
+        files=[_sgf_file("a.sgf", _SGF), _sgf_file("b.sgf", _SGF)],
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["inserted"] == 1
+    assert r.json()["skipped"] == 1
+
+
+@pytest.mark.asyncio
 async def test_admin_upload_rejects_bad_sgf(client: AsyncClient) -> None:
     await _signup(client, "대공")
     r = await client.post(
