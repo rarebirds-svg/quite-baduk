@@ -121,7 +121,7 @@
     "heading": "Pro Record Management",
     "uploadLabel": "Upload SGF files",
     "uploadButton": "Upload",
-    "uploadResult": "Added {inserted} · Duplicate {skipped} · Failed {failed}",
+    "uploadResult": "Added {inserted} · Duplicates {skipped} · Failed {failed}",
     "empty": "No pro records yet.",
     "delete": "Delete",
     "deleteConfirm": "Delete this record?"
