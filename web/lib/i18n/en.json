@@ -16,7 +16,15 @@
     "backToList": "Spectate list",
     "notFound": "This game cannot be spectated. Games whose session ended before finishing are not shown.",
     "toLive": "To live",
-    "behindLive": "Viewing an earlier move — tap To live to catch up"
+    "behindLive": "Viewing an earlier move — tap To live to catch up",
+    "tabInkbaduk": "Inkbaduk Games",
+    "tabPro": "Pro Records",
+    "proMasterpiece": "Masterpieces",
+    "proRecent": "Recent",
+    "proSearch": "Search player or event",
+    "proEmpty": "No pro records yet.",
+    "proEvent": "Event",
+    "proDate": "Date"
   },
   "admin": {
     "heading": "Admin console",

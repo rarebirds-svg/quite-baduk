@@ -1,5 +1,5 @@
 "use client";
-// 관전 목록 — 진행 중/종료된 대국을 모아 보여주는 페이지.
+// 관전 목록 — 잉크바둑 대국과 프로 기보를 탭으로 나눠 보여주는 페이지.
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,13 @@ import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { formatRank } from "@/components/RankPicker";
 import { PLAYER_COUNTRY, type PlayerId } from "@/components/PlayerPicker";
 import { CountryFlag } from "@/components/CountryFlag";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { ProGameList } from "@/components/ProGameList";
 
 interface SpectateRow {
   id: number;
@@ -84,47 +91,62 @@ export default function SpectateListPage() {
     <div className="space-y-6">
       <Hero title={t("spectate.heading")} subtitle={t("spectate.subtitle")} />
 
-      {rows === null ? (
-        <p className="text-sm text-ink-faint">…</p>
-      ) : rows.length === 0 ? (
-        <p className="text-sm text-ink-mute">{t("spectate.empty")}</p>
-      ) : (
-        <>
-          <section>
-            <h2 className="font-serif text-xl mb-3 flex items-baseline gap-2">
-              {t("spectate.liveSection")}
-              <span className="font-mono text-xs text-ink-faint tabular-nums">
-                {live.length}
-              </span>
-            </h2>
-            {live.length === 0 ? (
-              <p className="text-xs text-ink-faint font-sans">
-                {t("spectate.noLive")}
-              </p>
-            ) : (
-              <SpectateGrid rows={live} locale={locale} t={t} live />
-            )}
-          </section>
+      <Tabs defaultValue="inkbaduk">
+        <TabsList>
+          <TabsTrigger value="inkbaduk">
+            {t("spectate.tabInkbaduk")}
+          </TabsTrigger>
+          <TabsTrigger value="pro">{t("spectate.tabPro")}</TabsTrigger>
+        </TabsList>
 
-          <RuleDivider weight="faint" />
+        <TabsContent value="inkbaduk" className="space-y-6 pt-4">
+          {rows === null ? (
+            <p className="text-sm text-ink-faint">…</p>
+          ) : rows.length === 0 ? (
+            <p className="text-sm text-ink-mute">{t("spectate.empty")}</p>
+          ) : (
+            <>
+              <section>
+                <h2 className="font-serif text-xl mb-3 flex items-baseline gap-2">
+                  {t("spectate.liveSection")}
+                  <span className="font-mono text-xs text-ink-faint tabular-nums">
+                    {live.length}
+                  </span>
+                </h2>
+                {live.length === 0 ? (
+                  <p className="text-xs text-ink-faint font-sans">
+                    {t("spectate.noLive")}
+                  </p>
+                ) : (
+                  <SpectateGrid rows={live} locale={locale} t={t} live />
+                )}
+              </section>
 
-          <section>
-            <h2 className="font-serif text-xl mb-3 flex items-baseline gap-2">
-              {t("spectate.endedSection")}
-              <span className="font-mono text-xs text-ink-faint tabular-nums">
-                {ended.length}
-              </span>
-            </h2>
-            {ended.length === 0 ? (
-              <p className="text-xs text-ink-faint font-sans">
-                {t("spectate.noEnded")}
-              </p>
-            ) : (
-              <SpectateGrid rows={ended} locale={locale} t={t} live={false} />
-            )}
-          </section>
-        </>
-      )}
+              <RuleDivider weight="faint" />
+
+              <section>
+                <h2 className="font-serif text-xl mb-3 flex items-baseline gap-2">
+                  {t("spectate.endedSection")}
+                  <span className="font-mono text-xs text-ink-faint tabular-nums">
+                    {ended.length}
+                  </span>
+                </h2>
+                {ended.length === 0 ? (
+                  <p className="text-xs text-ink-faint font-sans">
+                    {t("spectate.noEnded")}
+                  </p>
+                ) : (
+                  <SpectateGrid rows={ended} locale={locale} t={t} live={false} />
+                )}
+              </section>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="pro" className="pt-4">
+          <ProGameList />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -148,8 +170,6 @@ function SpectateGrid({
         const aiName = r.ai_player
           ? t(`game.players.${r.ai_player}.name`)
           : formatRank(r.ai_rank, locale);
-        // 기존 대국은 country가 비어 있어 한국 국기로 폴백. AI는 기풍
-        // 기사의 국적, 랭크 전용 AI는 국기 생략.
         const userCountry = r.user_country ?? "KR";
         const aiCountry = r.ai_player
           ? PLAYER_COUNTRY[r.ai_player as PlayerId]
@@ -171,9 +191,7 @@ function SpectateGrid({
                   </span>
                   <span className="text-ink-faint">vs</span>
                   <CountryFlag code={aiCountry} />
-                  <span>
-                    {aiName}
-                  </span>
+                  <span>{aiName}</span>
                 </span>
                 {live ? (
                   <span className="inline-flex items-center gap-1 font-sans text-[10px] uppercase tracking-label text-moss shrink-0">

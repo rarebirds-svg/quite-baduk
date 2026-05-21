@@ -16,7 +16,15 @@
     "backToList": "관전 목록",
     "notFound": "관전할 수 없는 대국입니다. 종료되지 않은 채 세션이 끊긴 대국은 관전 목록에 나타나지 않습니다.",
     "toLive": "현재 국면",
-    "behindLive": "지난 수를 보는 중 — 현재 국면 버튼으로 따라잡기"
+    "behindLive": "지난 수를 보는 중 — 현재 국면 버튼으로 따라잡기",
+    "tabInkbaduk": "잉크바둑 대국",
+    "tabPro": "프로 기보",
+    "proMasterpiece": "명국선",
+    "proRecent": "최근 기보",
+    "proSearch": "기사·기전 검색",
+    "proEmpty": "등록된 프로 기보가 없습니다.",
+    "proEvent": "기전",
+    "proDate": "대국일"
   },
   "admin": {
     "heading": "관리자 콘솔",
