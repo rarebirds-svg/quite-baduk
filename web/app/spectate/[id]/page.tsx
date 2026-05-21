@@ -7,12 +7,7 @@ import Board from "@/components/Board";
 import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { useAuthStore } from "@/store/authStore";
-import {
-  applyMoveWithCaptures,
-  gtpToXy,
-  handicapStonesFor,
-  totalCells,
-} from "@/lib/board";
+import { gtpToXy, replay } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
 import { formatRank } from "@/components/RankPicker";
@@ -41,31 +36,6 @@ interface SpectateGame {
 }
 
 const POLL_MS = 4000;
-
-function replay(
-  size: number,
-  moves: MoveEntryRaw[],
-  upto: number,
-  handicap = 0,
-): string {
-  let board = ".".repeat(totalCells(size));
-  for (const coord of handicapStonesFor(size, handicap)) {
-    const xy = gtpToXy(coord, size);
-    if (!xy) continue;
-    const cells = board.split("");
-    cells[xy[1] * size + xy[0]] = "B";
-    board = cells.join("");
-  }
-  for (let i = 0; i < Math.min(upto, moves.length); i++) {
-    const m = moves[i];
-    if (m.is_undone || !m.coord || m.coord === "pass" || m.coord === "resign")
-      continue;
-    const xy = gtpToXy(m.coord, size);
-    if (!xy) continue;
-    board = applyMoveWithCaptures(board, size, xy[0], xy[1], m.color);
-  }
-  return board;
-}
 
 export default function SpectateWatchPage() {
   const t = useT();
