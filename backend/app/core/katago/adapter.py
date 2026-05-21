@@ -15,7 +15,11 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from app.config import settings
-from app.core.katago.analysis import AnalysisResult, parse_analysis
+from app.core.katago.analysis import (
+    AnalysisResult,
+    normalize_ownership_to_black,
+    parse_analysis,
+)
 from app.core.katago.strength import StrengthConfig
 
 if TYPE_CHECKING:
@@ -399,7 +403,14 @@ class KataGoAdapter:
                         pass
                     self._proc = None
 
-            return parse_analysis("".join(collected), board_size=self._replay.boardsize)
+            result = parse_analysis(
+                "".join(collected), board_size=self._replay.boardsize
+            )
+            # kata-analyze reports ownership from the side-to-move's
+            # perspective; normalize to Black-positive so all consumers
+            # can assume +1 = Black regardless of whose turn it is.
+            result.ownership = normalize_ownership_to_black(result.ownership, side)
+            return result
 
     async def load_sgf_text(self, sgf: str) -> None:
         # loadsgf requires a file path; a simpler approach is clear_board + replay moves.
