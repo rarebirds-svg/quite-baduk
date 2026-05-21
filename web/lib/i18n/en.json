@@ -117,6 +117,15 @@
     "backToConsole": "← Back to admin",
     "reviewDialogTitle": "Kifu review"
   },
+  "adminPro": {
+    "heading": "Pro Record Management",
+    "uploadLabel": "Upload SGF files",
+    "uploadButton": "Upload",
+    "uploadResult": "Added {inserted} · Duplicate {skipped} · Failed {failed}",
+    "empty": "No pro records yet.",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this record?"
+  },
   "home": {
     "masthead": "VOL. I",
     "edition": "Today's edition · Fresh kifu",

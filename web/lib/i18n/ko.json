@@ -117,6 +117,15 @@
     "backToConsole": "← 관리자 콘솔로",
     "reviewDialogTitle": "기보 복기"
   },
+  "adminPro": {
+    "heading": "프로 기보 관리",
+    "uploadLabel": "SGF 파일 업로드",
+    "uploadButton": "업로드",
+    "uploadResult": "추가 {inserted} · 중복 {skipped} · 실패 {failed}",
+    "empty": "등록된 프로 기보가 없습니다.",
+    "delete": "삭제",
+    "deleteConfirm": "이 기보를 삭제할까요?"
+  },
   "home": {
     "masthead": "VOL. I",
     "edition": "새 대국 · 매일의 기보",
