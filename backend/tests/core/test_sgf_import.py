@@ -45,7 +45,7 @@ def test_clean_sgf_strips_comments() -> None:
 
 def test_variations_ignored_main_line_only() -> None:
     parsed = parse_pro_sgf(_WITH_VARIATION)
-    # root + B[pd] + W[dp] + B[pp] (first variation) = 3 moves
+    # three move nodes B[pd], W[dp], B[pp] (first variation) = 3 moves
     assert parsed.move_count == 3
 
 

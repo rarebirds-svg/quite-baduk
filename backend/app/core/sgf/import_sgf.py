@@ -108,10 +108,19 @@ def parse_pro_sgf(sgf_text: str) -> ParsedProGame:
     black_player = _opt("PB") or "흑"
     white_player = _opt("PW") or "백"
     dt_raw = _opt("DT")
+    black_rank = _opt("BR")
+    white_rank = _opt("WR")
+    event = _opt("EV")
+    result = _opt("RE")
 
-    try:
-        komi = game.get_komi()
-    except ValueError:
+    # get_komi()은 KM이 없으면 ValueError가 아니라 0.0을 돌려준다.
+    # KM 자체가 없으면 한국 룰 기본값 6.5로 폴백한다.
+    if root.has_property("KM"):
+        try:
+            komi = game.get_komi()
+        except ValueError:
+            komi = 6.5
+    else:
         komi = 6.5
     handicap = game.get_handicap() or 0
 
@@ -135,11 +144,11 @@ def parse_pro_sgf(sgf_text: str) -> ParsedProGame:
         meta={
             "PB": black_player,
             "PW": white_player,
-            "BR": _opt("BR"),
-            "WR": _opt("WR"),
-            "EV": _opt("EV"),
+            "BR": black_rank,
+            "WR": white_rank,
+            "EV": event,
             "DT": dt_raw,
-            "RE": _opt("RE"),
+            "RE": result,
         },
     )
     clean_sgf = clean_bytes.decode("utf-8")
@@ -156,11 +165,11 @@ def parse_pro_sgf(sgf_text: str) -> ParsedProGame:
     return ParsedProGame(
         black_player=black_player,
         white_player=white_player,
-        black_rank=_opt("BR"),
-        white_rank=_opt("WR"),
-        event=_opt("EV"),
+        black_rank=black_rank,
+        white_rank=white_rank,
+        event=event,
         game_date=_parse_dt(dt_raw),
-        result=_opt("RE"),
+        result=result,
         board_size=size,
         handicap=handicap,
         komi=komi,
