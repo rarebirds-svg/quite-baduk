@@ -22,9 +22,7 @@
     "proMasterpiece": "Masterpieces",
     "proRecent": "Recent",
     "proSearch": "Search player or event",
-    "proEmpty": "No pro records yet.",
-    "proEvent": "Event",
-    "proDate": "Date"
+    "proEmpty": "No pro records yet."
   },
   "admin": {
     "heading": "Admin console",

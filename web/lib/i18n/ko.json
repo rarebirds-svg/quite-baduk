@@ -22,9 +22,7 @@
     "proMasterpiece": "명국선",
     "proRecent": "최근 기보",
     "proSearch": "기사·기전 검색",
-    "proEmpty": "등록된 프로 기보가 없습니다.",
-    "proEvent": "기전",
-    "proDate": "대국일"
+    "proEmpty": "등록된 프로 기보가 없습니다."
   },
   "admin": {
     "heading": "관리자 콘솔",

@@ -2,7 +2,8 @@
 // 프로 기보 목록 — 명국선/최근 토글과 기사·기전 검색을 갖춘 관전 탭 본문.
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import { api, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { Input } from "@/components/ui/input";
 
@@ -24,6 +25,7 @@ type Collection = "masterpiece" | "recent";
 
 export function ProGameList() {
   const t = useT();
+  const router = useRouter();
   const [collection, setCollection] = useState<Collection>("masterpiece");
   const [rows, setRows] = useState<ProRow[] | null>(null);
   const [q, setQ] = useState("");
@@ -35,13 +37,17 @@ export function ProGameList() {
       .then((d) => {
         if (!cancelled) setRows(d.rows);
       })
-      .catch(() => {
-        if (!cancelled) setRows([]);
+      .catch((e) => {
+        if (e instanceof ApiError && e.status === 401) {
+          router.replace("/");
+        } else if (!cancelled) {
+          setRows([]);
+        }
       });
     return () => {
       cancelled = true;
     };
-  }, [collection]);
+  }, [collection, router]);
 
   const filtered = useMemo(() => {
     if (!rows) return null;
