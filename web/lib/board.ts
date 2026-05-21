@@ -147,3 +147,36 @@ export function handicapStonesFor(size: number, count: number): string[] {
   if (count <= 0) return [];
   return HANDICAP_STONES[size]?.[count] ?? [];
 }
+
+// 관전·재생 화면이 공유하는 수순 항목 — 착수 색·좌표·취소 여부.
+export interface ReplayMove {
+  color: "B" | "W";
+  coord: string | null;
+  is_undone: boolean;
+}
+
+// upto 수까지 둔 반상 문자열을 만든다. 패스·기권·취소수는 건너뛴다.
+export function replay(
+  size: number,
+  moves: ReplayMove[],
+  upto: number,
+  handicap = 0,
+): string {
+  let board = ".".repeat(totalCells(size));
+  for (const coord of handicapStonesFor(size, handicap)) {
+    const xy = gtpToXy(coord, size);
+    if (!xy) continue;
+    const cells = board.split("");
+    cells[xy[1] * size + xy[0]] = "B";
+    board = cells.join("");
+  }
+  for (let i = 0; i < Math.min(upto, moves.length); i++) {
+    const m = moves[i];
+    if (m.is_undone || !m.coord || m.coord === "pass" || m.coord === "resign")
+      continue;
+    const xy = gtpToXy(m.coord, size);
+    if (!xy) continue;
+    board = applyMoveWithCaptures(board, size, xy[0], xy[1], m.color);
+  }
+  return board;
+}

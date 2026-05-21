@@ -16,7 +16,15 @@
     "backToList": "Spectate list",
     "notFound": "This game cannot be spectated. Games whose session ended before finishing are not shown.",
     "toLive": "To live",
-    "behindLive": "Viewing an earlier move — tap To live to catch up"
+    "behindLive": "Viewing an earlier move — tap To live to catch up",
+    "tabInkbaduk": "Inkbaduk Games",
+    "tabPro": "Pro Records",
+    "proMasterpiece": "Masterpieces",
+    "proRecent": "Recent",
+    "proSearch": "Search player or event",
+    "proEmpty": "No pro records yet.",
+    "proNotFound": "Pro record not found.",
+    "proBackToList": "Pro records"
   },
   "admin": {
     "heading": "Admin console",
@@ -108,6 +116,15 @@
     "endReasonActive": "Active",
     "backToConsole": "← Back to admin",
     "reviewDialogTitle": "Kifu review"
+  },
+  "adminPro": {
+    "heading": "Pro Record Management",
+    "uploadLabel": "Upload SGF files",
+    "uploadButton": "Upload",
+    "uploadResult": "Added {inserted} · Duplicates {skipped} · Failed {failed}",
+    "empty": "No pro records yet.",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this record?"
   },
   "home": {
     "masthead": "VOL. I",

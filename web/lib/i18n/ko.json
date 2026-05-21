@@ -16,7 +16,15 @@
     "backToList": "관전 목록",
     "notFound": "관전할 수 없는 대국입니다. 종료되지 않은 채 세션이 끊긴 대국은 관전 목록에 나타나지 않습니다.",
     "toLive": "현재 국면",
-    "behindLive": "지난 수를 보는 중 — 현재 국면 버튼으로 따라잡기"
+    "behindLive": "지난 수를 보는 중 — 현재 국면 버튼으로 따라잡기",
+    "tabInkbaduk": "Inkbaduk 대국",
+    "tabPro": "프로 기보",
+    "proMasterpiece": "명국",
+    "proRecent": "최근 기보",
+    "proSearch": "기사·기전 검색",
+    "proEmpty": "등록된 프로 기보가 없습니다.",
+    "proNotFound": "프로 기보를 찾을 수 없습니다.",
+    "proBackToList": "프로 기보 목록"
   },
   "admin": {
     "heading": "관리자 콘솔",
@@ -108,6 +116,15 @@
     "endReasonActive": "진행중",
     "backToConsole": "← 관리자 콘솔로",
     "reviewDialogTitle": "기보 복기"
+  },
+  "adminPro": {
+    "heading": "프로 기보 관리",
+    "uploadLabel": "SGF 파일 업로드",
+    "uploadButton": "업로드",
+    "uploadResult": "추가 {inserted} · 중복 {skipped} · 실패 {failed}",
+    "empty": "등록된 프로 기보가 없습니다.",
+    "delete": "삭제",
+    "deleteConfirm": "이 기보를 삭제하시겠습니까?"
   },
   "home": {
     "masthead": "VOL. I",
