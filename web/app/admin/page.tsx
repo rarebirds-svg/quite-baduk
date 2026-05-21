@@ -408,6 +408,9 @@ export default function AdminPage() {
           <Link href="/admin/stats" className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline">
             {t("admin.viewStats")}
           </Link>
+          <Link href="/admin/pro-games" className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline">
+            {t("adminPro.heading")}
+          </Link>
         </div>
       </section>
 
