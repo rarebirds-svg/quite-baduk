@@ -3,7 +3,8 @@
 
 노출 규칙: 정상 종료(finished/resigned)된 대국, 그리고 아직 세션이
 살아있는 진행 중(active) 대국만. active이면서 세션이 사라진 대국은
-"버려진 대국"이라 목록·상세 모두에서 제외한다.
+"버려진 대국"이라 목록·상세 모두에서 제외한다. 관리자 닉네임으로 둔
+대국도 닉네임·대국 내용이 노출되지 않도록 전부 숨긴다.
 """
 from __future__ import annotations
 
@@ -11,9 +12,9 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import ColumnElement, and_, or_, select
+from sqlalchemy import ColumnElement, and_, func, or_, select
 
-from app.deps import CurrentSession, DbSession
+from app.deps import ADMIN_NICKNAME_KEYS, CurrentSession, DbSession
 from app.models import Game, Move, Session
 from app.schemas.game import GameDetail, GameSummary, MoveEntry
 
@@ -22,14 +23,35 @@ router = APIRouter(prefix="/api/spectate", tags=["spectate"])
 _FINISHED = ("finished", "resigned")
 
 
-def _spectatable_clause() -> ColumnElement[bool]:
-    """SQLAlchemy WHERE 절: 종료된 대국 OR 세션이 살아있는 진행 중 대국."""
-    return or_(
-        Game.status.in_(_FINISHED),
-        and_(
-            Game.status == "active",
-            Game.session_id.in_(select(Session.id)),
+def _not_admin_clause() -> ColumnElement[bool]:
+    """관리자 대국 제외 절. 세션이 살아있으면 session.nickname_key로,
+    세션이 사라졌으면 games.user_nickname 스냅샷으로 판별한다."""
+    keys = list(ADMIN_NICKNAME_KEYS)
+    nickname_ok = or_(
+        Game.user_nickname.is_(None),
+        func.lower(Game.user_nickname).notin_(keys),
+    )
+    session_ok = or_(
+        Game.session_id.is_(None),
+        Game.session_id.notin_(
+            select(Session.id).where(Session.nickname_key.in_(keys))
         ),
+    )
+    return and_(nickname_ok, session_ok)
+
+
+def _spectatable_clause() -> ColumnElement[bool]:
+    """SQLAlchemy WHERE 절: (종료된 대국 OR 세션이 살아있는 진행 중
+    대국) AND 관리자 대국이 아님."""
+    return and_(
+        or_(
+            Game.status.in_(_FINISHED),
+            and_(
+                Game.status == "active",
+                Game.session_id.in_(select(Session.id)),
+            ),
+        ),
+        _not_admin_clause(),
     )
 
 

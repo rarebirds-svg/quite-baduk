@@ -83,6 +83,26 @@ async def test_spectate_hides_abandoned_game(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_spectate_hides_admin_game(client: AsyncClient) -> None:
+    """관리자 닉네임으로 둔 대국은 목록·상세 모두에서 제외."""
+    admin = AsyncClient(transport=client._transport, base_url=client.base_url)
+    try:
+        await _signup(admin, "대공")
+        gid = await _create_game(admin)
+        await admin.post(f"/api/games/{gid}/resign")
+    finally:
+        await admin.aclose()
+
+    await _signup(client, "watcher")
+    r = await client.get("/api/spectate")
+    ids = {x["id"] for x in r.json()["rows"]}
+    assert gid not in ids, "관리자 대국이 관전 목록에 노출됨"
+
+    detail = await client.get(f"/api/spectate/{gid}")
+    assert detail.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_spectate_detail_returns_moves(client: AsyncClient) -> None:
     """관전 가능 대국의 상세는 수순을 포함해 200."""
     await _signup(client, "watcher")
