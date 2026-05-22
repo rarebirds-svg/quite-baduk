@@ -42,6 +42,7 @@ export default function ProGameWatchPage() {
   const [game, setGame] = useState<ProGameDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     if (!session) {
@@ -87,6 +88,20 @@ export default function ProGameWatchPage() {
     return xy ? { x: xy[0], y: xy[1] } : null;
   }, [game, idx]);
 
+  // 자동 재생 — 1초마다 한 수씩 진행, 마지막 수에 닿으면 멈춘다.
+  useEffect(() => {
+    if (!playing || !game) return;
+    if (idx >= game.moves.length) {
+      setPlaying(false);
+      return;
+    }
+    const timer = setTimeout(
+      () => setIdx((i) => Math.min(game.moves.length, i + 1)),
+      1000,
+    );
+    return () => clearTimeout(timer);
+  }, [playing, idx, game]);
+
   if (!session) return null;
 
   if (error === "not_found") {
@@ -94,7 +109,7 @@ export default function ProGameWatchPage() {
       <div className="space-y-4">
         <Hero title={t("spectate.tabPro")} subtitle="" />
         <p className="text-sm text-oxblood">{t("spectate.proNotFound")}</p>
-        <Link href="/spectate" className="text-oxblood hover:underline text-sm">
+        <Link href="/spectate?tab=pro" className="text-oxblood hover:underline text-sm">
           ← {t("spectate.proBackToList")}
         </Link>
       </div>
@@ -116,7 +131,7 @@ export default function ProGameWatchPage() {
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <Hero title={t("spectate.tabPro")} subtitle="" />
         <Link
-          href="/spectate"
+          href="/spectate?tab=pro"
           className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
         >
           ← {t("spectate.proBackToList")}
@@ -153,34 +168,63 @@ export default function ProGameWatchPage() {
           min={0}
           max={game.moves.length}
           value={idx}
-          onChange={(e) => setIdx(Number(e.target.value))}
+          onChange={(e) => {
+            setPlaying(false);
+            setIdx(Number(e.target.value));
+          }}
           className="w-full accent-oxblood block"
           aria-label={t("review.scrubber")}
         />
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={() => setIdx(0)}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (!playing && idx >= game.moves.length) setIdx(0);
+            setPlaying((p) => !p);
+          }}
+        >
+          {playing ? t("review.pause") : t("review.play")}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setPlaying(false);
+            setIdx(0);
+          }}
+        >
           {t("review.first")}
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setIdx((i) => Math.max(0, i - 1))}
+          onClick={() => {
+            setPlaying(false);
+            setIdx((i) => Math.max(0, i - 1));
+          }}
         >
           {t("review.prev")}
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setIdx((i) => Math.min(game.moves.length, i + 1))}
+          onClick={() => {
+            setPlaying(false);
+            setIdx((i) => Math.min(game.moves.length, i + 1));
+          }}
         >
           {t("review.next")}
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setIdx(game.moves.length)}
+          onClick={() => {
+            setPlaying(false);
+            setIdx(game.moves.length);
+          }}
         >
           {t("review.last")}
         </Button>
