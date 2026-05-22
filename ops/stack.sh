@@ -23,7 +23,7 @@ staging_up() {
   ( cd "$WORKTREE/backend"
     # shellcheck disable=SC1091
     source .venv311/bin/activate
-    export DATABASE_URL KATAGO_MOCK JWT_SECRET CORS_ORIGINS
+    export DB_PATH KATAGO_MOCK JWT_SECRET CORS_ORIGINS
     alembic upgrade head >> "$RUN_DIR/staging-backend.log" 2>&1
     exec nohup uvicorn app.main:app --host 127.0.0.1 --port "$STAGING_BACKEND_PORT" \
       >> "$RUN_DIR/staging-backend.log" 2>&1
