@@ -9,6 +9,13 @@
 | prod | 정상 (backend·web 가동, db OK, 디스크 5%) | 2026-05-22 21:30 |
 | staging | 정상 (backend·web 가동, katago alive) | 2026-05-22 21:30 |
 
+## 백업 상태
+
+| 항목 | 값 |
+|---|---|
+| 최신 백업 | 미확인 |
+| daily / weekly / monthly | - / - / - |
+
 ## 보류 승인
 
 `state/pending-approvals.md` 참조 — 0건.
