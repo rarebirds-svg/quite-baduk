@@ -13,8 +13,11 @@
 1. **due한 러닝북 선별**
    - `docs/ops/runbooks/healthcheck.md` — 매 실행마다 수행.
    - `docs/ops/runbooks/backup-verify.md` — 매 실행마다 수행.
+   - `docs/ops/runbooks/bug-scan.md` — 매 실행마다 수행.
+   - `docs/ops/runbooks/backlog-triage.md` — 매 실행마다 수행.
+   - `docs/ops/runbooks/pr-watch.md` — 매 실행마다 수행.
    - healthcheck가 prod 실패를 잡으면 `docs/ops/runbooks/incident.md`로 연결한다.
-   - (sub-project 2~4에서 사용통계 러닝북이 추가되면 여기에 포함된다.)
+   - (sub-project 3~4에서 사용통계 러닝북이 추가되면 여기에 포함된다.)
 
 2. **실행** — 각 러닝북의 "절차"를 그대로 수행한다. 헬스체크는 직접 실행해도 되고,
    범위가 크면 `Agent` 도구로 서브에이전트에 위임한다.
