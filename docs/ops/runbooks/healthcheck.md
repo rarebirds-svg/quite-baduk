@@ -1,6 +1,6 @@
 # 러닝북: 헬스체크
 
-- 주기: 매시 정각 (오케스트레이터)
+- 주기: 매일 12시·18시 (오케스트레이터)
 - 등급: 🟢 자율
 - 목적: prod·staging 스택 정상 여부를 확인하고, 이상 시에만 Telegram 경보.
 
@@ -34,9 +34,8 @@ df -h / | tail -1 | awk '{print $5}'
 
 1. 결과를 `state/log/YYYY-MM-DD.md`에 추가한다 (시각·항목별 OK/실패).
 2. `state/dashboard.md`의 스택 상태 표를 갱신한다.
-3. **prod 이상이 하나라도 있으면** `runbooks/telegram-protocol.md`의 알림 형식으로
-   Telegram 경보를 보내고 `state/incidents.md`에 항목을 추가한다.
-4. 모두 정상이면 Telegram을 보내지 않는다 (조용한 성공).
+3. **prod 이상이 하나라도 있으면** `state/incidents.md`에 항목을 추가한다.
+4. Telegram 보고(경보·정상 요약)는 오케스트레이터가 실행 요약으로 처리한다.
 
 ## 범위 메모
 
