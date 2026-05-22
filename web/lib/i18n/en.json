@@ -20,11 +20,14 @@
     "tabInkbaduk": "Inkbaduk Games",
     "tabPro": "Pro Records",
     "proMasterpiece": "Masterpieces",
+    "proWorld": "World Titles",
     "proRecent": "Recent",
     "proSearch": "Search player or event",
     "proEmpty": "No pro records yet.",
     "proNotFound": "Pro record not found.",
-    "proBackToList": "Pro records"
+    "proBackToList": "Pro records",
+    "proPrev": "Prev",
+    "proNext": "Next"
   },
   "admin": {
     "heading": "Admin console",
