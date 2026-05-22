@@ -15,6 +15,10 @@ inkbaduk(Go/Baduk 웹앱)을 agentic AI로 전 영역 운영하는 체계를 구
 - inkbaduk은 **이미 라이브 서비스 중**이다.
 - 호스팅은 **맥 미니 한 대** — Claude Code 실행 머신과 라이브 호스트가 동일하다.
 - 개발과 운영이 **분리되어 있지 않다**. 에이전트가 실수하면 즉시 라이브 장애가 된다.
+- **라이브 구성 (Task 1 조사 확정)**: prod는 macOS launchd 서비스 둘로 돈다 —
+  `com.baduk.api`(uvicorn :8000), `com.baduk.web`(`npm start` :3000). Docker 미사용.
+  DB는 `backend/data/baduk.db`, 시크릿은 `~/.baduk.env`, 외부 노출은 cloudflared 터널 +
+  Caddy. launchd가 **리포 작업 트리에서 직접** 앱을 실행한다.
 - 자산: `.claude/agents/` 5종 에이전트(editorial-implementer, design-token-guardian,
   visual-qa, korean-copy-qa, a11y-auditor), Telegram 플러그인 연동.
 
@@ -58,25 +62,31 @@ inkbaduk(Go/Baduk 웹앱)을 agentic AI로 전 영역 운영하는 체계를 구
 
 ### 섹션 1 — 환경 분리 (prod/staging)
 
-맥 미니 한 대에서 두 개의 docker-compose 프로젝트를 띄운다.
+라이브 prod는 macOS launchd 서비스 두 개로 돈다 (Docker 미사용).
+
+- `com.baduk.api` — `backend/deploy/run_local_prod.sh` → uvicorn :8000.
+- `com.baduk.web` — `npm start` :3000.
+- 두 서비스 모두 `WorkingDirectory`가 이 리포다 — **prod가 리포 작업 트리에서 직접
+  실행된다.** 작업 트리의 앱 코드나 `web/.next/` 빌드 산출물을 바꾸면 prod 재시작 시
+  그대로 라이브에 반영된다. 따라서 에이전트의 모든 개발 작업은 **별도 git worktree**에서 한다.
 
 | | prod (라이브) | staging (에이전트 작업장) |
 |---|---|---|
-| 포트 | web 3000 / backend 8000 | web 3100 / backend 8100 |
-| 프로젝트명 | `inkbaduk-prod` | `inkbaduk-staging` |
-| DB | `baduk.db` (실데이터) | `baduk-staging.db` (시드 또는 prod 스냅샷) |
-| KataGo | 실제 모델 | `KATAGO_MOCK=true` 기본 — 맥 미니 CPU 보호 |
-| 코드 출처 | `main` 브랜치 | git worktree (에이전트 작업 브랜치) |
+| 실행 | launchd 상주 (`com.baduk.*`) | `ops/stack.sh`로 온디맨드 기동 |
+| web / backend 포트 | 3000 / 8000 | 3100 / 8100 |
+| 코드 | 리포 작업 트리 (`main`) | git worktree (`.worktrees/staging`) |
+| DB | `backend/data/baduk.db` | worktree의 `backend/data/baduk-staging.db` |
+| KataGo | `run_local_prod.sh` 설정 | `KATAGO_MOCK=true` |
 
-**흐름**: 에이전트는 worktree에서 개발 → staging 배포·검증 → 통과 시 `main` 머지 +
-prod 재빌드(승급). prod DB는 에이전트가 직접 건드리지 않고, staging은 주기적으로
-prod 스냅샷을 복사해 받는다.
+**흐름**: 에이전트는 `.worktrees/staging` worktree에서 개발 → `ops/stack.sh up staging`으로
+:3100/:8100에 기동·검증 → 통과 시 `main` 머지 → prod launchd 서비스 재시작(승급).
+prod DB는 에이전트가 직접 건드리지 않는다.
 
-**리소스**: 두 스택 동시 기동 부담을 줄이기 위해 staging backend는 기본
-`KATAGO_MOCK=true`. KataGo 자체를 검증할 때만 실모델을 띄운다.
+**리소스**: 두 네이티브 스택 + KataGo 부담을 줄이려 staging은 `KATAGO_MOCK=true`.
+staging은 온디맨드라 검증이 끝나면 내린다.
 
-**산출물**: `docker-compose.staging.yml` 오버라이드, `.env.staging`,
-`start.sh`/`stop.sh`에 `--env prod|staging` 인자 추가.
+**산출물**: `ops/stack.sh`(staging 기동·중지 + prod 상태 조회), `ops/staging.env`,
+staging worktree 일회성 셋업 절차.
 
 ### 섹션 2 — `docs/ops/` 디렉터리 구조
 
@@ -182,8 +192,9 @@ Telegram 배선(4), 오케스트레이터 골격 + healthcheck 러닝북(5).
 
 | 리스크 | 완화 |
 |---|---|
-| 에이전트 실수가 라이브 장애로 직결 | prod/staging 분리, 라이브 변경은 전부 🟡 승인 |
-| 맥 미니 리소스 부족(두 스택 + KataGo) | staging은 `KATAGO_MOCK=true` 기본 |
+| 에이전트 실수가 라이브 장애로 직결 | prod/staging 분리, 개발은 worktree 격리, 라이브 변경은 전부 🟡 승인 |
+| prod가 리포 작업 트리에서 직접 실행 | 에이전트 개발 작업은 `.worktrees/staging` worktree에서만 수행 |
+| 맥 미니 리소스 부족(두 스택 + KataGo) | staging은 `KATAGO_MOCK=true`, 온디맨드 — 검증 후 내림 |
 | 세션 간 작업 상태 망각 | `docs/ops/state/`·`runbooks/` 파일이 단일 진실 공급원 |
 | Telegram 히스토리 부재로 승인 유실 | `pending-approvals.md`로 제안/승인 시점 분리, 미처리분 재알림 |
 | 맥 미니 재부팅 시 스케줄 중단 | launchd plist(부팅 시 자동 로드) |
