@@ -1,0 +1,23 @@
+<!-- 매일 04:00 prod DB 로컬 다중 세대 백업을 실행하는 launchd 작업 정의. -->
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.inkbaduk.backup</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/daegong/projects/baduk/ops/backup.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>4</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/Users/daegong/projects/baduk/docs/ops/state/log/backup.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/daegong/projects/baduk/docs/ops/state/log/backup.err.log</string>
+</dict>
+</plist>
