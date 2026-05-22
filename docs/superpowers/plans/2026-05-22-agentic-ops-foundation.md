@@ -4,7 +4,7 @@
 
 **Goal:** 맥 미니 한 대에서 라이브 중인 inkbaduk을 agentic AI로 운영하기 위한 기반 계층을 구축한다 — prod/staging 분리, `docs/ops/` 구조, 자율성 정책, Telegram 배선, launchd 오케스트레이터 골격.
 
-**Architecture:** prod는 macOS launchd 서비스 둘(`com.baduk.api` uvicorn :8000, `com.baduk.web` npm start :3000)로 리포 작업 트리에서 직접 돈다 — Docker 미사용. staging은 `ops/stack.sh`가 별도 git worktree(`.worktrees/staging`)에서 :3100/:8100에 온디맨드로 띄우는 네이티브 스택이다. launchd가 매시 헤드리스 Claude Code 세션("오케스트레이터")을 깨워 `docs/ops/runbooks/`의 러닝북을 실행하고 상태를 `docs/ops/state/`에 파일로 고정한다. 라이브를 바꾸는 액션은 Telegram 승인을 거친다.
+**Architecture:** prod는 macOS launchd 서비스 둘(`com.baduk.api` uvicorn :8000, `com.baduk.web` npm start :3000)로 리포 작업 트리에서 직접 돈다 — Docker 미사용. staging은 `ops/stack.sh`가 별도 git worktree(`.worktrees/staging`)에서 :3100/:8100에 온디맨드로 띄우는 네이티브 스택이다. launchd가 매일 12시·18시에 헤드리스 Claude Code 세션("오케스트레이터")을 깨워 `docs/ops/runbooks/`의 러닝북을 실행하고 상태를 `docs/ops/state/`에 파일로 고정한다. 라이브를 바꾸는 액션은 Telegram 승인을 거친다.
 
 **Tech Stack:** bash, macOS launchd, git worktree, Python venv + uvicorn, Next.js, Claude Code CLI(헤드리스 `-p`), Telegram 플러그인, Markdown 러닝북.
 

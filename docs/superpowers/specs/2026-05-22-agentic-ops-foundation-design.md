@@ -158,8 +158,7 @@ cron보다 신뢰성이 높다.
 
 | 시점 | 하는 일 |
 |---|---|
-| 매시 정각 | `healthcheck.md` 실행 → 이상 시에만 Telegram 경보 |
-| 매일 09:00 | 일일 점검 — 백업검증 + 사용통계 + 보류 승인 리마인드 + 일일 요약 푸시 |
+| 매일 12시·18시 | `healthcheck.md` 실행 + 보류 승인 건수 + 상태 요약 Telegram 푸시 |
 | Telegram 답신 도착 | `pending-approvals.md` 처리 (섹션 4) |
 
 **오케스트레이터 1회 실행 루프** — ① `runbooks/`에서 due한 러닝북 선별 →
