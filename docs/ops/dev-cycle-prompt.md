@@ -17,11 +17,12 @@
 2. **선점** — 고른 이슈에 `in-progress` 라벨을 단다.
 3. **처리** — `dev-pipeline.md`의 자율 경로 1~4단계를 `.worktrees/dev-cycle`
    worktree에서 수행한다. 한 번에 이슈 1개만.
-4. **마무리** — PR을 만들었으면 이슈에서 `in-progress`를 떼고(PR이 `Closes`로
-   연결됨), 결과를 `state/log/YYYY-MM-DD.md`에 기록한다. 에스컬레이션했으면
-   `in-progress`를 떼고 이슈에 코멘트를 남긴 뒤 기록한다.
+4. **마무리** — 너는 PR을 만들 수 없다(`git push`가 deny됨). 커밋까지 완료했으면
+   `dev-pipeline.md` 3단계대로 핸드오프 코멘트(브랜치·SHA·사람이 실행할 push+PR
+   명령)를 이슈에 남기고 `in-progress`를 뗀다. 결과를 `state/log/YYYY-MM-DD.md`에
+   기록한다.
 5. **보고** — `docs/ops/runbooks/telegram-protocol.md` 알림 형식으로 Telegram에
-   결과(처리한 이슈·PR 번호 또는 에스컬레이션)를 1건 보낸다.
+   결과(처리한 이슈·브랜치·SHA — 또는 막힌 경우 사유)를 1건 보낸다.
 
 ## 끝낼 때
 
