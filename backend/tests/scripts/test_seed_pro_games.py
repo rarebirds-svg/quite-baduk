@@ -20,29 +20,39 @@ async def test_seed_is_idempotent(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # 테스트 SGF 디렉터리를 만들고 모듈 전역 SEED_DIR / AsyncSessionLocal 을
-    # 임시 테스트 DB 쪽으로 바꿔치기한다.
-    (tmp_path / "a.sgf").write_text(_SGF_A, encoding="utf-8")
-    (tmp_path / "b.sgf").write_text(_SGF_B, encoding="utf-8")
-    monkeypatch.setattr(seed_mod, "SEED_DIR", tmp_path)
+    # 임시 시드 디렉터리(컬렉션별)를 만들고 모듈 전역 DATA_DIR / SEED_SETS /
+    # AsyncSessionLocal 을 임시 테스트 DB 쪽으로 바꿔치기한다.
+    (tmp_path / "masterpieces").mkdir()
+    (tmp_path / "world_finals").mkdir()
+    (tmp_path / "masterpieces" / "a.sgf").write_text(_SGF_A, encoding="utf-8")
+    (tmp_path / "world_finals" / "b.sgf").write_text(_SGF_B, encoding="utf-8")
+    monkeypatch.setattr(seed_mod, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(
+        seed_mod,
+        "SEED_SETS",
+        [("masterpieces", "masterpiece"), ("world_finals", "world")],
+    )
     monkeypatch.setattr(
         seed_mod,
         "AsyncSessionLocal",
         async_sessionmaker(db_engine, expire_on_commit=False, class_=AsyncSession),
     )
 
-    async def _count() -> int:
+    async def _count(collection: str | None = None) -> int:
         factory = async_sessionmaker(
             db_engine, expire_on_commit=False, class_=AsyncSession
         )
         async with factory() as db:
-            return (
-                await db.execute(select(func.count()).select_from(ProGame))
-            ).scalar_one()
+            stmt = select(func.count()).select_from(ProGame)
+            if collection is not None:
+                stmt = stmt.where(ProGame.collection == collection)
+            return (await db.execute(stmt)).scalar_one()
 
-    # 1차 시드: 두 기보 모두 적재.
+    # 1차 시드: 두 기보가 각자 컬렉션으로 적재.
     await seed_mod.seed()
     assert await _count() == 2
+    assert await _count("masterpiece") == 1
+    assert await _count("world") == 1
 
     # 2차 시드: 동일 디렉터리 → 전부 중복 스킵, 행 수 불변.
     await seed_mod.seed()

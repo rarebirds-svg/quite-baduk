@@ -14,7 +14,7 @@ class ProGame(Base):
     __tablename__ = "pro_games"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    # 'masterpiece'(명국선 시드) | 'recent'(관리자 업로드)
+    # 'masterpiece'(명국선 시드) | 'world'(세계 기전 결승 시드) | 'recent'(관리자 업로드)
     collection: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
     black_player: Mapped[str] = mapped_column(String(64), nullable=False)
     white_player: Mapped[str] = mapped_column(String(64), nullable=False)
