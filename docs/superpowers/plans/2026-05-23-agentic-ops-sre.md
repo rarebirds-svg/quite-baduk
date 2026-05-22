@@ -112,8 +112,8 @@ git commit -m "feat(ops): 로컬 다중 세대 백업 스크립트 backup.sh"
 - [ ] **Step 1: `ops/launchd/com.inkbaduk.backup.plist` 작성**
 
 ```xml
-<!-- 매일 04:00 prod DB 로컬 다중 세대 백업을 실행하는 launchd 작업 정의. -->
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 매일 04:00 prod DB 로컬 다중 세대 백업을 실행하는 launchd 작업 정의. -->
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
