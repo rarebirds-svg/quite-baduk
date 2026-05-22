@@ -390,7 +390,7 @@ Expected: `staging-backend: 가동`, `staging-web: 가동`, staging backend heal
 
 Run:
 ```bash
-lsof -ti :8000 :3000 :8100 :3100 | wc -l
+lsof -ti :8000 -i :3000 -i :8100 -i :3100 | sort -u | wc -l
 curl -fs http://localhost:8100/api/health && echo " staging-OK"
 ```
 Expected: 네 포트 모두 점유(프로세스 PID 4개 이상), staging backend가 `staging-OK`. prod(:8000/:3000)와 staging(:8100/:3100)이 동시에 산다.
@@ -770,7 +770,7 @@ Run:
 ```bash
 ops/stack.sh ps prod
 ops/stack.sh ps staging
-lsof -ti :8000 :3000 :8100 :3100 | wc -l
+lsof -ti :8000 -i :3000 -i :8100 -i :3100 | sort -u | wc -l
 ```
 Expected: prod·staging 모두 health 응답, 네 포트 점유. staging이 내려가 있으면 `ops/stack.sh up staging` 후 재확인.
 
