@@ -19,3 +19,14 @@
 
 🟡 액션은 `runbooks/telegram-protocol.md`의 절차를 따른다 — `state/pending-approvals.md`에
 항목 기록 → Telegram 제안 → 답신 도착 시 실행.
+
+## 장애 안전 복구 화이트리스트
+
+아래 동작은 **healthcheck가 감지한 장애에 대응하는 중**, **장애당 1회**에 한해 🟢 자율이다.
+장애 맥락 밖에서 prod를 재시작하는 것은 여전히 🟡다 — 이것은 명시적 예외다.
+
+- prod launchd 서비스 재시작 — 프로세스는 떠 있으나 `/api/health` 무응답이거나 다운일 때 `ops/stack.sh restart prod`.
+- 디스크 압박 해소 — 보존 정책 초과 백업·오래된 `.run/staging-*.log` 삭제. prod 데이터는 불가.
+- staging 스택 재시작 — `ops/stack.sh down staging` 후 `ops/stack.sh up staging`.
+
+루프 가드 — 직전 실행에서 같은 대상을 이미 복구했는데 또 실패면 재시도하지 않고 에스컬레이션한다.
