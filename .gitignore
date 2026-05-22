@@ -23,6 +23,7 @@ coverage/
 # Env & data
 .env
 .env.local
+ops/ops.env
 backend/data/*.db
 backend/data/*.db-wal
 backend/data/*.db-shm
