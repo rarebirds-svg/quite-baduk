@@ -23,6 +23,37 @@ async function fetchProList(): Promise<ProSitemapItem[]> {
   }
 }
 
+interface ThemeItem {
+  slug: string;
+  label: string;
+  description: string;
+  count: number;
+}
+
+async function fetchThemesList(): Promise<ThemeItem[]> {
+  try {
+    const res = await fetch(`${API}/api/spectate/pro/themes`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    return (await res.json()) as ThemeItem[];
+  } catch {
+    return [];
+  }
+}
+
+function monthlyPickMonths(): string[] {
+  const now = new Date();
+  const months: string[] = [];
+  for (let delta = -12; delta <= 1; delta++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + delta, 1));
+    months.push(
+      `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`,
+    );
+  }
+  return months;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const proList = await fetchProList();
@@ -42,5 +73,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticUrls, ...proUrls];
+  const themesList = await fetchThemesList();
+  const themeUrls: MetadataRoute.Sitemap = themesList.map((t) => ({
+    url: `${BASE}/spectate/themes/${t.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+  const picksIndex: MetadataRoute.Sitemap = [{
+    url: `${BASE}/spectate/picks`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }];
+  const pickUrls: MetadataRoute.Sitemap = monthlyPickMonths().map((m) => ({
+    url: `${BASE}/spectate/picks/monthly/${m}`,
+    lastModified: now,
+    changeFrequency: "yearly",
+    priority: 0.4,
+  }));
+
+  return [...staticUrls, ...proUrls, ...themeUrls, ...picksIndex, ...pickUrls];
 }

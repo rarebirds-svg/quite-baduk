@@ -8,6 +8,8 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import or_, select
 
+from app.core.pro.monthly_pick import InvalidYearMonth, pick_for_month
+from app.core.pro.themes import THEMES, theme_by_slug, theme_query_clause
 from app.core.sgf.import_sgf import parse_pro_sgf
 from app.deps import CurrentSession, DbSession
 from app.models import ProGame
@@ -85,6 +87,81 @@ async def pro_sitemap(db: DbSession) -> list[dict[str, Any]]:
         {"id": row.id, "created_at": row.created_at.isoformat()}
         for row in result.all()
     ]
+
+
+@router.get("/themes")
+async def list_themes(db: DbSession) -> list[dict[str, Any]]:
+    """테마 카탈로그 + 각 테마의 게임 수."""
+    out: list[dict[str, Any]] = []
+    for t in THEMES:
+        clause = theme_query_clause(t["slug"])
+        if clause is None:
+            continue
+        result = await db.execute(
+            select(ProGame.id).where(clause)
+        )
+        count = len(result.scalars().all())
+        out.append({
+            "slug": t["slug"],
+            "label": t["label"],
+            "description": t["description"],
+            "count": count,
+        })
+    return out
+
+
+@router.get("/theme/{slug}")
+async def theme_detail(slug: str, db: DbSession) -> dict[str, Any]:
+    """테마별 게임 목록 + 메타. 알 수 없는 slug는 404."""
+    theme = theme_by_slug(slug)
+    if theme is None:
+        raise HTTPException(status_code=404, detail="theme_not_found")
+    clause = theme_query_clause(slug)
+    assert clause is not None  # slug was validated above
+    result = await db.execute(
+        select(ProGame).where(clause).order_by(ProGame.game_date.desc(), ProGame.id)
+    )
+    games = result.scalars().all()
+    return {
+        "slug": theme["slug"],
+        "label": theme["label"],
+        "description": theme["description"],
+        "total": len(games),
+        "games": [
+            {
+                "id": g.id,
+                "black_player": g.black_player,
+                "white_player": g.white_player,
+                "event": g.event,
+                "game_date": g.game_date.isoformat() if g.game_date else None,
+                "result": g.result,
+            }
+            for g in games
+        ],
+    }
+
+
+@router.get("/pick/monthly/{yyyymm}")
+async def pick_monthly(yyyymm: str, db: DbSession) -> dict[str, Any]:
+    """결정적 월간 픽. yyyymm=YYYY-MM. 후보 0이면 404, 형식 오류 400."""
+    try:
+        picked_id = await pick_for_month(db, yyyymm)
+    except InvalidYearMonth as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if picked_id is None:
+        raise HTTPException(status_code=404, detail="no_candidates")
+    game = (
+        await db.execute(select(ProGame).where(ProGame.id == picked_id))
+    ).scalar_one()
+    return {
+        "yyyymm": yyyymm,
+        "id": game.id,
+        "black_player": game.black_player,
+        "white_player": game.white_player,
+        "event": game.event,
+        "game_date": game.game_date.isoformat() if game.game_date else None,
+        "result": game.result,
+    }
 
 
 @router.get("/{game_id}", response_model=ProGameDetail)
