@@ -276,9 +276,17 @@ export default function Board({
 
       {lastMove && (() => {
         const emphasis = lastMoveKind === "blunder" || lastMoveKind === "decisive";
+        // 표준 마커는 돌 색에 따라 명도 대비가 큰 색을 고른다 — 검은돌
+        // 위 어두운 oxblood가 모바일에서 가독성 부족했던 문제 해결.
+        // emphasis(패착/승착)는 의미 우선이라 색을 유지한다.
+        const stoneAt = board[lastMove.y * size + lastMove.x];
         const stroke = lastMoveKind === "decisive"
           ? "rgb(var(--moss))"
-          : "rgb(var(--oxblood))";
+          : lastMoveKind === "blunder"
+            ? "rgb(var(--oxblood))"
+            : stoneAt === "B"
+              ? "rgb(var(--gold))"
+              : "rgb(var(--oxblood))";
         return (
           <>
             <circle
