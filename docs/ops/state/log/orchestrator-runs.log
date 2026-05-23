@@ -5,3 +5,32 @@
 - **상태 갱신** — `dashboard.md`를 정상 상태로 갱신, `state/log/2026-05-22.md`에 21:15 헬스체크 항목 추가. 보류 승인 0건이라 incidents 기록 없음.
 - **보고** — Telegram 상태 요약 1건 발송(HTTP 200). 헤드리스 실행에는 `--channels`가 없어 `reply` 도구 대신 Bot API `sendMessage` curl로 발송했고, 차후 launcher에 `--channels` 추가 검토 필요를 로그에 메모로 남겼다.
 [2026-05-22 21:18:00] orchestrator 종료
+[2026-05-23 12:00:05] orchestrator 시작
+## 종료 요약
+
+12시 오케스트레이터 사이클 완료. 5개 러닝북 수행 결과.
+
+- **prod·staging 헬스 정상** (디스크 5%, 백업 integrity OK).
+- **신규 버그 이슈 #13 생성** — `sessions` INSERT/UPDATE에서 `database is locked` 2066회 누적, PR #6 `busy_timeout=5000`이 해결책 후보로 교차 참조.
+- **열린 PR 7건 전부 주의** (#10·#11 frontend CI 실패, #5·#8·#9 충돌+정체, #6·#7 e2e 실패+정체).
+- **Telegram 보고 미발송** — launchd 세션에 telegram MCP 미로드, ops.env에 봇 토큰 없음. 사람 조치: launchd plist에 `--channels` 추가 또는 ops.env에 `TELEGRAM_BOT_TOKEN` 저장. 메모리에 갭 기록.
+
+다음 실행은 18시에 launchd가 깨운다.
+[2026-05-23 12:06:17] orchestrator 종료
+[2026-05-23 18:00:05] orchestrator 시작
+[2026-05-23 18:00:30] orchestrator 18시 실행
+- healthcheck: prod backend/web 200 OK, katago 사망 (사용자 영향), 디스크 5%, staging backend OK.
+- backup-verify: daily 3개, 최신 04:00, integrity ok, 테이블 7.
+- bug-scan: 신규 0건 (DB locked +30회 추세 안정, KataGo silent death로 err 흔적 없음).
+- backlog-triage: 미분류 0건.
+- pr-watch: 열린 PR 8건, 주의 7건 (frontend CI 실패 3, CONFLICTING+e2e 3, MERGEABLE+e2e 2).
+- 보류 승인: 1건 신규 (AP-20260523-02 com.baduk.api 재시작).
+- Telegram 미발송 — bot token·channels 모두 부재. 파일 보고만.
+[2026-05-23 18:00:35] orchestrator 종료
+18시 오케스트레이터 실행 종료.
+
+**요약 — 3줄:**
+- 5개 러닝북 완료. **prod KataGo 서브프로세스 사망**(silent crash) 감지 — API/웹은 200 OK이라 화이트리스트 외 → `AP-20260523-02`(com.baduk.api 재시작) 🟡 승인 대기로 큐잉, incidents 기록.
+- 백업·디스크·db 정상. 미분류 이슈 0건, 신규 버그 이슈 0건(DB locked +30회로 추세 안정), 열린 PR 8건 중 7건 주의(CI 실패·CONFLICTING·정체).
+- Telegram은 launchd 세션이 `--channels` 미부여 + bot token 부재로 12시와 동일하게 발송 불가, 파일 보고만. KataGo 재시작 승인은 사람 답신 전에는 진행하지 않음.
+[2026-05-23 18:04:45] orchestrator 종료

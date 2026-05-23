@@ -16,6 +16,12 @@ launchctl list | grep -E 'com\.baduk\.(api|web)'
 판정: 두 curl이 성공하고 `com.baduk.api`·`com.baduk.web`가 launchctl 목록에 있으면 정상.
 launchctl 행의 첫 컬럼이 PID(숫자)면 가동, `-`면 중단.
 
+**중요**: `/api/health` 응답의 `katago_alive` 필드는 **정보용**이지 경보 신호가 아니다.
+KataGo는 첫 AI 응수 요청 시 lazy spawn되므로 backend 재시작 직후나 한동안 AI 호출이
+없으면 `katago_alive:false`가 정상이다. 이 필드 단독으로 incident를 만들거나 prod 재시작을
+제안하지 마라(false alarm). 진짜 KataGo 실패는 "사용자가 응수 요청했는데 일정 시간 내
+미반환" 등 활동-연관 신호로만 판정한다.
+
 ### 2. staging 헬스
 
 ```bash

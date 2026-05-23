@@ -12,7 +12,12 @@
 
 1. **due한 러닝북 선별**
    - `docs/ops/runbooks/healthcheck.md` — 매 실행마다 수행.
-   - (sub-project 1~4에서 백업검증·사용통계 러닝북이 추가되면 여기에 포함된다.)
+   - `docs/ops/runbooks/backup-verify.md` — 매 실행마다 수행.
+   - `docs/ops/runbooks/bug-scan.md` — 매 실행마다 수행.
+   - `docs/ops/runbooks/backlog-triage.md` — 매 실행마다 수행.
+   - `docs/ops/runbooks/pr-watch.md` — 매 실행마다 수행.
+   - healthcheck가 prod 실패를 잡으면 `docs/ops/runbooks/incident.md`로 연결한다.
+   - (sub-project 3~4에서 사용통계 러닝북이 추가되면 여기에 포함된다.)
 
 2. **실행** — 각 러닝북의 "절차"를 그대로 수행한다. 헬스체크는 직접 실행해도 되고,
    범위가 크면 `Agent` 도구로 서브에이전트에 위임한다.
@@ -22,8 +27,10 @@
 
 4. **보고** — `docs/ops/runbooks/telegram-protocol.md` 형식으로 Telegram에 보낸다.
    - prod 이상이 있으면 경보를 보낸다.
-   - 이상이 없어도 매 실행 시 상태 요약을 1건 보낸다 — 헬스 OK 여부와
-     `state/pending-approvals.md` "대기 중" 건수를 포함한다. 하루 2회라 과하지 않다.
+   - 이상이 없어도 매 실행 시 상태 요약을 1건 보낸다 — 헬스 OK 여부,
+     `state/pending-approvals.md` "대기 중" 건수, `state/log/content-ingest-runs.log`에서
+     읽은 가장 최근 CWI ingest 결과(0건이면 "신규 0"), `state/reports/`의 가장 최근
+     주간 리포트 파일명(예: "최근 분석: 2026-W21")을 포함한다. 하루 2회라 과하지 않다.
 
 5. **승인 답신 처리** — 이 세션이 Telegram 답신으로 트리거된 것이면(인바운드 메시지가
    있으면), 위 루프 대신 telegram-protocol.md의 "처리" 절차를 수행한다.

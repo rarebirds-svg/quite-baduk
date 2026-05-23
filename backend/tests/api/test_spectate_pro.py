@@ -153,3 +153,110 @@ async def test_pro_list_pagination(client: AsyncClient, db_session) -> None:
     ids1 = {x["id"] for x in page1["rows"]}
     ids2 = {x["id"] for x in page2["rows"]}
     assert ids1.isdisjoint(ids2)
+
+
+_SGF2 = (
+    "(;GM[1]FF[4]SZ[19]KM[6.5]PB[Kim]PW[Park]BR[9p]WR[9p]"
+    "DT[2026-01-01]RE[B+R];B[pd];W[dp])"
+)
+_SGF3 = (
+    "(;GM[1]FF[4]SZ[19]KM[6.5]PB[Cho]PW[Shin]BR[9p]WR[9p]"
+    "DT[2025-06-01]RE[W+R];B[qd];W[cd])"
+)
+
+
+async def _insert_pro_game_sgf(
+    db_session, sgf: str, collection: str = "masterpiece"
+) -> int:
+    parsed = parse_pro_sgf(sgf)
+    g = ProGame.from_parsed(parsed, collection=collection)
+    db_session.add(g)
+    await db_session.commit()
+    await db_session.refresh(g)
+    return g.id
+
+
+@pytest.mark.asyncio
+async def test_sitemap_endpoint_returns_all_pro_games(
+    client: AsyncClient, db_session
+) -> None:
+    # content_hash는 SGF 기준 — 서로 다른 SGF를 사용해 UNIQUE 충돌 방지
+    id1 = await _insert_pro_game_sgf(db_session, _SGF, "masterpiece")
+    id2 = await _insert_pro_game_sgf(db_session, _SGF2, "recent")
+    id3 = await _insert_pro_game_sgf(db_session, _SGF3, "masterpiece")
+
+    resp = await client.get("/api/spectate/pro/sitemap")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    inserted_ids = {id1, id2, id3}
+    returned_ids = {item["id"] for item in data}
+    assert inserted_ids.issubset(returned_ids)
+    item = next(x for x in data if x["id"] == id1)
+    assert "id" in item
+    assert "created_at" in item
+    assert set(item.keys()) == {"id", "created_at"}  # 다른 필드 누설 안 됨
+
+
+@pytest.mark.asyncio
+async def test_themes_list_endpoint_returns_catalog(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/themes")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) >= 5
+    slugs = [t["slug"] for t in data]
+    assert "masterpieces" in slugs
+    item = data[0]
+    assert set(item.keys()) >= {"slug", "label", "description", "count"}
+
+
+@pytest.mark.asyncio
+async def test_themes_list_includes_counts(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/themes")
+    for item in resp.json():
+        assert isinstance(item["count"], int)
+        assert item["count"] >= 0
+
+
+@pytest.mark.asyncio
+async def test_theme_detail_known_slug(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/theme/masterpieces")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "games" in data
+    assert "total" in data
+    assert isinstance(data["games"], list)
+    assert isinstance(data["total"], int)
+
+
+@pytest.mark.asyncio
+async def test_theme_detail_unknown_slug_404(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/theme/does-not-exist")
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_pick_monthly_returns_game(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/pick/monthly/2026-05")
+    # 200 또는 404 둘 다 허용 — DB 상태 의존.
+    assert resp.status_code in (200, 404)
+    if resp.status_code == 200:
+        data = resp.json()
+        assert "id" in data
+        assert data["yyyymm"] == "2026-05"
+
+
+@pytest.mark.asyncio
+async def test_pick_monthly_deterministic(client: AsyncClient) -> None:
+    a = await client.get("/api/spectate/pro/pick/monthly/2026-05")
+    b = await client.get("/api/spectate/pro/pick/monthly/2026-05")
+    assert a.status_code == b.status_code
+    if a.status_code == 200:
+        assert a.json()["id"] == b.json()["id"]
+
+
+@pytest.mark.asyncio
+async def test_pick_monthly_invalid_format(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/pick/monthly/2026-13")
+    assert resp.status_code == 400

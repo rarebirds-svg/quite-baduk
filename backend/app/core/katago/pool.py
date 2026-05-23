@@ -30,7 +30,13 @@ class KataGoPool:
         if size < 1:
             raise ValueError("KataGoPool size must be >= 1")
         factory = adapter_factory or KataGoAdapter
-        self._adapters: list[KataGoAdapter] = [factory() for _ in range(size)]
+        self._adapters: list[KataGoAdapter] = []
+        for idx in range(size):
+            adapter = factory()
+            # 어댑터가 KataGoAdapter 일 때만 슬롯 라벨이 의미를 가진다.
+            # MockKataGoAdapter는 subprocess를 띄우지 않으므로 setattr만 한다.
+            adapter.slot_label = str(idx)
+            self._adapters.append(adapter)
         self._game_assignment: dict[int, int] = {}
         self._lock = asyncio.Lock()
 

@@ -8,7 +8,7 @@ WORKTREE="$ROOT/.worktrees/staging"
 RUN_DIR="$ROOT/.run"
 ENVFILE="$ROOT/ops/staging.env"
 
-usage() { echo "사용법: ops/stack.sh {up|down|ps} staging | ops/stack.sh ps prod" >&2; exit 1; }
+usage() { echo "사용법: ops/stack.sh {up|down|ps} staging | ops/stack.sh {ps|restart} prod" >&2; exit 1; }
 
 ACTION="${1:-}"; TARGET="${2:-}"
 { [ -z "$ACTION" ] || [ -z "$TARGET" ]; } && usage
@@ -75,10 +75,22 @@ prod_ps() {
     && echo "prod web :3000 OK" || echo "prod web :3000 응답 없음"
 }
 
+prod_restart() {
+  local uid; uid="$(id -u)"
+  for svc in com.baduk.api com.baduk.web; do
+    launchctl kickstart -k "gui/$uid/$svc"
+    echo "$svc 재시작 요청"
+  done
+  echo "기동 대기 20초..."
+  sleep 20
+  prod_ps
+}
+
 case "$ACTION/$TARGET" in
   up/staging)   staging_up ;;
   down/staging) staging_down ;;
   ps/staging)   staging_ps ;;
   ps/prod)      prod_ps ;;
+  restart/prod) prod_restart ;;
   *)            usage ;;
 esac
