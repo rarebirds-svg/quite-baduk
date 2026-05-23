@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -74,13 +75,27 @@ async def list_pro_games(
     )
 
 
+@router.get("/sitemap")
+async def pro_sitemap(db: DbSession) -> list[dict[str, Any]]:
+    """SEO sitemap용 경량 엔드포인트 — 전체 pro_games의 id·created_at만 반환한다."""
+    result = await db.execute(
+        select(ProGame.id, ProGame.created_at).order_by(ProGame.id)
+    )
+    return [
+        {"id": row.id, "created_at": row.created_at.isoformat()}
+        for row in result.all()
+    ]
+
+
 @router.get("/{game_id}", response_model=ProGameDetail)
 async def get_pro_game(
     game_id: int,
-    _: CurrentSession,
     db: DbSession,
 ) -> ProGameDetail:
-    """프로 기보 상세 — 저장된 SGF를 수순으로 파싱해 함께 반환한다."""
+    """프로 기보 상세 — 저장된 SGF를 수순으로 파싱해 함께 반환한다.
+    공개 endpoint(세션 무관) — SEO 메타·OG 카드 server-side fetch를 위해서.
+    pro_games는 CWI 퍼블릭 도메인 콘텐츠라 인증 게이트 불필요.
+    """
     game = (
         await db.execute(select(ProGame).where(ProGame.id == game_id))
     ).scalar_one_or_none()
