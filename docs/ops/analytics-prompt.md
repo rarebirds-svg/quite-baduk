@@ -19,12 +19,13 @@
    ```bash
    curl -fs http://localhost:8000/api/stats
    sqlite3 backend/data/baduk.db 'SELECT COUNT(*) FROM games;'
-   sqlite3 backend/data/baduk.db "SELECT COUNT(*) FROM games WHERE created_at >= date('now', '-7 days');"
+   sqlite3 backend/data/baduk.db "SELECT COUNT(*) FROM games WHERE started_at >= date('now', '-7 days');"
    sqlite3 backend/data/baduk.db 'SELECT COUNT(*) FROM sessions;'
    sqlite3 backend/data/baduk.db "SELECT COUNT(*) FROM sessions WHERE created_at >= date('now', '-7 days');"
    sqlite3 backend/data/baduk.db 'SELECT board_size, COUNT(*) FROM games GROUP BY board_size ORDER BY 2 DESC;'
    sqlite3 backend/data/baduk.db 'SELECT handicap, COUNT(*) FROM games GROUP BY handicap ORDER BY 2 DESC LIMIT 5;'
-   sqlite3 backend/data/baduk.db "SELECT COUNT(*) FROM games WHERE created_at >= date('now', '-14 days') AND created_at < date('now', '-7 days');"
+   sqlite3 backend/data/baduk.db "SELECT COUNT(*) FROM games WHERE started_at >= date('now', '-14 days') AND started_at < date('now', '-7 days');"
+   # 컬럼 주의: games는 started_at, sessions는 created_at.
    ```
 
    추가 운영 카운트:
