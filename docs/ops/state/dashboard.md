@@ -1,13 +1,13 @@
 # 운영 대시보드
 
-- 갱신: 2026-05-23 17:41
+- 갱신: 2026-05-23 18:00
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
-| prod | 정상 (backend·web 가동, db OK, katago alive, 디스크 5%) | 2026-05-23 12:00 |
-| staging | backend 가동, web 중단 (정책상 OK) | 2026-05-23 12:00 |
+| prod | 부분 장애 — backend·web 200 OK, db OK, **katago 사망**, 디스크 5% | 2026-05-23 18:00 |
+| staging | backend 가동, web 중단 (정책상 OK) | 2026-05-23 18:00 |
 
 ## 백업 상태
 
@@ -16,17 +16,25 @@
 | 최신 백업 | 2026-05-23T04:00 (baduk-20260523T040005.db.gz, integrity OK) |
 | daily / weekly / monthly | 3 / 0 / 0 |
 
+## 콘텐츠 인덱스
+
+| 항목 | 값 |
+|---|---|
+| 프로 기보 수 | 911 |
+| sitemap URL 수 | 916 |
+| 최근 CWI ingest | 2026-05-23 (fetched=0 new=0) |
+
 ## 개발 현황
 
 | 항목 | 값 |
 |---|---|
-| 열린 이슈 | 2건 (`gh issue list --state open \| wc -l` = 2) |
-| 열린 PR | 8건 (`gh pr list --state open \| wc -l` = 8) |
+| 열린 이슈 | 2건 (#12, #13) |
+| 열린 PR | 8건 (주의 7, 신규 1 — frontend CI 실패) |
 
 ## 보류 승인
 
-`state/pending-approvals.md` 참조 — 0건.
+`state/pending-approvals.md` 참조 — 1건 (AP-20260523-02: com.baduk.api 재시작).
 
 ## 최근 장애
 
-`state/incidents.md` 참조 — 1건.
+`state/incidents.md` 참조 — 2건 (2026-05-23 web 다운 복구 완료, 2026-05-23 18:00 KataGo 사망 승인 대기).
