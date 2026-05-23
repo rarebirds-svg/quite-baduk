@@ -126,3 +126,41 @@ async def test_sitemap_endpoint_returns_all_pro_games(
     assert "id" in item
     assert "created_at" in item
     assert set(item.keys()) == {"id", "created_at"}  # 다른 필드 누설 안 됨
+
+
+@pytest.mark.asyncio
+async def test_themes_list_endpoint_returns_catalog(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/themes")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) >= 5
+    slugs = [t["slug"] for t in data]
+    assert "masterpieces" in slugs
+    item = data[0]
+    assert set(item.keys()) >= {"slug", "label", "description", "count"}
+
+
+@pytest.mark.asyncio
+async def test_themes_list_includes_counts(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/themes")
+    for item in resp.json():
+        assert isinstance(item["count"], int)
+        assert item["count"] >= 0
+
+
+@pytest.mark.asyncio
+async def test_theme_detail_known_slug(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/theme/masterpieces")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "games" in data
+    assert "total" in data
+    assert isinstance(data["games"], list)
+    assert isinstance(data["total"], int)
+
+
+@pytest.mark.asyncio
+async def test_theme_detail_unknown_slug_404(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/theme/does-not-exist")
+    assert resp.status_code == 404
