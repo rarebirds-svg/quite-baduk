@@ -35,3 +35,42 @@ describe("sitemap", () => {
     expect(urls.find((u) => u.url?.includes("/spectate/pro/"))).toBeUndefined();
   });
 });
+
+describe("sitemap themes and picks", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.unstubAllGlobals();
+  });
+
+  it("includes theme + picks index + monthly pick URLs", async () => {
+    const themesList = [
+      { slug: "masterpieces", label: "명국선", description: "", count: 10 },
+      { slug: "honinbo", label: "본인방전", description: "", count: 5 },
+    ];
+    const proList = [{ id: 1, created_at: "2024-01-01T00:00:00" }];
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url: string) => {
+        if (url.endsWith("/api/spectate/pro/sitemap")) {
+          return { ok: true, json: async () => proList };
+        }
+        if (url.endsWith("/api/spectate/pro/themes")) {
+          return { ok: true, json: async () => themesList };
+        }
+        return { ok: false, json: async () => [] };
+      }),
+    );
+
+    const { default: sitemap } = await import("../app/sitemap");
+    const urls = await sitemap();
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/spectate/themes/masterpieces")).toBeDefined();
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/spectate/themes/honinbo")).toBeDefined();
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/spectate/picks")).toBeDefined();
+    // monthly picks 최근 12 + 현재 + 다음 = 14 URL
+    const monthlyCount = urls.filter((u) =>
+      u.url.startsWith("https://inkbaduk.com/spectate/picks/monthly/"),
+    ).length;
+    expect(monthlyCount).toBe(14);
+  });
+});
