@@ -37,7 +37,9 @@
 |---|---|
 | GitHub 이슈 생성·라벨링 | 🟢 자율 |
 | worktree에서 코드 구현·테스트·커밋 | 🟢 자율 |
-| 브랜치 푸시·PR 생성 | ⚪ 핸드오프 — `settings.json`의 `Bash(git push*)` deny가 헤드리스 푸시를 차단. 자율 세션은 커밋까지만 하고 이슈에 push+PR 명령을 코멘트로 남긴다. 사람이 한 줄 명령으로 실행 |
+| 브랜치 푸시 (feature 패턴: `fix/*`·`feat/*`·`chore/*`·`docs/*`·`test/*`) | 🟢 자율 — `settings.json` allow 목록에 명시 |
+| `main`·`master`·force push | 🚫 금지 — `settings.json` deny 명시 |
+| PR 생성·코멘트 | 🟢 자율 (`gh pr create`·`gh pr comment`는 deny 없음) |
 | PR 머지 (= `main` 변경) | 🟡 승인 |
 
-자율 버그 사이클(dev-cycle)은 커밋까지 만들고 핸드오프 코멘트를 남긴다. push·PR 생성은 사람이, 머지도 사람이 한다.
+자율 버그 사이클(dev-cycle)은 feature 패턴 브랜치 push·PR 생성까지 자율로 수행하고, 머지만 사람 승인을 받는다.
