@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
+import structlog
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,6 +35,8 @@ from app.engine_pool import (
 )
 from app.models import Game, Session
 from app.models import Move as MoveRow
+
+log = structlog.get_logger()
 
 
 class GameError(Exception):
@@ -900,16 +903,29 @@ async def _sync_adapter(
     latest move on top of what's already loaded.
 
     Slow path: ownership differs (another game interleaved, or the process
-    restarted) — wipe and replay the full history.
+    restarted) — wipe and replay the full history. ``new_state.move_history``
+    already contains the user's latest move, so the replay covers it.
+
+    Recovery: if the fast path fails because KataGo rejected what the rules
+    engine accepted — the slot board drifted from cached owner state — fall
+    through to the slow path automatically. The client otherwise sees the
+    same rejection on every retry and the game stalls.
     """
+    user_color = BLACK if game.user_color == "black" else WHITE
     if adapter_owner(game.id) == game.id:
         adapter = await get_adapter(game.id)
         await adapter.start()
-        await adapter.play(
-            BLACK if game.user_color == "black" else WHITE,
-            user_move_coord,
-        )
-        return
+        try:
+            await adapter.play(user_color, user_move_coord)
+            return
+        except ValueError as e:
+            log.warning(
+                "katago_fast_path_rejected_falling_back_to_reseed",
+                game_id=game.id,
+                color=user_color,
+                coord=user_move_coord,
+                error=str(e),
+            )
     await _reseed_adapter(game, new_state)
 
 
