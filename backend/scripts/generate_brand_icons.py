@@ -50,6 +50,19 @@ def make_icon(size: int, *, maskable: bool = False) -> Image.Image:
     return img
 
 
+def make_favicon_ico(path: Path) -> None:
+    """Multi-resolution .ico for the browser tab. Each size is rendered
+    natively (largest first) so the stone stays crisp down to 16px."""
+    sizes = [48, 32, 16]
+    imgs = [make_icon(s) for s in sizes]
+    imgs[0].save(
+        path,
+        format="ICO",
+        append_images=imgs[1:],
+        sizes=[(s, s) for s in sizes],
+    )
+
+
 def _font(paths: list[str], size: int) -> ImageFont.FreeTypeFont:
     """Load the first available font from a candidate list."""
     for p in paths:
@@ -153,6 +166,10 @@ def main() -> None:
         out = ICONS_DIR / name
         make_icon(size, maskable=maskable).save(out, "PNG", optimize=True)
         print(f"wrote {out} ({size}x{size}, maskable={maskable})")
+
+    favicon_path = PUBLIC_DIR / "favicon.ico"
+    make_favicon_ico(favicon_path)
+    print(f"wrote {favicon_path} (16/32/48 multi-res)")
 
     og = make_og_image()
     og_path = PUBLIC_DIR / "og-image.png"

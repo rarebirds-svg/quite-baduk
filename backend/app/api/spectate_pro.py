@@ -1,4 +1,4 @@
-# 프로 기보 공개 관전 API — 명국선·최근 기보 목록과 수순 상세를 제공한다.
+# 프로 기보 공개 관전 API — 명국선·세계기전·최근 기보 목록과 수순 상세를 제공한다.
 from __future__ import annotations
 
 from datetime import date
@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 
 from app.core.pro.monthly_pick import InvalidYearMonth, pick_for_month
 from app.core.pro.themes import THEMES, theme_by_slug, theme_query_clause
@@ -34,6 +34,7 @@ class ProGameRow(BaseModel):
 
 class ProGameList(BaseModel):
     rows: list[ProGameRow]
+    total: int  # 필터 적용 후 전체 건수 — 페이지네이션용
 
 
 class ProMoveOut(BaseModel):
@@ -54,26 +55,41 @@ async def list_pro_games(
     collection: str | None = Query(None),
     q: str | None = Query(None),
     limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
 ) -> ProGameList:
-    """프로 기보 목록. 닉네임 세션 필요. 최신 대국일 순."""
-    stmt = select(ProGame).order_by(
-        ProGame.game_date.desc().nullslast(), ProGame.id.desc()
-    )
-    if collection in ("masterpiece", "recent"):
-        stmt = stmt.where(ProGame.collection == collection)
+    """프로 기보 목록. 닉네임 세션 필요. 최신 대국일 순.
+
+    total 은 limit/offset 적용 전, 필터만 반영한 전체 건수 — 프론트
+    페이지네이션이 다음 페이지 유무를 판단하는 데 쓴다.
+    """
+    filters = []
+    if collection in ("masterpiece", "recent", "world"):
+        filters.append(ProGame.collection == collection)
     if q and q.strip():
         like = f"%{q.strip()}%"
-        stmt = stmt.where(
+        filters.append(
             or_(
                 ProGame.black_player.ilike(like),
                 ProGame.white_player.ilike(like),
                 ProGame.event.ilike(like),
             )
         )
-    stmt = stmt.limit(limit)
+    total = (
+        await db.execute(
+            select(func.count()).select_from(ProGame).where(*filters)
+        )
+    ).scalar_one()
+    stmt = (
+        select(ProGame)
+        .where(*filters)
+        .order_by(ProGame.game_date.desc().nullslast(), ProGame.id.desc())
+        .limit(limit)
+        .offset(offset)
+    )
     games = (await db.execute(stmt)).scalars().all()
     return ProGameList(
-        rows=[ProGameRow.model_validate(g, from_attributes=True) for g in games]
+        total=total,
+        rows=[ProGameRow.model_validate(g, from_attributes=True) for g in games],
     )
 
 

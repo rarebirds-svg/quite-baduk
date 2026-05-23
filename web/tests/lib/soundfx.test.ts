@@ -34,7 +34,7 @@ describe("soundfx", () => {
     playStoneClick();
     const playing = FakeAudio.instances.filter((a) => !a.paused);
     expect(playing.length).toBe(1);
-    expect(playing[0].src).toMatch(/\/sounds\/stone-\d\.mp3$/);
+    expect(playing[0].src).toMatch(/\/sounds\/stone-\d\.mp3(?:\?|$)/);
   });
 
   it("does not play when disabled", async () => {

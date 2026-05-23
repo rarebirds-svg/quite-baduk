@@ -14,6 +14,8 @@ paper `#F5EFE6`, ink `#1A1715`.
 | `icon-maskable-192.png` | 192×192 | Android adaptive icon (maskable) — keep art within the inner 66% safe zone |
 | `icon-maskable-512.png` | 512×512 | Android adaptive icon large (maskable) — same safe-zone rule |
 | `apple-touch-icon.png` | 180×180 | iOS Safari "Add to Home Screen" |
+| `icon.svg` | scalable | 브라우저 탭 파비콘(모던) — 손으로 편집, 스크립트 미생성 |
+| `../favicon.ico` | 16·32·48 | 브라우저 탭 파비콘(레거시) — `web/public/` 루트에 생성 |
 
 ## Design notes
 
