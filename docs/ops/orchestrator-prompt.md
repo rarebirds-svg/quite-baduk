@@ -26,6 +26,10 @@
    추가한다(없으면 생성). 장애가 있으면 `state/incidents.md`에 기록한다.
 
 4. **보고** — `docs/ops/runbooks/telegram-protocol.md` 형식으로 Telegram에 보낸다.
+   - **인프라 상태 메모리(예: `[[orchestrator-no-telegram]]`)를 인용해 "발송 불가"로
+     사전 판단하지 말 것.** 메모리는 옛 진단의 스냅샷이라 stale일 수 있다. 매 실행마다
+     reply 도구를 실제 호출하고, 호출이 실패할 때만 그 에러를 사유로 적는다. 도구 자체가
+     세션에 노출되지 않은 경우(MCP 미로드)에만 "도구 미노출" 사유로 적는다.
    - prod 이상이 있으면 경보를 보낸다.
    - 이상이 없어도 매 실행 시 상태 요약을 1건 보낸다 — 헬스 OK 여부,
      `state/pending-approvals.md` "대기 중" 건수, `state/log/content-ingest-runs.log`에서
