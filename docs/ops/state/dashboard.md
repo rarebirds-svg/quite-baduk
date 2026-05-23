@@ -1,13 +1,13 @@
 # 운영 대시보드
 
-- 갱신: 2026-05-23 18:00
+- 갱신: 2026-05-23 21:03
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
 | prod | 부분 장애 — backend·web 200 OK, db OK, **katago 사망**, 디스크 5% | 2026-05-23 18:00 |
-| staging | backend 가동, web 중단 (정책상 OK) | 2026-05-23 18:00 |
+| staging | backend·web 가동 (3c 검증 중) | 2026-05-23 21:03 |
 
 ## 백업 상태
 
@@ -26,6 +26,9 @@
 | sitemap URL 수 | 937 (정적 5 + 프로 911 + 테마 6 + 픽 인덱스 1 + 월간 픽 14) |
 | 최근 CWI ingest | 2026-05-23 (fetched=0 new=0) |
 | 이 달의 명국 | 353 |
+| 글로서리 | 2/10 |
+| FAQ | 1/5 |
+| sitemap 글로서리·FAQ URL | 5 (글로서리 3 + FAQ 2) |
 
 ## 개발 현황
 
@@ -36,7 +39,7 @@
 
 ## 보류 승인
 
-`state/pending-approvals.md` 참조 — 1건 (AP-20260523-02: com.baduk.api 재시작).
+`state/pending-approvals.md` 참조 — 2건 (AP-20260523-02: com.baduk.api 재시작, AP-20260523-03: bik 글로서리 게시).
 
 ## 최근 장애
 

@@ -1,0 +1,31 @@
+# 글로서리 시드 — slug·title·prompt_hint. LLM이 본문 작성, 사람이 새 항목 추가 시 여기에.
+- slug: dan-gup
+  title: 단·급
+  prompt_hint: 입문~9급 → 1급 → 아마추어 1~7단(또는 9단). 단 차이가 1점 핸디캡에 해당. 한국 바둑 등급 체계.
+- slug: gyega
+  title: 계가·집
+  prompt_hint: 한국 룰의 계가법(territory + 잡은 돌). 종국 절차. 일본 룰과 미세한 차이.
+- slug: pae
+  title: 패
+  prompt_hint: 같은 자리에 즉시 되따냄 금지(동형반복). 패 진행 절차. 패감 개념.
+- slug: chuk
+  title: 축
+  prompt_hint: 직선 추격. 축머리 개념. 축 성립 조건. 초보의 흔한 실수.
+- slug: bik
+  title: 빅
+  prompt_hint: 양쪽 모두 살아 있어 둘 수 없는 상태. 한국 룰의 처리 — 점수 계산 시 빅 안의 집 인정 안 함.
+- slug: samsam
+  title: 삼삼
+  prompt_hint: 3-3 점. 화점에 대한 침입수단. 알파고 이후 정석 변화.
+- slug: komi
+  title: 덤(komi)
+  prompt_hint: 흑 선번 보정. 한국 룰 6.5집(접바둑 0.5집). 일본·중국 룰과 차이.
+- slug: handicap
+  title: 접바둑·치수
+  prompt_hint: 2~9점 접바둑. 흑이 미리 두는 화점 위치. 단 차이만큼 접는 관습.
+- slug: hwajeom
+  title: 화점
+  prompt_hint: 4-4점. 19로 반의 9개 화점 표시. 빠른 세력 확장의 거점.
+- slug: kasaeng
+  title: 사활
+  prompt_hint: 돌의 삶과 죽음. 두 눈의 원칙. 사활 문제는 기력 향상의 핵심.

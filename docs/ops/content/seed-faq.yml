@@ -1,0 +1,16 @@
+# FAQ 시드 — slug·title(질문)·prompt_hint.
+- slug: ai-baduk-vs-human
+  title: AI 바둑은 사람과 어떻게 다른가요?
+  prompt_hint: KataGo Human-SL — 사람의 기풍을 학습해 자연스러운 수. 일반 KataGo와 차이. 학습 데이터 출처.
+- slug: review-and-analysis
+  title: 복기·승부처 분석은 무엇인가요?
+  prompt_hint: 종국 후 수순 재생 + 매 수의 승률 변화. 승부처(큰 변동 지점) 자동 표시. KataGo 분석.
+- slug: nickname-session
+  title: 닉네임 세션이란?
+  prompt_hint: 이메일·비밀번호 없이 닉네임만으로 임시 세션. HttpOnly 쿠키, 1시간 idle TTL. 개인정보 비수집.
+- slug: korean-vs-japanese-rules
+  title: 한국 규칙과 일본 규칙의 차이는?
+  prompt_hint: 계가법(영토 + 잡은 돌 vs 영토만), 덤(6.5 vs 6.5), 빅·자살 처리 등 미세한 차이.
+- slug: how-to-improve-rank
+  title: 단을 얻으려면 어떻게 두면 되나요?
+  prompt_hint: 정석 학습, 사활 문제, 복기, 실전. 적정 상대와의 대국. 기력 향상 일반 조언.
