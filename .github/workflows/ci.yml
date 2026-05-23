@@ -51,11 +51,20 @@ jobs:
         # `docker compose` (no hyphen). The legacy `docker-compose` binary
         # was removed from `ubuntu-latest` images, so the hyphenated form
         # exits 127.
+        #
+        # KATAGO_MOCK=true는 backend가 200MB 모델 파일 다운로드를 건너뛰게
+        # 해 e2e 컨테이너가 빠르게 ready 상태에 도달하도록 한다. CI에 진짜
+        # KataGo 추론을 끌어들이지 않는 게 의도 — e2e는 라우팅·DB·인증
+        # 흐름과 UI 통합만 확인한다.
+        env:
+          KATAGO_MOCK: "true"
         run: docker compose up --build -d
       - name: Wait for services
+        # 60s timeout은 backend 의존성 설치·DB 마이그레이션·uvicorn 부팅
+        # 합이 빠듯해 만성 실패였다. 180s로 늘려 안전 마진 확보.
         run: |
-          timeout 60 sh -c 'until curl -sf http://localhost:8000/api/health; do sleep 2; done'
-          timeout 60 sh -c 'until curl -sf http://localhost:3000; do sleep 2; done'
+          timeout 180 sh -c 'until curl -sf http://localhost:8000/api/health; do sleep 2; done'
+          timeout 180 sh -c 'until curl -sf http://localhost:3000; do sleep 2; done'
       - name: Run Playwright
         working-directory: e2e
         run: npm ci && npx playwright install --with-deps && npx playwright test
