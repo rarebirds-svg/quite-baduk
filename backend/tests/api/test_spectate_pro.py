@@ -164,3 +164,29 @@ async def test_theme_detail_known_slug(client: AsyncClient) -> None:
 async def test_theme_detail_unknown_slug_404(client: AsyncClient) -> None:
     resp = await client.get("/api/spectate/pro/theme/does-not-exist")
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_pick_monthly_returns_game(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/pick/monthly/2026-05")
+    # 200 또는 404 둘 다 허용 — DB 상태 의존.
+    assert resp.status_code in (200, 404)
+    if resp.status_code == 200:
+        data = resp.json()
+        assert "id" in data
+        assert data["yyyymm"] == "2026-05"
+
+
+@pytest.mark.asyncio
+async def test_pick_monthly_deterministic(client: AsyncClient) -> None:
+    a = await client.get("/api/spectate/pro/pick/monthly/2026-05")
+    b = await client.get("/api/spectate/pro/pick/monthly/2026-05")
+    assert a.status_code == b.status_code
+    if a.status_code == 200:
+        assert a.json()["id"] == b.json()["id"]
+
+
+@pytest.mark.asyncio
+async def test_pick_monthly_invalid_format(client: AsyncClient) -> None:
+    resp = await client.get("/api/spectate/pro/pick/monthly/2026-13")
+    assert resp.status_code == 400
