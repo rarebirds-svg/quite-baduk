@@ -1,5 +1,6 @@
 // 검색엔진 제출용 사이트맵 — 정적 공개 페이지 + 동적 프로 기보 페이지(911+).
 import type { MetadataRoute } from "next";
+import { getContentSlugs } from "../lib/content";
 
 const BASE = "https://inkbaduk.com";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -54,6 +55,24 @@ function monthlyPickMonths(): string[] {
   return months;
 }
 
+function contentUrls(kind: "glossary" | "faq"): MetadataRoute.Sitemap {
+  const slugs = getContentSlugs(kind);
+  return [
+    {
+      url: `${BASE}/${kind}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    ...slugs.map((s) => ({
+      url: `${BASE}/${kind}/${s}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+  ];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const proList = await fetchProList();
@@ -93,5 +112,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.4,
   }));
 
-  return [...staticUrls, ...proUrls, ...themeUrls, ...picksIndex, ...pickUrls];
+  const glossaryUrls = contentUrls("glossary");
+  const faqUrls = contentUrls("faq");
+  return [
+    ...staticUrls,
+    ...proUrls,
+    ...themeUrls,
+    ...picksIndex,
+    ...pickUrls,
+    ...glossaryUrls,
+    ...faqUrls,
+  ];
 }

@@ -74,3 +74,15 @@ describe("sitemap themes and picks", () => {
     expect(monthlyCount).toBe(14);
   });
 });
+
+describe("sitemap glossary and faq", () => {
+  it("includes glossary + faq slug URLs from content directory", async () => {
+    // sitemap.ts가 web/content/<kind>/를 스캔. 실제 dan-gup·ai-baduk-vs-human이 있어야.
+    const { default: sitemap } = await import("../app/sitemap");
+    const urls = await sitemap();
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/glossary")).toBeDefined();
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/glossary/dan-gup")).toBeDefined();
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/faq")).toBeDefined();
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/faq/ai-baduk-vs-human")).toBeDefined();
+  });
+});
