@@ -90,10 +90,12 @@ async def pro_sitemap(db: DbSession) -> list[dict[str, Any]]:
 @router.get("/{game_id}", response_model=ProGameDetail)
 async def get_pro_game(
     game_id: int,
-    _: CurrentSession,
     db: DbSession,
 ) -> ProGameDetail:
-    """프로 기보 상세 — 저장된 SGF를 수순으로 파싱해 함께 반환한다."""
+    """프로 기보 상세 — 저장된 SGF를 수순으로 파싱해 함께 반환한다.
+    공개 endpoint(세션 무관) — SEO 메타·OG 카드 server-side fetch를 위해서.
+    pro_games는 CWI 퍼블릭 도메인 콘텐츠라 인증 게이트 불필요.
+    """
     game = (
         await db.execute(select(ProGame).where(ProGame.id == game_id))
     ).scalar_one_or_none()
