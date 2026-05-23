@@ -1,0 +1,6 @@
+[2026-05-23 20:58:24] content-draft 시작
+완료.
+
+- 글로서리 `bik`(빅) 초안 `docs/ops/content/drafts/bik.md`에 저장 → korean-copy-qa fix 3건(공배 표현·공점 용어·끝문장 단축) 반영.
+- 게시 승인 `AP-20260523-03`을 `state/pending-approvals.md`에 등록, `state/log/2026-05-23.md`에 한 줄 기록. Telegram은 기존 인프라 미해결(launchd `--channels` 미부여 + 토큰 부재)로 미발송.
+[2026-05-23 21:00:47] content-draft 종료
