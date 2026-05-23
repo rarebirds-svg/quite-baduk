@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -72,6 +73,18 @@ async def list_pro_games(
     return ProGameList(
         rows=[ProGameRow.model_validate(g, from_attributes=True) for g in games]
     )
+
+
+@router.get("/sitemap")
+async def pro_sitemap(db: DbSession) -> list[dict[str, Any]]:
+    """SEO sitemap용 경량 엔드포인트 — 전체 pro_games의 id·created_at만 반환한다."""
+    result = await db.execute(
+        select(ProGame.id, ProGame.created_at).order_by(ProGame.id)
+    )
+    return [
+        {"id": row.id, "created_at": row.created_at.isoformat()}
+        for row in result.all()
+    ]
 
 
 @router.get("/{game_id}", response_model=ProGameDetail)
