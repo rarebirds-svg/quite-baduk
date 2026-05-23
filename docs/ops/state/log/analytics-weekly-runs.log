@@ -1,0 +1,7 @@
+[2026-05-23 21:18:59] analytics-weekly 시작
+주간 분석 리포트 W21 완료.
+
+- `docs/ops/state/reports/2026-W21.md` 작성 — 이번 주 게임 46개(전주 77 대비 **-31, -40.3%**), 전체 누적 222개. 보드 19:9:13 = 168:42:12, 핸디캡 0이 213/222. 세션 카운트 0(데이터 부족). 글로서리 2 / FAQ 1, 보류 승인 5건, 인시던트 3건(모두 복구).
+- Telegram 푸시 미수행 — launchd 세션 `--channels` 미부여 + `ops.env`에 봇 토큰 없음(기존 미해결, [orchestrator-no-telegram](file:///Users/daegong/.claude/projects/-Users-daegong-projects-baduk/memory/orchestrator-no-telegram.md) 메모 그대로). 파일 보고만 수행.
+- `docs/ops/state/log/2026-05-23.md`에 21:19 항목 추가.
+[2026-05-23 21:21:04] analytics-weekly 종료
