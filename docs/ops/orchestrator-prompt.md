@@ -29,7 +29,8 @@
    - prod 이상이 있으면 경보를 보낸다.
    - 이상이 없어도 매 실행 시 상태 요약을 1건 보낸다 — 헬스 OK 여부,
      `state/pending-approvals.md` "대기 중" 건수, `state/log/content-ingest-runs.log`에서
-     읽은 가장 최근 CWI ingest 결과(0건이면 "신규 0")를 포함한다. 하루 2회라 과하지 않다.
+     읽은 가장 최근 CWI ingest 결과(0건이면 "신규 0"), `state/reports/`의 가장 최근
+     주간 리포트 파일명(예: "최근 분석: 2026-W21")을 포함한다. 하루 2회라 과하지 않다.
 
 5. **승인 답신 처리** — 이 세션이 Telegram 답신으로 트리거된 것이면(인바운드 메시지가
    있으면), 위 루프 대신 telegram-protocol.md의 "처리" 절차를 수행한다.
