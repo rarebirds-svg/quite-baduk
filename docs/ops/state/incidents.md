@@ -16,3 +16,10 @@
 - 조치: 안전 복구 — staging 스택 재시작
 - 결과: 복구 후 :8100 OK
 - 비고: sub-project 1 검증 기준 #4 — incident.md 경로 실증.
+
+### 2026-05-23 18:00 — KataGo "사망" 보고는 false alarm (AP-20260523-02 처리)
+- 감지: 18시 오케스트레이터 헬스체크가 `katago_alive:false`를 장애로 raise — AP-02 큐 등록.
+- 조치: 사용자 승인 → `launchctl kickstart -k gui/$UID/com.baduk.api` 1회. backend 재기동 성공(PID 72430), 그러나 재확인 시 여전히 `katago_alive:false`. 루프 가드대로 추가 재시도 중지.
+- 진단 (코드 확인 — `backend/app/core/katago/adapter.py:106`의 `is_alive`): KataGo는 **첫 AI 응수 요청 시 lazy spawn**된다. backend 재시작 후 AI 호출 전이면 항상 `katago_alive:false`가 정상 — 장애 아님. 12시에 alive였던 것은 그때 활동 중인 게임이 있었기 때문.
+- 결과: 사용자 영향 없음 — 접속 중 사용자(game 220) WS 재연결로 끝. 이번 재시작은 불필요했고 ~5초 순단만 발생.
+- 후속 (필수): healthcheck.md 러닝북 정정 — `katago_alive:false` 단독으로 경보하지 말 것. 진짜 KataGo 실패 신호는 "AI 응수 요청이 일정 시간 내 미반환" 또는 "최근 N분간 응수 후 false 유지". 별도 hotfix 또는 sub-project 1 차후 작업.
