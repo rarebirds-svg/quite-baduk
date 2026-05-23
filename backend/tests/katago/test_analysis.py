@@ -1,4 +1,26 @@
-from app.core.katago.analysis import parse_analysis
+from app.core.katago.analysis import normalize_ownership_to_black, parse_analysis
+
+
+def test_normalize_ownership_black_unchanged():
+    """Black's turn — kata-analyze ownership is already Black-positive."""
+    own = [0.8, -0.4, 0.1, -0.9]
+    assert normalize_ownership_to_black(own, "B") == own
+    # Returns a copy, not the same list.
+    assert normalize_ownership_to_black(own, "B") is not own
+
+
+def test_normalize_ownership_white_flipped():
+    """White's turn — kata-analyze reports from White's perspective, so the
+    sign must flip to keep +1 = Black."""
+    own = [0.8, -0.4, 0.1, -0.9]
+    assert normalize_ownership_to_black(own, "W") == [-0.8, 0.4, -0.1, 0.9]
+
+
+def test_normalize_ownership_side_case_insensitive():
+    own = [0.5, -0.5]
+    assert normalize_ownership_to_black(own, "white") == [-0.5, 0.5]
+    assert normalize_ownership_to_black(own, "w") == [-0.5, 0.5]
+    assert normalize_ownership_to_black(own, "black") == [0.5, -0.5]
 
 
 def test_parse_empty():

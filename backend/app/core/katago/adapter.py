@@ -11,11 +11,16 @@ Design:
 from __future__ import annotations
 
 import asyncio
+import os
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from app.config import settings
-from app.core.katago.analysis import AnalysisResult, parse_analysis
+from app.core.katago.analysis import (
+    AnalysisResult,
+    normalize_ownership_to_black,
+    parse_analysis,
+)
 from app.core.katago.strength import StrengthConfig
 
 if TYPE_CHECKING:
@@ -95,6 +100,9 @@ class KataGoAdapter:
         self._lock = asyncio.Lock()
         self._replay = _ReplayState()
         self._starting = False
+        # 풀이 생성 직후 슬롯 인덱스를 부여한다. KATAGO_STDERR_LOG 경로의
+        # {slot} 토큰 치환에 쓰여 동시 부팅 시 stderr 인터리브를 막는다.
+        self.slot_label: str | None = None
 
     # ── lifecycle ─────────────────────────────────────────────────────────────
 
@@ -115,12 +123,29 @@ class KataGoAdapter:
         ]
         if self.human_model_path:
             args.extend(["-human-model", self.human_model_path])
-        self._proc = await asyncio.create_subprocess_exec(
-            *args,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
+        # KataGo의 자체 stderr는 GTP가 "illegal move" 같은 단답만 줄 때
+        # 거부 사유를 추적할 유일한 단서. KATAGO_STDERR_LOG가 설정되면
+        # 해당 경로에 append하고, 미설정이면 기존처럼 버린다. 경로에
+        # {slot} 토큰이 있으면 풀 슬롯 인덱스로 치환해 동시 부팅 시 글자
+        # 단위 인터리브를 방지한다.
+        stderr_log_path = os.getenv("KATAGO_STDERR_LOG")
+        stderr_fh = None
+        if stderr_log_path:
+            expanded = os.path.expanduser(stderr_log_path)
+            expanded = expanded.replace("{slot}", self.slot_label or "0")
+            stderr_fh = open(expanded, "ab", buffering=0)
+        try:
+            self._proc = await asyncio.create_subprocess_exec(
+                *args,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=stderr_fh if stderr_fh is not None else asyncio.subprocess.DEVNULL,
+            )
+        finally:
+            # 자식 프로세스는 자기 dup'd FD를 가지므로 부모 쪽 핸들은
+            # 즉시 닫아 누수 방지.
+            if stderr_fh is not None:
+                stderr_fh.close()
 
     async def start(self) -> None:
         """Public, idempotent. Spawns the subprocess if necessary AND
@@ -399,7 +424,14 @@ class KataGoAdapter:
                         pass
                     self._proc = None
 
-            return parse_analysis("".join(collected), board_size=self._replay.boardsize)
+            result = parse_analysis(
+                "".join(collected), board_size=self._replay.boardsize
+            )
+            # kata-analyze reports ownership from the side-to-move's
+            # perspective; normalize to Black-positive so all consumers
+            # can assume +1 = Black regardless of whose turn it is.
+            result.ownership = normalize_ownership_to_black(result.ownership, side)
+            return result
 
     async def load_sgf_text(self, sgf: str) -> None:
         # loadsgf requires a file path; a simpler approach is clear_board + replay moves.

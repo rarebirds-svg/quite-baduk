@@ -1,8 +1,8 @@
 "use client";
 // 관전 목록 — 잉크바둑 대국과 프로 기보를 탭으로 나눠 보여주는 페이지.
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { useAuthStore } from "@/store/authStore";
@@ -54,9 +54,22 @@ function fmtTime(iso: string): string {
 }
 
 export default function SpectateListPage() {
+  // useSearchParams는 Suspense 경계를 요구한다 — 없으면 라우트 전체가
+  // 클라이언트 렌더로 강등된다.
+  return (
+    <Suspense fallback={<p className="text-sm text-ink-faint">…</p>}>
+      <SpectateListContent />
+    </Suspense>
+  );
+}
+
+function SpectateListContent() {
   const t = useT();
   const [locale] = useLocale();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // 프로 기보 재생 화면에서 ?tab=pro로 돌아오면 프로 탭을 펼친다.
+  const initialTab = searchParams.get("tab") === "pro" ? "pro" : "inkbaduk";
   const { session } = useAuthStore();
   const [rows, setRows] = useState<SpectateRow[] | null>(null);
 
@@ -91,7 +104,7 @@ export default function SpectateListPage() {
     <div className="space-y-6">
       <Hero title={t("spectate.heading")} subtitle={t("spectate.subtitle")} />
 
-      <Tabs defaultValue="inkbaduk">
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value="inkbaduk">
             {t("spectate.tabInkbaduk")}

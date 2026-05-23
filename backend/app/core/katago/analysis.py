@@ -23,7 +23,10 @@ class MoveHint:
 @dataclass
 class AnalysisResult:
     top_moves: list[MoveHint] = field(default_factory=list)
-    ownership: list[float] = field(default_factory=list)  # length size*size
+    # length size*size. As parsed, values follow kata-analyze's
+    # side-to-move perspective; adapter.analyze() normalizes them to a
+    # fixed Black-positive convention (+1 = Black) before returning.
+    ownership: list[float] = field(default_factory=list)
     winrate: float = 0.5  # overall winrate for side to move
     score_lead: float = 0.0  # best move's score lead from side-to-move's perspective
 
@@ -98,3 +101,16 @@ def parse_analysis(body: str, board_size: int = 19) -> AnalysisResult:
         result.winrate = result.top_moves[0].winrate
         result.score_lead = result.top_moves[0].score_lead
     return result
+
+
+def normalize_ownership_to_black(ownership: list[float], side: str) -> list[float]:
+    """kata-analyze reports ownership from the side-to-move's perspective.
+
+    Flip it to a fixed Black-positive convention (+1 = Black, -1 = White) so
+    every consumer — the heatmap overlay, dead-stone inference, endgame
+    gating — can rely on it without knowing whose turn produced the read.
+    On Black's turn the values already match; on White's they are negated.
+    """
+    if side.strip().upper().startswith("W"):
+        return [-v for v in ownership]
+    return list(ownership)
