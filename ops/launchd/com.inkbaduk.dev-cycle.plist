@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 매일 02:00 자율 버그 사이클을 깨우는 launchd 작업 정의. -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.inkbaduk.dev-cycle</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/daegong/projects/baduk/ops/run-dev-cycle.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>2</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/Users/daegong/projects/baduk/docs/ops/state/log/dev-cycle.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/daegong/projects/baduk/docs/ops/state/log/dev-cycle.err.log</string>
+</dict>
+</plist>
