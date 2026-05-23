@@ -48,8 +48,9 @@
 | `castle-games` | 오성 (御城碁) | `event='Castle Game'` |
 | `21st-century` | 21세기 명국 | `game_date >= '2000-01-01'` |
 
-backend `/api/spectate/pro/theme/<slug>` — slug → filter 매핑은 backend에 하드코드,
-페이지네이션 지원. 알 수 없는 slug는 404.
+backend `/api/spectate/pro/theme/<slug>` — slug → filter 매핑은 backend에 하드코드.
+알 수 없는 slug는 404. 현재 응답은 전체 게임 목록(테마당 최대 ~625)을 한 번에
+반환 — 페이지네이션은 deferred(데이터 작아 즉시 필요 없음, 후속에서 limit/offset 추가).
 
 web `app/spectate/themes/[slug]/page.tsx` — 서버 컴포넌트, 게임 목록 페이지네이션,
 `generateMetadata`로 라벨·설명·canonical.
@@ -88,7 +89,8 @@ web:
 인덱스, sitemap·메타 통합, 결정적 알고리즘.
 
 **제외** — 주간 픽(deferred), 테마 관리 admin UI, LLM 자동 큐레이션(3c), AI 게임
-해설 텍스트(3c), 이미지 OG 보드 렌더(별도).
+해설 텍스트(3c), 이미지 OG 보드 렌더(별도), `theme_detail` 페이지네이션(deferred —
+현재 데이터 크기로 무난).
 
 ## 검증 기준
 
