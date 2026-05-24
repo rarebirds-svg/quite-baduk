@@ -12,16 +12,22 @@ engine = create_async_engine(
 )
 
 
-# `PRAGMA foreign_keys=ON` is per-connection in SQLite, and aiosqlite pools
-# connections. Without this hook, only the one connection used at startup
-# honors cascades — new pooled connections silently skip CASCADE, which
-# leaves orphan `moves` rows after sessions/games are deleted and causes
-# UNIQUE constraint collisions when game IDs get reused.
+# PRAGMAs are per-connection in SQLite and aiosqlite pools connections.
+# Without this hook only the one connection used at startup is configured —
+# new pooled connections silently skip the settings, which leaves orphan
+# `moves` rows after sessions/games are deleted (UNIQUE collisions on game
+# id reuse) AND raises immediate "database is locked" errors under any
+# concurrency because the default `busy_timeout` is 0.
 @event.listens_for(engine.sync_engine, "connect")
-def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record) -> None:  # type: ignore[no-untyped-def]
+def _configure_sqlite_connection(dbapi_connection, _connection_record) -> None:  # type: ignore[no-untyped-def]
     cursor = dbapi_connection.cursor()
     try:
         cursor.execute("PRAGMA foreign_keys=ON")
+        # Wait up to 5 s for a competing writer instead of failing the
+        # request outright. Combined with WAL (`enable_wal()` runs at app
+        # startup) this lets concurrent reads and a single writer share
+        # the file without the user-visible "database is locked" toast.
+        cursor.execute("PRAGMA busy_timeout=5000")
     finally:
         cursor.close()
 
