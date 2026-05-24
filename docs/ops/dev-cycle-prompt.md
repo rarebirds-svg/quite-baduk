@@ -23,6 +23,10 @@
    기록한다.
 5. **보고** — `docs/ops/runbooks/telegram-protocol.md` 알림 형식으로 Telegram에
    결과(처리한 이슈·브랜치·SHA — 또는 막힌 경우 사유)를 1건 보낸다.
+   - **환경 자가진단 금지.** `ops/ops.env`의 토큰 유무·`--channels` 플래그 가시성으로
+     "발송 불가"를 사전 판단하지 말 것. launchd는 항상 채널을 부여한다(진실 공급원은
+     `~/.claude/channels/telegram/`). reply 도구가 노출돼 있으면 호출하고, 실패할 때만
+     그 에러를 사유로 적는다.
 
 ## 끝낼 때
 

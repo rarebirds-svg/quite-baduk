@@ -1,19 +1,19 @@
 # 운영 대시보드
 
-- 갱신: 2026-05-23 21:22
+- 갱신: 2026-05-24 02:00
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
-| prod | 부분 장애 — backend·web 200 OK, db OK, **katago 사망**, 디스크 5% | 2026-05-23 18:00 |
-| staging | backend·web 가동 (3c 검증 중) | 2026-05-23 21:03 |
+| prod | 정상 — backend·web 200 OK, db OK, katago lazy (정보), 디스크 5% | 2026-05-24 02:00 |
+| staging | 중단 (정책상 정상) | 2026-05-24 02:00 |
 
 ## 백업 상태
 
 | 항목 | 값 |
 |---|---|
-| 최신 백업 | 2026-05-23T04:00 (baduk-20260523T040005.db.gz, integrity OK) |
+| 최신 백업 | 2026-05-23T04:00 (baduk-20260523T040005.db.gz, integrity OK, 약 22h) |
 | daily / weekly / monthly | 3 / 0 / 0 |
 
 ## 콘텐츠 인덱스
@@ -42,12 +42,12 @@
 | 항목 | 값 |
 |---|---|
 | 열린 이슈 | 2건 (#12, #13) |
-| 열린 PR | 8건 (주의 7, 신규 1 — frontend CI 실패) |
+| 열린 PR | 6건 (MERGEABLE: #14·#7·#6 e2e/frontend 실패, CONFLICTING: #5·#8·#9) |
 
 ## 보류 승인
 
-`state/pending-approvals.md` 참조 — 2건 (AP-20260523-02: com.baduk.api 재시작, AP-20260523-03: bik 글로서리 게시).
+`state/pending-approvals.md` 참조 — 1건 (AP-20260523-03: bik 글로서리 게시).
 
 ## 최근 장애
 
-`state/incidents.md` 참조 — 2건 (2026-05-23 web 다운 복구 완료, 2026-05-23 18:00 KataGo 사망 승인 대기).
+`state/incidents.md` 참조 — 3건 모두 복구·정리 완료 (web 다운 복구, staging 재시작 검증, KataGo "사망" false alarm 진단).
