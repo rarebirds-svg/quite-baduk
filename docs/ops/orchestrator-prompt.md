@@ -30,6 +30,12 @@
      사전 판단하지 말 것.** 메모리는 옛 진단의 스냅샷이라 stale일 수 있다. 매 실행마다
      reply 도구를 실제 호출하고, 호출이 실패할 때만 그 에러를 사유로 적는다. 도구 자체가
      세션에 노출되지 않은 경우(MCP 미로드)에만 "도구 미노출" 사유로 적는다.
+   - **환경 변수·플래그 자가진단 금지.** `ops/ops.env`의 `TELEGRAM_BOT_TOKEN` 유무나
+     세션 인자에 `--channels`가 보이는지 따지지 않는다. 이는 빈번한 오진의 원인이다.
+     Telegram 채널의 진실 공급원은 `~/.claude/channels/telegram/{.env,access.json}`이며,
+     launchd는 항상 `ops/run-orchestrator.sh`를 거쳐 `--channels
+     plugin:telegram@claude-plugins-official`을 부여한다. reply 도구가 세션에 노출돼
+     있으면 호출하고 결과만 기록한다.
    - prod 이상이 있으면 경보를 보낸다.
    - 이상이 없어도 매 실행 시 상태 요약을 1건 보낸다 — 헬스 OK 여부,
      `state/pending-approvals.md` "대기 중" 건수, `state/log/content-ingest-runs.log`에서
