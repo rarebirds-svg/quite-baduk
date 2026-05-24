@@ -14,7 +14,7 @@ test("review page loads and analyze button works", async ({ page }) => {
   await page.goto("/history");
   const reviewLink = page.locator("a", { hasText: /review/i }).first();
   await reviewLink.click();
-  await expect(page.locator("svg[role='grid']")).toBeVisible();
+  await expect(page.locator("svg[aria-label*='Go board']")).toBeVisible();
 
   // 분석 버튼 클릭. 원본 단언 유지.
   await page.getByRole("button", { name: /analyze|분석/i }).click();

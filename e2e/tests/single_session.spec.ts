@@ -14,7 +14,7 @@ test("opening the same game in a second tab terminates the first WS", async ({ b
   await page2.goto(url);
 
   // 두 번째 페이지는 보드를 정상적으로 로드해야 한다.
-  await expect(page2.locator("svg[role='grid']")).toBeVisible();
+  await expect(page2.locator("svg[aria-label*='Go board']")).toBeVisible();
   // 첫 번째 페이지는 SESSION_REPLACED 토스트를 띄울 수 있으나 필수 단언은 아님 — 원본 주석 유지.
   await ctx.close();
 });

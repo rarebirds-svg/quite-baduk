@@ -6,12 +6,12 @@ test("9x9 game can be created and renders the smaller board", async ({ page }) =
   await createSession(page);
   await createGame(page, { boardSize: 9 });
 
-  await expect(page.locator("svg[aria-label='9x9 Go board']")).toBeVisible();
+  await expect(page.locator("svg[aria-label='9×9 Go board']")).toBeVisible();
 });
 
 test("13x13 game can be created and renders the medium board", async ({ page }) => {
   await createSession(page);
   await createGame(page, { boardSize: 13 });
 
-  await expect(page.locator("svg[aria-label='13x13 Go board']")).toBeVisible();
+  await expect(page.locator("svg[aria-label='13×13 Go board']")).toBeVisible();
 });

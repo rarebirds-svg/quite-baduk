@@ -64,7 +64,7 @@ export async function createGame(page: Page, opts: CreateGameOpts = {}): Promise
       : opts.aiPlayer;
     await page.getByRole("radio", { name: aiLabel }).first().click();
   } else {
-    await page.getByRole("radiogroup", { name: /상대|Opponent/ }).getByRole("radio").first().click();
+    await page.getByRole("radiogroup", { name: /상대|opponent/i }).getByRole("radio").first().click();
   }
 
   const start = page.getByRole("button", { name: /^대국 시작$|^Start$/ });

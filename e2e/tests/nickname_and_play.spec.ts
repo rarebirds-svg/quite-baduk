@@ -7,10 +7,10 @@ test("nickname session, create 5k even game, play a move, resign, history shows 
   await createGame(page, { rank: "5k", handicap: 0 });
 
   // 보드 SVG 렌더 단언 — 원본 유지.
-  await expect(page.locator("svg[role='grid']")).toBeVisible();
+  await expect(page.locator("svg[aria-label*='Go board']")).toBeVisible();
 
   // 보드 중앙을 클릭해 한 수 두기 — 원본 좌표 계산 유지.
-  const svg = page.locator("svg[role='grid']");
+  const svg = page.locator("svg[aria-label*='Go board']");
   const box = await svg.boundingBox();
   if (!box) throw new Error("No board bbox");
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);

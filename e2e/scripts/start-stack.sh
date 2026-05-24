@@ -30,6 +30,11 @@ echo "[start-stack] booting backend on :$API_PORT, web on :$WEB_PORT"
   export DATABASE_URL="sqlite+aiosqlite:///./data/e2e-test.db"
   export JWT_SECRET="${JWT_SECRET:-e2e-test-secret-not-for-prod}"
   export CORS_ORIGINS="http://localhost:$WEB_PORT"
+  # 9개 e2e 스펙이 동일 IP로 다수 세션을 생성하므로 rate limit 우회.
+  export BADUK_E2E_RATE_LIMIT_DISABLED=true
+
+  # 새 DB일 때 alembic 마이그레이션을 적용해 sessions 등 테이블을 만든다.
+  alembic upgrade head
 
   exec uvicorn app.main:app --host 127.0.0.1 --port "$API_PORT" --workers 1
 ) > "$LOG_DIR/backend.log" 2>&1 &

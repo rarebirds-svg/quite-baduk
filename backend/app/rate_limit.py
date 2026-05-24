@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 from collections import deque
 from dataclasses import dataclass, field
@@ -21,6 +22,11 @@ class RateLimiter:
 
     async def check(self, key: str, max_hits: int, window_sec: float) -> bool:
         """Return True if allowed; False if rate-limited."""
+        # e2e 테스트 환경에선 9개 스펙이 동일 IP로 다수 세션을 생성한다 —
+        # 이때만 BADUK_E2E_RATE_LIMIT_DISABLED=true를 지정해 전 키 우회.
+        # prod와 dev에선 미지정이므로 정상 동작.
+        if os.environ.get("BADUK_E2E_RATE_LIMIT_DISABLED", "").lower() in ("1", "true", "yes"):
+            return True
         now = time.monotonic()
         async with self._lock:
             bucket = self._buckets.get(key)
