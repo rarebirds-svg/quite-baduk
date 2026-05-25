@@ -5,6 +5,8 @@ import { useT } from "@/lib/i18n";
 import { BrandMark } from "@/components/editorial/BrandMark";
 
 const FOOTER_LINKS = [
+  { href: "/glossary", key: "home.footerGlossary" },
+  { href: "/faq", key: "home.footerFaq" },
   { href: "/privacy", key: "home.footerPrivacy" },
   { href: "/terms", key: "home.footerTerms" },
   { href: "/support", key: "home.footerSupport" },
