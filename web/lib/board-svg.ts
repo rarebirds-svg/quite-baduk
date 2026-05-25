@@ -135,3 +135,15 @@ export function boardToSvg(spec: BoardSpec): string {
   parts.push(`</svg>`);
   return parts.join("");
 }
+
+/**
+ * ```board 코드블록 source → <figure class="board-diagram"><svg/>{<figcaption/>}</figure>.
+ */
+export function boardCodeBlockToHtml(source: string): string {
+  const spec = parseBoardCodeBlock(source);
+  const svg = boardToSvg(spec);
+  const caption = spec.caption
+    ? `<figcaption>${escapeXml(spec.caption)}</figcaption>`
+    : "";
+  return `<figure class="board-diagram">${svg}${caption}</figure>`;
+}
