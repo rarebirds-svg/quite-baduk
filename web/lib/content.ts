@@ -5,6 +5,8 @@ import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
 
+import { boardCodeBlockToHtml } from "./board-svg";
+
 const CONTENT_ROOT = path.join(process.cwd(), "content");
 
 export type ContentKind = "glossary" | "faq";
@@ -17,6 +19,18 @@ export interface ContentItem {
   excerpt: string;
   html: string;
 }
+
+// marked v18: renderer 함수가 객체 인자를 받는다.
+// ```board 코드블록은 board-svg가 figure로 변환, 나머지는 기본 처리.
+const renderer = new marked.Renderer();
+const defaultCode = renderer.code.bind(renderer);
+renderer.code = function ({ text, lang, escaped }) {
+  if (lang === "board") {
+    return boardCodeBlockToHtml(text);
+  }
+  return defaultCode({ text, lang, escaped });
+};
+marked.use({ renderer });
 
 function contentDir(kind: ContentKind): string {
   return path.join(CONTENT_ROOT, kind);
