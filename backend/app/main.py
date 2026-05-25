@@ -25,6 +25,10 @@ structlog.configure(
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await enable_wal()
 
+    from app import last_seen_cache
+    from app.db import AsyncSessionLocal
+    last_seen_cache.start_flusher(AsyncSessionLocal)
+
     from app.engine_pool import get_pool
     pool = get_pool()
     await pool.start_all()
@@ -40,6 +44,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     try:
         yield
     finally:
+        # cache 잔여를 DB로 마저 흘려보낸 뒤 flusher task 종료.
+        try:
+            await last_seen_cache.flush_all(AsyncSessionLocal)
+        finally:
+            await last_seen_cache.stop_flusher()
         purge_task.cancel()
         try:
             await purge_task

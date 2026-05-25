@@ -1,16 +1,15 @@
 """Dependency injection helpers."""
 from __future__ import annotations
 
-import datetime as dt
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from fastapi import Cookie, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy import update as _sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import app.db as _db_module
+from app import last_seen_cache
 from app.models import Session
 
 COOKIE_SESSION = "baduk_session"
@@ -45,22 +44,10 @@ async def get_current_session(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_session"
         )
-    # Use a direct UPDATE rather than ORM attribute mutation + commit so a
-    # concurrent DELETE (logout beacon double-fire, idle purge) doesn't trip
-    # the optimistic-lock check and bubble up as a 500.
-    upd = await db.execute(
-        _sa_update(Session)
-        .where(Session.id == sess.id)
-        .values(last_seen_at=dt.datetime.now(dt.UTC))
-    )
-    await db.commit()
-    # `Result[Any].rowcount` is exposed at runtime by CursorResult (returned for
-    # UPDATE/DELETE) but not declared in the parent generic — see SQLAlchemy
-    # typing stubs. Read via getattr to satisfy strict mypy.
-    if getattr(upd, "rowcount", 0) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_session"
-        )
+    # last_seen_at은 디바운스 캐시(app.last_seen_cache)에 메모리 stamp만 한다.
+    # 60s 단위로 백그라운드 flusher가 DB UPDATE. SELECT 직후 다른 코루틴이
+    # 세션을 삭제하는 race는 다음 요청의 SELECT가 401로 처리한다.
+    last_seen_cache.stamp(sess.id)
     return sess
 
 
