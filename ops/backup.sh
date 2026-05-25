@@ -10,6 +10,8 @@ DAILY_KEEP=14
 WEEKLY_KEEP=8
 MONTHLY_KEEP=12
 
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] backup 시작"
+
 [ -f "$DB" ] || { echo "prod DB 없음: $DB" >&2; exit 1; }
 mkdir -p "$DEST/daily" "$DEST/weekly" "$DEST/monthly"
 
@@ -44,4 +46,4 @@ prune "$DEST/daily" "$DAILY_KEEP"
 prune "$DEST/weekly" "$WEEKLY_KEEP"
 prune "$DEST/monthly" "$MONTHLY_KEEP"
 
-echo "백업 완료."
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] backup 완료"
