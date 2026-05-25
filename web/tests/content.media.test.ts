@@ -21,3 +21,29 @@ describe("marked board codeblock override", () => {
     expect(html).not.toMatch(/<figure class="board-diagram">/);
   });
 });
+
+describe("marked image override", () => {
+  it("converts ![alt](path) to figure.content-image with img + figcaption", () => {
+    const md = "![빅의 형태](/content/glossary/bik/figure-1.svg)";
+    const html = marked.parse(md, { async: false }) as string;
+    expect(html).toMatch(/<figure class="content-image">/);
+    expect(html).toMatch(/<img src="\/content\/glossary\/bik\/figure-1\.svg" alt="빅의 형태" loading="lazy"/);
+    expect(html).toMatch(/<figcaption>빅의 형태<\/figcaption>/);
+  });
+
+  it("omits figcaption when alt is empty", () => {
+    const md = "![](/content/glossary/bik/no-alt.svg)";
+    const html = marked.parse(md, { async: false }) as string;
+    expect(html).toMatch(/<figure class="content-image">/);
+    expect(html).toMatch(/alt=""/);
+    expect(html).not.toMatch(/<figcaption>/);
+  });
+
+  it("escapes html-unsafe characters in alt and src", () => {
+    const md = '![alt with <script>](/path?q="x")';
+    const html = marked.parse(md, { async: false }) as string;
+    expect(html).not.toMatch(/<script>/);
+    expect(html).toMatch(/&lt;script&gt;/);
+    expect(html).toMatch(/&quot;/);
+  });
+});

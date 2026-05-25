@@ -20,6 +20,14 @@ export interface ContentItem {
   html: string;
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // marked v18: renderer 함수가 객체 인자를 받는다.
 // ```board 코드블록은 board-svg가 figure로 변환, 나머지는 기본 처리.
 const renderer = new marked.Renderer();
@@ -29,6 +37,12 @@ renderer.code = function ({ text, lang, escaped }) {
     return boardCodeBlockToHtml(text);
   }
   return defaultCode({ text, lang, escaped });
+};
+renderer.image = function ({ href, text }) {
+  const alt = escapeHtml(text ?? "");
+  const src = escapeHtml(href ?? "");
+  const caption = alt ? `<figcaption>${alt}</figcaption>` : "";
+  return `<figure class="content-image"><img src="${src}" alt="${alt}" loading="lazy" />${caption}</figure>`;
 };
 marked.use({ renderer });
 
