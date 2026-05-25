@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Cookie, WebSocket, WebSocketDisconnect, status
 from sqlalchemy import select
-from sqlalchemy import update as _sa_update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import last_seen_cache
 from app.core.rules.engine import GameState
 from app.deps import COOKIE_SESSION, DbSession
 from app.models import Game, Session
@@ -113,16 +112,8 @@ async def _authenticate_ws(token: str | None, db: AsyncSession) -> Session | Non
     sess = res.scalar_one_or_none()
     if sess is None:
         return None
-    # Direct UPDATE so a concurrent DELETE (logout, idle purge) doesn't
-    # trigger SQLAlchemy's optimistic-lock StaleDataError.
-    upd = await db.execute(
-        _sa_update(Session)
-        .where(Session.id == sess.id)
-        .values(last_seen_at=dt.datetime.now(dt.UTC))
-    )
-    await db.commit()
-    if getattr(upd, "rowcount", 0) == 0:
-        return None
+    # last_seen_at은 디바운스 캐시(app.last_seen_cache)에 stamp만. DB 무접촉.
+    last_seen_cache.stamp(sess.id)
     return sess
 
 
