@@ -10,6 +10,8 @@ fi
 
 ROOT="/Users/daegong/projects/baduk"
 [ -f "$ROOT/ops/ops.env" ] && { set -a; . "$ROOT/ops/ops.env"; set +a; }
+# Telegram bot token의 진실 공급원은 ~/.claude/channels/telegram/.env (plugin 관리).
+[ -f "$HOME/.claude/channels/telegram/.env" ] && { set -a; . "$HOME/.claude/channels/telegram/.env"; set +a; }
 
 : "${TELEGRAM_BOT_TOKEN:=}"
 : "${TELEGRAM_CHAT_ID:=}"
