@@ -1,23 +1,7 @@
 {
-  "app": {
-    "title": "Inkbaduk · Quiet Game"
-  },
-  "nav": {
-    "home": "Home",
-    "newGame": "New Game",
-    "history": "History",
-    "daily": "Daily Challenge",
-    "spectate": "Spectate",
-    "settings": "Settings",
-    "admin": "Admin",
-    "volume": "Vol. I",
-    "glossary": "Glossary",
-    "faq": "FAQ"
-  },
-  "footer": {
-    "tagline": "Korean-style Go against KataGo Human-SL",
-    "navLabel": "Site info"
-  },
+  "app": { "title": "Inkbaduk · Quiet Game" },
+  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "daily": "Daily Challenge", "spectate": "Spectate", "settings": "Settings", "admin": "Admin", "volume": "Vol. I", "glossary": "Glossary", "faq": "FAQ" },
+  "footer": { "tagline": "Korean-style Go against KataGo Human-SL", "navLabel": "Site info" },
   "spectate": {
     "heading": "Spectate",
     "subtitle": "Browse games in progress or already finished",
@@ -215,172 +199,42 @@
     "expiredTitle": "Your session has expired",
     "expiredDesc": "Please set a nickname to continue"
   },
-  "game": {
-    "boardSize": "Board size",
-    "rank": "Rank",
-    "handicap": "Handicap",
-    "handicapNone": "Even",
-    "handicapStones": "{n} stones",
-    "color": "Order",
-    "colorBlack": "Black",
-    "colorWhite": "White",
-    "colorRoll": "Roll",
-    "colorReroll": "Re-roll",
-    "colorYou": "You",
-    "create": "Create game",
-    "pass": "Pass",
-    "resign": "Resign",
-    "undo": "Undo",
-    "hint": "Hint",
-    "hintLoading": "Checking…",
-    "hintCoachmark": "Stuck? Tap Hint to see the move KataGo recommends — it's a learning tool, not cheating.",
-    "hintHesitation": "Thinking hard about this spot? A hint can show you the recommended moves.",
-    "hintNudgeDismiss": "Dismiss",
-    "aiThinking": "AI thinking...",
-    "viewKifu": "View kifu",
-    "downloadSgf": "Download SGF",
-    "kifuDialogTitle": "Kifu review",
-    "resultLabel": "Result",
-    "newGame": "New game",
-    "newGameSubtitle": "Pick opponent, size, and handicap to begin.",
-    "summary": "Summary",
-    "start": "Start",
-    "sectionOpponent": "Opponent",
-    "sectionBoard": "Board",
-    "sectionHandicap": "Handicap",
-    "sectionChoice": "Choice",
-    "aiRank": "KataGo Human-SL",
-    "you": "You",
-    "yourRank": "Player",
-    "yourTurn": "Your turn",
-    "thinking": "Thinking…",
-    "result": "Result",
-    "info": "INFO",
-    "moves": "MOVES",
-    "move": "MOVE",
-    "captures": "CAPTURES",
-    "toMove": "TO MOVE",
-    "winrate": "WINRATE",
-    "winrateBlack": "Black",
-    "winrateWhite": "White",
-    "evenPosition": "Even",
+  "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Order", "colorBlack": "Black", "colorWhite": "White", "colorRoll": "Roll", "colorReroll": "Re-roll", "colorYou": "You", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "hintLoading": "Checking…", "hintCoachmark": "Stuck? Tap Hint to see the move KataGo recommends — it's a learning tool, not cheating.", "hintHesitation": "Thinking hard about this spot? A hint can show you the recommended moves.", "hintNudgeDismiss": "Dismiss", "aiThinking": "AI thinking...", "viewKifu": "View kifu", "downloadSgf": "Download SGF", "kifuDialogTitle": "Kifu review", "resultLabel": "Result", "newGame": "New game", "newGameSubtitle": "Pick opponent, size, and handicap to begin.", "summary": "Summary", "start": "Start", "sectionOpponent": "Opponent", "sectionBoard": "Board", "sectionHandicap": "Handicap", "sectionChoice": "Choice", "aiRank": "KataGo Human-SL", "you": "You", "yourRank": "Player", "yourTurn": "Your turn", "thinking": "Thinking…", "result": "Result", "info": "INFO", "moves": "MOVES", "move": "MOVE", "captures": "CAPTURES", "toMove": "TO MOVE", "winrate": "WINRATE", "winrateBlack": "Black", "winrateWhite": "White", "evenPosition": "Even",
     "aiResignedTitle": "Win by resignation",
     "aiResignedBody": "The AI has laid down its stones. Congratulations.",
     "aiPassed": "AI passed",
     "aiPassedScoredTitle": "AI proposed scoring",
-    "requestScoring": "Score game",
-    "scoringBreakdown": "Scoring",
-    "estimate": "Estimate",
-    "estimateLoading": "Estimating…",
-    "estimateTitle": "Score estimate",
-    "estimateWinrate": "Black winrate",
-    "estimateScoreLead": "Score lead",
-    "heatmapToggle": "Heatmap",
-    "heatmapOn": "On",
-    "heatmapOff": "Off",
-    "playerDetail": "Player details",
-    "selectPlayer": "Pick this player",
-    "blackTerritory": "Black territory",
-    "whiteTerritory": "White territory",
-    "blackCaptures": "Black captures",
-    "whiteCaptures": "White captures",
-    "komiLabel": "Komi",
-    "totalLabel": "Total",
-    "winnerLabel": "Winner",
-    "confirmResignTitle": "Resign?",
-    "confirmResignDesc": "End this game as a loss; the record is saved.",
-    "cancel": "Cancel",
-    "close": "Close",
-    "confirm": "OK",
-    "confirmPassTitle": "Pass?",
-    "confirmPassDesc": "If the AI passes right after you, the game is scored immediately. If endgame plays remain, cancel and keep playing.",
-    "unloadGuardTitle": "Leave the game?",
-    "unloadGuardBody": "The game isn't finished yet. If you leave this page, you may not be able to return to it.",
-    "unloadGuardConfirm": "Leave",
-    "unloadGuardCancel": "Keep playing",
-    "aiStyle": "Style",
-    "sectionStyle": "Style",
-    "aiPlayer": "AI opponent",
-    "aiPlayerHint": "Choose a style",
-    "sectionPlayer": "AI opponent",
+    "requestScoring": "Score game", "scoringBreakdown": "Scoring",
+    "estimate": "Estimate", "estimateLoading": "Estimating…", "estimateTitle": "Score estimate", "estimateWinrate": "Black winrate", "estimateScoreLead": "Score lead", "heatmapToggle": "Heatmap", "heatmapOn": "On", "heatmapOff": "Off",
+    "playerDetail": "Player details", "selectPlayer": "Pick this player",
+    "blackTerritory": "Black territory", "whiteTerritory": "White territory",
+    "blackCaptures": "Black captures", "whiteCaptures": "White captures",
+    "komiLabel": "Komi", "totalLabel": "Total", "winnerLabel": "Winner", "confirmResignTitle": "Resign?", "confirmResignDesc": "End this game as a loss; the record is saved.", "cancel": "Cancel", "close": "Close", "confirm": "OK",
+    "confirmPassTitle": "Pass?", "confirmPassDesc": "If the AI passes right after you, the game is scored immediately. If endgame plays remain, cancel and keep playing.",
+    "unloadGuardTitle": "Leave the game?", "unloadGuardBody": "The game isn't finished yet. If you leave this page, you may not be able to return to it.", "unloadGuardConfirm": "Leave", "unloadGuardCancel": "Keep playing",
+    "aiStyle": "Style", "sectionStyle": "Style",
+    "aiPlayer": "AI opponent", "aiPlayerHint": "Choose a style", "sectionPlayer": "AI opponent",
     "playerNamesDisclaimer": "Player names shown here are style references only; this service is not affiliated with, endorsed by, or sponsored by any listed player. The AI uses the generic Human-SL model and is not trained on any individual player's games. See the Terms of Service section 'Use of player names in AI style selection' for details and rights-holder contact.",
     "players": {
-      "lee_changho": {
-        "name": "Lee Chang-ho",
-        "bio": "‘Stone Buddha’ — half-point endgame mastery"
-      },
-      "cho_chikun": {
-        "name": "Cho Chikun",
-        "bio": "“Play with your life on the line” — relentless fighting and reading"
-      },
-      "kobayashi_koichi": {
-        "name": "Kobayashi Koichi",
-        "bio": "Low-altitude flying — thoroughly territorial opening"
-      },
-      "takemiya_masaki": {
-        "name": "Takemiya Masaki",
-        "bio": "Founder of Cosmic Style, grand central moyo"
-      },
-      "fujisawa_shuko": {
-        "name": "Fujisawa Shuko",
-        "bio": "Original, majestic openings; mentor to a generation"
-      },
-      "otake_hideo": {
-        "name": "Otake Hideo",
-        "bio": "Aesthetic influence-oriented play"
-      },
-      "yoo_changhyuk": {
-        "name": "Yoo Changhyuk",
-        "bio": "‘Plum blossom’ — world’s sharpest attacker"
-      },
-      "sakata_eio": {
-        "name": "Sakata Eio",
-        "bio": "‘Razor Sakata’ — reading-heavy tactical fighting"
-      },
-      "lee_sedol": {
-        "name": "Lee Sedol",
-        "bio": "Inventive, combative variations at crucial moments"
-      },
-      "gu_li": {
-        "name": "Gu Li",
-        "bio": "China’s signature fighter; Lee Sedol’s jubango rival"
-      },
-      "cho_hunhyun": {
-        "name": "Cho Hunhyun",
-        "bio": "‘Swallow’ — nimble shapes, speed-go genius"
-      },
-      "kato_masao": {
-        "name": "Kato Masao",
-        "bio": "‘The Killer’ — aggressive speed-go"
-      },
-      "go_seigen": {
-        "name": "Go Seigen",
-        "bio": "Co-founder of Shinfuseki, 20th century’s strongest"
-      },
-      "kitani_minoru": {
-        "name": "Kitani Minoru",
-        "bio": "Shinfuseki co-creator, trained generations"
-      },
-      "park_junghwan": {
-        "name": "Park Junghwan",
-        "bio": "Balanced thickness/territory; refined middlegame"
-      },
-      "shin_jinseo": {
-        "name": "Shin Jinseo",
-        "bio": "AI-era standard-bearer — precision endgames"
-      },
-      "ke_jie": {
-        "name": "Ke Jie",
-        "bio": "Aggressive yet balanced modern style"
-      },
-      "seo_bongsoo": {
-        "name": "Seo Bongsoo",
-        "bio": "‘Doenjang Go’ — self-taught, gut-fight Go"
-      },
-      "choi_cheolhan": {
-        "name": "Choi Cheolhan",
-        "bio": "‘The Viper’ — relentless fighting and capturing-race instinct"
-      }
+      "lee_changho":      { "name": "Lee Chang-ho",        "bio": "‘Stone Buddha’ — half-point endgame mastery" },
+      "cho_chikun":       { "name": "Cho Chikun",          "bio": "“Play with your life on the line” — relentless fighting and reading" },
+      "kobayashi_koichi": { "name": "Kobayashi Koichi",    "bio": "Low-altitude flying — thoroughly territorial opening" },
+      "takemiya_masaki":  { "name": "Takemiya Masaki",     "bio": "Founder of Cosmic Style, grand central moyo" },
+      "fujisawa_shuko":   { "name": "Fujisawa Shuko",      "bio": "Original, majestic openings; mentor to a generation" },
+      "otake_hideo":      { "name": "Otake Hideo",         "bio": "Aesthetic influence-oriented play" },
+      "yoo_changhyuk":    { "name": "Yoo Changhyuk",       "bio": "‘Plum blossom’ — world’s sharpest attacker" },
+      "sakata_eio":       { "name": "Sakata Eio",          "bio": "‘Razor Sakata’ — reading-heavy tactical fighting" },
+      "lee_sedol":        { "name": "Lee Sedol",           "bio": "Inventive, combative variations at crucial moments" },
+      "gu_li":            { "name": "Gu Li",               "bio": "China’s signature fighter; Lee Sedol’s jubango rival" },
+      "cho_hunhyun":      { "name": "Cho Hunhyun",         "bio": "‘Swallow’ — nimble shapes, speed-go genius" },
+      "kato_masao":       { "name": "Kato Masao",          "bio": "‘The Killer’ — aggressive speed-go" },
+      "go_seigen":        { "name": "Go Seigen",           "bio": "Co-founder of Shinfuseki, 20th century’s strongest" },
+      "kitani_minoru":    { "name": "Kitani Minoru",       "bio": "Shinfuseki co-creator, trained generations" },
+      "park_junghwan":    { "name": "Park Junghwan",       "bio": "Balanced thickness/territory; refined middlegame" },
+      "shin_jinseo":      { "name": "Shin Jinseo",         "bio": "AI-era standard-bearer — precision endgames" },
+      "ke_jie":           { "name": "Ke Jie",              "bio": "Aggressive yet balanced modern style" },
+      "seo_bongsoo":      { "name": "Seo Bongsoo",         "bio": "‘Doenjang Go’ — self-taught, gut-fight Go" },
+      "choi_cheolhan":    { "name": "Choi Cheolhan",       "bio": "‘The Viper’ — relentless fighting and capturing-race instinct" }
     },
     "aiStyleName": {
       "balanced": "Balanced",
@@ -410,43 +264,7 @@
       "rustic": "Self-taught, practical over theory — gut-fight Go"
     }
   },
-  "review": {
-    "first": "First",
-    "prev": "Prev",
-    "next": "Next",
-    "last": "Last",
-    "autoplay": "Auto",
-    "play": "Play",
-    "pause": "Pause",
-    "analyze": "Analyze",
-    "winrate": "Winrate",
-    "title": "Review",
-    "scrubber": "Move scrubber",
-    "blunderTag": "Blunder",
-    "decisiveTag": "Decisive",
-    "turningPointTag": "Turning point",
-    "coachTag": "This move",
-    "winrateBlackShort": "B",
-    "noTurningPointsFound": "No turning points — solid game.",
-    "modeLabel": "Review mode",
-    "modeReview": "Watch",
-    "modeLearn": "Learn",
-    "altsAutoShown": "Showing alternatives",
-    "turningPointListTitle": "Turning points",
-    "dialogSize": "Dialog size",
-    "size": {
-      "sm": "S",
-      "md": "M",
-      "lg": "L"
-    },
-    "soundOn": "Sound on",
-    "soundOff": "Sound off",
-    "sideBlack": "Black winrate",
-    "sideWhite": "White winrate",
-    "bestMove": "AI best",
-    "coachingProgress": "Analyzing",
-    "coachingDone": "Analyzed"
-  },
+  "review": { "first": "First", "prev": "Prev", "next": "Next", "last": "Last", "autoplay": "Auto", "play": "Play", "pause": "Pause", "analyze": "Analyze", "winrate": "Winrate", "title": "Review", "scrubber": "Move scrubber", "blunderTag": "Blunder", "decisiveTag": "Decisive", "turningPointTag": "Turning point", "coachTag": "This move", "winrateBlackShort": "B", "noTurningPointsFound": "No turning points — solid game.", "modeLabel": "Review mode", "modeReview": "Watch", "modeLearn": "Learn", "altsAutoShown": "Showing alternatives", "turningPointListTitle": "Turning points", "dialogSize": "Dialog size", "size": { "sm": "S", "md": "M", "lg": "L" }, "soundOn": "Sound on", "soundOff": "Sound off", "sideBlack": "Black winrate", "sideWhite": "White winrate", "bestMove": "AI best", "coachingProgress": "Analyzing", "coachingDone": "Analyzed" },
   "daily": {
     "eyebrow": "Puzzle",
     "title": "Challenge",
@@ -469,11 +287,7 @@
     "any": "Any",
     "noMatch": "No puzzles match this combination yet — adjust the filters.",
     "noOtherMatch": "No other puzzles in this combination. Loosen the filters or try again.",
-    "difficulty": {
-      "easy": "Easy",
-      "medium": "Medium",
-      "hard": "Hard"
-    },
+    "difficulty": { "easy": "Easy", "medium": "Medium", "hard": "Hard" },
     "topic": {
       "opening": "Opening",
       "joseki": "Joseki",
@@ -540,20 +354,7 @@
     "colStarted": "Started",
     "colDuration": "Duration"
   },
-  "settings": {
-    "heading": "Settings",
-    "preferredRank": "Preferred rank",
-    "language": "Language",
-    "theme": "Theme",
-    "themeLight": "Light",
-    "themeDark": "Dark",
-    "saved": "Saved",
-    "boardBg": "Board surface",
-    "boardBg_paper": "Paper",
-    "boardBg_wood": "Wood",
-    "boardBg_kaya": "Kaya",
-    "boardBg_slate": "Slate"
-  },
+  "settings": { "heading": "Settings", "preferredRank": "Preferred rank", "language": "Language", "theme": "Theme", "themeLight": "Light", "themeDark": "Dark", "saved": "Saved", "boardBg": "Board surface", "boardBg_paper": "Paper", "boardBg_wood": "Wood", "boardBg_kaya": "Kaya", "boardBg_slate": "Slate" },
   "privacy": {
     "title": "Privacy Policy",
     "eyebrow": "Policy",
@@ -736,14 +537,10 @@
     }
   },
   "errors": {
-    "NOT_YOUR_TURN": "Not your turn",
-    "OCCUPIED": "Already occupied",
-    "ILLEGAL_SUICIDE": "Suicide move is illegal",
-    "ILLEGAL_KO": "Ko — same board position",
-    "OUT_OF_BOUNDS": "Out of board",
-    "GAME_NOT_ACTIVE": "Game is not active",
-    "FORBIDDEN": "Forbidden",
-    "SESSION_REPLACED": "Session replaced (opened in another tab)",
+    "NOT_YOUR_TURN": "Not your turn", "OCCUPIED": "Already occupied",
+    "ILLEGAL_SUICIDE": "Suicide move is illegal", "ILLEGAL_KO": "Ko — same board position",
+    "OUT_OF_BOUNDS": "Out of board", "GAME_NOT_ACTIVE": "Game is not active",
+    "FORBIDDEN": "Forbidden", "SESSION_REPLACED": "Session replaced (opened in another tab)",
     "no_session": "Please set a nickname first",
     "invalid_session": "Your session has expired",
     "nickname_taken": "This nickname is already in use",
