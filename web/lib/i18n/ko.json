@@ -1,7 +1,23 @@
 {
-  "app": { "title": "Inkbaduk · 조용한 승부" },
-  "nav": { "home": "홈", "newGame": "새 대국", "history": "전적", "daily": "일일 챌린지", "spectate": "관전", "settings": "설정", "admin": "관리자", "volume": "Vol. I" },
-  "footer": { "tagline": "KataGo Human-SL과 두는 한국식 바둑", "navLabel": "사이트 정보" },
+  "app": {
+    "title": "Inkbaduk · 조용한 승부"
+  },
+  "nav": {
+    "home": "홈",
+    "newGame": "새 대국",
+    "history": "전적",
+    "daily": "일일 챌린지",
+    "spectate": "관전",
+    "settings": "설정",
+    "admin": "관리자",
+    "volume": "Vol. I",
+    "glossary": "용어",
+    "faq": "FAQ"
+  },
+  "footer": {
+    "tagline": "KataGo Human-SL과 두는 한국식 바둑",
+    "navLabel": "사이트 정보"
+  },
   "spectate": {
     "heading": "관전",
     "subtitle": "진행 중이거나 끝난 대국을 둘러보세요",
@@ -199,42 +215,172 @@
     "expiredTitle": "세션이 만료되었습니다",
     "expiredDesc": "닉네임을 다시 설정해주세요"
   },
-  "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "대국방식", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "순서", "colorBlack": "흑", "colorWhite": "백", "colorRoll": "랜덤 뽑기", "colorReroll": "다시 뽑기", "colorYou": "당신", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "hintLoading": "확인 중…", "hintCoachmark": "막힐 땐 힌트를 눌러 KataGo가 추천하는 한 수를 받아보세요. 실력을 키우는 학습 도구입니다.", "hintHesitation": "이 자리가 고민되시나요. 힌트로 추천 수를 확인해볼 수 있어요.", "hintNudgeDismiss": "안내 닫기", "aiThinking": "AI 생각 중...", "viewKifu": "기보 보기", "downloadSgf": "기보(SGF) 다운로드", "kifuDialogTitle": "기보 복기", "resultLabel": "결과", "newGame": "새 대국", "newGameSubtitle": "상대·판 크기·핸디캡을 선택하고 시작하세요.", "summary": "대국 요약", "start": "대국 시작", "sectionOpponent": "상대", "sectionBoard": "판", "sectionHandicap": "핸디캡", "sectionChoice": "선택", "aiRank": "KataGo Human-SL", "you": "나", "yourRank": "플레이어", "yourTurn": "당신 차례", "thinking": "수를 읽는 중…", "result": "결과", "info": "정보", "moves": "기보", "move": "수", "captures": "따냄", "toMove": "차례", "winrate": "승률", "winrateBlack": "흑", "winrateWhite": "백", "evenPosition": "호각",
+  "game": {
+    "boardSize": "바둑판 크기",
+    "rank": "급수",
+    "handicap": "대국방식",
+    "handicapNone": "호선",
+    "handicapStones": "{n}점 치석",
+    "color": "순서",
+    "colorBlack": "흑",
+    "colorWhite": "백",
+    "colorRoll": "랜덤 뽑기",
+    "colorReroll": "다시 뽑기",
+    "colorYou": "당신",
+    "create": "대국 생성",
+    "pass": "패스",
+    "resign": "기권",
+    "undo": "무르기",
+    "hint": "힌트",
+    "hintLoading": "확인 중…",
+    "hintCoachmark": "막힐 땐 힌트를 눌러 KataGo가 추천하는 한 수를 받아보세요. 실력을 키우는 학습 도구입니다.",
+    "hintHesitation": "이 자리가 고민되시나요. 힌트로 추천 수를 확인해볼 수 있어요.",
+    "hintNudgeDismiss": "안내 닫기",
+    "aiThinking": "AI 생각 중...",
+    "viewKifu": "기보 보기",
+    "downloadSgf": "기보(SGF) 다운로드",
+    "kifuDialogTitle": "기보 복기",
+    "resultLabel": "결과",
+    "newGame": "새 대국",
+    "newGameSubtitle": "상대·판 크기·핸디캡을 선택하고 시작하세요.",
+    "summary": "대국 요약",
+    "start": "대국 시작",
+    "sectionOpponent": "상대",
+    "sectionBoard": "판",
+    "sectionHandicap": "핸디캡",
+    "sectionChoice": "선택",
+    "aiRank": "KataGo Human-SL",
+    "you": "나",
+    "yourRank": "플레이어",
+    "yourTurn": "당신 차례",
+    "thinking": "수를 읽는 중…",
+    "result": "결과",
+    "info": "정보",
+    "moves": "기보",
+    "move": "수",
+    "captures": "따냄",
+    "toMove": "차례",
+    "winrate": "승률",
+    "winrateBlack": "흑",
+    "winrateWhite": "백",
+    "evenPosition": "호각",
     "aiResignedTitle": "불계승(不計勝)",
     "aiResignedBody": "AI가 돌을 거두었습니다. 축하드립니다.",
     "aiPassed": "AI가 패스했습니다",
     "aiPassedScoredTitle": "AI가 계가를 제안했습니다",
-    "requestScoring": "계가 신청", "scoringBreakdown": "계가 결과",
-    "estimate": "예상 형세", "estimateLoading": "추정 중…", "estimateTitle": "예상 형세", "estimateWinrate": "흑 승률", "estimateScoreLead": "예상 점수 차", "heatmapToggle": "히트맵", "heatmapOn": "켜기", "heatmapOff": "끄기",
-    "playerDetail": "기사 정보", "selectPlayer": "이 기사 선택",
-    "blackTerritory": "흑 집", "whiteTerritory": "백 집",
-    "blackCaptures": "흑 따냄", "whiteCaptures": "백 따냄",
-    "komiLabel": "덤", "totalLabel": "합계", "winnerLabel": "승자", "confirmResignTitle": "기권하시겠습니까?", "confirmResignDesc": "현재 대국을 기권으로 종료합니다. 기보는 저장됩니다.", "cancel": "취소", "close": "닫기", "confirm": "확인",
-    "confirmPassTitle": "패스하시겠습니까?", "confirmPassDesc": "AI도 이어서 패스하면 대국이 바로 집계됩니다. 아직 끝내기가 남아 있다면 '취소'를 눌러 계속 두세요.",
-    "unloadGuardTitle": "정말 떠나시겠습니까?", "unloadGuardBody": "대국이 아직 종료되지 않았습니다. 페이지를 떠나면 진행 중인 대국으로 돌아오기 어려울 수 있습니다.", "unloadGuardConfirm": "나가기", "unloadGuardCancel": "계속 두기",
-    "aiStyle": "기풍", "sectionStyle": "기풍",
-    "aiPlayer": "대국 상대 AI", "aiPlayerHint": "기풍 선택", "sectionPlayer": "대국 상대 AI",
+    "requestScoring": "계가 신청",
+    "scoringBreakdown": "계가 결과",
+    "estimate": "예상 형세",
+    "estimateLoading": "추정 중…",
+    "estimateTitle": "예상 형세",
+    "estimateWinrate": "흑 승률",
+    "estimateScoreLead": "예상 점수 차",
+    "heatmapToggle": "히트맵",
+    "heatmapOn": "켜기",
+    "heatmapOff": "끄기",
+    "playerDetail": "기사 정보",
+    "selectPlayer": "이 기사 선택",
+    "blackTerritory": "흑 집",
+    "whiteTerritory": "백 집",
+    "blackCaptures": "흑 따냄",
+    "whiteCaptures": "백 따냄",
+    "komiLabel": "덤",
+    "totalLabel": "합계",
+    "winnerLabel": "승자",
+    "confirmResignTitle": "기권하시겠습니까?",
+    "confirmResignDesc": "현재 대국을 기권으로 종료합니다. 기보는 저장됩니다.",
+    "cancel": "취소",
+    "close": "닫기",
+    "confirm": "확인",
+    "confirmPassTitle": "패스하시겠습니까?",
+    "confirmPassDesc": "AI도 이어서 패스하면 대국이 바로 집계됩니다. 아직 끝내기가 남아 있다면 '취소'를 눌러 계속 두세요.",
+    "unloadGuardTitle": "정말 떠나시겠습니까?",
+    "unloadGuardBody": "대국이 아직 종료되지 않았습니다. 페이지를 떠나면 진행 중인 대국으로 돌아오기 어려울 수 있습니다.",
+    "unloadGuardConfirm": "나가기",
+    "unloadGuardCancel": "계속 두기",
+    "aiStyle": "기풍",
+    "sectionStyle": "기풍",
+    "aiPlayer": "대국 상대 AI",
+    "aiPlayerHint": "기풍 선택",
+    "sectionPlayer": "대국 상대 AI",
     "playerNamesDisclaimer": "표시된 기사명은 기풍 분류 레퍼런스이며, 본 서비스는 해당 기사의 협력·후원·승인을 받지 않았습니다. AI는 일반 Human-SL 모델로 특정 기사의 기보를 학습하지 않습니다. 자세한 내용과 권리자 연락처는 이용약관 'AI 기풍 선택의 기사명 사용' 항목을 참조하세요.",
     "players": {
-      "lee_changho":      { "name": "이창호",              "bio": "돌부처·신산. 반집승의 미학과 완벽한 끝내기" },
-      "cho_chikun":       { "name": "조치훈",              "bio": "“목숨을 걸고 둔다” — 일본 기전 최다 우승" },
-      "kobayashi_koichi": { "name": "고바야시 고이치",      "bio": "저공비행, 철저한 실리 위주의 포석" },
-      "takemiya_masaki":  { "name": "다케미야 마사키",      "bio": "우주류의 창시자, 중앙 대모양 작전" },
-      "fujisawa_shuko":   { "name": "후지사와 슈코",        "bio": "독창적이고 웅대한 포석의 대가" },
-      "otake_hideo":      { "name": "오타케 히데오",        "bio": "바둑의 미학을 추구한 품격 있는 세력 기풍" },
-      "yoo_changhyuk":    { "name": "유창혁",              "bio": "일지매, 세계 최강의 공격수" },
-      "sakata_eio":       { "name": "사카타 에이오",        "bio": "면도날 사카타, 수읽기 기반의 예리한 전투" },
-      "lee_sedol":        { "name": "이세돌",              "bio": "센돌, 창의적이고 전투적인 변화" },
-      "gu_li":            { "name": "구리(古力)",          "bio": "중국의 대표 전투형, 이세돌과 십번기" },
-      "cho_hunhyun":      { "name": "조훈현",              "bio": "제비류, 날렵한 행마의 속기 천재" },
-      "kato_masao":       { "name": "가토 마사오",          "bio": "살인청부업자, 공격적 속기파" },
-      "go_seigen":        { "name": "오청원(吳淸源)",       "bio": "신포석 혁명, 20세기 최고의 기사" },
-      "kitani_minoru":    { "name": "기타니 미노루",        "bio": "신포석 공동 창시자, 수많은 제자를 길러낸 대종사" },
-      "park_junghwan":    { "name": "박정환",              "bio": "두터움과 실리의 균형, 정교한 중반 운영" },
-      "shin_jinseo":      { "name": "신진서",              "bio": "AI 시대의 대표 주자, 정확도 높은 균형 감각" },
-      "ke_jie":           { "name": "커제(柯潔)",          "bio": "공격적이면서 균형 잡힌 현대형 기풍" },
-      "seo_bongsoo":      { "name": "서봉수",              "bio": "된장바둑, 독학·야성적 실전 감각" },
-      "choi_cheolhan":    { "name": "최철한",              "bio": "독사, 끈질긴 전투와 사석 감각의 토종 야전형" }
+      "lee_changho": {
+        "name": "이창호",
+        "bio": "돌부처·신산. 반집승의 미학과 완벽한 끝내기"
+      },
+      "cho_chikun": {
+        "name": "조치훈",
+        "bio": "“목숨을 걸고 둔다” — 일본 기전 최다 우승"
+      },
+      "kobayashi_koichi": {
+        "name": "고바야시 고이치",
+        "bio": "저공비행, 철저한 실리 위주의 포석"
+      },
+      "takemiya_masaki": {
+        "name": "다케미야 마사키",
+        "bio": "우주류의 창시자, 중앙 대모양 작전"
+      },
+      "fujisawa_shuko": {
+        "name": "후지사와 슈코",
+        "bio": "독창적이고 웅대한 포석의 대가"
+      },
+      "otake_hideo": {
+        "name": "오타케 히데오",
+        "bio": "바둑의 미학을 추구한 품격 있는 세력 기풍"
+      },
+      "yoo_changhyuk": {
+        "name": "유창혁",
+        "bio": "일지매, 세계 최강의 공격수"
+      },
+      "sakata_eio": {
+        "name": "사카타 에이오",
+        "bio": "면도날 사카타, 수읽기 기반의 예리한 전투"
+      },
+      "lee_sedol": {
+        "name": "이세돌",
+        "bio": "센돌, 창의적이고 전투적인 변화"
+      },
+      "gu_li": {
+        "name": "구리(古力)",
+        "bio": "중국의 대표 전투형, 이세돌과 십번기"
+      },
+      "cho_hunhyun": {
+        "name": "조훈현",
+        "bio": "제비류, 날렵한 행마의 속기 천재"
+      },
+      "kato_masao": {
+        "name": "가토 마사오",
+        "bio": "살인청부업자, 공격적 속기파"
+      },
+      "go_seigen": {
+        "name": "오청원(吳淸源)",
+        "bio": "신포석 혁명, 20세기 최고의 기사"
+      },
+      "kitani_minoru": {
+        "name": "기타니 미노루",
+        "bio": "신포석 공동 창시자, 수많은 제자를 길러낸 대종사"
+      },
+      "park_junghwan": {
+        "name": "박정환",
+        "bio": "두터움과 실리의 균형, 정교한 중반 운영"
+      },
+      "shin_jinseo": {
+        "name": "신진서",
+        "bio": "AI 시대의 대표 주자, 정확도 높은 균형 감각"
+      },
+      "ke_jie": {
+        "name": "커제(柯潔)",
+        "bio": "공격적이면서 균형 잡힌 현대형 기풍"
+      },
+      "seo_bongsoo": {
+        "name": "서봉수",
+        "bio": "된장바둑, 독학·야성적 실전 감각"
+      },
+      "choi_cheolhan": {
+        "name": "최철한",
+        "bio": "독사, 끈질긴 전투와 사석 감각의 토종 야전형"
+      }
     },
     "aiStyleName": {
       "balanced": "균형형",
@@ -264,7 +410,43 @@
       "rustic": "정석보다 실전 감각으로 승부하는 야성적 행마"
     }
   },
-  "review": { "first": "처음", "prev": "이전", "next": "다음", "last": "끝", "autoplay": "자동재생", "play": "재생", "pause": "일시정지", "analyze": "분석", "winrate": "승률", "title": "기보 복기", "scrubber": "수순 슬라이더", "blunderTag": "패착", "decisiveTag": "승착", "turningPointTag": "승부처", "coachTag": "이 수", "winrateBlackShort": "흑", "noTurningPointsFound": "승부처가 발견되지 않았습니다 — 안정적인 대국이었어요.", "modeLabel": "복기 모드", "modeReview": "복기", "modeLearn": "학습", "altsAutoShown": "추천 수 표시 중", "turningPointListTitle": "승부처", "dialogSize": "창 크기", "size": { "sm": "소", "md": "중", "lg": "대" }, "soundOn": "소리 켜기", "soundOff": "소리 끄기", "sideBlack": "흑 승률", "sideWhite": "백 승률", "bestMove": "AI 최선수", "coachingProgress": "분석 중", "coachingDone": "분석 완료" },
+  "review": {
+    "first": "처음",
+    "prev": "이전",
+    "next": "다음",
+    "last": "끝",
+    "autoplay": "자동재생",
+    "play": "재생",
+    "pause": "일시정지",
+    "analyze": "분석",
+    "winrate": "승률",
+    "title": "기보 복기",
+    "scrubber": "수순 슬라이더",
+    "blunderTag": "패착",
+    "decisiveTag": "승착",
+    "turningPointTag": "승부처",
+    "coachTag": "이 수",
+    "winrateBlackShort": "흑",
+    "noTurningPointsFound": "승부처가 발견되지 않았습니다 — 안정적인 대국이었어요.",
+    "modeLabel": "복기 모드",
+    "modeReview": "복기",
+    "modeLearn": "학습",
+    "altsAutoShown": "추천 수 표시 중",
+    "turningPointListTitle": "승부처",
+    "dialogSize": "창 크기",
+    "size": {
+      "sm": "소",
+      "md": "중",
+      "lg": "대"
+    },
+    "soundOn": "소리 켜기",
+    "soundOff": "소리 끄기",
+    "sideBlack": "흑 승률",
+    "sideWhite": "백 승률",
+    "bestMove": "AI 최선수",
+    "coachingProgress": "분석 중",
+    "coachingDone": "분석 완료"
+  },
   "daily": {
     "eyebrow": "오늘의 한 수",
     "title": "챌린지",
@@ -287,7 +469,11 @@
     "any": "전체",
     "noMatch": "이 조합엔 아직 문제가 없어요. 필터를 조정해보세요.",
     "noOtherMatch": "이 조합엔 다른 문제가 없어요. 필터를 풀거나 다시 풀어보세요.",
-    "difficulty": { "easy": "쉬움", "medium": "보통", "hard": "어려움" },
+    "difficulty": {
+      "easy": "쉬움",
+      "medium": "보통",
+      "hard": "어려움"
+    },
     "topic": {
       "opening": "포석",
       "joseki": "정석",
@@ -354,7 +540,20 @@
     "colStarted": "시작",
     "colDuration": "소요"
   },
-  "settings": { "heading": "설정", "preferredRank": "선호 급수", "language": "언어", "theme": "테마", "themeLight": "밝게", "themeDark": "어둡게", "saved": "저장됨", "boardBg": "바둑판 배경", "boardBg_paper": "한지", "boardBg_wood": "나무결", "boardBg_kaya": "비자나무", "boardBg_slate": "슬레이트" },
+  "settings": {
+    "heading": "설정",
+    "preferredRank": "선호 급수",
+    "language": "언어",
+    "theme": "테마",
+    "themeLight": "밝게",
+    "themeDark": "어둡게",
+    "saved": "저장됨",
+    "boardBg": "바둑판 배경",
+    "boardBg_paper": "한지",
+    "boardBg_wood": "나무결",
+    "boardBg_kaya": "비자나무",
+    "boardBg_slate": "슬레이트"
+  },
   "privacy": {
     "title": "개인정보처리방침",
     "eyebrow": "정책",
@@ -537,10 +736,14 @@
     }
   },
   "errors": {
-    "NOT_YOUR_TURN": "당신 차례가 아닙니다", "OCCUPIED": "이미 돌이 있는 자리입니다",
-    "ILLEGAL_SUICIDE": "자살수는 금지됩니다", "ILLEGAL_KO": "패(Ko) — 같은 수를 둘 수 없습니다",
-    "OUT_OF_BOUNDS": "바둑판 범위를 벗어났습니다", "GAME_NOT_ACTIVE": "진행 중인 대국이 아닙니다",
-    "FORBIDDEN": "권한이 없습니다", "SESSION_REPLACED": "다른 곳에서 접속되어 세션이 종료됐습니다",
+    "NOT_YOUR_TURN": "당신 차례가 아닙니다",
+    "OCCUPIED": "이미 돌이 있는 자리입니다",
+    "ILLEGAL_SUICIDE": "자살수는 금지됩니다",
+    "ILLEGAL_KO": "패(Ko) — 같은 수를 둘 수 없습니다",
+    "OUT_OF_BOUNDS": "바둑판 범위를 벗어났습니다",
+    "GAME_NOT_ACTIVE": "진행 중인 대국이 아닙니다",
+    "FORBIDDEN": "권한이 없습니다",
+    "SESSION_REPLACED": "다른 곳에서 접속되어 세션이 종료됐습니다",
     "no_session": "먼저 닉네임을 설정해주세요",
     "invalid_session": "세션이 만료되었습니다",
     "nickname_taken": "이미 사용 중인 닉네임입니다",
