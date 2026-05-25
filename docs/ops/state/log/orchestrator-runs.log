@@ -56,3 +56,11 @@
 - 보류 승인 1건(AP-20260523-03 bik 글로서리), 최근 CWI 신규 0, 최근 분석 2026-W21.
 - Telegram 발송 불가(bot token 부재 — `[[orchestrator-no-telegram]]` 미해결), 파일 보고만 수행.
 [2026-05-24 02:01:11] orchestrator 종료
+[2026-05-25 21:28:35] orchestrator 시작
+## 21:30 운영 사이클 완료
+
+- prod·백업·plist drift·디스크 모두 정상. 오픈 이슈 0건, 오픈 PR 1건(#30 CI 모두 SUCCESS, CLEAN).
+- bug-scan: `database is locked` 누적 2262건(마지막 17:56) — PR #30이 정확한 수정이므로 `AP-20260525-02`로 머지 승인 제안 등록.
+- Telegram 보고: 헬스 요약 + AP-02 승인 요청 2건 모두 curl 직접 발송 성공 (msg_id 1969).
+- 보류 승인 2건 (AP-01 chuk 글로서리 게시 / AP-02 PR #30 머지). dashboard·log·incidents 갱신 완료.
+[2026-05-25 21:33:04] orchestrator 종료
