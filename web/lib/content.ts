@@ -36,6 +36,8 @@ export function extractExcerpt(content: string, override?: string): string {
   if (override && override.trim()) return override.trim();
   if (!content) return "";
   const plain = content
+    .replace(/```board[\s\S]*?```/g, "")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
     .replace(/^#+\s+.*$/gm, "")
     .replace(/^\s*[-*]\s+/gm, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
