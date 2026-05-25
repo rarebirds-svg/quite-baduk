@@ -137,6 +137,21 @@
 
 /* Pretendard CDN loads via <link> in layout.tsx */
 
+@layer components {
+  .editorial-prose figure {
+    @apply my-8 flex flex-col items-center gap-3;
+  }
+  .editorial-prose figure img {
+    @apply max-w-full border border-ink-faint bg-paper;
+  }
+  .editorial-prose figure figcaption {
+    @apply font-mono text-xs uppercase tracking-label text-ink-mute text-center;
+  }
+  .editorial-prose .board-diagram svg {
+    @apply w-full max-w-[480px] border border-ink-faint bg-paper-deep;
+  }
+}
+
 @layer utilities {
   @keyframes accordion-down {
     from { height: 0 }
