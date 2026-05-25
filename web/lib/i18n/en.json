@@ -591,5 +591,8 @@
     "counter": "{count} supporters in {year} have kept this site running.",
     "empty": "Waiting for the first supporter.",
     "becomeSupporter": "Support Inkbaduk"
-  }
+  },
+  "glossary": { "heroVolume": "VOL. I · Glossary", "heroTitle": "Baduk Dictionary", "heroSubtitle": "{count} concepts you meet playing KataGo", "searchPlaceholder": "Search terms…", "filterAll": "All", "cardMore": "Read more →", "prevEntry": "Previous", "nextEntry": "Next", "startGameCta": "Start a game →", "empty": "No matches" },
+  "faq": { "heroTitle": "FAQ", "heroSubtitle": "{count} answers", "notFoundCta": "Didn't find your question? Support →" },
+  "breadcrumb": { "glossary": "Glossary", "faq": "FAQ" }
 }
