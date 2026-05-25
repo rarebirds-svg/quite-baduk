@@ -36,12 +36,35 @@ df -h / | tail -1 | awk '{print $5}'
 ```
 판정: 사용률 90% 이상이면 경보.
 
+### 4. launchd plist drift
+
+```bash
+ops/sync-launchd.sh --check
+```
+판정: exit 0 + 출력 없음이면 정상. 비0이면 `~/Library/LaunchAgents/`의 plist가
+repo `ops/launchd/`와 다름 → drift incident로 기록.
+
+### 5. sleep/wake 진단 (필요 시)
+
+watchdog가 잡 stale을 감지한 경우 또는 launchd trigger 누락이 의심될 때만 실행한다.
+
+```bash
+pmset -g | grep -E '^\s+(sleep|standby|hibernatemode|womp)'
+pmset -g sched
+log show --predicate 'subsystem == "com.apple.xpc.launchd" AND eventMessage CONTAINS "com.inkbaduk"' \
+  --last 7d | tail -50
+```
+판정: `sleep` 값이 0이 아니거나, 7일 log에서 예상되는 trigger 시각의 entry가
+빠져 있으면 `state/incidents.md`에 sleep-related로 기록하고 사람에게 보고.
+
 ## 결과 처리
 
 1. 결과를 `state/log/YYYY-MM-DD.md`에 추가한다 (시각·항목별 OK/실패).
 2. `state/dashboard.md`의 스택 상태 표를 갱신한다.
 3. **prod 이상이 하나라도 있으면** `state/incidents.md`에 항목을 추가한다.
 4. Telegram 보고(경보·정상 요약)는 오케스트레이터가 실행 요약으로 처리한다.
+
+4·5번에서 비정상이면 watchdog incident와 별도로 기록한다 (id 접두: `DRIFT-` / `SLEEP-`).
 
 ## 범위 메모
 
