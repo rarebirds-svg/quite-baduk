@@ -95,6 +95,12 @@ export default function TopNav() {
               <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/spectate">{t("nav.spectate")}</Link>
               </Button>
+              <Button asChild size="sm" variant="outline" className="hidden md:inline-flex">
+                <Link href="/glossary">{t("nav.glossary")}</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="hidden md:inline-flex">
+                <Link href="/faq">{t("nav.faq")}</Link>
+              </Button>
             </>
           )}
 
@@ -132,7 +138,13 @@ export default function TopNav() {
                 <DropdownMenuItem asChild className="sm:hidden">
                   <Link href="/spectate">{t("nav.spectate")}</Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="sm:hidden" />
+                <DropdownMenuItem asChild className="md:hidden">
+                  <Link href="/glossary">{t("nav.glossary")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="md:hidden">
+                  <Link href="/faq">{t("nav.faq")}</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="md:hidden" />
                 <DropdownMenuItem asChild>
                   <Link href="/history">{t("nav.history")}</Link>
                 </DropdownMenuItem>

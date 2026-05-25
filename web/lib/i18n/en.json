@@ -1,6 +1,6 @@
 {
   "app": { "title": "Inkbaduk · Quiet Game" },
-  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "daily": "Daily Challenge", "spectate": "Spectate", "settings": "Settings", "admin": "Admin", "volume": "Vol. I" },
+  "nav": { "home": "Home", "newGame": "New Game", "history": "History", "daily": "Daily Challenge", "spectate": "Spectate", "settings": "Settings", "admin": "Admin", "volume": "Vol. I", "glossary": "Glossary", "faq": "FAQ" },
   "footer": { "tagline": "Korean-style Go against KataGo Human-SL", "navLabel": "Site info" },
   "spectate": {
     "heading": "Spectate",
