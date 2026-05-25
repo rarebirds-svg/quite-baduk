@@ -6,3 +6,7 @@ CWI ingest 완료: fetched=0 new=0 duplicate=0 error=0
 2026-05-24 03:00:08 [info     ] cwi.index.unchanged
 CWI ingest 완료: fetched=0 new=0 duplicate=0 error=0
 [2026-05-24 03:00:08] content-ingest 종료
+[2026-05-25 21:28:35] content-ingest 시작
+2026-05-25 21:28:37 [info     ] cwi.index.unchanged
+CWI ingest 완료: fetched=0 new=0 duplicate=0 error=0
+[2026-05-25 21:28:37] content-ingest 종료

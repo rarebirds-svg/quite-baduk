@@ -24,3 +24,33 @@
 - 결과: 사용자 영향 없음 — 접속 중 사용자(game 220) WS 재연결로 끝. 이번 재시작은 불필요했고 ~5초 순단만 발생.
 - 후속 (완료): `healthcheck.md` 정정됨 — `/api/health.katago_alive` 필드를 정보용으로 표시, 단독 경보 금지 규칙이 본문에 박혀 있다. 진짜 KataGo 실패는 활동-연관 신호(응수 요청 미반환 등)로만 판정한다.
 - 추가 진단성 강화 (작업 트리 적용, 커밋 대기): KataGo subprocess의 stderr를 슬롯별 파일(`KATAGO_STDERR_LOG=~/Library/Logs/baduk-katago-{slot}.err`)로 분리해 실제 거부 사유를 추적 가능하게 만들었고, `_sync_adapter`에 fast→slow path 자동 fallback을 추가해 slot board drift가 자가치유되도록 했다.
+
+### WD-20260525-212201 — orchestrator stale 43h
+
+- 감지: 2026-05-25 21:22:01
+- 마지막 실행: 2026-05-24 02:01:11
+- 임계 초과 — watchdog가 자동 감지.
+
+### WD-20260525-212202 — dev-cycle stale 43h
+
+- 감지: 2026-05-25 21:22:02
+- 마지막 실행: 2026-05-24 02:03:51
+- 임계 초과 — watchdog가 자동 감지.
+
+### WD-20260525-212203 — content-draft stale 48h
+
+- 감지: 2026-05-25 21:22:03
+- 마지막 실행: 2026-05-23 21:00:47
+- 임계 초과 — watchdog가 자동 감지.
+
+### WD-20260525-212203 — content-ingest stale 42h
+
+- 감지: 2026-05-25 21:22:03
+- 마지막 실행: 2026-05-24 03:00:08
+- 임계 초과 — watchdog가 자동 감지.
+
+### WD-20260525-212203 — backup stale 30h
+
+- 감지: 2026-05-25 21:22:03
+- 마지막 실행: (로그 비어있음)
+- 임계 초과 — watchdog가 자동 감지.
