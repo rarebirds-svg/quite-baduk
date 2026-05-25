@@ -90,3 +90,62 @@ position: |
     expect(spec.caption).toBeUndefined();
   });
 });
+
+import { boardToSvg } from "../lib/board-svg";
+
+describe("boardToSvg", () => {
+  const emptyPos = (size: number) => Array(size).fill(".".repeat(size));
+
+  it("includes svg root with viewBox 0 0 480 480", () => {
+    const svg = boardToSvg({ size: 9, position: emptyPos(9) });
+    expect(svg).toMatch(/<svg[^>]+viewBox="0 0 480 480"/);
+  });
+
+  it("renders size×size grid lines", () => {
+    const svg = boardToSvg({ size: 9, position: emptyPos(9) });
+    const lineCount = (svg.match(/<line\b/g) ?? []).length;
+    expect(lineCount).toBe(18);
+  });
+
+  it("renders 5 star points on 9x9", () => {
+    const svg = boardToSvg({ size: 9, position: emptyPos(9) });
+    const stars = (svg.match(/class="star"/g) ?? []).length;
+    expect(stars).toBe(5);
+  });
+
+  it("renders 9 star points on 19x19", () => {
+    const svg = boardToSvg({ size: 19, position: emptyPos(19) });
+    const stars = (svg.match(/class="star"/g) ?? []).length;
+    expect(stars).toBe(9);
+  });
+
+  it("renders black and white stones at correct positions", () => {
+    const pos = [
+      "B........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      ".........",
+      "........W",
+    ];
+    const svg = boardToSvg({ size: 9, position: pos });
+    const black = (svg.match(/class="stone-black"/g) ?? []).length;
+    const white = (svg.match(/class="stone-white"/g) ?? []).length;
+    expect(black).toBe(1);
+    expect(white).toBe(1);
+  });
+
+  it("includes role=img and aria-label from caption when present", () => {
+    const svg = boardToSvg({ size: 9, position: emptyPos(9), caption: "축의 시작" });
+    expect(svg).toMatch(/role="img"/);
+    expect(svg).toMatch(/aria-label="축의 시작"/);
+  });
+
+  it("uses generic aria-label when caption missing", () => {
+    const svg = boardToSvg({ size: 9, position: emptyPos(9) });
+    expect(svg).toMatch(/aria-label="9×9 바둑판 다이어그램"/);
+  });
+});

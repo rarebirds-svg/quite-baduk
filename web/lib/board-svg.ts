@@ -59,3 +59,79 @@ export function parseBoardCodeBlock(source: string): BoardSpec {
 
   return { size, position, caption };
 }
+
+const VIEWBOX = 480;
+const PAD = 30;
+const INNER = VIEWBOX - PAD * 2; // 420
+
+interface CellCoord { x: number; y: number; }
+
+function cellCenter(size: number, col: number, row: number): CellCoord {
+  const step = INNER / (size - 1);
+  return { x: PAD + col * step, y: PAD + row * step };
+}
+
+const STAR_POINTS: Record<number, [number, number][]> = {
+  9: [[2,2],[6,2],[4,4],[2,6],[6,6]],
+  13: [[3,3],[9,3],[6,6],[3,9],[9,9]],
+  19: [[3,3],[9,3],[15,3],[3,9],[9,9],[15,9],[3,15],[9,15],[15,15]],
+};
+
+function escapeXml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * BoardSpec → 정적 SVG markup. 토큰은 CSS 변수(rgb(var(--...)))로 light/dark 자동 대응.
+ */
+export function boardToSvg(spec: BoardSpec): string {
+  const { size, position, caption } = spec;
+  const label = caption ? escapeXml(caption) : `${size}×${size} 바둑판 다이어그램`;
+  const step = INNER / (size - 1);
+  const stoneR = step * 0.45;
+  const starR = step * 0.10;
+  const parts: string[] = [];
+
+  parts.push(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}" role="img" aria-label="${label}">`,
+  );
+
+  // grid lines
+  for (let i = 0; i < size; i++) {
+    const v = PAD + i * step;
+    parts.push(
+      `<line x1="${PAD}" y1="${v}" x2="${PAD + INNER}" y2="${v}" stroke="rgb(var(--ink-mute))" stroke-width="1" />`,
+    );
+    parts.push(
+      `<line x1="${v}" y1="${PAD}" x2="${v}" y2="${PAD + INNER}" stroke="rgb(var(--ink-mute))" stroke-width="1" />`,
+    );
+  }
+
+  // star points
+  const stars = STAR_POINTS[size] ?? [];
+  for (const [c, r] of stars) {
+    const { x, y } = cellCenter(size, c, r);
+    parts.push(`<circle class="star" cx="${x}" cy="${y}" r="${starR}" fill="rgb(var(--ink-mute))" />`);
+  }
+
+  // stones
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const ch = position[r]?.[c];
+      if (ch !== "B" && ch !== "W") continue;
+      const { x, y } = cellCenter(size, c, r);
+      if (ch === "B") {
+        parts.push(
+          `<circle class="stone-black" cx="${x}" cy="${y}" r="${stoneR}" fill="rgb(var(--stone-black))" />`,
+        );
+      } else {
+        parts.push(
+          `<circle class="stone-white" cx="${x}" cy="${y}" r="${stoneR}" fill="rgb(var(--stone-white))" stroke="rgb(var(--ink-mute))" stroke-width="1" />`,
+        );
+      }
+    }
+  }
+
+  parts.push(`</svg>`);
+  return parts.join("");
+}
