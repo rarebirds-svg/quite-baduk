@@ -21,8 +21,15 @@ from app.session_registry import registry
 log = structlog.get_logger()
 
 
-async def purge_expired_sessions_once(ttl_sec: int) -> int:
-    cutoff = dt.datetime.now(dt.UTC) - dt.timedelta(seconds=ttl_sec)
+async def purge_expired_sessions_once(
+    ttl_sec: int, *, now: dt.datetime | None = None
+) -> int:
+    # cache 잔여를 DB로 먼저 흘려 보낸다 — 그래야 cutoff 판정이 정확하다.
+    from app import last_seen_cache
+    await last_seen_cache.flush_all(_db_module.AsyncSessionLocal)
+
+    n = now or dt.datetime.now(dt.UTC)
+    cutoff = n - dt.timedelta(seconds=ttl_sec)
     async with _db_module.AsyncSessionLocal() as db:
         res = await db.execute(select(Session).where(Session.last_seen_at < cutoff))
         expired = res.scalars().all()

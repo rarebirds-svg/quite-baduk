@@ -150,3 +150,49 @@ async def test_start_and_stop_flusher_idempotent(session_factory):
     lsc.start_flusher(session_factory)
     assert lsc._task is not None
     await lsc.stop_flusher()
+
+
+@pytest.mark.asyncio
+async def test_session_purge_sees_fresh_value(db_engine, monkeypatch):
+    """cache에 fresh stamp를 둔 상태에서 purge가 호출되면 flush_all로
+    DB가 갱신된 뒤 cutoff 판정이 이루어져 활성 세션이 살아남는다."""
+    from sqlalchemy.ext.asyncio import AsyncSession as _AS
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    from app import db as db_module
+    factory = async_sessionmaker(db_engine, expire_on_commit=False, class_=_AS)
+    # session_purge가 module-level AsyncSessionLocal을 본다 — 테스트에서 주입.
+    monkeypatch.setattr(db_module, "AsyncSessionLocal", factory)
+
+    base = dt.datetime(2026, 5, 25, 10, 0, 0, tzinfo=dt.UTC)
+    async with factory() as s:
+        row = Session(
+            token="qa-fresh",  # noqa: S106 (test session token, not a password)
+            nickname="qa-fresh",
+            nickname_key="qa-fresh",
+            created_at=base,
+            last_seen_at=base,  # 1h+ 묵음 — DB만 보면 purge 후보
+        )
+        s.add(row)
+        await s.commit()
+        await s.refresh(row)
+        sid = row.id
+
+    # 활발히 활동 중인 척 — cache에 최신 stamp.
+    fresh = dt.datetime(2026, 5, 25, 11, 0, 30, tzinfo=dt.UTC)
+    lsc.stamp(sid, when=fresh)
+
+    # ttl=3600s, now=fresh → cutoff = 10:00:30. DB의 last_seen_at(=10:00:00) < cutoff
+    # 이라 naive purge면 삭제됐을 텐데, flush_all 후 last_seen_at=fresh(11:00:30)이
+    # 되어 cutoff보다 커서 살아남아야 한다.
+    from app.session_purge import purge_expired_sessions_once
+    n_purged = await purge_expired_sessions_once(ttl_sec=3600, now=fresh)
+    assert n_purged == 0
+
+    # DB가 fresh로 갱신됐는지 확인. (Session.last_seen_at은 tz-naive 저장.)
+    async with factory() as s:
+        res = await s.execute(select(Session.last_seen_at).where(Session.id == sid))
+        db_val = res.scalar_one_or_none()
+    assert db_val is not None
+    # SQLite는 tz 정보를 떨군다 — naive로 비교.
+    assert db_val.replace(tzinfo=None) == fresh.replace(tzinfo=None)
