@@ -26,7 +26,10 @@ for src in "$SRC_DIR"/com.inkbaduk.*.plist; do
     drift=1
     if [ "$CHECK_ONLY" -eq 0 ]; then
       cp "$src" "$dst"
-      launchctl bootstrap "gui/$(id -u)" "$dst"
+      if ! launchctl bootstrap "gui/$(id -u)" "$dst"; then
+        echo "ERROR: launchctl bootstrap failed for $name" >&2
+        exit 1
+      fi
       echo "[$(date '+%Y-%m-%d %H:%M:%S')] installed $name" >> "$LOG"
     fi
     continue
@@ -40,7 +43,10 @@ for src in "$SRC_DIR"/com.inkbaduk.*.plist; do
     if [ "$CHECK_ONLY" -eq 0 ]; then
       launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
       cp "$src" "$dst"
-      launchctl bootstrap "gui/$(id -u)" "$dst"
+      if ! launchctl bootstrap "gui/$(id -u)" "$dst"; then
+        echo "ERROR: launchctl bootstrap failed for $name" >&2
+        exit 1
+      fi
       echo "[$(date '+%Y-%m-%d %H:%M:%S')] resynced $name" >> "$LOG"
     fi
   fi
