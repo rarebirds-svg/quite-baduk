@@ -8,7 +8,7 @@ Web app to play Go (Baduk) against KataGo's Human-SL model. Three sibling direct
 
 - `backend/` — FastAPI (Python 3.11) + SQLAlchemy 2 async + SQLite
 - `web/` — Next.js 14 App Router + TypeScript + Tailwind + Zustand
-- `e2e/` — Playwright (hits the running Docker stack)
+- `e2e/` — Playwright (hits a native backend+web stack booted by `e2e/scripts/start-stack.sh`)
 
 ## Commands
 
@@ -38,20 +38,15 @@ npm test -- --run                       # Vitest (jsdom)
 npm test -- --run tests/board.test.ts   # single file
 ```
 
-### End-to-end (from `e2e/`)
+### End-to-end (from repo root)
 
 ```bash
-docker-compose up --build -d            # (from repo root) stack must be running
-npm install && npm run install-browsers # first time only
-npm test                                # playwright test
-npx playwright test tests/review.spec.ts
-```
-
-### Docker (from repo root)
-
-```bash
-cp .env.example .env                    # set KATAGO_MOCK=true for dev without the 200MB model
-docker-compose up --build               # web :3000, backend :8000, nightly backup sidecar
+# launchd prod가 3000/8000을 점유 중이면 alt port로 우회
+BADUK_API_PORT=18000 BADUK_WEB_PORT=13000 bash e2e/scripts/start-stack.sh
+cd e2e
+npm ci && npx playwright install --with-deps chromium  # first time only
+PLAYWRIGHT_BASE_URL=http://localhost:13000 npx playwright test
+bash ../e2e/scripts/stop-stack.sh
 ```
 
 ## Architecture
@@ -91,7 +86,7 @@ Email + bcrypt password, JWT (access + refresh) in HttpOnly cookies. `app/securi
 - `ruff` forbids `print` — use the configured `structlog` JSON logger.
 - Tests are colocated by layer: `tests/rules/`, `tests/katago/`, `tests/api/`. `conftest.py` provides DB + FastAPI test-client fixtures.
 - Frontend path alias: none — use relative imports. Tailwind classes only; no CSS modules.
-- Docker is the reference deployment. If a change works locally but breaks the Docker build, the Docker build wins.
+- Prod runs on macOS launchd (`com.baduk.api` uvicorn :8000, `com.baduk.web` `npm start` :3000) directly from the repo work tree — no Docker. e2e CI/local boots a native stack via `e2e/scripts/start-stack.sh`.
 
 ## UI/UX 디자인 시스템 규칙 (0.3.0+ · Editorial Hardcover / Journal)
 
@@ -143,7 +138,7 @@ Phase 2/3의 독립적 화면은 `editorial-implementer`를 병렬 호출해 동
 
 ## Environment
 
-Backend reads from `backend/.env` (see `.env.example`). Root `.env` is consumed by `docker-compose.yml` and passed to the backend container. Key vars: `KATAGO_MOCK` (skip model download — use for all dev and tests), `JWT_SECRET` (must be strong in prod), `DB_PATH`, `KATAGO_*` paths, `CORS_ORIGINS`.
+Backend reads from `backend/.env` (see `.env.example`) and `~/.baduk.env` in prod (sourced by `backend/deploy/run_local_prod.sh`). Key vars: `KATAGO_MOCK` (skip model download — use for all dev and tests), `JWT_SECRET` (must be strong in prod), `DB_PATH`, `KATAGO_*` paths, `CORS_ORIGINS`.
 
 ## Reference
 

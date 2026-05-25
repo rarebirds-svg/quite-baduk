@@ -55,12 +55,11 @@ if [ ! -f "$HUMAN" ]; then
   if ! fetch "$HUMAN_URL" "$HUMAN" "KataGo Human-SL net (~99 MB)"; then
     cat >&2 <<'EOF'
 ERROR: Human-SL net could not be downloaded automatically.
-Mount or copy the file into the katago_models volume manually:
+Copy the file into backend/katago/models/ manually:
 
-  docker run --rm -v baduk_katago_models:/dst -v /path/to/local:/src:ro \
-    alpine cp /src/b18c384nbt-humanv0.bin.gz /dst/
+  cp /path/to/b18c384nbt-humanv0.bin.gz backend/katago/models/
 
-Or set KATAGO_MOCK=true in the root .env to fall back to mock mode.
+Or set KATAGO_MOCK=true in the env to fall back to mock mode.
 EOF
     exit 1
   fi

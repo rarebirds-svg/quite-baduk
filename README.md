@@ -44,28 +44,24 @@ Rank selection from **18k to 7d** (Human-SL model), handicap games **2–9 stone
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
-- ~2 GB of disk space for the Docker images + KataGo model
+- Python 3.11 and Node.js 20+
+- ~250 MB of disk space for the KataGo binary + Human-SL model (skipped when `KATAGO_MOCK=true`)
 
 ## Quick Start
 
 ```bash
 git clone <your-fork> baduk && cd baduk
-cp .env.example .env
+cp backend/.env.example backend/.env
 # For development without downloading the KataGo model:
-echo "KATAGO_MOCK=true" >> .env
+echo "KATAGO_MOCK=true" >> backend/.env
 
-docker-compose up --build
+./start.sh   # bring the native dev stack up (backend :8000 + web :3000)
+./stop.sh    # bring it down
 ```
 
-On macOS, you can use the included launcher script instead — it auto-starts Docker Desktop if needed, bootstraps `.env`, waits for the stack to be healthy, and opens your browser:
+`start.sh` boots backend (uvicorn from `backend/.venv311`) and web (`npm run dev`) as background processes. PIDs live in `.run/`. First boot downloads KataGo (~10 MB) and the Human-SL model (~200 MB) unless `KATAGO_MOCK=true`.
 
-```bash
-./start.sh   # bring the stack up
-./stop.sh    # bring the stack down
-```
-
-First boot downloads the KataGo binary (~10 MB) and the Human-SL model (~200 MB) unless `KATAGO_MOCK=true`.
+For prod (launchd on macOS), see `backend/deploy/README.md`.
 
 ### Access
 
@@ -77,8 +73,8 @@ First boot downloads the KataGo binary (~10 MB) and the Human-SL model (~200 MB)
 
 ### First Game
 
-1. Visit http://localhost:3000/signup and create an account
-2. Go to **새 대국 / New Game** — pick your rank and handicap
+1. Visit http://localhost:3000 — enter a nickname (2–32 chars, no email/password)
+2. On **새 대국 / New Game** — pick your rank, board size, handicap, AI opponent
 3. Click the board to place stones
 4. Use **힌트 / Hint** to ask KataGo for suggestions
 5. After the game ends, find it under **전적 / History** and click **Review** to replay with analysis
@@ -95,37 +91,37 @@ Copy `.env.example` → `.env` and override as needed.
 | `CORS_ORIGINS`  | `http://localhost:3000`             | Comma-separated allowed origins.                            |
 | `KATAGO_ANALYZE_MAX_DEADLINE_SEC` | `15`               | Wall-clock budget for one `kata-analyze` call. Lower on fast CPUs.|
 
-Backend-only env vars (configure inside the backend container):
+Backend-only env vars (set in `backend/.env` or `~/.baduk.env` for prod launchd):
 
-| Variable              | Default                                             |
-|-----------------------|-----------------------------------------------------|
-| `DB_PATH`             | `/data/baduk.db`                                    |
-| `KATAGO_BIN_PATH`     | `/usr/local/bin/katago`                             |
-| `KATAGO_MODEL_PATH`   | `/katago/models/b18c384nbt-humanv0.bin.gz`          |
-| `KATAGO_CONFIG_PATH`  | `/katago/config.cfg`                                |
-| `KATAGO_TIMEOUT_SEC`  | `60`                                                |
+| Variable              | Default                                                |
+|-----------------------|--------------------------------------------------------|
+| `DATABASE_URL`        | `sqlite+aiosqlite:///./data/baduk.db`                  |
+| `KATAGO_BIN_PATH`     | `backend/katago/bin/katago`                            |
+| `KATAGO_MODEL_PATH`   | `backend/katago/models/b18c384nbt-humanv0.bin.gz`      |
+| `KATAGO_CONFIG_PATH`  | `backend/katago/config.cfg`                            |
+| `KATAGO_TIMEOUT_SEC`  | `60`                                                   |
 
 ## Backup & Restore
 
-The `backup` service in `docker-compose.yml` writes a dated copy of the SQLite DB to the `baduk_backups` volume every 24 hours and prunes files older than 30 days.
+Prod uses a launchd backup job (`com.inkbaduk.backup`) running `ops/backup.sh` daily. Snapshots land in `~/baduk-backups/{daily,weekly,monthly}/` with retention.
 
 **Manual backup:**
 
 ```bash
-docker-compose exec backend sqlite3 /data/baduk.db ".backup '/backups/manual.db'"
+sqlite3 backend/data/baduk.db ".backup '/tmp/baduk-manual.db'"
 ```
 
 **Restore:**
 
 ```bash
-docker-compose stop backend
-docker cp <backup.db> $(docker-compose ps -q backend):/data/baduk.db
-docker-compose start backend
+launchctl bootout gui/$(id -u)/com.baduk.api
+cp <backup.db> backend/data/baduk.db
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.baduk.api.plist
 ```
 
 ## Development
 
-### Local backend (no Docker)
+### Local backend
 
 ```bash
 cd backend
@@ -152,8 +148,10 @@ cd backend && source .venv311/bin/activate && pytest
 # Frontend (Vitest)
 cd web && npm run test -- --run
 
-# End-to-end (requires running docker-compose)
-cd e2e && npm install && npm run install-browsers && npm test
+# End-to-end (boots its own native stack on alt ports — see e2e/README.md)
+BADUK_API_PORT=18000 BADUK_WEB_PORT=13000 bash e2e/scripts/start-stack.sh
+PLAYWRIGHT_BASE_URL=http://localhost:13000 npx --prefix e2e playwright test
+bash e2e/scripts/stop-stack.sh
 ```
 
 ## Troubleshooting
@@ -162,7 +160,7 @@ cd e2e && npm install && npm run install-browsers && npm test
 Set `KATAGO_MOCK=true` in `.env` and rebuild. The mock adapter plays deterministic moves, enough to exercise the UI.
 
 **Port conflicts**
-Edit `docker-compose.yml` port mappings, e.g. `"3001:3000"` and `"8001:8000"`.
+Pass `BADUK_API_PORT` / `BADUK_WEB_PORT` to `start.sh` or `e2e/scripts/start-stack.sh` to bind alt ports.
 
 **"SESSION_REPLACED" error**
 You opened the same game in another tab or window. The backend enforces a single WebSocket per game to keep state consistent.
@@ -179,7 +177,7 @@ Before deploying publicly:
 - [ ] Update `CORS_ORIGINS` to your production domain
 - [ ] Replace placeholder support address in `web/app/privacy/page.tsx` and `web/app/terms/page.tsx`
 - [ ] Run `bandit`, `pip-audit`, `npm audit` in CI and fix any `high` findings
-- [ ] Ensure the `backup` service is scheduled or swap for off-host backup storage
+- [ ] Ensure the launchd backup job (`com.inkbaduk.backup`) is loaded or swap for off-host backup storage
 - [ ] Replace placeholder PWA icons under `web/public/icons/` with branded artwork (see icons/README.md)
 
 ## Quality Report
@@ -199,7 +197,8 @@ baduk/
 │   │   └── plans/        Implementation plan
 │   ├── reviews/          Individual review-agent reports
 │   └── QUALITY_REPORT.md
-└── docker-compose.yml
+├── start.sh / stop.sh   Native dev stack bootstrap
+└── ops/                 launchd plists, backup, runbooks, agentic state
 ```
 
 ## License
