@@ -591,5 +591,14 @@
     "counter": "{year}년에 {count}명이 함께 이 사이트를 지켜주었습니다.",
     "empty": "아직 첫 후원자를 기다리고 있습니다.",
     "becomeSupporter": "후원하기"
+  },
+  "glossary": {
+    "heroVolume": "VOL. I · 용어",
+    "heroTitle": "바둑 사전",
+    "heroSubtitle": "KataGo와 두며 만나는 {count}가지 개념",
+    "searchPlaceholder": "용어 검색…",
+    "filterAll": "전체",
+    "empty": "검색 결과가 없습니다.",
+    "cardMore": "자세히 보기 →"
   }
 }

@@ -1,7 +1,8 @@
-// 글로서리 인덱스 — web/content/glossary/ 디렉터리의 모든 슬러그 리스트.
+// 글로서리 인덱스 — server에서 데이터 fetch, client wrapper가 Hero + 검색 + 그리드 렌더.
 import type { Metadata } from "next";
 
 import { getContent, getContentSlugs } from "../../lib/content";
+import { GlossaryClient } from "./_GlossaryClient";
 
 const BASE = "https://inkbaduk.com";
 
@@ -15,18 +16,12 @@ export default function GlossaryIndex() {
   const slugs = getContentSlugs("glossary");
   const items = slugs
     .map((s) => getContent("glossary", s))
-    .filter((c): c is NonNullable<typeof c> => c !== null);
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+    .map((c) => ({ slug: c.slug, title: c.title, excerpt: c.excerpt }));
+
   return (
-    <article className="prose">
-      <h1>바둑 용어</h1>
-      <p>총 {items.length}개 항목.</p>
-      <ul className="not-prose grid gap-1">
-        {items.map((c) => (
-          <li key={c.slug}>
-            <a href={`/glossary/${c.slug}`}>{c.title}</a>
-          </li>
-        ))}
-      </ul>
-    </article>
+    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+      <GlossaryClient items={items} />
+    </div>
   );
 }
