@@ -28,6 +28,9 @@
 - prod launchd 서비스 재시작 — 프로세스는 떠 있으나 `/api/health` 무응답이거나 다운일 때 `ops/stack.sh restart prod`.
 - 디스크 압박 해소 — 보존 정책 초과 백업·오래된 `.run/staging-*.log` 삭제. prod 데이터는 불가.
 - staging 스택 재시작 — `ops/stack.sh down staging` 후 `ops/stack.sh up staging`.
+- watchdog 감지 잡 1회 재트리거 — `check-staleness.sh`가 stale로 감지한 잡에 대해
+  `launchctl kickstart -k gui/$(id -u)/com.inkbaduk.<label>`로 강제 트리거.
+  같은 incident에 재시도 후에도 stale이면 🟡로 격상해 사람 승인 요청.
 
 루프 가드 — 직전 실행에서 같은 대상을 이미 복구했는데 또 실패면 재시도하지 않고 에스컬레이션한다.
 

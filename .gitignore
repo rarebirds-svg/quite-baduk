@@ -60,3 +60,6 @@ context-notes.md
 
 # 모바일 점검 스크린샷 산출물
 e2e/screenshots-mobile/
+
+# watchdog cooldown 마커 파일 (임시 상태, 커밋 불필요)
+docs/ops/state/.watchdog-cooldown-*
