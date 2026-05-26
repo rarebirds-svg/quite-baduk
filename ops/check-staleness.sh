@@ -10,7 +10,7 @@ COOLDOWN_SECS=3600   # 같은 잡 1시간 1회 알림
 
 # 잡 정의: "표시명|로그파일|임계(초)"
 JOBS=(
-  "orchestrator|orchestrator-runs.log|28800"      # 8h
+  "orchestrator|orchestrator-runs.log|64800"      # 18h (plist는 12:00·18:00 두 슬롯, 야간 갭 18h 허용)
   "dev-cycle|dev-cycle-runs.log|108000"           # 30h
   "content-draft|content-draft-runs.log|108000"   # 30h
   "content-ingest|content-ingest-runs.log|108000" # 30h
