@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# launchd가 매주 토요일 02:00 호출 — 콘텐츠 초안 헤드리스 Claude를 1회 실행.
+# launchd가 매주 토·수 02:00 호출 (주 2회) — 콘텐츠 초안 헤드리스 Claude를 1회 실행.
 set -euo pipefail
 ROOT="/Users/daegong/projects/baduk"
 cd "$ROOT"
