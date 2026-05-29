@@ -151,6 +151,67 @@ def test_ws_undo_reverts_state(monkeypatch: pytest.MonkeyPatch) -> None:
             pass
 
 
+def test_ws_send_after_close_during_place_move_is_silent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """If the socket is closed (heartbeat expiry / eviction) while place_move
+    is in flight, the post-move send_json must be swallowed — not surface as a
+    RuntimeError('Cannot call "send" once a close message has been sent.') that
+    floods baduk-api.err (#39)."""
+    from starlette.websockets import WebSocketDisconnect
+
+    tc, db_path = _wire_test_app(monkeypatch)
+    try:
+        with tc:
+            r = tc.post("/api/session", json={"nickname": "ws_racer"})
+            cookie = r.cookies.get("baduk_session")
+            r = tc.post(
+                "/api/games",
+                json={
+                    "board_size": 9,
+                    "handicap": 0,
+                    "ai_rank": "5k",
+                    "user_color": "black",
+                },
+                cookies={"baduk_session": cookie},
+            )
+            game_id = r.json()["id"]
+
+            from app.api import ws as ws_module
+
+            real_place_move = ws_module.place_move
+
+            async def closing_place_move(db, **kwargs):  # type: ignore[no-untyped-def]
+                result = await real_place_move(db, **kwargs)
+                # Simulate the heartbeat/eviction task closing the socket
+                # while we were busy computing the AI reply. The handler's
+                # next send_json now hits a closed socket.
+                await ws_module._connections[game_id].close()
+                return result
+
+            monkeypatch.setattr(ws_module, "place_move", closing_place_move)
+
+            with tc.websocket_connect(
+                f"/api/ws/games/{game_id}",
+                cookies={"baduk_session": cookie},
+            ) as ws:
+                ws.receive_json()  # initial state
+                ws.send_json({"type": "move", "coord": "E5"})
+                # Draining must end in a clean WebSocketDisconnect, never a
+                # RuntimeError leaking from the server handler.
+                try:
+                    for _ in range(12):
+                        ws.receive_json()
+                except WebSocketDisconnect:
+                    pass
+    finally:
+        tc.close()
+        try:
+            os.unlink(db_path)
+        except OSError:
+            pass
+
+
 def test_ws_eviction_on_second_connection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
