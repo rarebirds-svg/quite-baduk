@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 import { getContent, getContentSlugs } from "../../lib/content";
 import { GlossaryClient } from "./_GlossaryClient";
 
+// 콘텐츠 md 추가를 재빌드·재시작 없이 노출 — 요청 시 fs 재읽기.
+export const dynamic = "force-dynamic";
+
 const BASE = "https://inkbaduk.com";
 
 export const metadata: Metadata = {
