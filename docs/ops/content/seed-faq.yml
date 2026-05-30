@@ -14,3 +14,15 @@
 - slug: how-to-improve-rank
   title: 단을 얻으려면 어떻게 두면 되나요?
   prompt_hint: 정석 학습, 사활 문제, 복기, 실전. 적정 상대와의 대국. 기력 향상 일반 조언.
+- slug: board-sizes
+  title: 9로·13로·19로 중 무엇으로 둘까요?
+  prompt_hint: inkbaduk은 9·13·19로를 지원. 규칙은 같고 반의 크기만 다름. 9·13로는 짧고 빨라 입문·연습에, 19로가 정규 대국. 작은 반은 전투, 큰 반은 포석·운영 비중이 큼.
+- slug: ai-strength-levels
+  title: AI 기력(난이도)은 어떻게 정해지나요?
+  prompt_hint: UI에서 고른 랭크에 맞춰 KataGo Human-SL이 그 기력의 사람처럼 둠. 추가로 maxVisits(탐색량)로 강도를 조절 — 높은 단일수록 강하고 CPU에서는 느림. 일반 KataGo와 달리 사람다운 기풍.
+- slug: spectate-pro
+  title: 프로 기보 감상은 무엇인가요?
+  prompt_hint: 저작권이 안전한 공개 도메인 프로 기보를 수순대로 두며 KataGo 분석과 함께 감상. 테마별·월간 추천(picks) 모음 제공. 상용 기보 사이트 자료는 쓰지 않음.
+- slug: resign-and-pass
+  title: 기권하거나 대국을 끝내려면?
+  prompt_hint: 더 둘 곳이 없으면 양쪽이 두 번 연속 패스해 종국 → 자동 계가. 승산이 없다고 판단하면 기권으로 즉시 종료. 종국·계가는 한국 룰 기준.
