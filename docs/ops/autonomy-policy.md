@@ -4,8 +4,8 @@
 
 | 등급 | 의미 | 해당 액션 |
 |---|---|---|
-| 🟢 자율 | 실행 후 `state/log/`에 사후 기록 | 헬스체크, 사용통계 리포트, staging 기동·검증, 콘텐츠·SEO 페이지 초안, 백업 검증 |
-| 🟡 승인 | Telegram 제안 → 사람 승인 후 실행 | prod 승급/배포(launchd 서비스 재시작), 콘텐츠·페이지 라이브 게시, `main` 머지, DB 마이그레이션, 의존성 버전업 |
+| 🟢 자율 | 실행 후 `state/log/`에 사후 기록 | 헬스체크, 사용통계 리포트, staging 기동·검증, 콘텐츠·SEO 페이지 초안, **글로서리·FAQ 마크다운 콘텐츠 라이브 게시(커밋·`main` push)**, 백업 검증 |
+| 🟡 승인 | Telegram 제안 → 사람 승인 후 실행 | prod 승급/배포(launchd 서비스 재시작), 콘텐츠·페이지 라이브 게시(글로서리·FAQ 마크다운 콘텐츠는 제외 — 🟢), `main` 머지, DB 마이그레이션, 의존성 버전업 |
 | 🔴 금지 | 에이전트 절대 불가 (사람 전용) | prod 데이터 삭제, 시크릿/`~/.baduk.env`·JWT 로테이션, 유료 인프라 결제, 사용자 PII 개별 열람 |
 
 ## 원칙
@@ -41,8 +41,10 @@
 | GitHub 이슈 생성·라벨링 | 🟢 자율 |
 | worktree에서 코드 구현·테스트·커밋 | 🟢 자율 |
 | 브랜치 푸시 (feature 패턴: `fix/*`·`feat/*`·`chore/*`·`docs/*`·`test/*`) | 🟢 자율 — `settings.json` allow 목록에 명시 |
-| `main`·`master`·force push | 🚫 금지 — `settings.json` deny 명시 |
+| `main`·`master`·force push | 🚫 금지 — `settings.json` deny 명시. **예외**: content-draft 사이클의 글로서리·FAQ 콘텐츠 커밋 push는 🟢 (아래 주석) |
 | PR 생성·코멘트 | 🟢 자율 (`gh pr create`·`gh pr comment`는 deny 없음) |
 | PR 머지 (= `main` 변경) | 🟡 승인 |
 
 자율 버그 사이클(dev-cycle)은 feature 패턴 브랜치 push·PR 생성까지 자율로 수행하고, 머지만 사람 승인을 받는다.
+
+> **콘텐츠 main push 예외** — content-draft 사이클(`ops/run-content-draft.sh`, `--dangerously-skip-permissions`)은 글로서리·FAQ 마크다운 콘텐츠 파일만 커밋해 `main`에 push하는 것이 🟢 자율이다. 코드·설정 변경의 `main` push·머지는 dev-cycle 포함 여전히 🚫/🟡다. `settings.json`의 `git push origin main` deny는 권한을 준수하는 세션(대화형 등)을 위한 가드레일로 그대로 둔다 — 헤드리스 content-draft는 권한 스킵으로 동작하며 이 정책 항목이 그 권한의 명시적 근거다.

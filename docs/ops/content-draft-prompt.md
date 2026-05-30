@@ -5,7 +5,7 @@
 
 ## 시작 전 필수
 
-1. `docs/ops/autonomy-policy.md` — 초안은 🟢 자율, 라이브 게시는 🟡 승인. 게시는 사람 손으로.
+1. `docs/ops/autonomy-policy.md` — 글로서리·FAQ 콘텐츠는 초안·QA·**라이브 게시(커밋+main push)**까지 🟢 자율이다. 사람 승인 없이 바로 게시한다. (그 외 콘텐츠·페이지 라이브 게시는 여전히 🟡.)
 2. 출처: 작성한 내용은 공개된 일반 지식 기반. 출처가 불확실하면 본문에 명시.
 
 ## 1회 실행
@@ -40,14 +40,15 @@
    "이 초안의 한국어 자연스러움·바둑 용어 정확성·문체를 점검해 주세요: <draft path>".
    결과 코멘트가 fix 가능한 것이면 본문 수정 반영. 큰 문제면 draft에 "// QA 보류" 코멘트 추가.
 
-6. **AP 제안** — `runbooks/telegram-protocol.md` 형식으로 `state/pending-approvals.md`에 AP 항목 추가:
-   - ID: `AP-YYYYMMDD-NN` (NN은 그날 일련번호)
-   - 액션: 초안 게시 — `<slug>` ({kind})
-   - 영향: `web/content/<kind>/<slug>.md`에 새 파일 + git commit
-   - 실행 절차: `mv docs/ops/content/drafts/<slug>.md web/content/<kind>/<slug>.md && git add web/content/<kind>/<slug>.md && git commit -m "content(<kind>): <slug> 게시"`
-   Telegram으로 같은 내용 전송.
+6. **라이브 게시 (자율 — 사람 승인 없음)** — QA 반영이 끝난 초안을 바로 서비스에 게시한다. 단 본문에 "// QA 보류"가 남아 있으면 게시하지 말고 draft에 그대로 둔 채 로그에 사유만 남긴다.
+   - `mv docs/ops/content/drafts/<slug>.md web/content/<kind>/<slug>.md`
+   - `git add web/content/<kind>/<slug>.md` — **이 파일만** 스테이징한다. 작업트리의 다른 변경(`state/` 로그·대시보드 등)은 절대 함께 add 하지 않는다.
+   - `git commit -m "content(<kind>): <slug> 게시"`
+   - `git push origin main` — 거부되면(non-fast-forward) `git pull --rebase origin main` 후 1회만 재시도. 그래도 실패하면 push는 보류하고 로그에 기록한다(커밋은 로컬에 남고 prod 작업트리에 이미 반영되므로 라이브에는 노출됨).
+   - 게시 완료를 Telegram으로 **사후 보고**(승인 요청 아님): "<slug> ({kind}) 게시 완료 — /{kind}/<slug>".
+   참고: `/glossary`·`/faq` 목록과 상세는 동적 렌더라 재빌드·재시작 없이 즉시 노출된다.
 
-7. **로그·기록** — `state/log/YYYY-MM-DD.md`에 한 줄. 1주기 1개 한정.
+7. **로그·기록** — `state/log/YYYY-MM-DD.md`에 한 줄. 1주기 1개 한정. (`pending-approvals.md`는 더 이상 사용하지 않는다.)
 
 ## 끝낼 때
 
