@@ -12,10 +12,11 @@
 
 1. **시드 로드** — `docs/ops/content/seed-glossary.yml`과 `seed-faq.yml`을 텍스트로 읽는다. 각 항목은 `{slug, title, prompt_hint}`.
 
-2. **미작성 슬러그 선택** — 우선순위:
-   - 글로서리 먼저(아직 `web/content/glossary/<slug>.md`도 `docs/ops/content/drafts/<slug>.md`도 없는 것). 알파벳 순.
-   - 글로서리 다 차면 FAQ 동일 규칙.
-   - 둘 다 차면 "처리할 토픽 없음" 로그 + 종료.
+2. **미작성 슬러그 선택** — 반드시 아래 절차로 기계적으로 정한다. **이미 게시된 슬러그를 재선택하거나 덮어쓰면 안 된다.**
+   - `ls web/content/glossary/`와 `ls docs/ops/content/drafts/`를 **실제로 실행**해 현재 존재하는 슬러그 집합(이미 게시·작성된 것)을 확보한다.
+   - 시드(`seed-glossary.yml`)의 슬러그 중 그 집합에 **없는** 것만 후보다. 후보를 알파벳 순으로 정렬해 첫 항목을 고른다. (`web/content/glossary/`에 파일이 있는 슬러그는 후보에서 제외 — 시드 순서나 알파벳 첫 글자만 보고 고르지 말 것.)
+   - 글로서리 후보가 0개면 FAQ에 같은 절차 적용(`web/content/faq/`·드래프트와 `seed-faq.yml` 대조).
+   - 글로서리·FAQ 모두 후보 0개면 "처리할 토픽 없음" 로그 + 즉시 종료. **기존 항목을 임의로 개정하지 않는다.**
 
 3. **본문 초안 생성** — 한국어 마크다운, 300-600자, 2-4 단락. frontmatter 포함:
    ```
@@ -41,6 +42,7 @@
    결과 코멘트가 fix 가능한 것이면 본문 수정 반영. 큰 문제면 draft에 "// QA 보류" 코멘트 추가.
 
 6. **라이브 게시 (자율 — 사람 승인 없음)** — QA 반영이 끝난 초안을 바로 서비스에 게시한다. 단 본문에 "// QA 보류"가 남아 있으면 게시하지 말고 draft에 그대로 둔 채 로그에 사유만 남긴다.
+   - **덮어쓰기 가드(필수)**: `web/content/<kind>/<slug>.md`가 **이미 존재하면** 게시를 중단한다(덮어쓰기 금지). 이는 선택 단계 오류의 안전망 — 로그에 "이미 게시됨, 게시 중단" 사유를 남기고 종료한다.
    - `mv docs/ops/content/drafts/<slug>.md web/content/<kind>/<slug>.md`
    - `git add web/content/<kind>/<slug>.md` — **이 파일만** 스테이징한다. 작업트리의 다른 변경(`state/` 로그·대시보드 등)은 절대 함께 add 하지 않는다.
    - `git commit -m "content(<kind>): <slug> 게시"`
