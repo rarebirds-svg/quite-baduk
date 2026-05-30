@@ -354,11 +354,16 @@ async def ws_game(
     except RuntimeError as e:
         # A concurrent close (heartbeat expiry, eviction by a newer
         # connection, or the client dropping mid-`place_move`) can flip the
-        # socket to DISCONNECTED while we're computing the AI reply. The next
-        # send_json then raises 'Cannot call "send" once a close message has
-        # been sent.'. The peer is already gone, so exit quietly instead of
-        # leaking a full traceback to baduk-api.err (#39).
-        if 'close message has been sent' not in str(e):
+        # socket to DISCONNECTED between operations. Starlette then raises one
+        # of two RuntimeErrors instead of WebSocketDisconnect:
+        #   - send_json after close: 'Cannot call "send" once a close message
+        #     has been sent.' (#39 send path, line 241)
+        #   - receive_json after close: 'WebSocket is not connected. Need to
+        #     call "accept" first.' (#39 receive-side variant, line 186)
+        # The peer is already gone in both cases, so exit quietly instead of
+        # leaking a full traceback to baduk-api.err. Re-raise anything else.
+        msg = str(e)
+        if 'close message has been sent' not in msg and 'not connected' not in msg:
             raise
     finally:
         hb_task.cancel()
