@@ -41,10 +41,12 @@
 | GitHub 이슈 생성·라벨링 | 🟢 자율 |
 | worktree에서 코드 구현·테스트·커밋 | 🟢 자율 |
 | 브랜치 푸시 (feature 패턴: `fix/*`·`feat/*`·`chore/*`·`docs/*`·`test/*`) | 🟢 자율 — `settings.json` allow 목록에 명시 |
-| `main`·`master`·force push | 🚫 금지 — `settings.json` deny 명시. **예외**: content-draft 사이클의 글로서리·FAQ 콘텐츠 커밋 push는 🟢 (아래 주석) |
+| `main` push (글로서리·FAQ 콘텐츠) | 🟢 자율 — content-draft 사이클 (아래 주석) |
+| `main` push (코드·설정 변경) | 🟡 승인 — 행위 규범. `settings.json` deny는 해제됨(기계적 차단 없음), 규범으로만 유지 |
+| `master`·force push | 🚫 금지 — `settings.json` deny 명시 |
 | PR 생성·코멘트 | 🟢 자율 (`gh pr create`·`gh pr comment`는 deny 없음) |
 | PR 머지 (= `main` 변경) | 🟡 승인 |
 
 자율 버그 사이클(dev-cycle)은 feature 패턴 브랜치 push·PR 생성까지 자율로 수행하고, 머지만 사람 승인을 받는다.
 
-> **콘텐츠 main push 예외** — content-draft 사이클(`ops/run-content-draft.sh`, `--dangerously-skip-permissions`)은 글로서리·FAQ 마크다운 콘텐츠 파일만 커밋해 `main`에 push하는 것이 🟢 자율이다. 코드·설정 변경의 `main` push·머지는 dev-cycle 포함 여전히 🚫/🟡다. `settings.json`의 `git push origin main` deny는 권한을 준수하는 세션(대화형 등)을 위한 가드레일로 그대로 둔다 — 헤드리스 content-draft는 권한 스킵으로 동작하며 이 정책 항목이 그 권한의 명시적 근거다.
+> **콘텐츠 main push 예외** — content-draft 사이클(`ops/run-content-draft.sh`, `--dangerously-skip-permissions`)은 글로서리·FAQ 마크다운 콘텐츠 파일만 커밋해 `main`에 push하는 것이 🟢 자율이다. 코드·설정 변경의 `main` push·머지는 dev-cycle 포함 여전히 🟡(사람 승인) 규범이다. `settings.json`의 `git push origin main` deny는 제거됐으므로(콘텐츠 자율 게시 흐름을 위해) 이 🟡는 기계적 차단이 아니라 **행위 규범**이다 — 에이전트는 코드·설정 변경을 `main`에 직접 push하지 말고 PR·승인 경로를 따른다.
