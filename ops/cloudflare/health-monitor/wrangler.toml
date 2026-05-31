@@ -1,0 +1,11 @@
+# inkbaduk 외부 헬스 모니터 Worker — Cron으로 공개 /api/health를 폴링한다.
+name = "inkbaduk-health-monitor"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[triggers]
+crons = ["*/5 * * * *"]   # 5분마다
+
+[vars]
+HEALTH_URL = "https://inkbaduk.com/api/health"
+# TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID 은 `wrangler secret put` 으로 등록 (README 참조)
