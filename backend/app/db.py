@@ -9,6 +9,14 @@ from app.config import settings
 engine = create_async_engine(
     f"sqlite+aiosqlite:///{settings.db_path}",
     connect_args={"check_same_thread": False},
+    # SQLite only allows a single writer at a time even in WAL mode.
+    # The default pool_size of 5 lets five connections fight over the
+    # write lock, causing "database is locked" errors under concurrency.
+    # Limit the pool to 1 so all DB access is serialized through a
+    # single connection — correct for SQLite and eliminates lock errors.
+    pool_size=1,
+    max_overflow=0,
+    pool_pre_ping=True,
 )
 
 
