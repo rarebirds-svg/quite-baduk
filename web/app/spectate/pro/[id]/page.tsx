@@ -1,12 +1,11 @@
 "use client";
 // 프로 기보 재생 화면 — 저장된 SGF 수순을 스크러버로 되짚어 보는 페이지.
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import Board from "@/components/Board";
 import { api, ApiError } from "@/lib/api";
 import { useT } from "@/lib/i18n";
-import { useAuthStore } from "@/store/authStore";
 import { gtpToXy, replay, type ReplayMove } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
@@ -34,10 +33,8 @@ interface ProGameDetail {
 
 export default function ProGameWatchPage() {
   const t = useT();
-  const router = useRouter();
   const params = useParams<{ id: string }>();
   const gameId = parseInt(params.id, 10);
-  const { session } = useAuthStore();
 
   const [game, setGame] = useState<ProGameDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +42,6 @@ export default function ProGameWatchPage() {
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
-    if (!session) {
-      router.replace("/");
-      return;
-    }
     api<ProGameDetail>(`/api/spectate/pro/${gameId}`)
       .then((g) => {
         setGame(g);
@@ -56,10 +49,9 @@ export default function ProGameWatchPage() {
       })
       .catch((e) => {
         if (e instanceof ApiError && e.status === 404) setError("not_found");
-        else if (e instanceof ApiError && e.status === 401) router.replace("/");
         else setError("load_failed");
       });
-  }, [session, gameId, router]);
+  }, [gameId]);
 
   const replayMoves: ReplayMove[] = useMemo(
     () =>
@@ -101,8 +93,6 @@ export default function ProGameWatchPage() {
     );
     return () => clearTimeout(timer);
   }, [playing, idx, game]);
-
-  if (!session) return null;
 
   if (error === "not_found") {
     return (
