@@ -97,6 +97,11 @@ export default function TopNav() {
               </Button>
             </>
           )}
+          {!session && (
+            <Button asChild size="sm" variant="outline">
+              <Link href="/spectate/pro">{t("spectate.tabPro")}</Link>
+            </Button>
+          )}
 
           <button
             onClick={() => setLocale(locale === "ko" ? "en" : "ko")}

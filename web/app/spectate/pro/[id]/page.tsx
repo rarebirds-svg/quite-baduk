@@ -99,7 +99,7 @@ export default function ProGameWatchPage() {
       <div className="space-y-4">
         <Hero title={t("spectate.tabPro")} subtitle="" />
         <p className="text-sm text-oxblood">{t("spectate.proNotFound")}</p>
-        <Link href="/spectate?tab=pro" className="text-oxblood hover:underline text-sm">
+        <Link href="/spectate/pro" className="text-oxblood hover:underline text-sm">
           ← {t("spectate.proBackToList")}
         </Link>
       </div>
@@ -121,7 +121,7 @@ export default function ProGameWatchPage() {
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <Hero title={t("spectate.tabPro")} subtitle="" />
         <Link
-          href="/spectate?tab=pro"
+          href="/spectate/pro"
           className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
         >
           ← {t("spectate.proBackToList")}
