@@ -42,6 +42,33 @@ def test_utc_datetime_type_serializes_naive_as_utc() -> None:
     assert M(ts=aware).model_dump(mode="json")["ts"] == "2026-05-31T08:45:00Z"
 
 
+@pytest.mark.asyncio
+async def test_admin_endpoints_serialize_utc_z(client: AsyncClient) -> None:
+    """관리자 화면이 쓰는 sessions·login-history 타임스탬프가 UTC 'Z'로 직렬화."""
+    r = await client.post("/api/session", json={"nickname": "대공"})  # 관리자 닉네임
+    assert r.status_code == 201, r.text
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+    )
+    assert r.status_code == 201, r.text
+
+    s = await client.get("/api/admin/sessions")
+    assert s.status_code == 200, s.text
+    sessions = s.json()
+    assert sessions, "관리자 세션 목록이 비어 있음"
+    for row in sessions:
+        assert row["created_at"].endswith("Z"), row["created_at"]
+        assert row["last_seen_at"].endswith("Z"), row["last_seen_at"]
+
+    h = await client.get("/api/admin/login-history")
+    assert h.status_code == 200, h.text
+    for row in h.json():
+        assert row["created_at"].endswith("Z"), row["created_at"]
+        if row["ended_at"] is not None:
+            assert row["ended_at"].endswith("Z"), row["ended_at"]
+
+
 def test_utc_iso_helper() -> None:
     from app.schemas.datetime_utc import utc_iso
 
