@@ -54,6 +54,18 @@ async def test_pro_list_returns_inserted_game(
 
 
 @pytest.mark.asyncio
+async def test_pro_sitemap_created_at_has_utc_z(
+    client: AsyncClient, db_session
+) -> None:
+    """pro 사이트맵의 created_at은 UTC 'Z'로 직렬화(수기 isoformat → utc_iso)."""
+    await _insert_pro_game(db_session)
+    r = await client.get("/api/spectate/pro/sitemap")
+    assert r.status_code == 200
+    rows = r.json()
+    assert rows and all(x["created_at"].endswith("Z") for x in rows)
+
+
+@pytest.mark.asyncio
 async def test_pro_list_collection_filter(
     client: AsyncClient, db_session
 ) -> None:

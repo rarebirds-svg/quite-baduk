@@ -40,3 +40,15 @@ def test_utc_datetime_type_serializes_naive_as_utc() -> None:
     # 이미 tz-aware인 경우도 UTC 'Z'로 정규화
     aware = dt.datetime(2026, 5, 31, 8, 45, 0, tzinfo=dt.UTC)
     assert M(ts=aware).model_dump(mode="json")["ts"] == "2026-05-31T08:45:00Z"
+
+
+def test_utc_iso_helper() -> None:
+    from app.schemas.datetime_utc import utc_iso
+
+    # naive는 UTC로 간주
+    assert utc_iso(dt.datetime(2026, 5, 31, 8, 45, 0)) == "2026-05-31T08:45:00Z"
+    # 이미 UTC
+    assert utc_iso(dt.datetime(2026, 5, 31, 8, 45, 0, tzinfo=dt.UTC)) == "2026-05-31T08:45:00Z"
+    # 다른 타임존은 UTC로 변환
+    kst = dt.timezone(dt.timedelta(hours=9))
+    assert utc_iso(dt.datetime(2026, 5, 31, 17, 45, 0, tzinfo=kst)) == "2026-05-31T08:45:00Z"

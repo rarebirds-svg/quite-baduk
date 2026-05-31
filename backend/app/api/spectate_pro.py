@@ -13,6 +13,7 @@ from app.core.pro.themes import THEMES, theme_by_slug, theme_query_clause
 from app.core.sgf.import_sgf import parse_pro_sgf
 from app.deps import CurrentSession, DbSession
 from app.models import ProGame
+from app.schemas.datetime_utc import utc_iso
 
 router = APIRouter(prefix="/api/spectate/pro", tags=["spectate"])
 
@@ -100,7 +101,7 @@ async def pro_sitemap(db: DbSession) -> list[dict[str, Any]]:
         select(ProGame.id, ProGame.created_at).order_by(ProGame.id)
     )
     return [
-        {"id": row.id, "created_at": row.created_at.isoformat()}
+        {"id": row.id, "created_at": utc_iso(row.created_at)}
         for row in result.all()
     ]
 

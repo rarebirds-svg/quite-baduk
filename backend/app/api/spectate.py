@@ -8,14 +8,13 @@
 """
 from __future__ import annotations
 
-from datetime import datetime
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import ColumnElement, and_, func, or_, select
 
 from app.deps import ADMIN_NICKNAME_KEYS, CurrentSession, DbSession
 from app.models import Game, Move, Session
+from app.schemas.datetime_utc import UtcDatetime
 from app.schemas.game import GameDetail, GameSummary, MoveEntry
 
 router = APIRouter(prefix="/api/spectate", tags=["spectate"])
@@ -68,8 +67,8 @@ class SpectateRow(BaseModel):
     status: str
     result: str | None
     move_count: int
-    started_at: datetime
-    finished_at: datetime | None
+    started_at: UtcDatetime
+    finished_at: UtcDatetime | None
     is_live: bool  # 진행 중(active + 세션 생존)
 
 

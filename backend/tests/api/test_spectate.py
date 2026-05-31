@@ -60,6 +60,20 @@ async def test_spectate_lists_finished_game(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_spectate_timestamps_serialized_with_utc_z(client: AsyncClient) -> None:
+    """관전 목록 started_at/finished_at은 UTC 'Z'로 직렬화(프론트 로컬 오해석 방지)."""
+    await _signup(client, "tzwatcher")
+    gid = await _create_game(client)
+    await client.post(f"/api/games/{gid}/resign")
+    r = await client.get("/api/spectate")
+    row = next((x for x in r.json()["rows"] if x["id"] == gid), None)
+    assert row is not None
+    assert row["started_at"].endswith("Z"), row["started_at"]
+    # finished_at은 같은 UtcDatetime 타입 — 값이 있으면 'Z'로 직렬화된다.
+    assert row["finished_at"] is None or row["finished_at"].endswith("Z")
+
+
+@pytest.mark.asyncio
 async def test_spectate_hides_abandoned_game(client: AsyncClient) -> None:
     """active인데 세션이 사라진 대국(버려진 대국)은 목록·상세 모두에서 제외."""
     # 다른 사용자가 active 대국을 만든 뒤 세션 종료.
