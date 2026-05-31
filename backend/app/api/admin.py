@@ -16,6 +16,7 @@ from app.config import settings
 from app.deps import AdminSession, CurrentSession, DbSession, is_admin
 from app.engine_pool import get_adapter
 from app.models import Game, Session, SessionHistory
+from app.schemas.datetime_utc import UtcDatetime
 from app.session_registry import registry
 
 # Captured at module import so the admin console can show "backend uptime"
@@ -29,8 +30,8 @@ class AdminSessionRow(BaseModel):
     id: int
     nickname: str
     country: str | None = None
-    created_at: datetime
-    last_seen_at: datetime
+    created_at: UtcDatetime
+    last_seen_at: UtcDatetime
     game_count: int
     active_game_count: int
     is_connected_ws: bool  # currently holding an open WS for at least one game
@@ -55,8 +56,8 @@ class AdminGameRow(BaseModel):
     undo_count: int
     hint_count: int
     is_live_ws: bool  # true when this specific game currently has an open WS
-    started_at: datetime
-    finished_at: datetime | None
+    started_at: UtcDatetime
+    finished_at: UtcDatetime | None
 
 
 class AdminIdentity(BaseModel):
@@ -86,8 +87,8 @@ class AdminLoginRow(BaseModel):
     id: int
     session_id: int | None
     nickname: str
-    created_at: datetime
-    ended_at: datetime | None
+    created_at: UtcDatetime
+    ended_at: UtcDatetime | None
     end_reason: str | None
     is_active: bool  # currently-open (ended_at IS NULL)
 
@@ -122,7 +123,7 @@ class AdminEngineHealth(BaseModel):
     human_model_path: str | None
     human_model_name: str | None
     config_path: str | None
-    backend_started_at: datetime
+    backend_started_at: UtcDatetime
 
 
 class DailyBucket(BaseModel):
