@@ -182,6 +182,7 @@
     "valueDesc3": "실시간 승률과 집차(scoreLead), 공배 단계 자동 감지, KataGo ownership 기반 자동 사석 판정까지.",
     "scrollHint": "아래 닉네임을 입력해 한 판 시작",
     "footerNote": "닉네임 기반 일회성 세션 — 1시간 무활동 시 자동 만료. 자세한 데이터 보관 정책은 개인정보처리방침을 참조하세요.",
+    "footerPro": "프로 기보",
     "footerGlossary": "용어",
     "footerFaq": "FAQ",
     "footerPrivacy": "개인정보처리방침",

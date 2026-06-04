@@ -182,6 +182,7 @@
     "valueDesc3": "Live winrate and score lead, endgame-phase detection, and KataGo-ownership-driven dead-stone scoring.",
     "scrollHint": "Enter a nickname below to begin",
     "footerNote": "Nickname-based ephemeral session — auto-expires after 1 hour of inactivity. See the Privacy Policy for full data retention details.",
+    "footerPro": "Pro Games",
     "footerGlossary": "Glossary",
     "footerFaq": "FAQ",
     "footerPrivacy": "Privacy Policy",

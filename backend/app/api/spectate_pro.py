@@ -11,7 +11,7 @@ from sqlalchemy import func, or_, select
 from app.core.pro.monthly_pick import InvalidYearMonth, pick_for_month
 from app.core.pro.themes import THEMES, theme_by_slug, theme_query_clause
 from app.core.sgf.import_sgf import parse_pro_sgf
-from app.deps import CurrentSession, DbSession
+from app.deps import DbSession
 from app.models import ProGame
 from app.schemas.datetime_utc import utc_iso
 
@@ -51,14 +51,13 @@ class ProGameDetail(ProGameRow):
 
 @router.get("", response_model=ProGameList)
 async def list_pro_games(
-    _: CurrentSession,
     db: DbSession,
     collection: str | None = Query(None),
     q: str | None = Query(None),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> ProGameList:
-    """프로 기보 목록. 닉네임 세션 필요. 최신 대국일 순.
+    """프로 기보 목록. 비로그인 공개. 최신 대국일 순.
 
     total 은 limit/offset 적용 전, 필터만 반영한 전체 건수 — 프론트
     페이지네이션이 다음 페이지 유무를 판단하는 데 쓴다.
