@@ -28,11 +28,12 @@ async def _insert_pro_game(db_session, collection: str = "masterpiece") -> int:
 
 
 @pytest.mark.asyncio
-async def test_pro_list_requires_session(client: AsyncClient) -> None:
+async def test_pro_list_is_public(client: AsyncClient) -> None:
+    # 프로 기보 목록은 비로그인 공개 — 세션 없이도 200을 반환한다.
     fresh = AsyncClient(transport=client._transport, base_url=client.base_url)
     try:
         r = await fresh.get("/api/spectate/pro")
-        assert r.status_code == 401
+        assert r.status_code == 200
     finally:
         await fresh.aclose()
 
