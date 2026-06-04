@@ -5,6 +5,7 @@ import { useT } from "@/lib/i18n";
 import { BrandMark } from "@/components/editorial/BrandMark";
 
 const FOOTER_LINKS = [
+  { href: "/spectate/pro", key: "home.footerPro" },
   { href: "/glossary", key: "home.footerGlossary" },
   { href: "/faq", key: "home.footerFaq" },
   { href: "/privacy", key: "home.footerPrivacy" },
