@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.3.0] - 2026-06-06
+
+### Added
+- Public learning layer, browsable without an account:
+  - Pro game library — 911 SGF records (625 masterpieces, 286 world-final games) with per-game
+    analysis, themed collections, and a deterministic monthly "masterpiece" pick.
+  - Daily challenge — 420 GoGameGuru puzzles with a daily deterministic pick and a random mode.
+  - Glossary and FAQ — markdown articles with board diagrams and images.
+  - Spectating — watch in-progress AI games and replay finished ones; pro games expose SEO metadata
+    and a dynamic sitemap.
+- Editorial Hardcover design system — paper/ink/oxblood/gold/moss tokens, serif/sans/mono
+  typography, shadcn-based UI primitives, and custom editorial primitives.
+- Admin console — sessions, login history, stats, and pro-game upload/management.
+- Autonomous operations — launchd-scheduled agents for backups, content drafting, pro-game ingest,
+  a health watchdog, and an orchestrator; plus a Cloudflare Workers external health monitor.
+- Phase B single-node hardening — machine-restart recovery and hung-process auto-correction.
+
+### Changed
+- Authentication is now ephemeral nickname-only sessions (opaque random token in an HttpOnly cookie,
+  1-hour idle TTL); email/password login removed.
+- Dark mode migrated to `next-themes` (class-based) with full token coverage.
+- Version bumped to 0.3.0 across `backend/pyproject.toml` and `web/package.json`.
+
+### Notes
+- The end-to-end (Playwright) job is temporarily disabled in CI pending a rewrite for the
+  nickname-only flow.
+
 ## [0.2.0] - 2026-04-18
 
 ### Added
