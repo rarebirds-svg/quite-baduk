@@ -1,7 +1,7 @@
 ---
 slug: komi
 kind: glossary
-title: 덤(komi)
+title: 덤
 created_at: 2026-05-31
 draft_by: agent v1
 ---
