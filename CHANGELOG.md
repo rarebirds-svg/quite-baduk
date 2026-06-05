@@ -40,7 +40,7 @@
 ### Removed
 - Legacy 19×19-only DB schema. The 0002 migration drops and recreates `games`, `moves`, `analyses`.
 
-## [0.1.0] - 2026-04-17
+## [0.1.0] - 2026-04-18
 
 Initial release — MVP.
 
