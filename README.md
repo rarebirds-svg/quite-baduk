@@ -1,23 +1,46 @@
 # AI 바둑 (AI Go)
 
-Play the game of Go (Baduk) against the **KataGo** AI in your browser.
-Rank selection from **18k to 7d** (Human-SL model), handicap games **2–9 stones**, Korean rules territory scoring, SGF export, hint, undo, review + analysis, per-user history, Korean/English UI with dark mode.
+Play the game of Go (Baduk) against the **KataGo** AI in your browser — then learn from it. Rank
+selection from **18k to 7d** (Human-SL model), handicap games, Korean-rules scoring, hint, undo,
+review + analysis, plus a public learning layer: **911 professional game records**, **420 daily
+puzzles**, a Go **glossary** and **FAQ**, and live **spectating** — all browsable without an account.
 
 ![stack: Next.js + FastAPI + SQLite + KataGo](https://img.shields.io/badge/stack-Next.js%20%2B%20FastAPI%20%2B%20KataGo-blue)
 
 ## Features
 
+### Play
+
 - 🎯 **Rank picker** — 12 preset strength levels from 18-kyu (beginner) to 7-dan (strong amateur)
+- 📐 **Board sizes** — 9×9, 13×13, 19×19
 - 🪨 **Handicap games** — standard Korean handicap positions (2 to 9 stones)
 - 🧠 **KataGo Human-SL model** — AI plays *like a human* at the chosen rank, not just weaker
-- 📋 **SGF import/export** — download your games, load any SGF
+- 📋 **SGF export** — download any of your games
 - 🔁 **Undo** — take back the last two plies (your move + AI response)
 - 💡 **Hint** — ask KataGo for the top-3 recommended moves with winrate
-- 🔬 **Review + analysis** — replay any finished game move by move with winrate overlay
+- 🔬 **Review + analysis** — replay any finished game move by move with winrate / ownership overlay
 - 📊 **Personal stats** — win/loss by rank and handicap
+
+### Learn & browse (no login required)
+
+- ♟️ **Pro game library** — 911 SGF records across two collections (625 masterpieces, 286 world-final
+  games), with per-game analysis, themed collections, and a monthly "masterpiece" pick
+- 🧩 **Daily challenge** — 420 GoGameGuru puzzles; a deterministic daily pick plus a random mode
+- 📖 **Glossary** — Go terms with markdown articles, board diagrams, and images
+- ❓ **FAQ** — how AI ranks work, Korean vs Japanese rules, review/analysis usage, and more
+- 👀 **Spectate** — watch in-progress AI games and replay finished ones, indexed for SEO (sitemap)
+
+### Platform
+
 - 🌐 **i18n** — Korean and English, instant switching
-- 🌗 **Dark mode**
-- 🔒 **Sessions** — ephemeral nickname-only login. Opaque random session token in an HttpOnly cookie; idle TTL 1 hour. No email, no password, no PII.
+- 🌗 **Dark mode** — `next-themes`, class-based, full token coverage
+- 🎨 **Editorial design system** — "Editorial Hardcover" tokens (paper/ink/oxblood/gold/moss),
+  serif + sans + mono typography, shadcn-based UI primitives
+- 🔒 **Sessions** — ephemeral nickname-only login. Opaque random session token in an HttpOnly cookie;
+  idle TTL 1 hour. No email, no password, no PII.
+- 🛠️ **Admin console** — sessions, login history, stats, and pro-game uploads
+- ⚙️ **Autonomous ops** — launchd-scheduled agents for backups, content drafting, pro-game ingest,
+  health watchdog, and an orchestrator (see [Operations](#operations))
 
 ## Architecture
 
@@ -41,6 +64,31 @@ Rank selection from **18k to 7d** (Human-SL model), handicap games **2–9 stone
 - **Rules engine** (`backend/app/core/rules/`): pure-Python implementation of Go rules, 100% test coverage
 - **KataGo adapter** (`backend/app/core/katago/`): async subprocess with GTP protocol, auto-restart, state replay
 - **Mock mode**: set `KATAGO_MOCK=true` to run without the KataGo binary (for local dev / tests)
+
+### Screens
+
+| Route | Login | Purpose |
+|-------|-------|---------|
+| `/` | — | Landing page |
+| `/game/new` · `/game/play/[id]` · `/game/review/[id]` | ✓ | Create, play, review a game |
+| `/history` · `/settings` | ✓ | Personal game history, profile settings |
+| `/daily` | ✓ | Daily + random puzzle challenges |
+| `/spectate` · `/spectate/[id]` | — | Browse / watch in-progress & finished AI games |
+| `/spectate/pro` · `/spectate/pro/[id]` | — | Pro game library + per-game detail (SEO) |
+| `/spectate/themes/[slug]` · `/spectate/picks` · `/spectate/picks/monthly/[yyyymm]` | — | Themed collections, monthly masterpiece pick |
+| `/glossary` · `/glossary/[slug]` | — | Go glossary index + articles |
+| `/faq` · `/faq/[slug]` | — | FAQ index + articles |
+| `/privacy` · `/terms` · `/support` · `/supporters` | — | Public info pages |
+| `/admin/*` | ✓ (admin) | Sessions, login history, stats, pro-game management |
+
+### API surface
+
+Public (no auth): `GET /api/health`, `GET /api/spectate`, `GET /api/spectate/{id}`,
+`GET /api/spectate/pro[...]` (list, detail, themes, monthly pick, sitemap).
+Session: `POST/GET/DELETE /api/session`, `GET/POST /api/games[...]` (+ `hint`, `analyze`, `sgf`,
+`resign`), `WS /api/ws/games/{id}`, `GET /api/stats`, `GET/POST /api/daily[...]`.
+Admin: `GET /api/admin/*` (summary, engine, sessions, games, login-history) and `/api/admin/pro-games`
+(upload/list/delete).
 
 ## Prerequisites
 
@@ -119,6 +167,27 @@ cp <backup.db> backend/data/baduk.db
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.baduk.api.plist
 ```
 
+## Operations
+
+Prod runs as macOS **launchd** agents directly from the repo work tree (no Docker): `com.baduk.api`
+(uvicorn :8000) and `com.baduk.web` (`npm start` :3000). Alongside the app, a set of autonomous
+agents run on schedules — plists in `ops/launchd/`, runner scripts in `ops/`, runbooks and state in
+`docs/ops/`.
+
+| Agent | Schedule | Role |
+|-------|----------|------|
+| `com.inkbaduk.backup` | daily | Multi-generation SQLite backups (daily/weekly/monthly) |
+| `com.inkbaduk.ops-watchdog` | hourly | Staleness + KataGo/DB health checks, auto-recovery |
+| `com.inkbaduk.ops-orchestrator` | 12:00 / 18:00 | Headless Claude Code — status reports, PR watch |
+| `com.inkbaduk.dev-cycle` | 02:00 | Autonomous bug-fix cycle (commits a branch; human pushes/PRs) |
+| `com.inkbaduk.content-draft` | Sat/Wed 02:00 | Drafts & publishes glossary/FAQ content |
+| `com.inkbaduk.content-ingest` | Sun 03:00 | Ingests public-domain pro game records |
+| `com.inkbaduk.analytics-weekly` | Sun 09:00 | Weekly analytics report |
+
+The hardening work (single-node machine-restart recovery, hung-process auto-correction) and a
+Cloudflare Workers **external health monitor** live under `ops/cloudflare/health-monitor/`. See
+`docs/ops/` for autonomy policy and runbooks.
+
 ## Development
 
 ### Local backend
@@ -142,13 +211,14 @@ npm run dev
 ### Tests
 
 ```bash
-# Backend (170 tests, Rules Engine 100% coverage)
+# Backend (~499 tests, Rules Engine 100% coverage)
 cd backend && source .venv311/bin/activate && pytest
 
-# Frontend (Vitest)
+# Frontend (Vitest — ~136 tests)
 cd web && npm run test -- --run
 
-# End-to-end (boots its own native stack on alt ports — see e2e/README.md)
+# End-to-end (9 Playwright scenarios; boots its own native stack on alt ports — see e2e/README.md)
+# NOTE: the e2e job is currently disabled in CI pending a rewrite for the nickname-only flow.
 BADUK_API_PORT=18000 BADUK_WEB_PORT=13000 bash e2e/scripts/start-stack.sh
 PLAYWRIGHT_BASE_URL=http://localhost:13000 npx --prefix e2e playwright test
 bash e2e/scripts/stop-stack.sh
@@ -189,16 +259,27 @@ A full audit from five specialized review agents (Rules, KataGo, API, Frontend, 
 ```
 baduk/
 ├── backend/              FastAPI + Rules Engine + KataGo adapter
+│   └── data/
+│       ├── pro_games/    SGF library (masterpieces, world_finals)
+│       └── gogameguru/   Daily-challenge puzzle SGFs
 ├── web/                  Next.js 14 (App Router, TS, Tailwind)
+│   ├── components/
+│   │   ├── ui/           shadcn primitives (Editorial-themed)
+│   │   └── editorial/    Custom primitives + Go domain icons
+│   └── content/          Glossary + FAQ markdown articles
 ├── e2e/                  Playwright end-to-end tests
 ├── docs/
 │   ├── superpowers/
 │   │   ├── specs/        Design spec
 │   │   └── plans/        Implementation plan
+│   ├── ops/             Autonomy policy, runbooks, agentic state
 │   ├── reviews/          Individual review-agent reports
 │   └── QUALITY_REPORT.md
 ├── start.sh / stop.sh   Native dev stack bootstrap
-└── ops/                 launchd plists, backup, runbooks, agentic state
+└── ops/
+    ├── launchd/         launchd plists for scheduled agents
+    ├── cloudflare/      External health monitor (Workers)
+    └── *.sh            backup, watchdog, orchestrator, content runners
 ```
 
 ## License
