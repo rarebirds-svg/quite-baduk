@@ -84,3 +84,7 @@ Initial release — MVP.
 - Rate limiting only on login/signup (not on move/analyze endpoints)
 
 See `docs/QUALITY_REPORT.md` for the full list of open recommendations.
+
+[0.3.0]: https://github.com/rarebirds-svg/quite-baduk/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/rarebirds-svg/quite-baduk/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/rarebirds-svg/quite-baduk/releases/tag/v0.1.0
