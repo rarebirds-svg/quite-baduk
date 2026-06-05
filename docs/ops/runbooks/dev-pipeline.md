@@ -6,7 +6,9 @@ GitHub 이슈를 크기별로 처리하는 절차다.
 
 전용 worktree(`.worktrees/dev-cycle`)에서.
 
-1. `git -C .worktrees/dev-cycle fetch origin`, `origin/main` 기준으로 `fix/issue-<N>` 브랜치 생성.
+1. 워크트리가 없으면 먼저 만든다 —
+   `[ -d .worktrees/dev-cycle ] || git worktree add --detach .worktrees/dev-cycle origin/main`.
+   그다음 `git -C .worktrees/dev-cycle fetch origin`, `origin/main` 기준으로 `fix/issue-<N>` 브랜치 생성.
 2. 수정한다.
    - 로직 버그 — TDD: 버그를 재현하는 실패 테스트 작성 → 수정 → 통과 확인.
    - 오타·주석·문구 등 비로직 수정 — 테스트 추가 없이 수정하고 기존 테스트가 깨지지
