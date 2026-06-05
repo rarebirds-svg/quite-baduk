@@ -5,6 +5,7 @@ selection from **18k to 7d** (Human-SL model), handicap games, Korean-rules scor
 review + analysis, plus a public learning layer: **911 professional game records**, **420 daily
 puzzles**, a Go **glossary** and **FAQ**, and live **spectating** — all browsable without an account.
 
+[![version](https://img.shields.io/badge/version-0.3.0-8b2e2e)](https://github.com/rarebirds-svg/quite-baduk/releases/tag/v0.3.0)
 ![stack: Next.js + FastAPI + SQLite + KataGo](https://img.shields.io/badge/stack-Next.js%20%2B%20FastAPI%20%2B%20KataGo-blue)
 
 ## Features
