@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import func, or_, select
+from sqlalchemy import ColumnElement, func, or_, select
 
 from app.core.pro.monthly_pick import InvalidYearMonth, pick_for_month
 from app.core.pro.themes import THEMES, theme_by_slug, theme_query_clause
@@ -63,7 +63,7 @@ async def list_pro_games(
     total 은 limit/offset 적용 전, 필터만 반영한 전체 건수 — 프론트
     페이지네이션이 다음 페이지 유무를 판단하는 데 쓴다.
     """
-    filters = []
+    filters: list[ColumnElement[bool]] = []
     if collection == "recent":
         filters.append(ProGame.collection.in_(("recent", "cwi")))
     elif collection in ("masterpiece", "world"):
