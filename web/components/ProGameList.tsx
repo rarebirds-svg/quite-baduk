@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
+import { formatProEvent } from "@/lib/proEvent";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,7 @@ interface ProRow {
   black_rank: string | null;
   white_rank: string | null;
   event: string | null;
+  round: string | null;
   game_date: string | null;
   result: string | null;
   board_size: number;
@@ -39,6 +41,7 @@ const PAGE_SIZE = 50;
 
 export function ProGameList() {
   const t = useT();
+  const [locale] = useLocale();
   const router = useRouter();
   const [collection, setCollection] = useState<Collection>("masterpiece");
   const [page, setPage] = useState(0);
@@ -147,7 +150,9 @@ export function ProGameList() {
                     </span>
                   </div>
                   <div className="mt-1 font-mono text-[11px] text-ink-faint tabular-nums flex flex-wrap gap-3">
-                    {r.event && <span>{r.event}</span>}
+                    {formatProEvent(r.event, r.round, locale) && (
+                      <span>{formatProEvent(r.event, r.round, locale)}</span>
+                    )}
                     {r.game_date && <span>{r.game_date}</span>}
                     <span>
                       {r.board_size}×{r.board_size}
