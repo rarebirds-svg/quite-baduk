@@ -131,6 +131,49 @@ def test_save_index_hash_writes_md5(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_main_async_caps_new_and_skips_hash(tmp_path, monkeypatch):
+    import scripts.ingest_cwi_weekly as mod
+    monkeypatch.setattr(mod, "CACHE_PATH", tmp_path / ".baduk" / "ingest-cwi.cache")
+    monkeypatch.setattr(mod, "MAX_NEW_PER_RUN", 2)
+
+    base = "https://homepages.cwi.nl/~aeb/go/games/"
+    index_html = "".join(f'<a href="g{i}.sgf">g{i}</a>' for i in range(4))
+
+    def handler(request):
+        url = str(request.url)
+        if url == base:
+            return httpx.Response(200, text=index_html)
+        if url.endswith(".sgf"):
+            n = url.rstrip(".sgf")[-1]
+            return httpx.Response(200, text=f"(;FF[4]GM[1]SZ[19]EV[E{n}];B[pd];W[dc])")
+        return httpx.Response(404)
+
+    real_client = httpx.AsyncClient
+    def patched_client(*args, **kwargs):
+        kwargs.pop("timeout", None)
+        kwargs.pop("follow_redirects", None)
+        return real_client(transport=httpx.MockTransport(handler))
+    monkeypatch.setattr(httpx, "AsyncClient", patched_client)
+
+    from sqlalchemy.ext.asyncio import (
+        AsyncSession, async_sessionmaker, create_async_engine,
+    )
+    import app.models  # noqa: F401
+    from app.db import Base
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    monkeypatch.setattr(
+        mod, "AsyncSessionLocal",
+        async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession),
+    )
+
+    summary = await mod.main_async()
+    assert summary["new"] == 2
+    assert mod.CACHE_PATH.exists() is False
+
+
+@pytest.mark.asyncio
 async def test_main_async_ingests_new_sgfs(tmp_path, monkeypatch):
     """index → SGF → parse → insert 전체 경로. httpx.MockTransport로 모킹."""
     import scripts.ingest_cwi_weekly as mod

@@ -31,6 +31,9 @@ CWI_INDEX_URL = "https://homepages.cwi.nl/~aeb/go/games/"
 ALLOWED_HOSTS = {"homepages.cwi.nl"}
 ALLOWED_PATH_PREFIX = "/~aeb/go/games/"
 CACHE_PATH = Path.home() / ".baduk" / "ingest-cwi.cache"
+MAX_DEPTH = 4
+MAX_PAGES = 500
+MAX_NEW_PER_RUN = 200
 
 
 def is_cwi_url(url: str) -> bool:
@@ -153,7 +156,10 @@ async def main_async() -> dict[str, int]:
             log.info("cwi.index.unchanged")
             return summary
 
-        links = extract_sgf_links(html, CWI_INDEX_URL)
+        links = await crawl_sgf_links(
+            http, CWI_INDEX_URL, max_depth=MAX_DEPTH, max_pages=MAX_PAGES
+        )
+        capped = False
         async with AsyncSessionLocal() as db:
             for url in links:
                 summary["fetched"] += 1
@@ -186,10 +192,15 @@ async def main_async() -> dict[str, int]:
                     continue
                 db.add(pro)
                 summary["new"] += 1
+                if summary["new"] >= MAX_NEW_PER_RUN:
+                    capped = True
+                    log.info("cwi.ingest.capped", cap=MAX_NEW_PER_RUN)
+                    break
 
             await db.commit()
 
-    save_index_hash(html)
+    if not capped:
+        save_index_hash(html)
     log.info("cwi.ingest.complete", **summary)
     return summary
 
