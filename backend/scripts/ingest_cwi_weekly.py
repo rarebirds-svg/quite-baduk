@@ -78,6 +78,42 @@ def extract_subdir_links(html: str, base_url: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+async def crawl_sgf_links(
+    http: httpx.AsyncClient,
+    start_url: str,
+    *,
+    max_depth: int,
+    max_pages: int,
+) -> list[str]:
+    """start_url에서 CWI 하위 디렉터리를 BFS로 따라가 .sgf 절대 URL을 수집한다.
+    visited-set으로 순환 방지, max_depth/max_pages로 폭주 방지."""
+    queue: list[tuple[str, int]] = [(start_url, 0)]
+    visited: set[str] = set()
+    found: list[str] = []
+    pages = 0
+    while queue and pages < max_pages:
+        url, depth = queue.pop(0)
+        if url in visited:
+            continue
+        visited.add(url)
+        try:
+            resp = await http.get(url)
+            resp.raise_for_status()
+            html = resp.text
+        except Exception as exc:  # noqa: BLE001 — 디렉터리 1장 실패는 건너뛰고 계속
+            log.warning("cwi.dir.fetch_failed", url=url, err=str(exc))
+            continue
+        pages += 1
+        for sgf in extract_sgf_links(html, url):
+            if sgf not in found:
+                found.append(sgf)
+        if depth < max_depth:
+            for sub in extract_subdir_links(html, url):
+                if sub not in visited:
+                    queue.append((sub, depth + 1))
+    return found
+
+
 def index_changed(html: str) -> bool:
     """index 페이지 md5가 캐시와 다르면 True (재처리 필요)."""
     current = hashlib.md5(html.encode("utf-8"), usedforsecurity=False).hexdigest()

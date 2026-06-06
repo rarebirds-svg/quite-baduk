@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import hashlib
 
+import httpx
 import pytest
 
 from scripts.ingest_cwi_weekly import (
+    crawl_sgf_links,
     extract_sgf_links,
     extract_subdir_links,
     is_cwi_url,
@@ -55,6 +57,51 @@ def test_extract_subdir_links_returns_cwi_dirs_only():
     base = "https://homepages.cwi.nl/~aeb/go/games/"
     dirs = extract_subdir_links(html, base)
     assert dirs == ["https://homepages.cwi.nl/~aeb/go/games/games/Agon/"]
+
+
+_BASE = "https://homepages.cwi.nl/~aeb/go/games/"
+
+
+def _tree_handler():
+    pages = {
+        _BASE: '<a href="games/sub1/">sub1</a><a href="top.sgf">t</a>',
+        _BASE + "games/sub1/": (
+            '<a href="deep/">deep</a><a href="a.sgf">a</a><a href="../">up</a>'
+        ),
+        _BASE + "games/sub1/deep/": '<a href="b.sgf">b</a>',
+    }
+    def handler(request):
+        url = str(request.url)
+        if url in pages:
+            return httpx.Response(200, text=pages[url])
+        if url.endswith(".sgf"):
+            return httpx.Response(200, text="(;FF[4]SZ[19];B[pd])")
+        return httpx.Response(404)
+    return handler
+
+
+@pytest.mark.asyncio
+async def test_crawl_finds_nested_sgfs():
+    async with httpx.AsyncClient(transport=httpx.MockTransport(_tree_handler())) as http:
+        links = await crawl_sgf_links(http, _BASE, max_depth=4, max_pages=50)
+    assert _BASE + "top.sgf" in links
+    assert _BASE + "games/sub1/a.sgf" in links
+    assert _BASE + "games/sub1/deep/b.sgf" in links
+
+
+@pytest.mark.asyncio
+async def test_crawl_respects_max_depth():
+    async with httpx.AsyncClient(transport=httpx.MockTransport(_tree_handler())) as http:
+        links = await crawl_sgf_links(http, _BASE, max_depth=1, max_pages=50)
+    assert _BASE + "games/sub1/a.sgf" in links
+    assert _BASE + "games/sub1/deep/b.sgf" not in links
+
+
+@pytest.mark.asyncio
+async def test_crawl_respects_max_pages():
+    async with httpx.AsyncClient(transport=httpx.MockTransport(_tree_handler())) as http:
+        links = await crawl_sgf_links(http, _BASE, max_depth=4, max_pages=1)
+    assert links == [_BASE + "top.sgf"]
 
 
 def test_index_hash_skips_when_unchanged(tmp_path, monkeypatch):
