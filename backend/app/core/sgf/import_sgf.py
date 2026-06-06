@@ -30,6 +30,7 @@ class ParsedProGame:
     black_rank: str | None
     white_rank: str | None
     event: str | None
+    round: str | None
     game_date: date | None
     result: str | None
     board_size: int
@@ -111,6 +112,7 @@ def parse_pro_sgf(sgf_text: str) -> ParsedProGame:
     black_rank = _opt("BR")
     white_rank = _opt("WR")
     event = _opt("EV")
+    round_ = _opt("RO")
     result = _opt("RE")
 
     # get_komi()은 KM이 없으면 ValueError가 아니라 0.0을 돌려준다.
@@ -168,6 +170,7 @@ def parse_pro_sgf(sgf_text: str) -> ParsedProGame:
         black_rank=black_rank,
         white_rank=white_rank,
         event=event,
+        round=round_,
         game_date=_parse_dt(dt_raw),
         result=result,
         board_size=size,

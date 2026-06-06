@@ -69,3 +69,21 @@ def test_bad_board_size_rejected() -> None:
 def test_garbage_input_rejected() -> None:
     with pytest.raises(InvalidProSgf):
         parse_pro_sgf("this is not sgf at all")
+
+
+def test_parse_pro_sgf_extracts_round():
+    sgf_text = "(;FF[4]GM[1]SZ[19]EV[10th Chunlan Cup Final]RO[3];B[pd];W[dp])"
+    parsed = parse_pro_sgf(sgf_text)
+    assert parsed.round == "3"
+
+
+def test_parse_pro_sgf_round_none_when_absent():
+    sgf_text = "(;FF[4]GM[1]SZ[19]EV[Dosaku Castle Game];B[pd];W[dp])"
+    parsed = parse_pro_sgf(sgf_text)
+    assert parsed.round is None
+
+
+def test_parse_pro_sgf_round_keeps_final_prefix_text():
+    sgf_text = "(;FF[4]GM[1]SZ[19]RO[Final 2];B[pd];W[dp])"
+    parsed = parse_pro_sgf(sgf_text)
+    assert parsed.round == "Final 2"
