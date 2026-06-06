@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatProEvent } from "@/lib/proEvent";
+import { localizePlayer, localizeRank } from "@/lib/proLocale";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -135,14 +136,14 @@ export function ProGameList() {
                 >
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-sans text-sm text-ink">
-                      {r.black_player}
-                      {r.black_rank && (
-                        <span className="text-ink-faint text-xs"> {r.black_rank}</span>
+                      {localizePlayer(r.black_player, locale)}
+                      {localizeRank(r.black_rank, locale) && (
+                        <span className="text-ink-faint text-xs"> {localizeRank(r.black_rank, locale)}</span>
                       )}
                       <span className="text-ink-faint"> vs </span>
-                      {r.white_player}
-                      {r.white_rank && (
-                        <span className="text-ink-faint text-xs"> {r.white_rank}</span>
+                      {localizePlayer(r.white_player, locale)}
+                      {localizeRank(r.white_rank, locale) && (
+                        <span className="text-ink-faint text-xs"> {localizeRank(r.white_rank, locale)}</span>
                       )}
                     </span>
                     <span className="font-mono text-xs text-ink-faint shrink-0">

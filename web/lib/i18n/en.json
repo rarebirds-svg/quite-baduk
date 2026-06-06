@@ -23,14 +23,6 @@
     "proWorld": "World Titles",
     "proEdition": "{n}",
     "proGameNo": "Game {n}",
-    "proTournament": {
-      "chunlan": "Chunlan Cup",
-      "fujitsu": "Fujitsu Cup",
-      "ing": "Ing Cup",
-      "lg": "LG Cup",
-      "samsung": "Samsung Cup",
-      "toyota": "Toyota Cup"
-    },
     "proStage": {
       "final": "Final",
       "prelim": "Preliminary"

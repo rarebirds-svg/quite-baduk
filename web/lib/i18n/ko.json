@@ -23,14 +23,6 @@
     "proWorld": "세계 기전",
     "proEdition": "제{n}회",
     "proGameNo": "제{n}국",
-    "proTournament": {
-      "chunlan": "춘란배",
-      "fujitsu": "후지쯔배",
-      "ing": "응씨배",
-      "lg": "LG배",
-      "samsung": "삼성화재배",
-      "toyota": "도요타배"
-    },
     "proStage": {
       "final": "결승",
       "prelim": "예선"

@@ -7,6 +7,7 @@ import Board from "@/components/Board";
 import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatProEvent } from "@/lib/proEvent";
+import { localizePlayer, localizeRank } from "@/lib/proLocale";
 import { gtpToXy, replay, type ReplayMove } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
@@ -112,11 +113,13 @@ export default function ProGameWatchPage() {
     return <p className="text-sm text-ink-mute p-4 text-center">…</p>;
   }
 
-  const blackLabel = `${game.black_player}${
-    game.black_rank ? ` ${game.black_rank}` : ""
+  const blackRank = localizeRank(game.black_rank, locale);
+  const whiteRank = localizeRank(game.white_rank, locale);
+  const blackLabel = `${localizePlayer(game.black_player, locale)}${
+    blackRank ? ` ${blackRank}` : ""
   }`;
-  const whiteLabel = `${game.white_player}${
-    game.white_rank ? ` ${game.white_rank}` : ""
+  const whiteLabel = `${localizePlayer(game.white_player, locale)}${
+    whiteRank ? ` ${whiteRank}` : ""
   }`;
 
   return (
