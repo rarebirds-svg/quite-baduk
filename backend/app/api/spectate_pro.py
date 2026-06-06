@@ -64,7 +64,9 @@ async def list_pro_games(
     페이지네이션이 다음 페이지 유무를 판단하는 데 쓴다.
     """
     filters = []
-    if collection in ("masterpiece", "recent", "world"):
+    if collection == "recent":
+        filters.append(ProGame.collection.in_(("recent", "cwi")))
+    elif collection in ("masterpiece", "world"):
         filters.append(ProGame.collection == collection)
     if q and q.strip():
         like = f"%{q.strip()}%"

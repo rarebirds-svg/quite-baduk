@@ -78,6 +78,29 @@ async def test_pro_list_collection_filter(
 
 
 @pytest.mark.asyncio
+async def test_recent_tab_includes_cwi(client: AsyncClient, db_session) -> None:
+    from app.core.sgf.import_sgf import parse_pro_sgf
+    from app.models import ProGame
+    cwi = ProGame.from_parsed(
+        parse_pro_sgf("(;GM[1]FF[4]SZ[19]KM[6.5]EV[CWI A];B[pd];W[dp])"),
+        collection="cwi",
+    )
+    mp = ProGame.from_parsed(
+        parse_pro_sgf("(;GM[1]FF[4]SZ[19]KM[6.5]EV[MP B];B[pd];W[dq])"),
+        collection="masterpiece",
+    )
+    db_session.add_all([cwi, mp])
+    await db_session.commit()
+    await db_session.refresh(cwi)
+    await db_session.refresh(mp)
+    r = await client.get("/api/spectate/pro?collection=recent")
+    assert r.status_code == 200
+    ids = {row["id"] for row in r.json()["rows"]}
+    assert cwi.id in ids
+    assert mp.id not in ids
+
+
+@pytest.mark.asyncio
 async def test_pro_detail_returns_moves(
     client: AsyncClient, db_session
 ) -> None:
