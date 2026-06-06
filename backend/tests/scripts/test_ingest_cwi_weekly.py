@@ -156,8 +156,11 @@ async def test_main_async_caps_new_and_skips_hash(tmp_path, monkeypatch):
     monkeypatch.setattr(httpx, "AsyncClient", patched_client)
 
     from sqlalchemy.ext.asyncio import (
-        AsyncSession, async_sessionmaker, create_async_engine,
+        AsyncSession,
+        async_sessionmaker,
+        create_async_engine,
     )
+
     import app.models  # noqa: F401
     from app.db import Base
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
