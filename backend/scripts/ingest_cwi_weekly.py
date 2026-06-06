@@ -21,6 +21,7 @@ import httpx
 import structlog
 from sqlalchemy import select
 
+from app.core.pro.classify import classify_collection
 from app.core.sgf.import_sgf import InvalidProSgf, ParsedProGame, parse_pro_sgf
 from app.db import AsyncSessionLocal
 from app.models import ProGame
@@ -134,7 +135,11 @@ def save_index_hash(html: str) -> None:
 def _build_pro_game(parsed: ParsedProGame) -> ProGame | None:
     """parse_pro_sgf 결과에서 ProGame 인스턴스 생성. ProGame.from_parsed() 위임."""
     try:
-        return ProGame.from_parsed(parsed, collection="cwi", source_note=CWI_INDEX_URL)
+        return ProGame.from_parsed(
+            parsed,
+            collection=classify_collection(parsed.event),
+            source_note=CWI_INDEX_URL,
+        )
     except (AttributeError, TypeError) as exc:
         log.warning("cwi.progame.build_failed", err=str(exc))
         return None
