@@ -1,12 +1,12 @@
 # 프로 기보 공개 관전 API — 명국선·세계기전·최근 기보 목록과 수순 상세를 제공한다.
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import ColumnElement, func, or_, select
+from sqlalchemy import ColumnElement, UnaryExpression, func, or_, select
 
 from app.core.pro.monthly_pick import InvalidYearMonth, pick_for_month
 from app.core.pro.themes import THEMES, theme_by_slug, theme_query_clause
@@ -32,6 +32,7 @@ class ProGameRow(BaseModel):
     board_size: int
     handicap: int
     move_count: int
+    view_count: int
 
 
 class ProGameList(BaseModel):
@@ -55,6 +56,7 @@ async def list_pro_games(
     db: DbSession,
     collection: str | None = Query(None),
     q: str | None = Query(None),
+    sort: str = Query("recent"),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> ProGameList:
@@ -63,11 +65,15 @@ async def list_pro_games(
     total 은 limit/offset 적용 전, 필터만 반영한 전체 건수 — 프론트
     페이지네이션이 다음 페이지 유무를 판단하는 데 쓴다.
     """
+    cutoff = date.today() - timedelta(days=365)
     filters: list[ColumnElement[bool]] = []
     if collection == "recent":
-        filters.append(ProGame.collection.in_(("recent", "cwi")))
+        filters.append(ProGame.game_date >= cutoff)
     elif collection in ("masterpiece", "world"):
         filters.append(ProGame.collection == collection)
+        filters.append(
+            or_(ProGame.game_date < cutoff, ProGame.game_date.is_(None))
+        )
     if q and q.strip():
         like = f"%{q.strip()}%"
         filters.append(
@@ -82,10 +88,21 @@ async def list_pro_games(
             select(func.count()).select_from(ProGame).where(*filters)
         )
     ).scalar_one()
+    order: tuple[UnaryExpression[Any], ...]
+    if sort == "oldest":
+        order = (ProGame.game_date.asc().nullslast(), ProGame.id.asc())
+    elif sort == "popular":
+        order = (
+            ProGame.view_count.desc(),
+            ProGame.game_date.desc().nullslast(),
+            ProGame.id.desc(),
+        )
+    else:  # recent (기본 · 알 수 없는 값 폴백)
+        order = (ProGame.game_date.desc().nullslast(), ProGame.id.desc())
     stmt = (
         select(ProGame)
         .where(*filters)
-        .order_by(ProGame.game_date.desc().nullslast(), ProGame.id.desc())
+        .order_by(*order)
         .limit(limit)
         .offset(offset)
     )
@@ -197,6 +214,10 @@ async def get_pro_game(
     ).scalar_one_or_none()
     if game is None:
         raise HTTPException(status_code=404, detail="pro_game_not_found")
+
+    game.view_count += 1
+    await db.commit()
+    await db.refresh(game)
 
     parsed = parse_pro_sgf(game.sgf)
     base = ProGameRow.model_validate(game, from_attributes=True)

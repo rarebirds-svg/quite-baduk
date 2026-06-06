@@ -1,15 +1,30 @@
 # 프로 기보 공개 조회 API(/api/spectate/pro) 계약 테스트
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 import pytest
 from httpx import AsyncClient
 
 from app.core.sgf.import_sgf import parse_pro_sgf
 from app.models import ProGame
 
+
+async def _add(db_session, *, collection, game_date, event="E", views=0, suffix="pd"):
+    g = ProGame.from_parsed(
+        parse_pro_sgf(f"(;GM[1]FF[4]SZ[19]KM[6.5]EV[{event}];B[{suffix}];W[dp])"),
+        collection=collection,
+    )
+    g.game_date = game_date
+    g.view_count = views
+    db_session.add(g)
+    await db_session.commit()
+    await db_session.refresh(g)
+    return g.id
+
 _SGF = (
     "(;GM[1]FF[4]SZ[19]KM[6.5]PB[Lee]PW[Cho]BR[9p]WR[9p]"
-    "EV[Demo Cup]DT[2026-02-01]RE[W+2.5];B[pd];W[dp];B[pp];W[dd])"
+    "EV[Demo Cup]DT[2024-02-01]RE[W+2.5];B[pd];W[dp];B[pp];W[dd])"
 )
 
 
@@ -78,26 +93,52 @@ async def test_pro_list_collection_filter(
 
 
 @pytest.mark.asyncio
-async def test_recent_tab_includes_cwi(client: AsyncClient, db_session) -> None:
-    from app.core.sgf.import_sgf import parse_pro_sgf
-    from app.models import ProGame
-    cwi = ProGame.from_parsed(
-        parse_pro_sgf("(;GM[1]FF[4]SZ[19]KM[6.5]EV[CWI A];B[pd];W[dp])"),
-        collection="cwi",
-    )
-    mp = ProGame.from_parsed(
-        parse_pro_sgf("(;GM[1]FF[4]SZ[19]KM[6.5]EV[MP B];B[pd];W[dq])"),
-        collection="masterpiece",
-    )
-    db_session.add_all([cwi, mp])
-    await db_session.commit()
-    await db_session.refresh(cwi)
-    await db_session.refresh(mp)
+async def test_recent_tab_only_within_one_year(client, db_session):
+    recent_id = await _add(db_session, collection="masterpiece",
+                           game_date=date.today() - timedelta(days=30), suffix="pd")
+    old_id = await _add(db_session, collection="masterpiece",
+                        game_date=date.today() - timedelta(days=400), suffix="pp")
+    null_id = await _add(db_session, collection="world",
+                         game_date=None, suffix="dd")
     r = await client.get("/api/spectate/pro?collection=recent")
-    assert r.status_code == 200
     ids = {row["id"] for row in r.json()["rows"]}
-    assert cwi.id in ids
-    assert mp.id not in ids
+    assert recent_id in ids
+    assert old_id not in ids and null_id not in ids
+
+
+@pytest.mark.asyncio
+async def test_masterpiece_tab_excludes_recent_includes_null(client, db_session):
+    recent_id = await _add(db_session, collection="masterpiece",
+                           game_date=date.today() - timedelta(days=30), suffix="pd")
+    old_id = await _add(db_session, collection="masterpiece",
+                        game_date=date.today() - timedelta(days=400), suffix="pp")
+    null_id = await _add(db_session, collection="masterpiece",
+                         game_date=None, suffix="dd")
+    r = await client.get("/api/spectate/pro?collection=masterpiece")
+    ids = {row["id"] for row in r.json()["rows"]}
+    assert old_id in ids and null_id in ids
+    assert recent_id not in ids
+
+
+@pytest.mark.asyncio
+async def test_sort_popular(client, db_session):
+    low = await _add(db_session, collection="masterpiece",
+                     game_date=date.today() - timedelta(days=400), views=1, suffix="pd")
+    high = await _add(db_session, collection="masterpiece",
+                      game_date=date.today() - timedelta(days=400), views=99, suffix="pp")
+    r = await client.get("/api/spectate/pro?collection=masterpiece&sort=popular")
+    ids = [row["id"] for row in r.json()["rows"]]
+    assert ids.index(high) < ids.index(low)
+
+
+@pytest.mark.asyncio
+async def test_detail_increments_view_count(client, db_session):
+    gid = await _add(db_session, collection="masterpiece",
+                     game_date=date.today() - timedelta(days=400), views=5, suffix="pd")
+    r1 = await client.get(f"/api/spectate/pro/{gid}")
+    assert r1.json()["view_count"] == 6
+    r2 = await client.get(f"/api/spectate/pro/{gid}")
+    assert r2.json()["view_count"] == 7
 
 
 @pytest.mark.asyncio
@@ -125,7 +166,7 @@ def _sgf(n: int) -> str:
     """n 마다 다른 content_hash 가 나오도록 결과값을 바꾼 SGF."""
     return (
         f"(;GM[1]FF[4]SZ[19]KM[6.5]PB[Lee]PW[Cho]BR[9p]WR[9p]"
-        f"EV[Demo Cup]DT[2026-02-01]RE[W+{n}.5];B[pd];W[dp];B[pp];W[dd])"
+        f"EV[Demo Cup]DT[2024-02-01]RE[W+{n}.5];B[pd];W[dp];B[pp];W[dd])"
     )
 
 
@@ -300,7 +341,7 @@ async def test_pick_monthly_invalid_format(client: AsyncClient) -> None:
 
 _SGF_ROUND = (
     "(;GM[1]FF[4]SZ[19]KM[6.5]PB[Lee]PW[Cho]BR[9p]WR[9p]"
-    "EV[10th Chunlan Cup Final]RO[3]DT[2026-03-01]RE[B+R];B[pd];W[dp])"
+    "EV[10th Chunlan Cup Final]RO[3]DT[2024-03-01]RE[B+R];B[pd];W[dp])"
 )
 
 
