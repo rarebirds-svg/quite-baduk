@@ -29,6 +29,8 @@ class ProGame(Base):
     handicap: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     komi: Mapped[float] = mapped_column(Float, nullable=False, default=6.5)
     move_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # 인기순 정렬용 조회수 — 상세 열람 시 +1.
+    view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     # 해설(C[]) 등 마크업을 제거한 정제 SGF 원문.
     sgf: Mapped[str] = mapped_column(Text, nullable=False)
     # 출처 메모 — 관리자만 보는 비공개 필드.
