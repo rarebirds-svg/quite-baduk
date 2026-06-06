@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Board from "@/components/Board";
 import { api, ApiError } from "@/lib/api";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
+import { formatProEvent } from "@/lib/proEvent";
 import { gtpToXy, replay, type ReplayMove } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
@@ -22,6 +23,7 @@ interface ProGameDetail {
   black_rank: string | null;
   white_rank: string | null;
   event: string | null;
+  round: string | null;
   game_date: string | null;
   result: string | null;
   board_size: number;
@@ -33,6 +35,7 @@ interface ProGameDetail {
 
 export default function ProGameWatchPage() {
   const t = useT();
+  const [locale] = useLocale();
   const params = useParams<{ id: string }>();
   const gameId = parseInt(params.id, 10);
 
@@ -144,7 +147,9 @@ export default function ProGameWatchPage() {
 
       {(game.event || game.game_date) && (
         <p className="font-sans text-xs text-ink-faint">
-          {[game.event, game.game_date].filter(Boolean).join(" · ")}
+          {[formatProEvent(game.event, game.round, locale) || null, game.game_date]
+            .filter(Boolean)
+            .join(" · ")}
         </p>
       )}
 
