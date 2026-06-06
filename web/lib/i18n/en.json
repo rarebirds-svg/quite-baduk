@@ -21,6 +21,20 @@
     "tabPro": "Pro Records",
     "proMasterpiece": "Masterpieces",
     "proWorld": "World Titles",
+    "proEdition": "{n}",
+    "proGameNo": "Game {n}",
+    "proTournament": {
+      "chunlan": "Chunlan Cup",
+      "fujitsu": "Fujitsu Cup",
+      "ing": "Ing Cup",
+      "lg": "LG Cup",
+      "samsung": "Samsung Cup",
+      "toyota": "Toyota Cup"
+    },
+    "proStage": {
+      "final": "Final",
+      "prelim": "Preliminary"
+    },
     "proRecent": "Recent",
     "proSearch": "Search player or event",
     "proEmpty": "No pro records yet.",
