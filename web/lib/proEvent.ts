@@ -1,37 +1,38 @@
 // 프로 기보 EV(기전)·RO(국수)를 로케일별 표기 문자열로 조립한다.
 import { t, type Locale } from "@/lib/i18n";
-
-// EV 이름 토큰(소문자) → i18n 기전 키.
-const NAME_TO_KEY: Record<string, string> = {
-  chunlan: "chunlan",
-  fujitsu: "fujitsu",
-  ing: "ing",
-  lg: "lg",
-  samsung: "samsung",
-  toyota: "toyota",
-};
-
-const EVENT_RE = /^(?:(\d+)(?:st|nd|rd|th)\s+)?(.+?)\s+Cup(?:\s+(Final))?(?:,\s*(.+))?$/i;
+import { TOURNAMENT_KO } from "@/lib/proLocale";
 
 interface ParsedEvent {
   editionNum?: number;
-  tournamentKey?: string;
+  base: string;
+  baseKo?: string;
   stage?: "final" | "prelim";
 }
 
+// "10th Chunlan Cup Final" / "Castle Game" / "Ing Cup, Korean preliminary" 등을 분해.
 function parseEvent(event: string): ParsedEvent {
-  const m = EVENT_RE.exec(event.trim());
-  if (!m) return {};
-  const [, edition, name, finalWord, tail] = m;
-  const key = NAME_TO_KEY[name.trim().toLowerCase()];
+  let rest = event.trim();
+  // 선행 서수
+  let editionNum: number | undefined;
+  const ord = /^(\d+)(?:st|nd|rd|th)\s+/i.exec(rest);
+  if (ord) {
+    editionNum = Number(ord[1]);
+    rest = rest.slice(ord[0].length);
+  }
+  // 단계 분리
   let stage: "final" | "prelim" | undefined;
-  if (tail && /prelim/i.test(tail)) stage = "prelim";
-  else if (finalWord) stage = "final";
-  return {
-    editionNum: edition ? Number(edition) : undefined,
-    tournamentKey: key,
-    stage,
-  };
+  const prelim = /,\s*[^,]*prelim[^,]*$/i.exec(rest);
+  if (prelim) {
+    stage = "prelim";
+    rest = rest.slice(0, prelim.index);
+  } else if (/\s+Final\b/i.test(rest)) {
+    stage = "final";
+    rest = rest.replace(/\s+Final\b.*$/i, "");
+  } else {
+    rest = rest.replace(/\s+Title\b.*$/i, "");
+  }
+  const base = rest.trim();
+  return { editionNum, base, baseKo: TOURNAMENT_KO[base], stage };
 }
 
 // RO 원문에서 후행 정수(국수)를 뽑는다. "Final 2" → 2, "Final" → undefined.
@@ -47,32 +48,24 @@ export function formatProEvent(
   locale: Locale,
 ): string {
   if (!event) return "";
-  const { editionNum, tournamentKey, stage } = parseEvent(event);
+  const { editionNum, baseKo, stage } = parseEvent(event);
   const gameNo = parseGameNo(round);
 
-  // 미지 기전 — 원문을 살리고 국수만 로케일에 맞게 덧붙인다.
-  if (!tournamentKey) {
+  // 미매핑 기전 — 원문 + 국수만 로케일 접미.
+  if (locale !== "ko" || !baseKo) {
     if (gameNo === undefined) return event;
     return locale === "ko"
       ? `${event} ${t("spectate.proGameNo", { n: gameNo })}`
       : `${event} · ${t("spectate.proGameNo", { n: gameNo })}`;
   }
 
-  // 국수가 있으면 결승 best-of 시리즈를 함의 → stage 보강.
+  // ko & 매핑 — 조립. 국수가 있으면 결승 시리즈 함의 → stage 보강.
   const stageKey = stage ?? (gameNo !== undefined ? "final" : undefined);
-
-  if (locale === "ko") {
-    const parts = [
-      editionNum !== undefined ? t("spectate.proEdition", { n: editionNum }) : null,
-      t(`spectate.proTournament.${tournamentKey}`),
-      stageKey ? t(`spectate.proStage.${stageKey}`) : null,
-      gameNo !== undefined ? t("spectate.proGameNo", { n: gameNo }) : null,
-    ].filter(Boolean);
-    return parts.join(" ");
-  }
-
-  // en — 국제 표준 영문 원문 유지 + Game N.
-  return gameNo === undefined
-    ? event
-    : `${event} · ${t("spectate.proGameNo", { n: gameNo })}`;
+  const parts = [
+    editionNum !== undefined ? t("spectate.proEdition", { n: editionNum }) : null,
+    baseKo,
+    stageKey ? t(`spectate.proStage.${stageKey}`) : null,
+    gameNo !== undefined ? t("spectate.proGameNo", { n: gameNo }) : null,
+  ].filter(Boolean);
+  return parts.join(" ");
 }

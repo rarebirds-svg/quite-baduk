@@ -45,3 +45,20 @@ describe("formatProEvent (en)", () => {
     );
   });
 });
+
+describe("formatProEvent — 일반 base", () => {
+  it("ko: 비-Cup 기전도 한글 (Castle Game)", () => {
+    setLocale("ko");
+    expect(formatProEvent("Castle Game", null, "ko")).toBe("어성기");
+  });
+  it("ko: 서수+base+국수 (Agon-Kiriyama)", () => {
+    setLocale("ko");
+    expect(formatProEvent("32nd Agon-Kiriyama Cup", "4", "ko")).toBe(
+      "제32회 아곤·기리야마배 결승 제4국",
+    );
+  });
+  it("ko: 미매핑 base는 원문 폴백", () => {
+    setLocale("ko");
+    expect(formatProEvent("All Japan #1", null, "ko")).toBe("All Japan #1");
+  });
+});
