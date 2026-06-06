@@ -273,3 +273,23 @@ async def test_pick_monthly_deterministic(client: AsyncClient) -> None:
 async def test_pick_monthly_invalid_format(client: AsyncClient) -> None:
     resp = await client.get("/api/spectate/pro/pick/monthly/2026-13")
     assert resp.status_code == 400
+
+
+_SGF_ROUND = (
+    "(;GM[1]FF[4]SZ[19]KM[6.5]PB[Lee]PW[Cho]BR[9p]WR[9p]"
+    "EV[10th Chunlan Cup Final]RO[3]DT[2026-03-01]RE[B+R];B[pd];W[dp])"
+)
+
+
+@pytest.mark.asyncio
+async def test_list_pro_games_includes_round(
+    client: AsyncClient, db_session
+) -> None:
+    gid = await _insert_pro_game_sgf(db_session, _SGF_ROUND, "world")
+    await _signup(client, "watcher")
+    r = await client.get("/api/spectate/pro", params={"collection": "world"})
+    assert r.status_code == 200
+    rows = r.json()["rows"]
+    row = next((x for x in rows if x["id"] == gid), None)
+    assert row is not None
+    assert row["round"] == "3"

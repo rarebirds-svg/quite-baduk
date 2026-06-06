@@ -26,6 +26,7 @@ class ProGameRow(BaseModel):
     black_rank: str | None
     white_rank: str | None
     event: str | None
+    round: str | None
     game_date: date | None
     result: str | None
     board_size: int
