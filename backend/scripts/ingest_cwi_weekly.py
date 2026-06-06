@@ -62,6 +62,22 @@ def extract_sgf_links(html: str, base_url: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+def extract_subdir_links(html: str, base_url: str) -> list[str]:
+    """HTML에서 하위 디렉터리(/ 로 끝나는) 링크를 절대 URL로 추출. CWI만 통과.
+    Apache 정렬 링크(?…)·상위(prefix 밖)·외부 도메인은 제외한다."""
+    hrefs = re.findall(r'href=["\']([^"\']+)["\']', html, flags=re.IGNORECASE)
+    out: list[str] = []
+    for href in hrefs:
+        if not href.endswith("/"):
+            continue
+        if href.startswith("?") or href.startswith("../") or href == "./":
+            continue
+        absolute = urljoin(base_url, href)
+        if is_cwi_url(absolute):
+            out.append(absolute)
+    return list(dict.fromkeys(out))
+
+
 def index_changed(html: str) -> bool:
     """index 페이지 md5가 캐시와 다르면 True (재처리 필요)."""
     current = hashlib.md5(html.encode("utf-8"), usedforsecurity=False).hexdigest()

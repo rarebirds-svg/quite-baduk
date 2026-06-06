@@ -7,6 +7,7 @@ import pytest
 
 from scripts.ingest_cwi_weekly import (
     extract_sgf_links,
+    extract_subdir_links,
     is_cwi_url,
 )
 
@@ -39,6 +40,21 @@ def test_extract_sgf_links_returns_absolute_cwi_urls():
     assert all(is_cwi_url(u) for u in links)
     assert "https://evil.com/danger.sgf" not in links
     assert not any(u.endswith(".html") for u in links)
+
+
+def test_extract_subdir_links_returns_cwi_dirs_only():
+    html = (
+        '<html><body>'
+        '<a href="games/Agon/">Agon</a>'
+        '<a href="?C=N;O=A">sort</a>'
+        '<a href="/~aeb/go/">parent</a>'
+        '<a href="foo.sgf">file</a>'
+        '<a href="https://evil.com/x/">evil</a>'
+        '</body></html>'
+    )
+    base = "https://homepages.cwi.nl/~aeb/go/games/"
+    dirs = extract_subdir_links(html, base)
+    assert dirs == ["https://homepages.cwi.nl/~aeb/go/games/games/Agon/"]
 
 
 def test_index_hash_skips_when_unchanged(tmp_path, monkeypatch):
