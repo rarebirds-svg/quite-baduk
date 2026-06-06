@@ -21,6 +21,8 @@ class ProGame(Base):
     black_rank: Mapped[str | None] = mapped_column(String(16), nullable=True)
     white_rank: Mapped[str | None] = mapped_column(String(16), nullable=True)
     event: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # SGF RO 원문 — 결승 제N국 등. 표기 로컬라이즈는 web 계층.
+    round: Mapped[str | None] = mapped_column(String(32), nullable=True)
     game_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     result: Mapped[str | None] = mapped_column(String(16), nullable=True)
     board_size: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -53,6 +55,7 @@ class ProGame(Base):
             black_rank=parsed.black_rank,
             white_rank=parsed.white_rank,
             event=parsed.event,
+            round=parsed.round,
             game_date=parsed.game_date,
             result=parsed.result,
             board_size=parsed.board_size,
