@@ -9,6 +9,9 @@ import { formatProEvent } from "@/lib/proEvent";
 import { localizePlayer, localizeRank } from "@/lib/proLocale";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select";
 
 interface ProRow {
   id: number;
@@ -23,6 +26,7 @@ interface ProRow {
   result: string | null;
   board_size: number;
   move_count: number;
+  view_count: number;
 }
 
 interface ProListResponse {
@@ -48,6 +52,7 @@ export function ProGameList() {
   const [page, setPage] = useState(0);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
+  const [sort, setSort] = useState<"recent" | "oldest" | "popular">("recent");
   const [data, setData] = useState<ProListResponse | null>(null);
 
   // 검색어 디바운스 — 입력이 멎고 300ms 뒤 서버 질의. 새 검색은 첫 페이지로.
@@ -64,6 +69,7 @@ export function ProGameList() {
     setData(null);
     const params = new URLSearchParams({
       collection,
+      sort,
       limit: String(PAGE_SIZE),
       offset: String(page * PAGE_SIZE),
     });
@@ -82,7 +88,7 @@ export function ProGameList() {
     return () => {
       cancelled = true;
     };
-  }, [collection, page, debouncedQ, router]);
+  }, [collection, page, debouncedQ, sort, router]);
 
   const rows = data?.rows ?? null;
   const total = data?.total ?? 0;
@@ -119,6 +125,22 @@ export function ProGameList() {
           placeholder={t("spectate.proSearch")}
           className="max-w-xs"
         />
+        <Select
+          value={sort}
+          onValueChange={(v) => {
+            setSort(v as "recent" | "oldest" | "popular");
+            setPage(0);
+          }}
+        >
+          <SelectTrigger aria-label={t("spectate.sortLabel")} className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">{t("spectate.sortRecent")}</SelectItem>
+            <SelectItem value="oldest">{t("spectate.sortOldest")}</SelectItem>
+            <SelectItem value="popular">{t("spectate.sortPopular")}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {rows === null ? (

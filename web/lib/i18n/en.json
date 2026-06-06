@@ -33,7 +33,11 @@
     "proNotFound": "Pro record not found.",
     "proBackToList": "Pro records",
     "proPrev": "Prev",
-    "proNext": "Next"
+    "proNext": "Next",
+    "sortLabel": "Sort",
+    "sortRecent": "Newest",
+    "sortOldest": "Oldest",
+    "sortPopular": "Popular"
   },
   "admin": {
     "heading": "Admin console",

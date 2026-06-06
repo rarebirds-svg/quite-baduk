@@ -33,7 +33,11 @@
     "proNotFound": "프로 기보를 찾을 수 없습니다.",
     "proBackToList": "프로 기보 목록",
     "proPrev": "이전",
-    "proNext": "다음"
+    "proNext": "다음",
+    "sortLabel": "정렬",
+    "sortRecent": "최근순",
+    "sortOldest": "오래된순",
+    "sortPopular": "인기순"
   },
   "admin": {
     "heading": "관리자 콘솔",
