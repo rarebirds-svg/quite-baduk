@@ -30,7 +30,9 @@
 
    추가 운영 카운트:
    ```bash
-   grep -c '^- ' docs/ops/state/pending-approvals.md  # 보류 승인
+   # 보류 승인 — '## 대기 중'~'## 처리 완료' 구간의 실제 AP 항목(### AP-)만 센다.
+   # (전체 '- ' 글머리를 세면 '처리 완료' 섹션 설명 줄까지 잡혀 오집계됨.)
+   awk '/## 대기 중/{f=1;next} /## 처리 완료/{f=0} f && /^### AP-/{c++} END{print c+0}' docs/ops/state/pending-approvals.md  # 보류 승인
    ls web/content/glossary/*.md 2>/dev/null | grep -v gitkeep | wc -l  # 글로서리 게시 수
    ls web/content/faq/*.md 2>/dev/null | grep -v gitkeep | wc -l  # FAQ 게시 수
    ```
