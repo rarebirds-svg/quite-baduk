@@ -19,7 +19,6 @@ import { useT, useLocale } from "@/lib/i18n";
 import { formatRank, type Rank } from "@/components/RankPicker";
 import { playStoneClick } from "@/lib/soundfx";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
-import { SupportNudge } from "@/components/SupportNudge";
 import { HintNudge } from "@/components/HintNudge";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { DataBlock } from "@/components/editorial/DataBlock";
@@ -518,7 +517,6 @@ export default function PlayPage() {
                 {t("game.viewKifu")}
               </button>
             </div>
-            <SupportNudge context="game-end" />
           </>
         )}
       </div>
