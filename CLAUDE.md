@@ -36,6 +36,8 @@ npm run lint                            # next lint / eslint
 npm run type-check                      # tsc --noEmit
 npm test -- --run                       # Vitest (jsdom)
 npm test -- --run tests/board.test.ts   # single file
+bash scripts/build-app.sh               # 앱 셸 정적 export (web/out, Capacitor용)
+npx cap sync android                    # export 결과를 android/ 네이티브 프로젝트에 동기화
 ```
 
 ### End-to-end (from repo root)
@@ -74,6 +76,10 @@ Process-wide singletons: one shared `KataGoAdapter`, a `dict[game_id, asyncio.Lo
 ### Frontend state — `web/store/`
 
 Zustand: `authStore` (user session), `gameStore` (board + move list + analysis). Board rendering is SVG in `components/Board.tsx`. WebSocket client in `lib/ws.ts` reconnects on disconnect and reconciles with the `state` payload from the server (authoritative). `lib/i18n/` is a small homegrown dictionary loader, not i18next.
+
+### App shell (Capacitor) — `web/capacitor.config.ts`, `web/android/`
+
+Capacitor 8 기반 모바일 셸. `BUILD_TARGET=app`이면 `next.config.js`가 `output:"export"`로 전환되고, `scripts/build-app.sh`가 웹 전용 라우트(admin·faq·glossary·picks·themes·[id] 동적 세그먼트 등)를 임시 제외해 `web/out`을 만든다. 앱 셸은 쿠키 대신 Bearer 토큰(`lib/sessionToken.ts`, Capacitor Preferences)을 쓰고, 동적 화면은 쿼리 진입점(`/game/play?id=` 등, `lib/routes.ts` 헬퍼)으로 진입한다. 네이티브 브리지는 `components/AppShellBridge.tsx`. APK 빌드는 JDK 17 + Android SDK 필요: `cd android && ./gradlew assembleDebug`.
 
 ### Auth
 
