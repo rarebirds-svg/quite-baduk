@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, errorMessageKey } from "@/lib/api";
 import { useAuthStore, type Session } from "@/store/authStore";
+import { setSessionToken } from "../lib/sessionToken";
 import { useT } from "@/lib/i18n";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -70,6 +71,7 @@ export default function NicknameGate() {
         method: "POST",
         body: JSON.stringify({ nickname: n }),
       });
+      await setSessionToken(sess.token ?? null);
       setSession(sess);
       router.replace("/game/new");
     } catch (e) {
