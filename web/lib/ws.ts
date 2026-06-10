@@ -1,3 +1,7 @@
+import { API_BASE, authHeaders } from "./api";
+import { IS_APP_SHELL } from "./appShell";
+import { getSessionToken } from "./sessionToken";
+
 export interface ScoreResultMsg {
   type: "score_result";
   black_territory: number;
@@ -83,8 +87,11 @@ export function openGameWS(
           /^http/,
           "ws",
         ));
-  const url = `${base}/api/ws/games/${gameId}`;
-  const probeUrl = `/api/games/${gameId}`;
+  const wsToken = IS_APP_SHELL ? getSessionToken() : null;
+  const url =
+    `${base}/api/ws/games/${gameId}` +
+    (wsToken ? `?token=${encodeURIComponent(wsToken)}` : "");
+  const probeUrl = `${API_BASE}/api/games/${gameId}`;
   let ws = new WebSocket(url);
   let closed = false;
 
@@ -118,7 +125,10 @@ export function openGameWS(
         // the caller surface the error. Network failures fall through to
         // the normal retry — they're usually transient.
         try {
-          const r = await fetch(probeUrl, { credentials: "same-origin" });
+          const r = await fetch(probeUrl, {
+            credentials: IS_APP_SHELL ? "include" : "same-origin",
+            headers: authHeaders(),
+          });
           if (r.status === 401 || r.status === 403 || r.status === 404) {
             closed = true;
             options.onAuthLost?.();
