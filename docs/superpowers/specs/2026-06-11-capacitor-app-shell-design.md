@@ -33,8 +33,10 @@ export 번들**(원격 URL 모드 아님) — 오프라인 화면, 빠른 초기
 
 ### 1. 리포 구조와 빌드 모드
 
-- `mobile/` 디렉토리 신설 — backend/web/e2e와 같은 급의 형제 디렉토리. Capacitor 프로젝트
-  (`capacitor.config.ts`, `android/`, 후속으로 `ios/`). `webDir`는 `../web/out`.
+- Capacitor 프로젝트는 **`web/` 내부**에 둔다 (`web/capacitor.config.ts`, `web/android/`,
+  후속으로 `web/ios/`). `webDir`는 `out`. Capacitor는 자기 루트의 `package.json`에서
+  플러그인을 감지하므로 별도 `mobile/` 디렉토리로 분리하면 플러그인 등록이 깨진다.
+  (2026-06-11 구현 조사 후 보정 — 원안은 `mobile/` 형제 디렉토리였음.)
 - `web/next.config.js`를 `BUILD_TARGET=app` 환경변수로 분기.
   - 앱 빌드: `output:"export"`, rewrite 없음.
   - 웹 prod: 기존 `standalone` + rewrite 그대로 — **웹 배포 경로 불변**.
@@ -85,7 +87,8 @@ export 번들**(원격 URL 모드 아님) — 오프라인 화면, 빠른 초기
 - `@capacitor/app` — 하드웨어 뒤로가기 처리(Android 필수), 백그라운드 복귀 시 WS 재동기화.
 - `@capacitor/haptics` — 착수 진동 (향후 iOS 4.2 방어 자산).
 - `@capacitor/splash-screen` / `@capacitor/status-bar` — Editorial 토큰 색상 적용.
-- `@capacitor/network` — 오프라인 안내 화면 (심사 단골 테스트).
+- 오프라인 안내 화면 — 브라우저 `online`/`offline` 이벤트 사용 (WebView에서 동일 동작,
+  `@capacitor/network` 플러그인 불필요. 2026-06-11 보정).
 - `@capacitor/preferences` — 세션 토큰 저장.
 - 푸시·딥링크·공유는 v1 제외.
 
