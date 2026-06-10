@@ -63,6 +63,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   const [locale] = useLocale();
   const router = useRouter();
   const g = useGameStore();
+  const resetGame = useGameStore((s) => s.reset);
   const nickname = useAuthStore((s) => s.session?.nickname ?? null);
   const setSession = useAuthStore((s) => s.setSession);
   const [meta, setMeta] = useState<GameMeta | null>(null);
@@ -117,10 +118,10 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
 
   const loadMeta = useCallback(() => {
     api<GameMeta>(`/api/games/${gameId}`).then((detail) => {
-      g.reset(detail.board_size);
+      resetGame(detail.board_size);
       setMeta(detail);
     });
-  }, [gameId, g]);
+  }, [gameId, resetGame]);
 
   useEffect(() => {
     const onResume = () => void loadMeta();
