@@ -3,19 +3,25 @@
 import Link from "next/link";
 import { useT } from "@/lib/i18n";
 import { BrandMark } from "@/components/editorial/BrandMark";
+import { IS_APP_SHELL } from "@/lib/appShell";
 
-const FOOTER_LINKS = [
+const ALL_FOOTER_LINKS = [
   { href: "/spectate/pro", key: "home.footerPro" },
   { href: "/glossary", key: "home.footerGlossary" },
   { href: "/faq", key: "home.footerFaq" },
   { href: "/privacy", key: "home.footerPrivacy" },
   { href: "/terms", key: "home.footerTerms" },
   { href: "/support", key: "home.footerSupport" },
-] as const;
+];
+
+const SUPPORT_HREFS = new Set(["/support", "/supporters"]);
 
 export default function Footer() {
   const t = useT();
   const year = new Date().getFullYear();
+  const links = IS_APP_SHELL
+    ? ALL_FOOTER_LINKS.filter((l) => !SUPPORT_HREFS.has(l.href))
+    : ALL_FOOTER_LINKS;
 
   return (
     <footer className="mt-20 border-t border-ink-faint">
@@ -44,7 +50,7 @@ export default function Footer() {
             className="flex flex-col gap-2 sm:items-end"
           >
             <ul className="flex flex-wrap gap-x-5 gap-y-2">
-              {FOOTER_LINKS.map((link) => (
+              {links.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}

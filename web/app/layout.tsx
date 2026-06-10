@@ -3,6 +3,7 @@ import "./globals.css";
 import TopNav from "@/components/TopNav";
 import Footer from "@/components/Footer";
 import AuthGate from "@/components/AuthGate";
+import OfflineBanner from "@/components/OfflineBanner";
 import { ThemeProviderClient } from "@/components/ThemeProviderClient";
 import { fontVariables } from "@/lib/fonts";
 import { Toaster } from "sonner";
@@ -141,6 +142,7 @@ export default function RootLayout({
       </head>
       <body className="bg-paper text-ink">
         <ThemeProviderClient>
+          <OfflineBanner />
           <AuthGate>
             <div className="flex min-h-dvh flex-col">
               <TopNav />
