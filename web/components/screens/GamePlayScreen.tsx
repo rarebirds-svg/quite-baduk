@@ -48,7 +48,6 @@ import {
   useNavigationGuard,
   resolveNavigation,
 } from "@/lib/hooks/useNavigationGuard";
-import { APP_RESUMED_EVENT } from "@/components/AppShellBridge";
 
 interface GameMeta {
   board_size: number;
@@ -123,12 +122,6 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
       setMeta(detail);
     });
   }, [gameId, resetGame]);
-
-  useEffect(() => {
-    const onResume = () => void loadMeta();
-    window.addEventListener(APP_RESUMED_EVENT, onResume);
-    return () => window.removeEventListener(APP_RESUMED_EVENT, onResume);
-  }, [loadMeta]);
 
   // A — 첫 대국 1회 힌트 코치마크. localStorage에 본 기록이 없으면 표시.
   useEffect(() => {
