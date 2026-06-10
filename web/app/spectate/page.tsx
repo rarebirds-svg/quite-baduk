@@ -18,6 +18,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ProGameList } from "@/components/ProGameList";
+import { spectateWatchHref } from "@/lib/routes";
 
 interface SpectateRow {
   id: number;
@@ -190,7 +191,7 @@ function SpectateGrid({
         return (
           <li key={r.id}>
             <Link
-              href={`/spectate/${r.id}`}
+              href={spectateWatchHref(r.id)}
               className="block border border-ink-faint p-3 hover:bg-paper-deep transition-base"
             >
               <div className="flex items-baseline justify-between gap-2">

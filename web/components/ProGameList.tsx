@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
+import { proGameHref } from "@/lib/routes";
 
 interface ProRow {
   id: number;
@@ -153,7 +154,7 @@ export function ProGameList() {
             {rows.map((r) => (
               <li key={r.id}>
                 <Link
-                  href={`/spectate/pro/${r.id}`}
+                  href={proGameHref(r.id)}
                   className="block border border-ink-faint p-3 hover:bg-paper-deep transition-base"
                 >
                   <div className="flex items-baseline justify-between gap-2">
