@@ -1,6 +1,6 @@
 "use client";
 // 대국 진행 화면 본체 — path/query 두 진입점이 공유한다.
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Board from "@/components/Board";
 import GameControls from "@/components/GameControls";
@@ -47,6 +47,7 @@ import {
   useNavigationGuard,
   resolveNavigation,
 } from "@/lib/hooks/useNavigationGuard";
+import { APP_RESUMED_EVENT } from "@/components/AppShellBridge";
 
 interface GameMeta {
   board_size: number;
@@ -114,6 +115,19 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
     onRequest: () => setPendingLeave(true),
   });
 
+  const loadMeta = useCallback(() => {
+    api<GameMeta>(`/api/games/${gameId}`).then((detail) => {
+      g.reset(detail.board_size);
+      setMeta(detail);
+    });
+  }, [gameId, g]);
+
+  useEffect(() => {
+    const onResume = () => void loadMeta();
+    window.addEventListener(APP_RESUMED_EVENT, onResume);
+    return () => window.removeEventListener(APP_RESUMED_EVENT, onResume);
+  }, [loadMeta]);
+
   // A — 첫 대국 1회 힌트 코치마크. localStorage에 본 기록이 없으면 표시.
   useEffect(() => {
     try {
@@ -136,10 +150,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   }, [ready, g.gameOver, g.aiThinking, g.moveCount]);
 
   useEffect(() => {
-    api<GameMeta>(`/api/games/${gameId}`).then((detail) => {
-      g.reset(detail.board_size);
-      setMeta(detail);
-    });
+    loadMeta();
 
     const ws = openGameWS(gameId, (msg: WSMessage) => {
       if (msg.type === "state") {
