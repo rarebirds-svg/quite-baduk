@@ -14,6 +14,7 @@ import {
 import { useGameStore, UNDO_LIMIT, emaWinrate } from "@/store/gameStore";
 import { useAuthStore } from "@/store/authStore";
 import { api } from "@/lib/api";
+import { setSessionToken } from "@/lib/sessionToken";
 import { applyMoveWithCaptures, gtpToXy, xyToGtp } from "@/lib/board";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank, type Rank } from "@/components/RankPicker";
@@ -243,6 +244,7 @@ export default function PlayPage() {
         // another tab, or this game vanished). Stop the silent retry loop,
         // wipe local session state, and route back to the nickname gate.
         setSession(null);
+        void setSessionToken(null);
         toast.error(t("errors.invalid_session"));
         router.replace("/");
       },
