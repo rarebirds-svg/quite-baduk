@@ -14,13 +14,14 @@ const ALL_FOOTER_LINKS = [
   { href: "/support", key: "home.footerSupport" },
 ];
 
-const SUPPORT_HREFS = new Set(["/support", "/supporters"]);
+// 앱 셸 빌드에서 제외되는 웹 전용 경로 — 스토어 정책(/support)과 미포함 라우트.
+const WEB_ONLY_HREFS = new Set(["/support", "/supporters", "/glossary", "/faq"]);
 
 export default function Footer() {
   const t = useT();
   const year = new Date().getFullYear();
   const links = IS_APP_SHELL
-    ? ALL_FOOTER_LINKS.filter((l) => !SUPPORT_HREFS.has(l.href))
+    ? ALL_FOOTER_LINKS.filter((l) => !WEB_ONLY_HREFS.has(l.href))
     : ALL_FOOTER_LINKS;
 
   return (
