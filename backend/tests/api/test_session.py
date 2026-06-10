@@ -135,3 +135,33 @@ async def test_create_session_returns_token_in_body(client: AsyncClient) -> None
     r2 = await client.get("/api/session")
     assert r2.status_code == 200
     assert r2.json().get("token") is None
+
+
+@pytest.mark.asyncio
+async def test_bearer_header_authenticates_without_cookie(client: AsyncClient) -> None:
+    r = await client.post("/api/session", json={"nickname": "appuser"})
+    token = r.json()["token"]
+    client.cookies.clear()
+    r2 = await client.get("/api/session", headers={"Authorization": f"Bearer {token}"})
+    assert r2.status_code == 200
+    assert r2.json()["nickname"] == "appuser"
+
+
+@pytest.mark.asyncio
+async def test_bad_bearer_token_is_401(client: AsyncClient) -> None:
+    client.cookies.clear()
+    r = await client.get("/api/session", headers={"Authorization": "Bearer nope"})
+    assert r.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_end_session_via_bearer_header(client: AsyncClient) -> None:
+    r = await client.post("/api/session", json={"nickname": "enduser"})
+    token = r.json()["token"]
+    client.cookies.clear()
+    r2 = await client.post(
+        "/api/session/end", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert r2.status_code == 204
+    r3 = await client.get("/api/session", headers={"Authorization": f"Bearer {token}"})
+    assert r3.status_code == 401

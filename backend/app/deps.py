@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import Cookie, Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +13,13 @@ from app import last_seen_cache
 from app.models import Session
 
 COOKIE_SESSION = "baduk_session"
+
+
+def bearer_token(authorization: str | None) -> str | None:
+    """Authorization 헤더에서 Bearer 토큰을 추출한다. 형식이 다르면 None."""
+    if authorization and authorization.startswith("Bearer "):
+        return authorization.removeprefix("Bearer ").strip() or None
+    return None
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -28,17 +35,20 @@ DbSession = Annotated[AsyncSession, Depends(get_db)]
 async def get_current_session(
     db: DbSession,
     baduk_session: Annotated[str | None, Cookie()] = None,
+    authorization: Annotated[str | None, Header()] = None,
 ) -> Session:
-    """Resolve the current session from the cookie, bumping ``last_seen_at``.
+    """Resolve the current session from the cookie (web) or the
+    ``Authorization: Bearer`` header (Capacitor app shell), bumping
+    ``last_seen_at``. Cookie wins when both are present.
 
-    Raises 401 if the cookie is missing or refers to a session that has been
-    deleted (e.g. idle-purged or logged out concurrently).
+    Raises 401 if neither credential resolves to a live session row.
     """
-    if not baduk_session:
+    token = baduk_session or bearer_token(authorization)
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="no_session"
         )
-    result = await db.execute(select(Session).where(Session.token == baduk_session))
+    result = await db.execute(select(Session).where(Session.token == token))
     sess = result.scalar_one_or_none()
     if sess is None:
         raise HTTPException(
