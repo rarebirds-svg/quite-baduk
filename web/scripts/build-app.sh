@@ -19,6 +19,7 @@ STASH="$WEB_DIR/.app-shell-excluded"
 rm -rf "$STASH"
 
 restore() {
+  set +e
   cd "$WEB_DIR"
   for p in "${EXCLUDES[@]}"; do
     if [ -e "$STASH/$p" ]; then
