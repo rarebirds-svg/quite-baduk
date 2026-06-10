@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/lib/i18n";
+import { gamePlayHref } from "@/lib/routes";
 import { api, ApiError, errorMessageKey } from "@/lib/api";
 import type { BoardSize } from "@/lib/board";
 import { Hero } from "@/components/editorial/Hero";
@@ -113,7 +114,7 @@ export default function NewGamePage() {
           user_rank: userRank,
         }),
       });
-      router.push(`/game/play/${res.id}`);
+      router.push(gamePlayHref(res.id));
     } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 401) {
         router.replace("/");
