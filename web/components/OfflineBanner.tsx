@@ -2,12 +2,27 @@
 // 네트워크 단절 안내 배너 — offline 이벤트 시 상단 고정 표시 (앱 심사 필수 UX).
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
+import { IS_APP_SHELL } from "@/lib/appShell";
 
 export default function OfflineBanner() {
   const t = useT();
   const [offline, setOffline] = useState(false);
 
   useEffect(() => {
+    if (IS_APP_SHELL) {
+      let remove: (() => void) | undefined;
+      import("@capacitor/network").then(async ({ Network }) => {
+        const status = await Network.getStatus();
+        setOffline(!status.connected);
+        const sub = await Network.addListener("networkStatusChange", (s) => {
+          setOffline(!s.connected);
+        });
+        remove = () => {
+          void sub.remove();
+        };
+      });
+      return () => remove?.();
+    }
     setOffline(!navigator.onLine);
     const on = () => setOffline(false);
     const off = () => setOffline(true);
