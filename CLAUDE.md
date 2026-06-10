@@ -79,7 +79,7 @@ Zustand: `authStore` (user session), `gameStore` (board + move list + analysis).
 
 ### App shell (Capacitor) — `web/capacitor.config.ts`, `web/android/`
 
-Capacitor 8 기반 모바일 셸. `BUILD_TARGET=app`이면 `next.config.js`가 `output:"export"`로 전환되고, `scripts/build-app.sh`가 웹 전용 라우트(admin·faq·glossary·picks·themes·[id] 동적 세그먼트 등)를 임시 제외해 `web/out`을 만든다. 앱 셸은 쿠키 대신 Bearer 토큰(`lib/sessionToken.ts`, Capacitor Preferences)을 쓰고, 동적 화면은 쿼리 진입점(`/game/play?id=` 등, `lib/routes.ts` 헬퍼)으로 진입한다. 네이티브 브리지는 `components/AppShellBridge.tsx`. APK 빌드는 JDK 17 + Android SDK 필요: `cd android && ./gradlew assembleDebug`.
+Capacitor 8 기반 모바일 셸. `BUILD_TARGET=app`이면 `next.config.js`가 `output:"export"`로 전환되고, `scripts/build-app.sh`가 웹 전용 라우트(admin·faq·glossary·picks·themes·[id] 동적 세그먼트 등)를 임시 제외해 `web/out`을 만든다. 앱 셸은 쿠키 대신 Bearer 토큰(`lib/sessionToken.ts`, Capacitor Preferences)을 쓰고, 동적 화면은 쿼리 진입점(`/game/play?id=` 등, `lib/routes.ts` 헬퍼)으로 진입한다. 네이티브 브리지는 `components/AppShellBridge.tsx`. APK 빌드는 JDK 21 + Android SDK 필요: `cd android && ./gradlew assembleDebug`.
 
 ### Auth
 
