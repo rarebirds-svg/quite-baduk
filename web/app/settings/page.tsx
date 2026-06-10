@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useT, useLocale, setLocale, type Locale } from "@/lib/i18n";
 import { useTheme } from "next-themes";
 import { api } from "@/lib/api";
-import { setSessionToken } from "../../lib/sessionToken";
 import { useAuthStore } from "@/store/authStore";
+import { setSessionToken } from "@/lib/sessionToken";
 import RankPicker, { RANKS, type Rank } from "@/components/RankPicker";
 import BoardBgSwitcher from "@/components/BoardBgSwitcher";
 
