@@ -20,6 +20,7 @@ import { applyMoveWithCaptures, gtpToXy, xyToGtp } from "@/lib/board";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank, type Rank } from "@/components/RankPicker";
 import { playStoneClick } from "@/lib/soundfx";
+import { IS_APP_SHELL } from "@/lib/appShell";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { HintNudge } from "@/components/HintNudge";
 import { StatFigure } from "@/components/editorial/StatFigure";
@@ -310,6 +311,13 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
     setHintWinrate(null);
     playStoneClick();
     wsRef.current?.send({ type: "move", coord });
+    if (IS_APP_SHELL) {
+      import("@capacitor/haptics")
+        .then(({ Haptics, ImpactStyle }) =>
+          Haptics.impact({ style: ImpactStyle.Light })
+        )
+        .catch(() => {});
+    }
   };
 
   const pass = () => {
