@@ -107,7 +107,7 @@ async def create_session(
         await db.commit()
 
         _set_session_cookie(response, token)
-        return SessionPublic(id=sess.id, nickname=sess.nickname)
+        return SessionPublic(id=sess.id, nickname=sess.nickname, token=token)
     except HTTPException:
         await registry.release(key)
         raise

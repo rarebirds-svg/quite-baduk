@@ -122,3 +122,16 @@ async def test_nickname_check_invalid_then_taken(client: AsyncClient) -> None:
         "/api/session/nickname/check", params={"name": "claimed_one"}
     )
     assert taken.json()["reason"] == "taken"
+
+
+@pytest.mark.asyncio
+async def test_create_session_returns_token_in_body(client: AsyncClient) -> None:
+    r = await client.post("/api/session", json={"nickname": "tokuser"})
+    assert r.status_code == 201
+    body = r.json()
+    assert isinstance(body.get("token"), str)
+    assert len(body["token"]) >= 32
+    # GET /api/session은 토큰을 재노출하지 않는다 (생성 시 1회만).
+    r2 = await client.get("/api/session")
+    assert r2.status_code == 200
+    assert r2.json().get("token") is None
