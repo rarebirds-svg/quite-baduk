@@ -165,3 +165,28 @@ async def test_end_session_via_bearer_header(client: AsyncClient) -> None:
     assert r2.status_code == 204
     r3 = await client.get("/api/session", headers={"Authorization": f"Bearer {token}"})
     assert r3.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_cookie_wins_over_bearer_header(client: AsyncClient) -> None:
+    # 쿠키(첫 세션)와 다른 세션의 Bearer 헤더가 동시에 오면 쿠키가 이긴다.
+    await client.post("/api/session", json={"nickname": "cookieuser"})
+    from httpx import AsyncClient as _AC
+
+    other = _AC(transport=client._transport, base_url=client.base_url)
+    r_other = await other.post("/api/session", json={"nickname": "headeruser"})
+    other_token = r_other.json()["token"]
+    r = await client.get(
+        "/api/session", headers={"Authorization": f"Bearer {other_token}"}
+    )
+    assert r.status_code == 200
+    assert r.json()["nickname"] == "cookieuser"
+
+
+@pytest.mark.asyncio
+async def test_lowercase_bearer_scheme_accepted(client: AsyncClient) -> None:
+    r = await client.post("/api/session", json={"nickname": "lcuser"})
+    token = r.json()["token"]
+    client.cookies.clear()
+    r2 = await client.get("/api/session", headers={"Authorization": f"bearer {token}"})
+    assert r2.status_code == 200

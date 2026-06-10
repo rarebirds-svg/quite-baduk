@@ -16,9 +16,15 @@ COOKIE_SESSION = "baduk_session"
 
 
 def bearer_token(authorization: str | None) -> str | None:
-    """Authorization 헤더에서 Bearer 토큰을 추출한다. 형식이 다르면 None."""
-    if authorization and authorization.startswith("Bearer "):
-        return authorization.removeprefix("Bearer ").strip() or None
+    """Authorization 헤더에서 Bearer 토큰을 추출한다. 형식이 다르면 None.
+
+    RFC 7235에 따라 스킴 이름은 대소문자 무관("bearer"/"BEARER" 허용).
+    """
+    if not authorization:
+        return None
+    parts = authorization.split(" ", 1)
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1].strip() or None
     return None
 
 
