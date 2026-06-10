@@ -12,8 +12,11 @@ export default function AppShellBridge() {
     if (!IS_APP_SHELL) return;
     let cleanup: (() => void) | undefined;
     import("@capacitor/app").then(({ App }) => {
+      // "/"는 비로그인 게이트, "/game/new"는 로그인 상태의 실질 루트 —
+      // AuthGate가 "/"를 "/game/new"로 되밀어 back 트랩이 생기므로 둘 다 최소화 대상.
+      const ROOT_PATHS = ["/", "/game/new"];
       const backSub = App.addListener("backButton", () => {
-        if (window.location.pathname === "/") App.minimizeApp();
+        if (ROOT_PATHS.includes(window.location.pathname)) App.minimizeApp();
         else router.back();
       });
       const stateSub = App.addListener("appStateChange", ({ isActive }) => {
