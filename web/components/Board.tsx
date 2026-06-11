@@ -276,38 +276,43 @@ export default function Board({
 
       {lastMove && (() => {
         const emphasis = lastMoveKind === "blunder" || lastMoveKind === "decisive";
-        // 표준 마커는 돌 색에 따라 명도 대비가 큰 색을 고른다 — 검은돌
-        // 위 어두운 oxblood가 모바일에서 가독성 부족했던 문제 해결.
-        // emphasis(패착/승착)는 의미 우선이라 색을 유지한다.
-        const stoneAt = board[lastMove.y * size + lastMove.x];
-        const stroke = lastMoveKind === "decisive"
-          ? "rgb(var(--moss))"
-          : lastMoveKind === "blunder"
-            ? "rgb(var(--oxblood))"
-            : stoneAt === "B"
-              ? "rgb(var(--gold))"
-              : "rgb(var(--oxblood))";
+        const mcx = pad + lastMove.x * CELL;
+        const mcy = pad + lastMove.y * CELL;
+        if (!emphasis) {
+          // 표준 마커 — 돌 중앙의 반대색 채움 원 (흑돌→백 점, 백돌→흑 점).
+          // 링 방식 대비 돌 색과 무관하게 항상 최대 명도 대비가 보장된다.
+          const stoneAt = board[lastMove.y * size + lastMove.x];
+          if (stoneAt !== "B" && stoneAt !== "W") return null;
+          const dotFill =
+            stoneAt === "B"
+              ? tokens.light["stone-white"]
+              : tokens.light["stone-black"];
+          return (
+            <circle data-last-move cx={mcx} cy={mcy} r={CELL * 0.16} fill={dotFill} />
+          );
+        }
+        // emphasis(패착/승착)는 의미 우선이라 기존 색 링을 유지한다.
+        const stroke =
+          lastMoveKind === "decisive" ? "rgb(var(--moss))" : "rgb(var(--oxblood))";
         return (
           <>
             <circle
-              cx={pad + lastMove.x * CELL}
-              cy={pad + lastMove.y * CELL}
+              cx={mcx}
+              cy={mcy}
               r={CELL * 0.38}
               fill="none"
               stroke={stroke}
-              strokeWidth={emphasis ? 3 : 1.5}
+              strokeWidth={3}
             />
-            {emphasis && (
-              <circle
-                cx={pad + lastMove.x * CELL}
-                cy={pad + lastMove.y * CELL}
-                r={CELL * 0.5}
-                fill="none"
-                stroke={stroke}
-                strokeWidth={1.5}
-                strokeDasharray="2 2"
-              />
-            )}
+            <circle
+              cx={mcx}
+              cy={mcy}
+              r={CELL * 0.5}
+              fill="none"
+              stroke={stroke}
+              strokeWidth={1.5}
+              strokeDasharray="2 2"
+            />
           </>
         );
       })()}
