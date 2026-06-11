@@ -210,7 +210,7 @@ def test_ws_score_result_payload_includes_points(
     import tempfile
 
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-    from sqlalchemy.pool import StaticPool
+    from sqlalchemy.pool import NullPool
     from starlette.testclient import TestClient
 
     import app.api.ws as _ws_mod
@@ -236,10 +236,13 @@ def test_ws_score_result_payload_includes_points(
     tmp.close()
     db_path = tmp.name
 
+    # NullPool — 스키마 생성(asyncio.run 임시 루프)과 TestClient(portal 루프)가
+    # 다른 루프라서 커넥션을 루프 너머로 재사용하지 않게 한다 (test_ws_flow의
+    # _wire_test_app과 동일한 이유). 파일 DB라 데이터는 유지된다.
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{db_path}",
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+        poolclass=NullPool,
     )
     asyncio.run(_create_schema(engine, Base))
     session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)

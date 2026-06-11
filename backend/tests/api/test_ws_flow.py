@@ -13,7 +13,7 @@ from collections.abc import Callable
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool
 from starlette.testclient import TestClient
 
 
@@ -61,10 +61,15 @@ def _wire_test_app(
     tmp.close()
     db_path = tmp.name
 
+    # NullPool — 커넥션을 풀에 보관하지 않는다. 이 헬퍼는 스키마 생성
+    # (asyncio.run 임시 루프)과 TestClient(portal 루프)가 서로 다른 이벤트
+    # 루프라서, StaticPool처럼 커넥션 1개를 루프 너머로 재사용하면 aiosqlite
+    # 워커 스레드가 닫힌 루프에 응답하다 죽는 레이스가 생긴다(CI 간헐 실패).
+    # 파일 DB라 커넥션을 매번 새로 열어도 데이터는 유지된다.
     engine = create_async_engine(
         f"sqlite+aiosqlite:///{db_path}",
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+        poolclass=NullPool,
     )
     asyncio.run(_create_schema(engine, Base))
     factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
