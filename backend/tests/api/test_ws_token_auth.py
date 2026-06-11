@@ -16,7 +16,7 @@ _GAME_PAYLOAD = {
 def test_ws_accepts_query_token_without_cookie(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    tc, db_path = _wire_test_app(monkeypatch)
+    tc, cleanup = _wire_test_app(monkeypatch)
     try:
         with tc:
             r = tc.post("/api/session", json={"nickname": "wstoken"})
@@ -33,13 +33,11 @@ def test_ws_accepts_query_token_without_cookie(
                 msg = ws.receive_json()
                 assert msg["type"] in ("state", "ai_move", "winrate")
     finally:
-        import os
-
-        os.unlink(db_path)
+        cleanup()
 
 
 def test_ws_rejects_bad_query_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    tc, db_path = _wire_test_app(monkeypatch)
+    tc, cleanup = _wire_test_app(monkeypatch)
     try:
         with tc:
             r = tc.post("/api/session", json={"nickname": "wstoken2"})
@@ -60,6 +58,4 @@ def test_ws_rejects_bad_query_token(monkeypatch: pytest.MonkeyPatch) -> None:
                 closed_immediately = True
             assert closed_immediately, "bogus token should not allow WS connection"
     finally:
-        import os
-
-        os.unlink(db_path)
+        cleanup()
