@@ -213,10 +213,23 @@ def test_ws_score_result_payload_includes_points(
     from sqlalchemy.pool import StaticPool
     from starlette.testclient import TestClient
 
+    import app.api.ws as _ws_mod
+    import app.engine_pool as _pool_mod
     import app.services.game_service as _svc
     from app.core.katago.mock import MockKataGoAdapter
     from app.db import Base
     from app.engine_pool import set_adapter
+
+    # 테스트 격리: temp DB마다 game_id가 1부터 다시 시작하므로, 이전 테스트의
+    # 게임 상태 캐시·락·WS 연결이 같은 id로 재사용되지 않게 비운다.
+    _pool_mod._game_locks.clear()
+    _pool_mod._states.clear()
+    _ws_mod._connections.clear()
+    # last_seen 캐시도 프로세스-글로벌 — 남겨두면 새 앱의 flusher가 startup
+    # 직후 이전 테스트의 세션 id들을 이 테스트 DB에 UPDATE하고, StaticPool
+    # 단일 커넥션에서 첫 요청 트랜잭션과 섞여 간헐 실패를 만든다.
+    import app.last_seen_cache as _lsc_mod
+    _lsc_mod._cache.clear()
 
     # --- fresh isolated DB -----------------------------------------------
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
@@ -286,7 +299,13 @@ def test_ws_score_result_payload_includes_points(
             for pt in msg["black_points"]:
                 assert isinstance(pt, list) and len(pt) == 2
 
-    # cleanup
+    # cleanup — dispose는 살아 있는 루프에서 해야 aiosqlite 워커 스레드가
+    # 깨끗하게 종료된다 (닫힌 루프에 응답하려다 죽으면 이후 테스트 오염).
+    asyncio.run(engine.dispose())
+    _pool_mod._game_locks.clear()
+    _pool_mod._states.clear()
+    _ws_mod._connections.clear()
+    _lsc_mod._cache.clear()
     try:
         os.unlink(db_path)
     except OSError:

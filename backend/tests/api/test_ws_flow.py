@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import os
 import tempfile
+from collections.abc import Callable
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -21,11 +22,16 @@ async def _create_schema(engine, base) -> None:  # type: ignore[no-untyped-def]
         await conn.run_sync(base.metadata.create_all)
 
 
-def _wire_test_app(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
+def _wire_test_app(
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[TestClient, Callable[[], None]]:
     """Boot a fresh app instance bound to an isolated temp DB and the mock
-    KataGo. Returns (client, db_path) — caller closes the client and deletes
-    the file."""
+    KataGo. Returns (client, cleanup) — caller invokes cleanup() in a
+    finally block; it closes the client, disposes the engine and deletes
+    the temp DB file."""
     import app.api.session as _session_mod
+    import app.api.ws as _ws_mod
+    import app.engine_pool as _pool_mod
     import app.session_registry as _reg_mod
     from app.core.katago.mock import MockKataGoAdapter
     from app.db import Base
@@ -40,6 +46,16 @@ def _wire_test_app(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
     monkeypatch.setattr(_reg_mod, "registry", fresh_registry)
     # session.py가 registry를 직접 import해 쓰므로 해당 모듈도 패치한다.
     monkeypatch.setattr(_session_mod, "registry", fresh_registry)
+    # temp DB마다 game_id가 1부터 다시 시작하므로, 이전 테스트의 게임 상태
+    # 캐시·락·WS 연결이 같은 id로 새 테스트에 재사용되지 않게 비운다.
+    _pool_mod._game_locks.clear()
+    _pool_mod._states.clear()
+    _ws_mod._connections.clear()
+    # last_seen 캐시도 프로세스-글로벌 — 남겨두면 새 앱의 flusher가 startup
+    # 직후 이전 테스트의 세션 id들을 이 테스트 DB에 UPDATE하고, StaticPool
+    # 단일 커넥션에서 첫 요청 트랜잭션과 섞여 간헐 실패를 만든다.
+    import app.last_seen_cache as _lsc_mod
+    _lsc_mod._cache.clear()
 
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
     tmp.close()
@@ -63,11 +79,28 @@ def _wire_test_app(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
     asyncio.run(mock.start())
 
     from app.main import create_app
-    return TestClient(create_app(), raise_server_exceptions=True), db_path
+    tc = TestClient(create_app(), raise_server_exceptions=True)
+
+    def cleanup() -> None:
+        # dispose는 살아 있는 루프에서 해야 한다 — 그러지 않으면 aiosqlite
+        # 워커 스레드가 닫힌 루프에 call_soon_threadsafe를 시도하다 죽고,
+        # 이후 테스트가 ValueError: Connection closed로 오염된다 (CI 간헐 실패).
+        tc.close()
+        asyncio.run(engine.dispose())
+        _pool_mod._game_locks.clear()
+        _pool_mod._states.clear()
+        _ws_mod._connections.clear()
+        _lsc_mod._cache.clear()
+        try:
+            os.unlink(db_path)
+        except OSError:
+            pass
+
+    return tc, cleanup
 
 
 def test_ws_move_emits_state_and_ai_move(monkeypatch: pytest.MonkeyPatch) -> None:
-    tc, db_path = _wire_test_app(monkeypatch)
+    tc, cleanup = _wire_test_app(monkeypatch)
     try:
         with tc:
             r = tc.post("/api/session", json={"nickname": "ws_mover"})
@@ -109,15 +142,11 @@ def test_ws_move_emits_state_and_ai_move(monkeypatch: pytest.MonkeyPatch) -> Non
                 assert seen["state"] >= 2  # post-user + post-AI
                 assert seen["ai_move"] >= 1
     finally:
-        tc.close()
-        try:
-            os.unlink(db_path)
-        except OSError:
-            pass
+        cleanup()
 
 
 def test_ws_undo_reverts_state(monkeypatch: pytest.MonkeyPatch) -> None:
-    tc, db_path = _wire_test_app(monkeypatch)
+    tc, cleanup = _wire_test_app(monkeypatch)
     try:
         with tc:
             r = tc.post("/api/session", json={"nickname": "ws_undoer"})
@@ -156,11 +185,7 @@ def test_ws_undo_reverts_state(monkeypatch: pytest.MonkeyPatch) -> None:
                         return
                 pytest.fail("never saw a state with undo_count >= 1")
     finally:
-        tc.close()
-        try:
-            os.unlink(db_path)
-        except OSError:
-            pass
+        cleanup()
 
 
 def test_ws_send_after_close_during_place_move_is_silent(
@@ -172,7 +197,7 @@ def test_ws_send_after_close_during_place_move_is_silent(
     floods baduk-api.err (#39)."""
     from starlette.websockets import WebSocketDisconnect
 
-    tc, db_path = _wire_test_app(monkeypatch)
+    tc, cleanup = _wire_test_app(monkeypatch)
     try:
         with tc:
             r = tc.post("/api/session", json={"nickname": "ws_racer"})
@@ -217,11 +242,7 @@ def test_ws_send_after_close_during_place_move_is_silent(
                 except WebSocketDisconnect:
                     pass
     finally:
-        tc.close()
-        try:
-            os.unlink(db_path)
-        except OSError:
-            pass
+        cleanup()
 
 
 def test_ws_receive_after_disconnect_is_silent(
@@ -258,7 +279,7 @@ def test_ws_receive_after_disconnect_is_silent(
 
     monkeypatch.setattr(WebSocket, "receive_json", flaky_receive_json)
 
-    tc, db_path = _wire_test_app(monkeypatch)
+    tc, cleanup = _wire_test_app(monkeypatch)
     try:
         with tc:
             r = tc.post("/api/session", json={"nickname": "ws_recv_racer"})
@@ -287,11 +308,7 @@ def test_ws_receive_after_disconnect_is_silent(
                     for _ in range(5):
                         ws.receive_json()
     finally:
-        tc.close()
-        try:
-            os.unlink(db_path)
-        except OSError:
-            pass
+        cleanup()
 
 
 def test_ws_eviction_on_second_connection(
@@ -300,7 +317,7 @@ def test_ws_eviction_on_second_connection(
     """Opening a second WS for the same game evicts the first with a
     SESSION_REPLACED error frame — exercises the existing-connection cleanup
     branch in ws.py."""
-    tc, db_path = _wire_test_app(monkeypatch)
+    tc, cleanup = _wire_test_app(monkeypatch)
     try:
         with tc:
             r = tc.post("/api/session", json={"nickname": "ws_evictor"})
@@ -332,8 +349,4 @@ def test_ws_eviction_on_second_connection(
                     init2 = ws2.receive_json()
                     assert init2["type"] == "state"
     finally:
-        tc.close()
-        try:
-            os.unlink(db_path)
-        except OSError:
-            pass
+        cleanup()
