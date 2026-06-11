@@ -1,11 +1,24 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.services.game_service import GameError
+
+
+def _safe_validation_errors(exc: RequestValidationError) -> object:
+    """pydantic v2 오류 목록을 JSON 직렬화 가능하게 정리한다.
+
+    비JSON 본문이면 ``input``에 raw bytes가 들어와 그대로 직렬화하면
+    TypeError(500)가 난다. bytes는 치환 디코딩으로 문자열화한다.
+    """
+    return jsonable_encoder(
+        exc.errors(),
+        custom_encoder={bytes: lambda b: b.decode("utf-8", errors="replace")},
+    )
 
 
 def register_handlers(app: FastAPI) -> None:
@@ -24,7 +37,7 @@ def register_handlers(app: FastAPI) -> None:
                 "error": {
                     "code": "validation_error",
                     "message_key": "errors.validation",
-                    "detail": exc.errors(),
+                    "detail": _safe_validation_errors(exc),
                 }
             },
         )
