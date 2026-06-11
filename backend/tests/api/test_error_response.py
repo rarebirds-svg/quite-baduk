@@ -27,3 +27,17 @@ async def test_game_error_response_includes_detail(client: AsyncClient) -> None:
     body = r.json()
     assert body["detail"]["code"] == "INVALID_HANDICAP"
     assert body["detail"]["detail"] == "6"
+
+
+@pytest.mark.asyncio
+async def test_non_json_body_returns_422_not_500(client: AsyncClient) -> None:
+    # Content-Type이 JSON이 아닌 본문은 422 검증 오류여야 한다.
+    # 회귀 방지: pydantic v2가 input에 raw bytes를 넣어 와 직렬화 500이 났던 버그.
+    r = await client.post(
+        "/api/session",
+        content=b'{"nickname":"x"}',
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert r.status_code == 422
+    body = r.json()
+    assert body["error"]["code"] == "validation_error"
