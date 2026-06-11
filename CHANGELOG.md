@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Capacitor 8 Android 앱 셸 (`web/android/`) — 기존 Next.js 웹앱을 네이티브 WebView로 감싼 모바일 클라이언트.
+  - Bearer 토큰 인증 (`lib/sessionToken.ts`, Capacitor Preferences) — HttpOnly 쿠키와 병행; 웹 브라우저는 쿠키, 앱은 Bearer.
+  - 정적 export 빌드 스크립트 (`web/scripts/build-app.sh`): `BUILD_TARGET=app`으로 `output:"export"` 전환, 웹 전용 라우트 임시 제외 후 `web/out` 생성.
+  - 쿼리 진입점 라우트 헬퍼 (`lib/routes.ts`): 동적 세그먼트 대신 `/game/play?id=` 등 쿼리스트링 방식으로 네이티브 내비게이션.
+  - 오프라인 배너 (`components/AppShellBridge.tsx`): 네트워크 단절 시 인라인 안내 표시.
+  - 착수 햅틱: 착수 성공 시 Capacitor Haptics로 짧은 진동 피드백.
+  - 앱 셸 환경에서 후원 링크 숨김 (`IS_APP_SHELL` 감지).
+- CI 잡 `app-shell-build` 추가: `npm ci` + `bash scripts/build-app.sh` — 정적 export 가능 여부를 PR마다 검증.
+
 ## [0.3.0] - 2026-06-06
 
 ### Added

@@ -87,8 +87,9 @@ export 번들**(원격 URL 모드 아님) — 오프라인 화면, 빠른 초기
 - `@capacitor/app` — 하드웨어 뒤로가기 처리(Android 필수), 백그라운드 복귀 시 WS 재동기화.
 - `@capacitor/haptics` — 착수 진동 (향후 iOS 4.2 방어 자산).
 - `@capacitor/splash-screen` / `@capacitor/status-bar` — Editorial 토큰 색상 적용.
-- 오프라인 안내 화면 — 브라우저 `online`/`offline` 이벤트 사용 (WebView에서 동일 동작,
-  `@capacitor/network` 플러그인 불필요. 2026-06-11 보정).
+- 오프라인 안내 — 앱 셸은 `@capacitor/network` 플러그인, 웹은 브라우저 `online`/`offline`
+  이벤트. (1차 보정에서 플러그인을 제거했으나 Android WebView에서 브라우저 이벤트가
+  발화하지 않음이 에뮬레이터 스모크에서 확인되어 재보정. 2026-06-11)
 - `@capacitor/preferences` — 세션 토큰 저장.
 - 푸시·딥링크·공유는 v1 제외.
 

@@ -3,6 +3,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { useAuthStore, type Session } from "@/store/authStore";
+import { setSessionToken } from "@/lib/sessionToken";
 
 const PUBLIC_PATHS = new Set(["/", "/privacy", "/terms", "/support", "/supporters"]);
 // Content (SEO) route prefixes — viewable without a session, including their
@@ -33,6 +34,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         if (cancelled) return;
         if (e instanceof ApiError && e.status === 401) {
           setSession(null);
+          void setSessionToken(null);
           if (!isPublicPath(pathname)) {
             router.replace("/");
             return;

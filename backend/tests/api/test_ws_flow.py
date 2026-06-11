@@ -25,9 +25,21 @@ def _wire_test_app(monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, str]:
     """Boot a fresh app instance bound to an isolated temp DB and the mock
     KataGo. Returns (client, db_path) — caller closes the client and deletes
     the file."""
+    import app.api.session as _session_mod
+    import app.session_registry as _reg_mod
     from app.core.katago.mock import MockKataGoAdapter
     from app.db import Base
     from app.engine_pool import set_adapter
+    from app.rate_limit import rate_limiter
+    from app.session_registry import NicknameRegistry
+
+    # 테스트 격리: 이전 테스트에서 누적된 rate_limiter 버킷과 session_registry
+    # 상태를 초기화한다. 두 싱글턴 모두 프로세스-글로벌이라 파일 간 오염을 막는다.
+    rate_limiter._buckets.clear()
+    fresh_registry = NicknameRegistry()
+    monkeypatch.setattr(_reg_mod, "registry", fresh_registry)
+    # session.py가 registry를 직접 import해 쓰므로 해당 모듈도 패치한다.
+    monkeypatch.setattr(_session_mod, "registry", fresh_registry)
 
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
     tmp.close()

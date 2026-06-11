@@ -1080,7 +1080,7 @@ npx cap sync android
 
 Run: `cd web/android && ./gradlew assembleDebug`
 Expected: `web/android/app/build/outputs/apk/debug/app-debug.apk` 생성.
-JDK 17 필요 — 없으면 `brew install --cask temurin@17` 후 `JAVA_HOME` 지정.
+JDK 21 필요 — 없으면 `brew install --cask temurin@21` 후 `JAVA_HOME` 지정.
 
 - [ ] **Step 3: 커밋**
 

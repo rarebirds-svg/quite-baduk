@@ -1,0 +1,4 @@
+/out
+/.app-shell-excluded
+/android/app/build/
+/android/.gradle/

@@ -123,8 +123,11 @@ async def ws_game(
     game_id: int,
     db: DbSession,
     baduk_session: Annotated[str | None, Cookie(alias=COOKIE_SESSION)] = None,
+    token: str | None = None,
 ) -> None:
-    sess = await _authenticate_ws(baduk_session, db)
+    # 쿠키(웹) 우선, 쿼리 파라미터(앱 셸 WebView)는 폴백. 토큰이 URL에 남는
+    # 노출면은 자체 서버 wss 한정이라 수용한다.
+    sess = await _authenticate_ws(baduk_session or token, db)
     if sess is None:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return

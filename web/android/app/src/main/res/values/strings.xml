@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Inkbaduk</string>
+    <string name="title_activity_main">Inkbaduk</string>
+    <string name="package_name">com.inkbaduk.app</string>
+    <string name="custom_url_scheme">com.inkbaduk.app</string>
+</resources>

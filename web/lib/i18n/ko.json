@@ -607,5 +607,6 @@
   },
   "glossary": { "heroVolume": "VOL. I · 용어", "heroTitle": "바둑 사전", "heroSubtitle": "KataGo와 두며 만나는 {count}가지 개념", "searchPlaceholder": "용어 검색…", "filterAll": "전체", "cardMore": "자세히 →", "prevEntry": "이전", "nextEntry": "다음", "startGameCta": "대국 시작 →", "empty": "검색 결과 없음" },
   "faq": { "heroTitle": "FAQ", "heroSubtitle": "{count}가지 답변", "notFoundCta": "질문 못 찾으셨나요? 지원 페이지 →" },
-  "breadcrumb": { "glossary": "용어", "faq": "FAQ" }
+  "breadcrumb": { "glossary": "용어", "faq": "FAQ" },
+  "offline": { "banner": "오프라인 상태입니다. 연결을 확인해 주세요." }
 }

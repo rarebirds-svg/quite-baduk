@@ -7,6 +7,7 @@ import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { formatRank, type Rank } from "@/components/RankPicker";
+import { gameReviewHref } from "@/lib/routes";
 
 interface BucketRow {
   total: number;
@@ -199,7 +200,7 @@ export default function HistoryPage() {
                     <td className="p-2 tabular-nums text-ink-mute">{duration(g.started_at, g.finished_at)}</td>
                     <td className="p-2">
                       <span className="flex gap-2">
-                        <Link className="text-oxblood hover:underline" href={`/game/review/${g.id}`}>review</Link>
+                        <Link className="text-oxblood hover:underline" href={gameReviewHref(g.id)}>review</Link>
                         <a className="text-oxblood hover:underline" href={`/api/games/${g.id}/sgf`}>SGF</a>
                       </span>
                     </td>
