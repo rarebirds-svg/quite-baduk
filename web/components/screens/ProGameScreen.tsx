@@ -16,7 +16,7 @@ interface ProMove {
   color: "B" | "W";
   coord: string | null;
 }
-interface ProGameDetail {
+export interface ProGameDetail {
   id: number;
   black_player: string;
   white_player: string;
@@ -33,16 +33,23 @@ interface ProGameDetail {
   moves: ProMove[];
 }
 
-export default function ProGameScreen({ gameId }: { gameId: number }) {
+export default function ProGameScreen({
+  gameId,
+  initialGame,
+}: {
+  gameId: number;
+  initialGame?: ProGameDetail;
+}) {
   const t = useT();
   const [locale] = useLocale();
 
-  const [game, setGame] = useState<ProGameDetail | null>(null);
+  const [game, setGame] = useState<ProGameDetail | null>(initialGame ?? null);
   const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
+    if (initialGame) return; // 서버에서 이미 받은 경우 재요청하지 않는다
     api<ProGameDetail>(`/api/spectate/pro/${gameId}`)
       .then((g) => {
         setGame(g);
@@ -52,7 +59,7 @@ export default function ProGameScreen({ gameId }: { gameId: number }) {
         if (e instanceof ApiError && e.status === 404) setError("not_found");
         else setError("load_failed");
       });
-  }, [gameId]);
+  }, [gameId, initialGame]);
 
   const replayMoves: ReplayMove[] = useMemo(
     () =>
