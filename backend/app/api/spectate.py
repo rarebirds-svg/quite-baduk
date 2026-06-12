@@ -5,6 +5,11 @@
 살아있는 진행 중(active) 대국만. active이면서 세션이 사라진 대국은
 "버려진 대국"이라 목록·상세 모두에서 제외한다. 관리자 닉네임으로 둔
 대국도 닉네임·대국 내용이 노출되지 않도록 전부 숨긴다.
+
+추가 제외: 종료 대국이라도 result가 없거나(승부 미결) 수수가
+_MIN_EXPOSED_MOVES 미만이면(즉시 기권 등 사실상 강제 종료) 숨긴다.
+시스템 테스트 하네스 닉네임(_TEST_NICKNAME_PREFIXES)의 대국도
+진행 중·종료 불문 전부 숨긴다.
 """
 from __future__ import annotations
 
@@ -20,6 +25,18 @@ from app.schemas.game import GameDetail, GameSummary, MoveEntry
 router = APIRouter(prefix="/api/spectate", tags=["spectate"])
 
 _FINISHED = ("finished", "resigned")
+# 승부가 성립했다고 볼 최소 수수 — 이보다 짧은 종료 대국(0수 즉시 기권 등)은
+# 관전 가치가 없는 강제 종료로 보고 숨긴다.
+_MIN_EXPOSED_MOVES = 10
+# 시스템 테스트 하네스가 쓰는 닉네임 prefix — 해당 대국은 전부 숨긴다.
+# (e2e: qa_*, 스크린샷 캡처: screenshotter*/devshot*)
+_TEST_NICKNAME_PREFIXES = ("screenshotter", "devshot", "qa_")
+
+
+def _prefix_pattern(prefix: str) -> str:
+    """LIKE 패턴용 prefix 이스케이프 — 'qa_'의 '_'가 와일드카드로 새지 않게."""
+    escaped = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"{escaped}%"
 
 
 def _not_admin_clause() -> ColumnElement[bool]:
@@ -39,18 +56,47 @@ def _not_admin_clause() -> ColumnElement[bool]:
     return and_(nickname_ok, session_ok)
 
 
+def _not_test_clause() -> ColumnElement[bool]:
+    """시스템 테스트 하네스 대국 제외 절. 관리자 제외와 동일하게 세션
+    생존 시 nickname_key로, 세션 소멸 시 user_nickname 스냅샷으로 판별."""
+    patterns = [_prefix_pattern(p) for p in _TEST_NICKNAME_PREFIXES]
+    nickname_ok = or_(
+        Game.user_nickname.is_(None),
+        and_(
+            *[
+                func.lower(Game.user_nickname).notlike(pat, escape="\\")
+                for pat in patterns
+            ]
+        ),
+    )
+    session_ok = or_(
+        Game.session_id.is_(None),
+        Game.session_id.notin_(
+            select(Session.id).where(
+                or_(*[Session.nickname_key.like(pat, escape="\\") for pat in patterns])
+            )
+        ),
+    )
+    return and_(nickname_ok, session_ok)
+
+
 def _spectatable_clause() -> ColumnElement[bool]:
-    """SQLAlchemy WHERE 절: (종료된 대국 OR 세션이 살아있는 진행 중
-    대국) AND 관리자 대국이 아님."""
+    """SQLAlchemy WHERE 절: (승부가 성립한 종료 대국 OR 세션이 살아있는
+    진행 중 대국) AND 관리자 대국 아님 AND 테스트 하네스 대국 아님."""
     return and_(
         or_(
-            Game.status.in_(_FINISHED),
+            and_(
+                Game.status.in_(_FINISHED),
+                Game.result.is_not(None),
+                Game.move_count >= _MIN_EXPOSED_MOVES,
+            ),
             and_(
                 Game.status == "active",
                 Game.session_id.in_(select(Session.id)),
             ),
         ),
         _not_admin_clause(),
+        _not_test_clause(),
     )
 
 
