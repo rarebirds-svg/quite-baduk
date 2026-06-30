@@ -69,3 +69,6 @@ docs/ops/state/.watchdog-cooldown-*
 
 # Cloudflare wrangler 빌드 캐시
 .wrangler/
+
+# e2e 일회성 캡처 스크립트 (임시 산출물)
+e2e/capture-end-ui.js
