@@ -38,7 +38,7 @@ export default function RankAdvisor({ onSelect }: { onSelect: (r: Rank) => void 
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-sm border border-ink/15 px-3 py-2 text-left font-sans text-sm text-ink transition-base hover:border-oxblood"
+      className="w-full rounded-sm border border-ink/25 px-3 py-2 text-left font-sans text-sm text-ink transition-base hover:border-oxblood"
     >
       {label}
     </button>
