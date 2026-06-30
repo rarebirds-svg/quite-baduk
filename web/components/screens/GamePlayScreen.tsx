@@ -28,6 +28,8 @@ import { DataBlock } from "@/components/editorial/DataBlock";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { WinrateBar } from "@/components/editorial/WinrateBar";
 import BoardBgSwitcher from "@/components/BoardBgSwitcher";
+import AnalysisDensityToggle from "@/components/AnalysisDensityToggle";
+import { useAnalysisPref } from "@/store/analysisPrefStore";
 import ReviewPlayer from "@/components/ReviewPlayer";
 import {
   Dialog,
@@ -66,6 +68,12 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   const resetGame = useGameStore((s) => s.reset);
   const nickname = useAuthStore((s) => s.session?.nickname ?? null);
   const setSession = useAuthStore((s) => s.setSession);
+  // 형세 표시 밀도. beginner는 승률·집차를 숨긴다. persist가 클라이언트에서
+  // 동기 rehydrate되므로 마운트 전에는 analyst로 렌더해 hydration을 맞춘다.
+  const analysisDensity = useAnalysisPref((s) => s.density);
+  const [densityMounted, setDensityMounted] = useState(false);
+  useEffect(() => setDensityMounted(true), []);
+  const showAnalyst = !densityMounted || analysisDensity === "analyst";
   const [meta, setMeta] = useState<GameMeta | null>(null);
   const wsRef = useRef<GameWS | null>(null);
   const preOptimisticBoard = useRef<string | null>(null);
@@ -536,26 +544,31 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
       </div>
 
       <aside className="flex flex-col gap-6">
+        <AnalysisDensityToggle />
         {hint.length > 0 && hintWinrate !== null ? (
           <AnalysisOverlay topMoves={hint} winrate={hintWinrate} />
         ) : (
           <StatFigure value={g.moveCount} label={t("game.move")} />
         )}
-        <RuleDivider label={t("game.winrate")} />
-        <WinrateBar
-          value={g.winrateBlackSmoothed ?? g.winrateBlack}
-          blackLabel={t("game.winrateBlack")}
-          whiteLabel={t("game.winrateWhite")}
-        />
-        {typeof g.scoreLeadBlack === "number" && (
-          <div className="font-mono text-xs tabular-nums text-ink-mute text-center -mt-1">
-            {(() => {
-              const lead = g.scoreLeadBlack;
-              if (Math.abs(lead) < 0.05) return t("game.evenPosition");
-              const prefix = lead > 0 ? "B+" : "W+";
-              return `${prefix}${Math.abs(lead).toFixed(1)}`;
-            })()}
-          </div>
+        {showAnalyst && (
+          <>
+            <RuleDivider label={t("game.winrate")} />
+            <WinrateBar
+              value={g.winrateBlackSmoothed ?? g.winrateBlack}
+              blackLabel={t("game.winrateBlack")}
+              whiteLabel={t("game.winrateWhite")}
+            />
+            {typeof g.scoreLeadBlack === "number" && (
+              <div className="font-mono text-xs tabular-nums text-ink-mute text-center -mt-1">
+                {(() => {
+                  const lead = g.scoreLeadBlack;
+                  if (Math.abs(lead) < 0.05) return t("game.evenPosition");
+                  const prefix = lead > 0 ? "B+" : "W+";
+                  return `${prefix}${Math.abs(lead).toFixed(1)}`;
+                })()}
+              </div>
+            )}
+          </>
         )}
         <RuleDivider label={t("game.info")} />
         <DataBlock

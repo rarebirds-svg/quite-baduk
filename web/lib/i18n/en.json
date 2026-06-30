@@ -190,6 +190,7 @@
     "valueDesc2": "Seven play styles and 18 historic masters — Lee Chang-ho, Cho Chikun, Shin Jinseo, Ke Jie, and more.",
     "valueTitle3": "Deep positional read",
     "valueDesc3": "Live winrate and score lead, endgame-phase detection, and KataGo-ownership-driven dead-stone scoring.",
+    "previewCaption": "A real game — same engine, 9 kyu to 9 dan",
     "scrollHint": "Enter a nickname below to begin",
     "footerNote": "Nickname-based ephemeral session — auto-expires after 1 hour of inactivity. See the Privacy Policy for full data retention details.",
     "footerPro": "Pro Games",
@@ -212,7 +213,7 @@
     "expiredTitle": "Your session has expired",
     "expiredDesc": "Please set a nickname to continue"
   },
-  "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Order", "colorBlack": "Black", "colorWhite": "White", "colorRoll": "Roll", "colorReroll": "Re-roll", "colorYou": "You", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "hintLoading": "Checking…", "hintCoachmark": "Stuck? Tap Hint to see the move KataGo recommends — it's a learning tool, not cheating.", "hintHesitation": "Thinking hard about this spot? A hint can show you the recommended moves.", "hintNudgeDismiss": "Dismiss", "aiThinking": "AI thinking...", "viewKifu": "View kifu", "downloadSgf": "Download SGF", "kifuDialogTitle": "Kifu review", "resultLabel": "Result", "newGame": "New game", "newGameSubtitle": "Pick opponent, size, and handicap to begin.", "summary": "Summary", "start": "Start", "sectionOpponent": "Opponent", "sectionBoard": "Board", "sectionHandicap": "Handicap", "sectionChoice": "Choice", "aiRank": "KataGo Human-SL", "you": "You", "yourRank": "Player", "yourTurn": "Your turn", "thinking": "Thinking…", "result": "Result", "info": "INFO", "moves": "MOVES", "move": "MOVE", "captures": "CAPTURES", "toMove": "TO MOVE", "winrate": "WINRATE", "winrateBlack": "Black", "winrateWhite": "White", "evenPosition": "Even",
+  "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Order", "colorBlack": "Black", "colorWhite": "White", "colorRoll": "Roll", "colorReroll": "Re-roll", "colorYou": "You", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "hintLoading": "Checking…", "hintCoachmark": "Stuck? Tap Hint to see the move KataGo recommends — it's a learning tool, not cheating.", "hintHesitation": "Thinking hard about this spot? A hint can show you the recommended moves.", "hintNudgeDismiss": "Dismiss", "aiThinking": "AI thinking...", "viewKifu": "View kifu", "downloadSgf": "Download SGF", "kifuDialogTitle": "Kifu review", "resultLabel": "Result", "newGame": "New game", "newGameSubtitle": "Pick opponent, size, and handicap to begin.", "summary": "Summary", "start": "Start", "sectionOpponent": "Opponent", "sectionBoard": "Board", "sectionHandicap": "Handicap", "sectionChoice": "Choice", "aiRank": "KataGo Human-SL", "you": "You", "yourRank": "Player", "yourTurn": "Your turn", "thinking": "Thinking…", "result": "Result", "info": "INFO", "moves": "MOVES", "move": "MOVE", "captures": "CAPTURES", "toMove": "TO MOVE", "winrate": "WINRATE", "winrateBlack": "Black", "winrateWhite": "White", "evenPosition": "Even", "analysisView": "Analysis", "viewBeginner": "Beginner", "viewAnalyst": "Analyst", "advisor": { "trigger": "Not sure of your rank?", "q1Title": "Have you played Go before?", "q1New": "I'm brand new", "q1Rules": "I know the rules", "q1Played": "I've played before", "q2Title": "How strong are you?", "q2Small": "Mostly small boards (9×9)", "q2Finish": "I can finish a 19×19 game", "q2Club": "I have a club rank", "q2Dan": "I'm a dan player", "resultLabel": "Suggested starting rank", "apply": "Use this rank", "restart": "Start over" },
     "aiResignedTitle": "Win by resignation",
     "aiResignedBody": "The AI has laid down its stones. Congratulations.",
     "aiPassed": "AI passed",
@@ -367,7 +368,7 @@
     "colStarted": "Started",
     "colDuration": "Duration"
   },
-  "settings": { "heading": "Settings", "preferredRank": "Preferred rank", "language": "Language", "theme": "Theme", "themeLight": "Light", "themeDark": "Dark", "saved": "Saved", "boardBg": "Board surface", "boardBg_paper": "Paper", "boardBg_wood": "Wood", "boardBg_kaya": "Kaya", "boardBg_slate": "Slate" },
+  "settings": { "heading": "Settings", "preferredRank": "Preferred rank", "language": "Language", "theme": "Theme", "themeLight": "Light", "themeDark": "Dark", "saved": "Saved", "boardBg": "Board surface", "boardBg_paper": "Paper", "boardBg_wood": "Wood", "boardBg_kaya": "Kaya", "boardBg_slate": "Slate", "analysisView": "Analysis display", "analysisViewHint": "Beginner mode hides win rate and score during play." },
   "privacy": {
     "title": "Privacy Policy",
     "eyebrow": "Policy",

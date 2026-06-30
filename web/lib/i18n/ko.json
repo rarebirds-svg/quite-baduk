@@ -190,7 +190,8 @@
     "valueDesc2": "세력·실리·전투·속기 등 7가지 기풍, 이창호·조치훈·신진서 등 18명의 기사 중 한 명을 상대로.",
     "valueTitle3": "깊이 있는 형세 판단",
     "valueDesc3": "실시간 승률과 집차(scoreLead), 공배 단계 자동 감지, KataGo ownership 기반 자동 사석 판정까지.",
-    "scrollHint": "아래 닉네임을 입력해 한 판 시작",
+    "previewCaption": "실제 대국 — 9급부터 9단까지, 같은 엔진으로",
+ "scrollHint": "아래 닉네임을 입력해 한 판 시작",
     "footerNote": "닉네임 기반 일회성 세션 — 1시간 무활동 시 자동 만료. 자세한 데이터 보관 정책은 개인정보처리방침을 참조하세요.",
     "footerPro": "프로 기보",
     "footerGlossary": "용어",
@@ -212,7 +213,7 @@
     "expiredTitle": "세션이 만료되었습니다",
     "expiredDesc": "닉네임을 다시 설정해주세요"
   },
-  "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "대국방식", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "순서", "colorBlack": "흑", "colorWhite": "백", "colorRoll": "랜덤 뽑기", "colorReroll": "다시 뽑기", "colorYou": "당신", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "hintLoading": "확인 중…", "hintCoachmark": "막힐 땐 힌트를 눌러 KataGo가 추천하는 한 수를 받아보세요. 실력을 키우는 학습 도구입니다.", "hintHesitation": "이 자리가 고민되시나요. 힌트로 추천 수를 확인해볼 수 있어요.", "hintNudgeDismiss": "안내 닫기", "aiThinking": "AI 생각 중...", "viewKifu": "기보 보기", "downloadSgf": "기보(SGF) 다운로드", "kifuDialogTitle": "기보 복기", "resultLabel": "결과", "newGame": "새 대국", "newGameSubtitle": "상대·판 크기·핸디캡을 선택하고 시작하세요.", "summary": "대국 요약", "start": "대국 시작", "sectionOpponent": "상대", "sectionBoard": "판", "sectionHandicap": "핸디캡", "sectionChoice": "선택", "aiRank": "KataGo Human-SL", "you": "나", "yourRank": "플레이어", "yourTurn": "당신 차례", "thinking": "수를 읽는 중…", "result": "결과", "info": "정보", "moves": "기보", "move": "수", "captures": "따냄", "toMove": "차례", "winrate": "승률", "winrateBlack": "흑", "winrateWhite": "백", "evenPosition": "호각",
+  "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "대국방식", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "순서", "colorBlack": "흑", "colorWhite": "백", "colorRoll": "랜덤 뽑기", "colorReroll": "다시 뽑기", "colorYou": "당신", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "hintLoading": "확인 중…", "hintCoachmark": "막힐 땐 힌트를 눌러 KataGo가 추천하는 한 수를 받아보세요. 실력을 키우는 학습 도구입니다.", "hintHesitation": "이 자리가 고민되시나요. 힌트로 추천 수를 확인해볼 수 있어요.", "hintNudgeDismiss": "안내 닫기", "aiThinking": "AI 생각 중...", "viewKifu": "기보 보기", "downloadSgf": "기보(SGF) 다운로드", "kifuDialogTitle": "기보 복기", "resultLabel": "결과", "newGame": "새 대국", "newGameSubtitle": "상대·판 크기·핸디캡을 선택하고 시작하세요.", "summary": "대국 요약", "start": "대국 시작", "sectionOpponent": "상대", "sectionBoard": "판", "sectionHandicap": "핸디캡", "sectionChoice": "선택", "aiRank": "KataGo Human-SL", "you": "나", "yourRank": "플레이어", "yourTurn": "당신 차례", "thinking": "수를 읽는 중…", "result": "결과", "info": "정보", "moves": "기보", "move": "수", "captures": "따냄", "toMove": "차례", "winrate": "승률", "winrateBlack": "흑", "winrateWhite": "백", "evenPosition": "호각", "analysisView": "형세 표시", "viewBeginner": "초보", "viewAnalyst": "분석가", "advisor": { "trigger": "급수를 모르겠어요?", "q1Title": "바둑을 둬본 적 있나요?", "q1New": "처음이에요", "q1Rules": "규칙은 알아요", "q1Played": "둬본 적 있어요", "q2Title": "실력은 어느 정도인가요?", "q2Small": "작은 판(9줄) 위주로 둬요", "q2Finish": "19줄 한 판을 끝까지 둘 수 있어요", "q2Club": "동네 기원에서 급수를 받았어요", "q2Dan": "유단자예요", "resultLabel": "추천 시작 급수", "apply": "이 급수로 설정", "restart": "다시" },
     "aiResignedTitle": "불계승(不計勝)",
     "aiResignedBody": "AI가 돌을 거두었습니다. 축하드립니다.",
     "aiPassed": "AI가 패스했습니다",
@@ -367,7 +368,7 @@
     "colStarted": "시작",
     "colDuration": "소요"
   },
-  "settings": { "heading": "설정", "preferredRank": "선호 급수", "language": "언어", "theme": "테마", "themeLight": "밝게", "themeDark": "어둡게", "saved": "저장됨", "boardBg": "바둑판 배경", "boardBg_paper": "한지", "boardBg_wood": "나무결", "boardBg_kaya": "비자나무", "boardBg_slate": "슬레이트" },
+  "settings": { "heading": "설정", "preferredRank": "선호 급수", "language": "언어", "theme": "테마", "themeLight": "밝게", "themeDark": "어둡게", "saved": "저장됨", "boardBg": "바둑판 배경", "boardBg_paper": "한지", "boardBg_wood": "나무결", "boardBg_kaya": "비자나무", "boardBg_slate": "슬레이트", "analysisView": "형세 정보 표시", "analysisViewHint": "초보 모드는 대국 중 승률·집차를 숨깁니다." },
   "privacy": {
     "title": "개인정보처리방침",
     "eyebrow": "정책",

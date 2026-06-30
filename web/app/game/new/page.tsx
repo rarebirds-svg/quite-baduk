@@ -9,6 +9,7 @@ import { Hero } from "@/components/editorial/Hero";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import RankPicker, { RANKS, type Rank } from "@/components/RankPicker";
+import RankAdvisor from "@/components/RankAdvisor";
 import BoardSizePicker from "@/components/BoardSizePicker";
 import HandicapPicker from "@/components/HandicapPicker";
 import type { AiStyle } from "@/components/StylePicker";
@@ -133,16 +134,19 @@ export default function NewGamePage() {
       <Hero title={t("game.newGame")} subtitle={t("game.newGameSubtitle")} />
 
       <div className="divide-y divide-ink-faint/40 border-y border-ink-faint/40">
-        <section className="flex items-center justify-between gap-4 py-3">
-          <Label
-            htmlFor="rank-picker"
-            className="text-xs font-semibold uppercase tracking-label text-ink-mute"
-          >
-            {t("game.rank")}
-          </Label>
-          <div className="w-40">
-            <RankPicker value={rank} onChange={setRank} />
+        <section className="flex flex-col gap-3 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <Label
+              htmlFor="rank-picker"
+              className="text-xs font-semibold uppercase tracking-label text-ink-mute"
+            >
+              {t("game.rank")}
+            </Label>
+            <div className="w-40">
+              <RankPicker value={rank} onChange={setRank} />
+            </div>
           </div>
+          <RankAdvisor onSelect={setRank} />
         </section>
 
         <section className="flex items-center justify-between gap-4 py-3">

@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { setSessionToken } from "@/lib/sessionToken";
 import RankPicker, { RANKS, type Rank } from "@/components/RankPicker";
 import BoardBgSwitcher from "@/components/BoardBgSwitcher";
+import AnalysisDensityToggle from "@/components/AnalysisDensityToggle";
 
 export default function SettingsPage() {
   const t = useT();
@@ -61,6 +62,10 @@ export default function SettingsPage() {
         </select>
       </label>
       <BoardBgSwitcher />
+      <div className="flex flex-col gap-1">
+        <AnalysisDensityToggle />
+        <span className="text-xs text-ink-mute">{t("settings.analysisViewHint")}</span>
+      </div>
       <div className="pt-6 border-t border-ink-faint">
         <button
           onClick={endSession}

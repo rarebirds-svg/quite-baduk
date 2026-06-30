@@ -7,6 +7,7 @@ import { useT } from "@/lib/i18n";
 import { setSessionToken } from "@/lib/sessionToken";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
+import { BoardPreview } from "@/components/editorial/BoardPreview";
 
 type CheckResp = { available: boolean; reason?: "taken" | "invalid" };
 
@@ -161,6 +162,7 @@ export default function NicknameGate() {
         <p className="mt-6 md:mt-8 font-sans text-base md:text-lg text-ink-mute max-w-2xl leading-relaxed">
           {subtitle}
         </p>
+        <BoardPreview />
       </section>
 
       <RuleDivider weight="strong" />
