@@ -146,7 +146,7 @@
       "heading1": "A game, a piece of literature.",
       "sub1": "9-kyu to 9-dan, modeled on real human play. KataGo's Human-SL network is your opponent.",
       "heading2": "Find your own style.",
-      "sub2": "Lee Chang-ho's endgame, Cho Chikun's fighting, Shin Jinseo's balance — pick from 18 masters across 7 styles.",
+      "sub2": "Lee Chang-ho's endgame, Cho Chikun's fighting, Shin Jinseo's balance — pick from 19 masters across 7 styles.",
       "heading3": "Read the universe in a single stone.",
       "sub3": "Live winrate, score lead, dame-fill detection, auto dead-stone scoring — quiet but deep positional judgment.",
       "heading4": "Silence on the board, calculation in the mind.",
@@ -187,7 +187,7 @@
     "valueTitle1": "Truly human-like AI",
     "valueDesc1": "Not a labeled difficulty — an actual Human-SL network trained on real games at that rank, 9-kyu to 9-dan.",
     "valueTitle2": "Master lineage",
-    "valueDesc2": "Seven play styles and 18 historic masters — Lee Chang-ho, Cho Chikun, Shin Jinseo, Ke Jie, and more.",
+    "valueDesc2": "Seven play styles and 19 historic masters — Lee Chang-ho, Cho Chikun, Shin Jinseo, Ke Jie, and more.",
     "valueTitle3": "Deep positional read",
     "valueDesc3": "Live winrate and score lead, endgame-phase detection, and KataGo-ownership-driven dead-stone scoring.",
     "previewCaption": "A real game — same engine, 9 kyu to 9 dan",
@@ -213,7 +213,7 @@
     "expiredTitle": "Your session has expired",
     "expiredDesc": "Please set a nickname to continue"
   },
-  "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Order", "colorBlack": "Black", "colorWhite": "White", "colorRoll": "Roll", "colorReroll": "Re-roll", "colorYou": "You", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "hintLoading": "Checking…", "hintCoachmark": "Stuck? Tap Hint to see the move KataGo recommends — it's a learning tool, not cheating.", "hintHesitation": "Thinking hard about this spot? A hint can show you the recommended moves.", "hintNudgeDismiss": "Dismiss", "aiThinking": "AI thinking...", "viewKifu": "View kifu", "downloadSgf": "Download SGF", "kifuDialogTitle": "Kifu review", "resultLabel": "Result", "newGame": "New game", "newGameSubtitle": "Pick opponent, size, and handicap to begin.", "summary": "Summary", "start": "Start", "sectionOpponent": "Opponent", "sectionBoard": "Board", "sectionHandicap": "Handicap", "sectionChoice": "Choice", "aiRank": "KataGo Human-SL", "you": "You", "yourRank": "Player", "yourTurn": "Your turn", "thinking": "Thinking…", "result": "Result", "info": "INFO", "moves": "MOVES", "move": "MOVE", "captures": "CAPTURES", "toMove": "TO MOVE", "winrate": "WINRATE", "winrateBlack": "Black", "winrateWhite": "White", "evenPosition": "Even", "analysisView": "Analysis", "viewBeginner": "Beginner", "viewAnalyst": "Analyst", "advisor": { "trigger": "Not sure of your rank?", "q1Title": "Have you played Go before?", "q1New": "I'm brand new", "q1Rules": "I know the rules", "q1Played": "I've played before", "q2Title": "How strong are you?", "q2Small": "Mostly small boards (9×9)", "q2Finish": "I can finish a 19×19 game", "q2Club": "I have a club rank", "q2Dan": "I'm a dan player", "resultLabel": "Suggested starting rank", "apply": "Use this rank", "restart": "Start over" },
+  "game": { "boardSize": "Board size", "rank": "Rank", "handicap": "Handicap", "handicapNone": "Even", "handicapStones": "{n} stones", "color": "Order", "colorBlack": "Black", "colorWhite": "White", "colorRoll": "Roll", "colorReroll": "Re-roll", "colorYou": "You", "create": "Create game", "pass": "Pass", "resign": "Resign", "undo": "Undo", "hint": "Hint", "hintLoading": "Checking…", "hintCoachmark": "Stuck? Tap Hint to see the move KataGo recommends — it's a learning tool, not cheating.", "hintHesitation": "Thinking hard about this spot? A hint can show you the recommended moves.", "hintNudgeDismiss": "Dismiss", "aiThinking": "AI thinking...", "viewKifu": "View kifu", "downloadSgf": "Download SGF", "kifuDialogTitle": "Kifu review", "resultLabel": "Result", "newGame": "New game", "newGameSubtitle": "Pick opponent, size, and handicap to begin.", "summary": "Summary", "start": "Start", "sectionOpponent": "Opponent", "sectionBoard": "Board", "sectionHandicap": "Handicap", "sectionChoice": "Choice", "aiRank": "KataGo Human-SL", "you": "You", "yourRank": "Player", "yourTurn": "Your turn", "thinking": "Thinking…", "result": "Result", "info": "INFO", "moves": "MOVES", "move": "MOVE", "captures": "CAPTURES", "toMove": "TO MOVE", "winrate": "WINRATE", "winrateBlack": "Black", "winrateWhite": "White", "evenPosition": "Even", "analysisView": "Analysis", "viewBeginner": "Beginner", "viewAnalyst": "Analyst", "advisor": { "trigger": "Not sure of your rank?", "q1Title": "Have you played Go before?", "q1New": "I'm brand new", "q1Rules": "I know the rules", "q1Played": "I've played before", "q2Title": "How strong are you?", "q2Small": "Mostly small boards (9×9)", "q2Finish": "I can finish a 19×19 game", "q2Club": "I have a club rank", "q2Dan": "I'm a dan player", "resultLabel": "Suggested starting rank", "apply": "Use this rank", "restart": "Start over" }, "boardKbHint": "Arrow keys to move, Enter to place", "boardKbCursor": "cursor", "styleFilterAll": "All", "styleFilterLabel": "Filter by style",
     "aiResignedTitle": "Win by resignation",
     "aiResignedBody": "The AI has laid down its stones. Congratulations.",
     "aiPassed": "AI passed",
@@ -513,7 +513,7 @@
       "aiPlayerNames": {
         "title": "Use of player names in AI style selection",
         "items": [
-          "The AI style selection screen lists the names of 18 real professional Go players to help convey style categories. These names are used solely as classification references for non-commercial, educational guidance.",
+          "The AI style selection screen lists the names of 19 real professional Go players to help convey style categories. These names are used solely as classification references for non-commercial, educational guidance.",
           "This service has no official affiliation, endorsement, or sponsorship from any listed player or from organisations such as the Korea Baduk Association, the Nihon Ki-in, or the Chinese Weiqi Association, and does not present itself as having such a relationship.",
           "The KataGo Human-SL model used here is a generic, rank-trained model — it has not been trained on any individual player's game records and does not impersonate that player.",
           "References are limited to well-known nicknames and publicly known stylistic evaluations; no player's photograph, signature, voice, or personal logo is used.",

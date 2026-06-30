@@ -146,7 +146,7 @@
       "heading1": "한 판의 대국, 한 편의 문학.",
       "sub1": "KataGo Human-SL로 재현한 9급에서 9단까지 — 실제 사람의 기보를 배운 AI가 당신의 상대가 됩니다.",
       "heading2": "당신의 기풍을 발견하는 곳.",
-      "sub2": "이창호의 끝내기, 조치훈의 전투, 신진서의 균형 — 세력·실리·전투·속기까지 18명의 기사 중 택일.",
+      "sub2": "이창호의 끝내기, 조치훈의 전투, 신진서의 균형 — 세력·실리·전투·속기까지 19명의 기사 중 택일.",
       "heading3": "돌 하나에 담긴 우주를 다시 읽다.",
       "sub3": "착수마다 승률과 집차, 공배 단계 판정까지 — 조용하지만 깊이 있는 형세 판단이 곁에 있습니다.",
       "heading4": "반상의 침묵, 마음의 수읽기.",
@@ -187,7 +187,7 @@
     "valueTitle1": "진짜 인간 같은 AI",
     "valueDesc1": "라벨만 단 급수가 아니라 해당 수준의 실제 기보를 학습한 Human-SL 모델 — 9급에서 9단까지.",
     "valueTitle2": "명국의 기풍",
-    "valueDesc2": "세력·실리·전투·속기 등 7가지 기풍, 이창호·조치훈·신진서 등 18명의 기사 중 한 명을 상대로.",
+    "valueDesc2": "세력·실리·전투·속기 등 7가지 기풍, 이창호·조치훈·신진서 등 19명의 기사 중 한 명을 상대로.",
     "valueTitle3": "깊이 있는 형세 판단",
     "valueDesc3": "실시간 승률과 집차(scoreLead), 공배 단계 자동 감지, KataGo ownership 기반 자동 사석 판정까지.",
     "previewCaption": "실제 대국 — 9급부터 9단까지, 같은 엔진으로",
@@ -213,7 +213,7 @@
     "expiredTitle": "세션이 만료되었습니다",
     "expiredDesc": "닉네임을 다시 설정해주세요"
   },
-  "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "대국방식", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "순서", "colorBlack": "흑", "colorWhite": "백", "colorRoll": "랜덤 뽑기", "colorReroll": "다시 뽑기", "colorYou": "당신", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "hintLoading": "확인 중…", "hintCoachmark": "막힐 땐 힌트를 눌러 KataGo가 추천하는 한 수를 받아보세요. 실력을 키우는 학습 도구입니다.", "hintHesitation": "이 자리가 고민되시나요. 힌트로 추천 수를 확인해볼 수 있어요.", "hintNudgeDismiss": "안내 닫기", "aiThinking": "AI 생각 중...", "viewKifu": "기보 보기", "downloadSgf": "기보(SGF) 다운로드", "kifuDialogTitle": "기보 복기", "resultLabel": "결과", "newGame": "새 대국", "newGameSubtitle": "상대·판 크기·핸디캡을 선택하고 시작하세요.", "summary": "대국 요약", "start": "대국 시작", "sectionOpponent": "상대", "sectionBoard": "판", "sectionHandicap": "핸디캡", "sectionChoice": "선택", "aiRank": "KataGo Human-SL", "you": "나", "yourRank": "플레이어", "yourTurn": "당신 차례", "thinking": "수를 읽는 중…", "result": "결과", "info": "정보", "moves": "기보", "move": "수", "captures": "따냄", "toMove": "차례", "winrate": "승률", "winrateBlack": "흑", "winrateWhite": "백", "evenPosition": "호각", "analysisView": "형세 표시", "viewBeginner": "초보", "viewAnalyst": "분석가", "advisor": { "trigger": "급수를 모르겠어요?", "q1Title": "바둑을 둬본 적 있나요?", "q1New": "처음이에요", "q1Rules": "규칙은 알아요", "q1Played": "둬본 적 있어요", "q2Title": "실력은 어느 정도인가요?", "q2Small": "작은 판(9줄) 위주로 둬요", "q2Finish": "19줄 한 판을 끝까지 둘 수 있어요", "q2Club": "동네 기원에서 급수를 받았어요", "q2Dan": "유단자예요", "resultLabel": "추천 시작 급수", "apply": "이 급수로 설정", "restart": "다시" },
+  "game": { "boardSize": "바둑판 크기", "rank": "급수", "handicap": "대국방식", "handicapNone": "호선", "handicapStones": "{n}점 치석", "color": "순서", "colorBlack": "흑", "colorWhite": "백", "colorRoll": "랜덤 뽑기", "colorReroll": "다시 뽑기", "colorYou": "당신", "create": "대국 생성", "pass": "패스", "resign": "기권", "undo": "무르기", "hint": "힌트", "hintLoading": "확인 중…", "hintCoachmark": "막힐 땐 힌트를 눌러 KataGo가 추천하는 한 수를 받아보세요. 실력을 키우는 학습 도구입니다.", "hintHesitation": "이 자리가 고민되시나요. 힌트로 추천 수를 확인해볼 수 있어요.", "hintNudgeDismiss": "안내 닫기", "aiThinking": "AI 생각 중...", "viewKifu": "기보 보기", "downloadSgf": "기보(SGF) 다운로드", "kifuDialogTitle": "기보 복기", "resultLabel": "결과", "newGame": "새 대국", "newGameSubtitle": "상대·판 크기·핸디캡을 선택하고 시작하세요.", "summary": "대국 요약", "start": "대국 시작", "sectionOpponent": "상대", "sectionBoard": "판", "sectionHandicap": "핸디캡", "sectionChoice": "선택", "aiRank": "KataGo Human-SL", "you": "나", "yourRank": "플레이어", "yourTurn": "당신 차례", "thinking": "수를 읽는 중…", "result": "결과", "info": "정보", "moves": "기보", "move": "수", "captures": "따냄", "toMove": "차례", "winrate": "승률", "winrateBlack": "흑", "winrateWhite": "백", "evenPosition": "호각", "analysisView": "형세 표시", "viewBeginner": "초보", "viewAnalyst": "분석가", "advisor": { "trigger": "급수를 모르겠어요?", "q1Title": "바둑을 둬본 적 있나요?", "q1New": "처음이에요", "q1Rules": "규칙은 알아요", "q1Played": "둬본 적 있어요", "q2Title": "실력은 어느 정도인가요?", "q2Small": "작은 판(9줄) 위주로 둬요", "q2Finish": "19줄 한 판을 끝까지 둘 수 있어요", "q2Club": "동네 기원에서 급수를 받았어요", "q2Dan": "유단자예요", "resultLabel": "추천 시작 급수", "apply": "이 급수로 설정", "restart": "다시" }, "boardKbHint": "화살표 키로 이동하고 엔터로 착수합니다", "boardKbCursor": "커서", "styleFilterAll": "전체", "styleFilterLabel": "기풍 필터",
     "aiResignedTitle": "불계승(不計勝)",
     "aiResignedBody": "AI가 돌을 거두었습니다. 축하드립니다.",
     "aiPassed": "AI가 패스했습니다",
@@ -513,7 +513,7 @@
       "aiPlayerNames": {
         "title": "AI 기풍 선택의 기사명 사용",
         "items": [
-          "AI 기풍 선택 화면에는 기풍 분류의 이해를 돕기 위해 18명의 실제 프로 기사 이름이 노출됩니다. 표시된 기사명은 분류 레퍼런스 및 비상업적·교육적 안내 목적으로만 사용됩니다.",
+          "AI 기풍 선택 화면에는 기풍 분류의 이해를 돕기 위해 19명의 실제 프로 기사 이름이 노출됩니다. 표시된 기사명은 분류 레퍼런스 및 비상업적·교육적 안내 목적으로만 사용됩니다.",
           "본 서비스는 표시된 기사 본인, 한국기원·일본기원·중국기원 등 어떠한 단체와도 공식 협력·후원·승인 관계가 없으며, 그러한 관계가 있는 것처럼 표시하지 않습니다.",
           "사용된 KataGo Human-SL 모델은 기력 단위(급·단)로 학습된 일반 모델이며, 특정 기사 본인의 기보로 학습되거나 그 기사를 사칭하지 않습니다.",
           "표시는 잘 알려진 별칭 및 공개된 기풍 평가에 한정되며, 기사의 사진·서명·음성·개인 로고는 일체 사용하지 않습니다.",

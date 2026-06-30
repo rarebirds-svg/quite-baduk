@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useId, useState } from "react";
-import { COLS, starPoints } from "@/lib/board";
+import { COLS, starPoints, xyToGtp } from "@/lib/board";
 import { tokens } from "@/lib/tokens";
 import { BOARD_THEMES, useBoardTheme } from "@/store/boardThemeStore";
+import { useT } from "@/lib/i18n";
 
 type OverlayColor = "primary" | "secondary" | "tertiary";
 type OverlayItem = { x: number; y: number; color: OverlayColor | string; label?: string };
@@ -83,6 +84,46 @@ export default function Board({
     onClick(x, y);
   };
 
+  // 키보드 착수 — onClick이 있고 비활성이 아닐 때만 보드를 포커스 가능하게 한다.
+  // 화살표로 커서를 옮기고 Enter/Space로 착수. 마우스 사용자에게 커서가
+  // 보이지 않도록 첫 화살표 입력 때 커서를 띄운다(클릭 포커스로는 안 뜸).
+  const t = useT();
+  const interactive = !!onClick && !disabled;
+  const [kbCursor, setKbCursor] = useState<{ x: number; y: number } | null>(null);
+  const mid = Math.floor(size / 2);
+
+  const handleKeyDown = (e: React.KeyboardEvent<SVGSVGElement>) => {
+    if (!interactive) return;
+    const deltas: Record<string, [number, number]> = {
+      ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0],
+    };
+    if (e.key in deltas) {
+      e.preventDefault();
+      const [dx, dy] = deltas[e.key];
+      setKbCursor((c) => {
+        const base = c ?? { x: mid, y: mid };
+        return {
+          x: Math.min(size - 1, Math.max(0, base.x + dx)),
+          y: Math.min(size - 1, Math.max(0, base.y + dy)),
+        };
+      });
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (!kbCursor) {
+        setKbCursor({ x: mid, y: mid });
+        return;
+      }
+      onClick?.(kbCursor.x, kbCursor.y);
+    }
+  };
+
+  const baseAria = `${size}×${size} Go board`;
+  const ariaLabel = !interactive
+    ? baseAria
+    : kbCursor
+      ? `${baseAria}, ${t("game.boardKbCursor")} ${xyToGtp(kbCursor.x, kbCursor.y, size)}. ${t("game.boardKbHint")}`
+      : `${baseAria}. ${t("game.boardKbHint")}`;
+
   return (
     <svg
       viewBox={`0 0 ${W} ${W}`}
@@ -92,9 +133,12 @@ export default function Board({
         backgroundColor: palette.bg,
         transition: "background-color 200ms ease-out",
       }}
-      className="block"
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-oxblood"
       role="img"
-      aria-label={`${size}×${size} Go board`}
+      aria-label={ariaLabel}
+      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={interactive ? handleKeyDown : undefined}
+      onBlur={interactive ? () => setKbCursor(null) : undefined}
     >
       <defs>
         {palette.surface === "wood" && (
@@ -405,6 +449,25 @@ export default function Board({
           ))}
         </g>
       )}
+
+      {interactive && kbCursor && (() => {
+        const ccx = pad + kbCursor.x * CELL;
+        const ccy = pad + kbCursor.y * CELL;
+        return (
+          <g data-kb-cursor aria-hidden pointerEvents="none">
+            <circle
+              cx={ccx}
+              cy={ccy}
+              r={CELL * 0.42}
+              fill="none"
+              stroke="rgb(var(--oxblood))"
+              strokeWidth={2}
+            />
+            <line x1={ccx - CELL * 0.5} y1={ccy} x2={ccx + CELL * 0.5} y2={ccy} stroke="rgb(var(--oxblood))" strokeWidth={0.75} opacity={0.5} />
+            <line x1={ccx} y1={ccy - CELL * 0.5} x2={ccx} y2={ccy + CELL * 0.5} stroke="rgb(var(--oxblood))" strokeWidth={0.75} opacity={0.5} />
+          </g>
+        );
+      })()}
 
       {onClick && (
         <rect
