@@ -134,7 +134,7 @@ export default function Board({
         transition: "background-color 200ms ease-out",
       }}
       className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-oxblood"
-      role="img"
+      role={interactive ? "application" : "img"}
       aria-label={ariaLabel}
       tabIndex={interactive ? 0 : undefined}
       onKeyDown={interactive ? handleKeyDown : undefined}
