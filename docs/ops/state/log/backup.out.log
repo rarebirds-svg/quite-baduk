@@ -5,3 +5,145 @@ daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260523T040005.db
 daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260524T040005.db.gz
 weekly 티어 복사: baduk-20260524T040005.db.gz
 백업 완료.
+[2026-05-26 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260526T040005.db.gz
+[2026-05-26 04:00:05] backup 완료
+[2026-05-27 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260527T040005.db.gz
+[2026-05-27 04:00:05] backup 완료
+[2026-05-28 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260528T040005.db.gz
+[2026-05-28 04:00:06] backup 완료
+[2026-05-29 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260529T040005.db.gz
+[2026-05-29 04:00:06] backup 완료
+[2026-05-30 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260530T040005.db.gz
+[2026-05-30 04:00:05] backup 완료
+[2026-05-31 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260531T040005.db.gz
+weekly 티어 복사: baduk-20260531T040005.db.gz
+[2026-05-31 04:00:05] backup 완료
+[2026-06-01 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260601T040005.db.gz
+monthly 티어 복사: baduk-20260601T040005.db.gz
+[2026-06-01 04:00:06] backup 완료
+[2026-06-02 04:00:04] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260602T040004.db.gz
+[2026-06-02 04:00:05] backup 완료
+[2026-06-03 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260603T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260523T004131.db.gz
+[2026-06-03 04:00:06] backup 완료
+[2026-06-04 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260604T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260523T004447.db.gz
+[2026-06-04 04:00:06] backup 완료
+[2026-06-05 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260605T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260523T040005.db.gz
+[2026-06-05 04:00:06] backup 완료
+[2026-06-06 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260606T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260524T040005.db.gz
+[2026-06-06 04:00:05] backup 완료
+[2026-06-07 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260607T040005.db.gz
+weekly 티어 복사: baduk-20260607T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260525T040005.db.gz
+[2026-06-07 04:00:05] backup 완료
+[2026-06-08 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260608T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260525T213610.db.gz
+[2026-06-08 04:00:06] backup 완료
+[2026-06-09 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260609T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260526T040005.db.gz
+[2026-06-09 04:00:06] backup 완료
+[2026-06-10 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260610T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260527T040005.db.gz
+[2026-06-10 04:00:06] backup 완료
+[2026-06-11 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260611T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260528T040005.db.gz
+[2026-06-11 04:00:06] backup 완료
+[2026-06-12 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260612T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260529T040005.db.gz
+[2026-06-12 04:00:06] backup 완료
+[2026-06-13 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260613T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260530T040005.db.gz
+[2026-06-13 04:00:06] backup 완료
+[2026-06-14 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260614T040005.db.gz
+weekly 티어 복사: baduk-20260614T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260531T040005.db.gz
+[2026-06-14 04:00:06] backup 완료
+[2026-06-15 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260615T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260601T040005.db.gz
+[2026-06-15 04:00:06] backup 완료
+[2026-06-16 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260616T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260602T040004.db.gz
+[2026-06-16 04:00:06] backup 완료
+[2026-06-17 04:00:02] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260617T040002.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260603T040005.db.gz
+[2026-06-17 04:00:03] backup 완료
+[2026-06-18 04:00:01] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260618T040001.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260604T040005.db.gz
+[2026-06-18 04:00:02] backup 완료
+[2026-06-19 04:00:03] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260619T040003.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260605T040005.db.gz
+[2026-06-19 04:00:04] backup 완료
+[2026-06-20 04:00:01] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260620T040001.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260606T040005.db.gz
+[2026-06-20 04:00:02] backup 완료
+[2026-06-21 04:00:02] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260621T040002.db.gz
+weekly 티어 복사: baduk-20260621T040002.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260607T040005.db.gz
+[2026-06-21 04:00:03] backup 완료
+[2026-06-22 04:00:04] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260622T040004.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260608T040005.db.gz
+[2026-06-22 04:00:04] backup 완료
+[2026-06-23 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260623T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260609T040005.db.gz
+[2026-06-23 04:00:06] backup 완료
+[2026-06-24 04:00:01] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260624T040001.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260610T040005.db.gz
+[2026-06-24 04:00:02] backup 완료
+[2026-06-25 04:00:04] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260625T040004.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260611T040005.db.gz
+[2026-06-25 04:00:05] backup 완료
+[2026-06-26 04:00:02] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260626T040002.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260612T040005.db.gz
+[2026-06-26 04:00:03] backup 완료
+[2026-06-27 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260627T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260613T040005.db.gz
+[2026-06-27 04:00:06] backup 완료
+[2026-06-28 04:00:04] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260628T040004.db.gz
+weekly 티어 복사: baduk-20260628T040004.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260614T040005.db.gz
+[2026-06-28 04:00:05] backup 완료
+[2026-06-29 04:00:02] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260629T040002.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260615T040005.db.gz
+[2026-06-29 04:00:03] backup 완료
+[2026-06-30 04:00:02] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260630T040002.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260616T040005.db.gz
+[2026-06-30 04:00:03] backup 완료

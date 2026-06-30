@@ -64,3 +64,616 @@
 - Telegram 보고: 헬스 요약 + AP-02 승인 요청 2건 모두 curl 직접 발송 성공 (msg_id 1969).
 - 보류 승인 2건 (AP-01 chuk 글로서리 게시 / AP-02 PR #30 머지). dashboard·log·incidents 갱신 완료.
 [2026-05-25 21:33:04] orchestrator 종료
+[2026-05-26 12:00:01] orchestrator 시작
+[2026-05-26 12:05] orchestrator 12시 사이클 — health OK / backup OK / bug-scan 0 신규 / triage 0 / pr 0 / 보류 승인 0 / Telegram 발송 OK (msg_id 2006)
+[2026-05-26 12:05] orchestrator 종료
+12시 사이클 완료. 한 일 요약.
+
+- **healthcheck/backup-verify**: prod backend·web 200 OK, launchd 가동, 디스크 4%, plist drift 없음. 백업 `baduk-20260526T040005.db.gz` integrity OK (daily 7/weekly 1/monthly 0).
+- **bug-scan/backlog-triage/pr-watch**: 어제 PR #30(`last_seen_at` 디바운스) 머지 후 err 로그의 `database is locked` 신규 발생 멈춤. 열린 이슈·PR·미분류 모두 0건, 보류 승인 0건.
+- **state 갱신**: `dashboard.md` (최신 백업/PR/보류 승인 stale 항목 수정), `state/log/2026-05-26.md` 12시 항목 추가, `orchestrator-runs.log` 추가.
+- **Telegram**: curl 직접 발송 성공 (msg_id 2006).
+[2026-05-26 12:03:15] orchestrator 종료
+[2026-05-26 18:00:05] orchestrator 시작
+오케스트레이터 1회 루프는 이미 종료 단계라 task 추적은 불필요. 종료 요약.
+
+## 18:00 사이클 결과
+
+- **prod 정상** — backend·web 200, launchd 가동, 디스크 4%, drift 0
+- **백업 OK** — 최신 14h 전, integrity ok, daily 7/weekly 1/monthly 0
+- **신규 버그·미분류·열린 PR·보류 승인 모두 0**
+- **Telegram 발송 성공** — Bot API curl 폴백, msg_id 2007
+
+다음 실행은 launchd가 23:30에 깨운다.
+[2026-05-26 18:02:31] orchestrator 종료
+[2026-05-27 12:00:04] orchestrator 시작
+## 12:00 사이클 요약
+
+- **healthcheck/backup-verify** — prod backend·web 200, launchd 가동(api 1466·web 1455), 디스크 4%, drift 0. 백업 `baduk-20260527T040005.db.gz` integrity OK (daily 8/weekly 1/monthly 0).
+- **bug-scan/backlog-triage/pr-watch** — 신규 후보·미분류·열린 PR 0건. 보류 승인 0건.
+- **신규 발견** — content-draft·content-ingest는 plist `Weekday=6`/`Weekday=0` 주 1회 잡인데 `check-staleness.sh` 임계 30h로 매주 ~5일간 false-positive 누적 (5/27만 18건). 임계 8~9d 정정 권장 — 별도 dev-cycle/PR.
+- **state 갱신** — `dashboard.md` 27T04:00로 갱신 + Watchdog 정합성 행 추가, `2026-05-27.md` 12:00 항목 추가, `incidents.md`에 메타 항목 추가.
+- **Telegram** — curl 직접 발송 성공 (msg_id 2029).
+[2026-05-27 12:05:30] orchestrator 종료
+12:00 사이클 종료.
+
+## 요약
+
+- **prod 정상** — backend·web 200, launchd PID 유지, 디스크 4%, drift 0
+- **백업 OK** — `baduk-20260527T040005.db.gz` (8h 전), integrity ok, daily 8 / weekly 1 / monthly 0
+- **bug-scan/triage/pr-watch** — 신규 후보·미분류·열린 PR·보류 승인 모두 0
+- **신규 발견** — `ops/check-staleness.sh`의 content-draft·content-ingest 임계 30h가 plist Weekday 주 1회 잡 일정과 misalign → 5/27만 18건 false-positive 누적. 임계 8~9d 정정 권장 (별도 dev-cycle/PR로 처리).
+- **state 갱신** — `dashboard.md` `2026-05-27.md` `incidents.md` 모두 갱신
+- **Telegram** — curl 직접 발송 성공 (msg_id 2029)
+
+다음 실행은 launchd가 18:30에 깨운다.
+[2026-05-27 12:05:13] orchestrator 종료
+[2026-05-27 18:00:05] orchestrator 시작
+18:00 사이클 완료. healthcheck·backup-verify·bug-scan·backlog-triage·pr-watch 모두 통과 — prod·web 200, 백업 integrity OK, 신규 이슈/PR/승인 0건. Telegram 요약 발송 성공 (msg_id 2042). watchdog content-* false-positive 12건 추가 누적은 12:00 사이클의 임계 정합성 권장과 동일하므로 별도 액션 없음.
+[2026-05-27 18:06:00] orchestrator 종료
+[2026-05-28 12:00:01] orchestrator 시작
+12:00 정기 오케스트레이터 1회 완료. prod·web 200 OK·디스크 4%·plist drift 없음, 최신 백업 `baduk-20260528T040005.db.gz` integrity OK(9/1/0), 보류 승인 0건·열린 PR 0건·미분류 이슈 0건, 신규 버그 후보 0건(err 로그의 WS RuntimeError 18건은 PR #30 이전 잔재로 최신 server start 이후 신규 0건), 최근 CWI ingest 2026-05-27 21:41(신규 0)·최근 주간 리포트 2026-W21. Telegram reply 도구는 세션에 미노출이라 fallback curl로 `sendMessage` 발송(`message_id=2053`). dashboard·`state/log/2026-05-28.md` 갱신 완료.
+[2026-05-28 12:03:53] orchestrator 종료
+[2026-05-28 18:00:05] orchestrator 시작
+[2026-05-28 18:02:51] orchestrator 18시 사이클 — health OK / backup OK / bug-scan 0 신규 / triage 0 / pr 0 / 보류 승인 0 / Telegram 발송 OK (msg_id 2054)
+[2026-05-28 18:02:51] orchestrator 종료
+18:30 사이클 정상 완료. prod·web 200·디스크 4%·plist drift 0, 최신 백업 `baduk-20260528T040005.db.gz` integrity OK(9/1/0), 신규 버그·미분류 이슈·열린 PR·보류 승인 모두 0, watchdog 21회 연속 0건. Telegram fallback curl 발송 성공 (`message_id=2054`). dashboard·`state/log/2026-05-28.md`·`orchestrator-runs.log` 갱신 완료. 다음 실행은 launchd가 23:30에 깨운다.
+[2026-05-28 18:02:57] orchestrator 종료
+[2026-05-29 12:00:03] orchestrator 시작
+운영 점검 완료. 요약.
+
+**1회 실행 결과 (2026-05-29 12:00)**
+- **헬스/백업 전부 정상** — prod backend·web 200 OK, launchd 가동, 디스크 4%, plist drift 없음, staging 중단(정책상 정상). 백업 최신(05-29 04:00, 약 8h), 복원 드릴 integrity ok·테이블 7개. 신규 incident 없음.
+- **버그 스캔에서 진짜 버그 1건 발견** — `baduk-api.err`에 WS send-after-close `RuntimeError`(ws.py:241)가 18회 누적(여러 서버 세대 반복). place_move 중 클라이언트가 끊으면 후속 send_json이 닫힌 소켓에 쓰는 레이스. 기존 이슈 없어 GitHub bug 이슈 **#39** 자율 생성(수정은 dev-cycle 대기). 미분류 이슈·열린 PR 0건.
+- **상태 갱신·보고** — dashboard.md·log/2026-05-29.md 갱신. Telegram 보고는 이 세션에 reply/send 도구가 노출되지 않아(MCP 미로드) 발송 불가 — 요약 본문을 로그에 대체 기록했다(환경 변수 자가진단 아님, 도구 미노출 사유).
+[2026-05-29 12:03:24] orchestrator 종료
+[2026-05-29 18:00:05] orchestrator 시작
+18:30 슬롯 오케스트레이터 실행을 마쳤다.
+
+**요약**
+- **전부 정상** — prod backend·web 200 OK(PID 1466·1455), 디스크 4%, plist drift 없음, 백업 신선(05-29 04:00, 복원 integrity ok), staging 중단(정책상 정상). 미분류 이슈 0·열린 PR 0·보류 승인 0.
+- **버그 스캔 — 신규 0건.** `database is locked`(누적 2516회)를 반복 에러로 오인해 이슈 #40을 만들었으나, 대시보드 기록과 트레이스 타임스탬프(05-25 14:06 KST)를 대조하니 PR #30(last_seen_at 디바운스, 05-25 12:50 UTC) **이전** 발생분이고 현재 프로세스 기동 후 0회라 즉시 오탐 확인 후 닫았다. 스캔 전에 대시보드를 먼저 대조했어야 하는 절차 실수였고, 로그에 그대로 남겼다. 기존 #39(WS send-after-close)는 유지.
+- **Telegram 보고 불가** — reply 도구를 ToolSearch로 실제 조회했으나 이 세션에 미노출(MCP 미로드). 환경 변수 자가진단이 아니라 도구 부재가 사유이며, 보고 본문은 `state/log/2026-05-29.md`에 대체 기록했다. dashboard·log 갱신 완료.
+[2026-05-29 18:03:38] orchestrator 종료
+[2026-05-30 12:00:05] orchestrator 시작
+운영 점검 완료. 종료 요약.
+
+## 12:00 정기 사이클 요약
+
+**전부 정상.** prod backend·web 200 OK, db OK, 디스크 4%, launchd plist drift 없음. 백업 `2026-05-30T04:00` 신선(integrity OK, daily 11). 미분류 이슈·열린 PR 0건.
+
+**버그스캔에서 함정 회피.** err 로그가 rotate되지 않아 `database is locked`가 1257회로 보였지만, 임베디드 타임스탬프 전부 `≤2026-05-25 14:06:43`이고 이후 4일·다수 재시작에도 0건 — PR #30(last_seen_at 디바운스)으로 이미 해소된 과거분. 성급히 만든 #41을 검증 후 즉시 close(이전 #40과 동일 케이스). 단, WS `receive_json` not-connected는 현 서버 세대에서 4건 진행형이라 #39에 코멘트로 통합.
+
+**상태 갱신·보고 완료.** dashboard·오늘 로그 갱신, Telegram 상태 요약 발송 성공(`message_id=2059`). 보류 승인 1건(AP-20260530-01 handicap 게시) 대기 중 — 사람 승인 필요.
+[2026-05-30 12:05:40] orchestrator 종료
+[2026-05-30 18:00:05] orchestrator 시작
+18:00 정기 점검 완료 — 종료.
+
+**요약**
+- **헬스·백업 정상** — prod backend·web 200 OK, db OK, 디스크 4%, plist drift 없음, staging 중단(정책상 정상). 최신 백업(04:00) integrity OK·신선, 복원 드릴 통과.
+- **버그스캔** — WS `receive_json` not-connected 누적 70회 발견했으나 #39(WS disconnect 레이스)와 동일 근본원인이라 신규 이슈 대신 #39에 수신경로(line 186)·누적치 데이터포인트 코멘트 추가. 순 신규 0건. 미분류 이슈·열린 PR 모두 0건.
+- **상태 갱신·보고** — dashboard·오늘 로그 갱신, Telegram 상태 요약 발송 성공(message_id 2060). 보류 승인 1건(AP-20260530-01 handicap 게시) 대기 중.
+[2026-05-30 18:03:32] orchestrator 종료
+[2026-05-31 12:00:04] orchestrator 시작
+## 운영 요약 (2026-05-31 12:00 실행)
+
+5개 러닝북 모두 수행. **prod 정상**(backend·web 200 OK·db OK·디스크 4%·plist drift 없음), staging 중단(정상), 백업 신선(2026-05-31T04:00·integrity OK·daily 12), CWI ingest 신규 0, 미분류 이슈·열린 PR 0, 보류 승인 0건, 최근 분석 2026-W22. prod 이상 없음 — incident 미기록.
+
+bug-scan이 `database is locked` ~1258회를 '현재 진행 중'으로 오판해 이슈 #42를 만들었으나, **시점 검증으로 전부 ≤2026-05-25(PR #30 이전) 누적임을 확인하고 즉시 close** — #41과 같은 함정 재발이라 재발 방지 메모리(`bug-scan-verify-recency`)를 추가했다. WS RuntimeError는 기존 #39로 이미 추적 중. Telegram 보고는 reply 도구가 세션에 미노출(MCP 미로드)이라 발송 불가 — 본문은 로그에 기록.
+[2026-05-31 12:05:08] orchestrator 종료
+[2026-05-31 18:00:05] orchestrator 시작
+18:30 운영 실행을 마쳤다. 모든 러닝북을 수행했고, dashboard·로그를 검증된 값으로 갱신했다(신규 incident 없음).
+
+**결과 요약**
+- **헬스**: prod backend `/api/health` ok(db·katago 정상)·web 200·launchd api/web 모두 가동, 디스크 4%, plist drift 없음, staging 중단(정상).
+- **백업**: 최신 20260531T0400 integrity ok·복원 드릴 통과, 티어 12/2/0.
+- **버그 스캔**: 신규 0 — err 로그의 WS RuntimeError는 전부 재시작 전 프로세스(1466) 것이고 기존 #39로 추적 중, 현재 프로세스(22846)는 재시작 후 신규 에러 0건.
+- **백로그/PR**: 미분류 0. 열린 PR 1건 #43(오늘 생성·MERGEABLE·정상, dev-cycle의 #42 방어 픽스로 머지 🟡 사람 승인 대기). 보류 승인 0건. 최근 분석 2026-W22.
+- **Telegram**: ToolSearch로 reply 도구를 실제 조회했으나 세션에 미노출(MCP 미로드) — 발송 불가, 사유 기록하고 요약 본문은 로그로 대체.
+
+작업 도중 PR #43 메타데이터를 한 번 잘못 기재했다가(생성일·mergeable) 실제 `gh` 출력으로 정정했다. 상태 파일은 prior 실행과 동일하게 커밋하지 않고 갱신만 했다(코드·설정 main push는 🟡 규범).
+[2026-05-31 18:07:48] orchestrator 종료
+[2026-06-01 12:00:04] orchestrator 시작
+## 실행 요약 (2026-06-01 12:00 정기 오케스트레이터)
+
+5개 러닝북 모두 정상. healthcheck OK(prod backend/web 200, 디스크 4%, plist drift 없음), 백업 신선·복원 드릴 `ok`, 신규 버그 0건, 미분류 이슈 0건. 보류 승인 0건.
+
+핵심 조치 — 아침 dev-cycle이 완료한 `fix/issue-39`를 push·PR 없이 로컬에만 둬 리뷰 큐에서 보이지 않던 것을 발견. 정책상 `fix/*` push와 PR 생성은 🟢 자율이라, 워크트리에서 테스트 5건 통과 재확인 후 origin push + **PR #45**(closes #39) 생성. 머지만 🟡 사람 승인 대기. 대시보드·로그 갱신, Telegram 상태 요약 발송 완료(message_id=2090), 재발 방지용 메모리 1건 기록.
+[2026-06-01 12:13:24] orchestrator 종료
+[2026-06-01 18:00:05] orchestrator 시작
+18:00 정기 점검 완료. 요약.
+
+- **헬스·백업 정상** — prod backend·web 200 OK, 디스크 4%, plist drift 없음, staging 중단(정책상 정상). 백업 최신 04:00·복원 드릴 `integrity_check=ok`(테이블 7).
+- **이슈·PR** — 신규 버그 0(WS RuntimeError는 기존 #39, 최신 prod 프로세스 28352 재시작 후 재발 0건 — 단 PR #45 미머지). 미분류 0. 열린 PR 3건(#45·#44·#43) 모두 MERGEABLE·CI 통과·정체/충돌 없음, 머지만 🟡 사람 승인 대기. 보류 승인 0건.
+- **기록·보고** — `state/log/2026-06-01.md`에 18:00 섹션 추가, 대시보드 타임스탬프·#45 CI 상태 갱신, Telegram 정기 요약 발송(`message_id=2091`). 인시던트 없음.
+[2026-06-01 18:02:35] orchestrator 종료
+[2026-06-02 12:00:05] orchestrator 시작
+12:30 오케스트레이터 정기 실행 완료. 모든 러닝북 정상.
+
+- **헬스** — prod backend·web 200 OK, db OK, 디스크 4%, plist drift 없음. staging 중단(정책상 정상). 백업 `20260602T040004` 신선·integrity ok·복원 드릴 통과(7 tables).
+- **버그스캔/PR/백로그** — 신규 버그 0건(WS RuntimeError는 기존 #39/PR #45 범위, 02:00 체크 이후 신규 발생 없음 — 로그 위치 불변). 미분류 이슈 0건. 열린 PR 3건(#45·#44·#43) 전부 MERGEABLE·CI SUCCESS, 머지 🟡 대기. 보류 승인 0건.
+- **보고** — `reply` MCP 도구 미노출이라 Bot API `sendMessage`로 직접 발송 성공(`message_id=2094`). 대시보드·로그 갱신 완료. incident 없음.
+[2026-06-02 12:02:52] orchestrator 종료
+[2026-06-02 18:00:05] orchestrator 시작
+18:30 오케스트레이터 1회 실행 완료. 이상 없음.
+
+- **헬스** — prod backend·web 200 OK, db OK, 디스크 4%, plist drift 없음, launchctl 양 서비스 가동. 백업 신선(`baduk-20260602T040004`, integrity ok·7 tables, daily 14/weekly 2/monthly 1).
+- **버그·PR** — 신규 버그 0(잔존 WS RuntimeError는 기존 #39·PR #45 범위, 현 프로세스 기동 후 신규 0). 미분류 이슈 0. 열린 PR 3건(#45·#44·#43) 모두 CI 통과·MERGEABLE, 정체·충돌 없음 — 머지만 🟡 사람 승인 대기. 보류 승인 0건.
+- **보고** — Telegram 상태 요약 발송 성공(message_id 2095). 대시보드·`log/2026-06-02.md` 갱신 완료.
+[2026-06-02 18:02:42] orchestrator 종료
+[2026-06-03 12:00:04] orchestrator 시작
+Telegram sent successfully (`ok:true`, message_id=2097). All runbooks complete.
+
+## 12:00 오케스트레이터 실행 완료
+
+- **모두 정상** — prod backend·web 200 OK, 디스크 4%, plist drift 없음, 백업 신선(오늘 04:00)·복원 무결성 OK, launchd 잡 둘 다 가동.
+- **버그·PR** — 신규 버그 0건. WS RuntimeError는 현 prod 세대(pid 28352) 기동 후 재발 0건이라 신규 이슈를 만들지 않음(이미 #39·PR #45로 추적). 미분류 이슈 0건. 열린 PR 3건 모두 정체·충돌 없음(#44·#45 CI 전부 SUCCESS·머지 🟡 대기, #43은 CI 미트리거).
+- **기록·보고** — dashboard·`log/2026-06-03.md` 갱신, Telegram 상태 요약 발송(`reply` 도구 미노출 → 채널 봇 토큰으로 Bot API 직접 발송, message_id 2097).
+[2026-06-03 12:03:03] orchestrator 종료
+[2026-06-03 18:00:05] orchestrator 시작
+18:30 정기 점검 완료. 모든 항목 정상.
+
+- **헬스/백업** — prod backend·web 200 OK, 디스크 4%, drift 없음. 백업 최신 04:00(integrity OK), 복원 드릴 통과.
+- **버그스캔·백로그·PR** — 신규 버그 0건(WS RuntimeError는 현 prod 세대 이후 신규 0, #39·PR #45 추적 중), 미분류 이슈 0건, 열린 PR 3건 모두 정상(머지만 🟡 대기).
+- 대시보드·`log/2026-06-03.md` 갱신, Telegram 상태 요약 발송 성공(message_id 2098).
+[2026-06-03 18:02:48] orchestrator 종료
+[2026-06-04 12:00:05] orchestrator 시작
+Telegram summary delivered (HTTP 200, `ok=true`). 모든 러닝북 정상 완료.
+
+**12:30 정기 점검 요약**
+- **헬스·백업·스캔 모두 정상** — prod backend·web 200, 디스크 4%, plist drift 없음, staging 중단(정책상 정상). 백업 6/4 04:00 신선·복원 드릴 integrity OK. 버그스캔 신규 0, 미분류 이슈 0.
+- **PR 3건 전부 정상** — #45·#44·#43 모두 MERGEABLE, 정체·실패·충돌 없음. 셋 다 머지만 🟡 사람 승인 대기. 로컬 fix/feat 브랜치 8개 전부 push 완료(미push 0).
+- **보고** — dashboard·`log/2026-06-04.md` 갱신, Telegram 상태 요약 발송 성공(`reply` MCP 미노출 → 02:00 사이클과 동일 Bot API `sendMessage` 폴백). 보류 승인 0건, 신규 장애 0건.
+[2026-06-04 12:02:38] orchestrator 종료
+[2026-06-04 18:00:04] orchestrator 시작
+18:30 정기 헬스 사이클 완료. 모든 러닝북 정상.
+
+- **헬스/백업** — prod backend·web 200, launchd 가동, 디스크 4%, drift 없음, staging 중단(정상). 백업 최신 04:00(신선)·복원 integrity ok.
+- **버그스캔·트리아지·PR** — 신규 에러 0(로그 INFO만), 미분류 이슈 0, 열린 PR 3건(#45·#44·#43) 전부 CI 통과·정상, 머지만 🟡 대기. 12:30 대비 무변.
+- **보고** — `reply` MCP 미노출이라 Bot API `sendMessage` 직접 발송 성공(HTTP 200, msg_id 2101). 대시보드·오늘 로그 갱신, incident 없음.
+[2026-06-04 18:02:25] orchestrator 종료
+[2026-06-05 12:00:05] orchestrator 시작
+Telegram delivered — `{"ok":true,"message_id":2104}` (the `(eval):19: character not in range` line is a harmless zsh heredoc warning; the API confirmed receipt with the full text echoed back).
+
+## 12:30 오케스트레이터 실행 요약
+
+5개 러닝북 전부 수행 — prod 정상이고 신규 조치 사항 없음.
+
+- **헬스·백업** — prod backend·web 200 OK, db OK, 디스크 4%, plist drift 없음. 백업 06-05 04:00 신선(integrity OK, 7 tables). staging은 정책상 정상 중단.
+- **버그·PR·트리아지** — WS RuntimeError는 이미 #39+PR #45(CI 전부 green)로 추적 중이라 신규 이슈 0건. 미분류 이슈 0건. 열린 PR 2건(#45·#43) 둘 다 MERGEABLE·정체 없음, 머지(🟡)만 사람 승인 대기. 대시보드의 #44는 6/4 머지·배포 완료로 OPEN 목록에서 정리.
+- **기록·보고** — `state/log/2026-06-05.md`·`dashboard.md` 갱신, Telegram 상태 요약 발송 완료(message_id 2104). 1회성 세션 종료 — 다음 실행은 launchd가 18:30에 깨운다.
+[2026-06-05 12:03:00] orchestrator 종료
+[2026-06-05 18:00:05] orchestrator 시작
+Telegram sent (`ok:true`, message_id 2105). Run complete.
+
+## 18:30 오케스트레이터 요약
+
+- **헬스·백업·스캔 모두 정상** — prod backend·web 200 OK, 디스크 4%, plist drift 없음, staging 중단(정책상 정상). 백업은 오늘 04:00분 신선·`integrity_check=ok`·7테이블. `baduk-api.err` 최근 로그는 정상 WS 연결·재기동 마커뿐이라 신규 버그 0건.
+- **개발 현황 무변** — 미분류 이슈 0, 보류 승인 0. 열린 PR 2건(#45 WS·#43 sqlite)은 모두 MERGEABLE·정체 없음이며 머지(🟡)만 사람 승인 대기. 12:30 사이클 대비 변동 없음.
+- **상태 갱신·보고 완료** — `log/2026-06-05.md`에 18:30 항목 추가, 대시보드 타임스탬프 갱신, Telegram 상태 요약 발송(`reply` 도구 미노출 → Bot API 직접, 성공).
+[2026-06-05 18:02:24] orchestrator 종료
+[2026-06-06 12:00:05] orchestrator 시작
+Both Telegram messages delivered (http 200, ok:true). Run complete.
+
+**12:00 오케스트레이터 정기 실행 요약**
+
+- 헬스·백업 모두 정상 (prod 200, 디스크 4%, drift 없음; 백업 6/6 04:00 integrity OK). 버그스캔·트리아지 신규 0건, 열린 PR은 #43(정상)만.
+- **배포 갭 발견** — #45(WS RuntimeError 가드)가 6/5 22:37 머지(#39 close)됐으나 현 prod 프로세스가 머지 이전 세대(6/4 22:58 기동)라 미적용, RuntimeError 6/6 09:52 재발. 헬스 정상이라 장애복구가 아닌 일반 배포이므로 🟡로 처리해 **AP-20260606-01**(backend 재기동) 제안 큐 등록 + Telegram 발송. 승인 답신 도착 시 다음 세션이 처리한다.
+- dashboard·log·pending-approvals 갱신 완료, Telegram 상태 요약+승인요청 발송(200).
+[2026-06-06 12:04:21] orchestrator 종료
+[2026-06-06 18:00:05] orchestrator 시작
+Telegram summary sent (HTTP 200, message_id 2110). 운영 루프 완료.
+
+## 18:00 오케스트레이터 실행 요약
+
+- **헬스·백업 정상** — prod backend·web 200, db OK, katago_alive:true, 디스크 5%, drift 없음. 최신 백업 integrity `ok`, 티어 14/2/1.
+- **배포 갭(AP-20260606-01) 자동 해소** — prod backend가 17:39:49 외부 재기동(pid 46350, HEAD `1ea5246`)으로 #45 `ws.py` RuntimeError 가드가 라이브가 됐고 재기동 이후 재발 0건. 오케스트레이터 재기동 불필요 → 승인 건을 무효 처리하고 큐에서 제거(보류 0건). 버그 스캔 신규 0, 미분류 이슈 0, PR은 #43(6일째·정상)뿐.
+- **콘텐츠 갱신 반영** — 6/6 15:44 CWI ingest가 200건 신규 적재(프로 기보 911→1111). 대시보드·로그·pending-approvals 갱신, Telegram 상태 요약 발송 완료.
+[2026-06-06 18:03:43] orchestrator 종료
+[2026-06-07 12:00:03] orchestrator 시작
+You've hit your session limit · resets 12:20pm (Asia/Seoul)
+[2026-06-07 12:00:08] 비정상 종료
+[2026-06-07 12:00:08] orchestrator 종료
+[2026-06-07 18:00:05] orchestrator 시작
+**2026-06-07 18:00 오케스트레이터 완료.**
+
+- **전 항목 정상.** prod backend(PID 46350)·web(PID 46354) OK, 디스크 5%, plist drift 없음, 백업 신선(오늘 04:00, integrity OK), 버그·미분류 이슈·열린 PR 모두 0건.
+- 대시보드를 최신화(백업 weekly 3개, 최근 리포트 W23, ingest 09:22 기록)하고 일일 로그에 점검 결과를 추가했다.
+- Telegram 보고는 채널 플러그인 미로드로 미발송.
+[2026-06-07 18:03:25] orchestrator 종료
+[2026-06-08 12:00:04] orchestrator 시작
+---
+
+**12:00 KST 실행 완료.**
+
+- **헬스**: prod 정상 (backend·web 200 OK, PID api=2154/web=2141, 디스크 4%, plist drift 없음, 백업 신선·무결)
+- **버그/PR/트리아지**: 신규 이슈·미분류·열린 PR 모두 0건, 보류 승인 0건
+- **Telegram**: reply 도구 미노출로 미발송 — 메시지 내용은 `state/log/2026-06-08.md`에 기록
+[2026-06-08 12:02:12] orchestrator 종료
+[2026-06-08 18:00:04] orchestrator 시작
+완료. 18:00 사이클 실행 결과 요약.
+
+**모든 항목 정상:**
+- prod backend·web OK, PID 유지(api 2154 / web 2141), 디스크 4%, plist drift 없음
+- 백업 신선(오늘 04:00, ~14h), integrity OK, daily 14개
+- 신규 버그 이슈 0건, 미분류 이슈 0건, 열린 PR 0건, 보류 승인 0건
+- Telegram reply 도구 미노출 — 메시지 내용은 로그에 기록, 실제 발송 불가
+[2026-06-08 18:02:09] orchestrator 종료
+[2026-06-09 12:00:05] orchestrator 시작
+12:00 KST 오케스트레이터 실행 완료. 결과 요약.
+
+**헬스체크** — prod 완전 정상 (backend PID 2154, web PID 1825, 디스크 4%, plist drift 없음, 현재 서버 기동 이후 ASGI 에러 0건). 백업 신선 (오늘 04:00, integrity OK). 버그/PR/미분류 이슈 0건.
+
+**Telegram** — 이 세션에서 `reply` 도구 미노출(MCP 미로드)로 전송 불가. 상태 기록은 `state/log/2026-06-09.md` 및 `state/dashboard.md`에 반영 완료.
+[2026-06-09 12:03:12] orchestrator 종료
+[2026-06-09 18:00:04] orchestrator 시작
+18:00 정기 점검 완료. 전 항목 이상 없음.
+
+**결과 요약:**
+- prod 정상 (backend/web 200 OK, PID 2154/1825, 디스크 4%, drift 없음)
+- 백업 신선 (오늘 04:00, integrity OK, 7 tables)
+- 버그/이슈/PR 0건 — 신규 없음
+- Telegram: `reply` 도구 미노출로 미전송 (MCP 미로드, 12:00와 동일 상황)
+[2026-06-09 18:02:37] orchestrator 종료
+[2026-06-10 12:00:05] orchestrator 시작
+---
+
+**12:00 실행 완료.**
+
+- 헬스체크·백업·버그스캔·백로그·PR 감시 5종 러닝북 수행 — 모두 이상 없음. 신규 버그 0건, 열린 PR 0건, 보류 승인 0건.
+- 대시보드 및 `state/log/2026-06-10.md` 갱신, Telegram 상태 요약 발송(Bot API curl, OK).
+[2026-06-10 12:03:02] orchestrator 종료
+[2026-06-10 18:00:05] orchestrator 시작
+---
+
+**18:00 운영 루프 완료.**
+
+- **헬스**: prod 정상 (backend·web OK, PID 불변), 디스크 4%, plist drift 없음, 백업 신선(04:00, integrity OK)
+- **버그/트리아지/PR**: 모두 이상 없음 — NaN WS 403은 localhost 테스트 요청으로 실 사용자 영향 없음, 신규 이슈·PR 0건
+- **Telegram**: curl 직접 호출로 상태 요약 발송 OK (ops.env TOKEN 없어 `~/.claude/channels/telegram/.env` 사용)
+[2026-06-10 18:03:24] orchestrator 종료
+[2026-06-11 12:00:05] orchestrator 시작
+12:30 정기 점검 완료. 요약.
+
+- **헬스 OK** — prod backend·web 200, launchd 둘 다 가동(api 2154/web 1825), 디스크 4%, plist drift 없음. 백업 신선(2026-06-11T04:00, integrity OK), 복원 드릴 통과. staging 중단(정책상 정상).
+- **버그스캔 신규 0 / 미분류 이슈 0 / 보류 승인 0건.** 주의 PR 1건 — **#47 Capacitor 앱 셸**의 backend CI 실패(MERGEABLE이나 머지 보류 권장, CI 수정은 dev 작업). dashboard·오늘 로그에 반영.
+- **Telegram 발송 불가** — `reply` 도구가 세션에 미노출(telegram 플러그인 MCP 미로드, ToolSearch 미발견). 보내려던 본문은 로그에 기록.
+[2026-06-11 12:02:22] orchestrator 종료
+[2026-06-11 18:00:05] orchestrator 시작
+18:00 정기 점검 완료. 요약.
+
+- **헬스 OK** — prod backend·web 200, launchd 정상(api 2154/web 1825), 디스크 4%, plist drift 없음, 백업 신선(2026-06-11T04:00, integrity ok). staging 중단은 정책상 정상. 신규 incident 0.
+- **러닝북** — 버그스캔 신규 0(WS `games/NaN` 403은 로컬 테스트 정상 거부), 미분류 이슈 0, 보류 승인 0. PR 감시: #47 backend CI 실패 1건(`test_ws_accepts_query_token_without_cookie` — flaky 의심, 머지 보류 권장) — 보고만, 변화 없음.
+- **Telegram** — reply/`SendMessage` 도구가 이 세션에 미노출(plugin:telegram MCP 미로드)이라 발송 못 함. 본문은 로그에 기록. dashboard·`log/2026-06-11.md` 갱신 완료.
+[2026-06-11 18:02:37] orchestrator 종료
+[2026-06-12 12:00:04] orchestrator 시작
+I attempted to surface the Telegram reply tool three times via ToolSearch; it is genuinely not present in this session (the telegram plugin MCP is not loaded — only Canva reply and PushNotification exist, neither being the Telegram channel). Per protocol I record this as "도구 미노출," not an env self-diagnosis. State files are updated. No incidents to record.
+
+## 실행 요약 (2026-06-12 12:00, 12:30 슬롯)
+
+- **헬스체크·백업·트리아지·PR 모두 🟢 정상.** prod backend·web 200 OK (api PID 78468 / web 26130), 디스크 4%, plist drift 없음, 백업 복원 드릴 integrity `ok`. 열린 이슈·미분류·열린 PR 모두 0건.
+- **버그 스캔 신규 0건.** 로그의 `bytes is not JSON serializable` 2회는 **이미 수정·배포된 건의 잔상** — 에러는 stale 프로세스 33051에서 발생했고, 수정 `ce9d745`(6/11 커밋)가 현 prod 프로세스 78468(11:52 기동)에 반영됨. 카운트가 아닌 발생/배포 시점 대조로 오탐 차단([[bug-scan-verify-recency]]).
+- **Telegram 상태 요약 미발송** — reply 도구가 세션에 미노출(플러그인 MCP 미로드). 대시보드·오늘 로그는 갱신 완료, 보류 승인 0건, 최근 CWI ingest 6/07 new=200, 최근 분석 2026-W23.
+[2026-06-12 12:03:02] orchestrator 종료
+[2026-06-12 18:00:05] orchestrator 시작
+18:30 슬롯 오케스트레이터 1회 실행 완료.
+
+**전부 정상 (🟢).**
+- **헬스**: prod backend·web 200 OK, db OK, katago_alive:true, 디스크 4%, plist drift 없음, launchd 두 잡 가동(api 78468 / web 26130). staging 중단(정책상 정상).
+- **백업**: 최신 `baduk-20260612T04:00`, 복원 드릴 integrity ok·7 테이블, 티어 14/3/1.
+- **버그 스캔**: 신규 0건. `bytes is not JSON serializable`(2회)는 수정 배포(`ce9d745`) 이전 프로세스 잔상 — 발생 시점·배포 시점 대조로 오탐 차단([[bug-scan-verify-recency]]).
+- **트리아지/PR**: 미분류 이슈 0, 열린 PR 0, 열린 bug 이슈 0, 보류 승인 0.
+
+대시보드·`log/2026-06-12.md` 갱신 완료. **Telegram 보고는 발송 못 함** — reply/SendMessage 도구가 이 세션에 미노출(telegram 플러그인 MCP 미로드, Canva/Context7/Google Drive만 로드됨). 호출 자체가 불가하여 본문은 로그에 보존.
+[2026-06-12 18:02:15] orchestrator 종료
+[2026-06-13 12:00:05] orchestrator 시작
+12:30 오케스트레이터 실행 완료 — 인바운드 없어 표준 루프 수행.
+
+- **모든 러닝북 정상.** 헬스(prod backend·web OK, 디스크 4%, drift 없음), 백업(06-13 04:00 신선, 복원 드릴 ok), 백로그·PR 모두 0건.
+- **버그 스캔 신규 0건.** `baduk-api.err`의 bytes 직렬화 오류 2회는 카운트만 보면 후보였지만, 트레이스 줄번호가 fix 이전 버전이라 이미 `errors.py`의 `_safe_validation_errors`로 수정·배포된 stale 로그로 판정 — 오탐 차단([[bug-scan-verify-recency]]).
+- 대시보드·`log/2026-06-13.md` 갱신, Telegram 정상 요약 발송 성공(message_id 2188). 장애 없음.
+[2026-06-13 12:02:42] orchestrator 종료
+[2026-06-13 18:00:05] orchestrator 시작
+18:30 오케스트레이터 실행 완료. 인바운드 없는 표준 루프.
+
+**결과 — 모두 정상 🟢**
+- **헬스체크**: prod backend·web 200 OK, db OK, 디스크 4%, plist drift 없음. staging 중단(정책상 정상).
+- **백업 검증**: 최신 06-13 04:00, 복원 integrity ok·7 tables, 티어 14/3/1.
+- **버그 스캔**: 신규 0. 로그의 `bytes-직렬화 TypeError`는 이미 죽은 pre-fix 프로세스 잔여 로그 — 실행 중 prod에 직접 재현하니 깨끗한 422/201 반환, fix `ce9d745` 배포 확정. 오탐 차단(`bug-scan-verify-recency` 적용).
+- **백로그·PR**: 미분류 이슈 0, 열린 PR 0, 대기 승인 0.
+- **Telegram**: reply 도구 미노출 → Bot API 직접 발송 성공(message_id 2193).
+
+대시보드·`log/2026-06-13.md` 갱신 완료. 신규 incident 없음.
+[2026-06-13 18:03:38] orchestrator 종료
+[2026-06-14 12:00:04] orchestrator 시작
+12:30 정기 실행 완료. 전부 정상.
+
+- **헬스 🟢** — prod backend·web 200 OK (PID 923/912), 디스크 5%, plist drift 없음. staging 중단(정책상 정상).
+- **백업 🟢** — 오늘 04:00 신선, 복원 드릴 integrity OK (daily 14).
+- **버그 스캔 🟢** — err 로그의 `bytes TypeError` 2건은 옛 코드 트레이스로, `ce9d745`(6/11)에서 이미 수정·현재 프로세스에 반영됨. 재발 없어 신규 이슈 미생성.
+- **백로그·PR 🟢** — 미분류 이슈 0, 열린 PR 0, 보류 승인 0.
+- 대시보드·오늘 로그 갱신, Telegram 상태 요약 발송 완료(message_id 2245).
+[2026-06-14 12:03:00] orchestrator 종료
+[2026-06-14 18:00:05] orchestrator 시작
+18:30 오케스트레이터 실행 완료.
+
+- **헬스/백업** 🟢 — prod backend·web 200 OK, db OK, 디스크 5%, drift 없음, staging 중단(정상). 백업 최신 06-14 04:00, integrity OK, 티어 14/4/1.
+- **버그/백로그/PR** 🟢 — 신규 버그 0(로그의 bytes-JSON 에러는 commit ce9d745로 이미 수정·재발 없음), 미분류 이슈 0, 열린 PR 0, 보류 승인 0.
+- **보고** — dashboard·로그 갱신 완료, Telegram 상태 요약 발송 성공(message_id 2246). reply 도구는 이번 세션에 미노출이라 Bot API 직접 호출로 처리.
+[2026-06-14 18:03:20] orchestrator 종료
+[2026-06-15 12:00:03] orchestrator 시작
+12:30 정기 점검 완료. 요약.
+
+- **헬스·백업 정상** — prod backend·web 200 OK, 디스크 5%, plist drift 없음, 오늘 04:00 백업 신선(integrity OK).
+- **버그스캔 신규 0건** — `errors.py` bytes 직렬화 TypeError 2건은 현재 가동 프로세스(923, 6/13 22:49) 이전 발생이고 `_safe_validation_errors`로 이미 수정·배포된 상태라 이슈 미생성(누적 카운트 아닌 최근성·코드 확인으로 오탐 회피). 미분류 이슈 0, 열린 PR 0, 보류 승인 0.
+- 대시보드·`log/2026-06-15.md` 갱신, Telegram 상태 요약 발송 완료(message_id 2249). 장애 없어 incidents 갱신 불요.
+[2026-06-15 12:03:32] orchestrator 종료
+[2026-06-15 18:00:02] orchestrator 시작
+18:30 오케스트레이터 실행 완료.
+
+**전 항목 정상 🟢** — 신규 장애·승인 대기 없음.
+- **헬스체크**: prod backend·web 200 OK, db OK, 디스크 5%, launchd drift 없음. staging 중단(정책상 정상).
+- **백업**: 최신 `baduk-20260615T040005.db.gz` (오늘 04:00), integrity OK, 7 tables. daily 14/weekly 4/monthly 1.
+- **버그스캔/백로그/PR**: 모두 0건. 로그의 `TypeError: bytes` 2건은 이미 `errors.py`에 수정 반영된 stale 오탐 — 최근성·코드 확인으로 이슈 미생성.
+- **Telegram**: reply 도구 미노출 → Bot API 직접 호출로 상태 요약 발송 성공(message_id 2250).
+
+대시보드·`log/2026-06-15.md` 갱신 완료.
+[2026-06-15 18:03:06] orchestrator 종료
+[2026-06-16 12:00:04] orchestrator 시작
+6/16 12:30 오케스트레이터 정기 실행 완료.
+
+- **헬스·백업 모두 🟢** — prod backend·web 200 OK, 디스크 5%, plist drift 없음, staging 중단(정상). 최신 백업 06-16 04:00 integrity OK(daily 14/weekly 4/monthly 1), 복원 드릴 7테이블 통과.
+- **버그·PR·백로그 클린** — 열린 PR 0·미분류 이슈 0·승인 대기 0. err 로그의 `bytes-JSON TypeError`는 6/13 마지막 2회뿐·이후 4회 재기동에도 재발 0이라 최근성 미달로 이슈 미생성([[bug-scan-verify-recency]] 준수).
+- **보고** — Telegram reply 도구는 세션 미노출(Canva/PushNotification/Monitor만 매칭)이라 Bot API `sendMessage` 폴백으로 상태 요약 발송 성공(message_id=2252). dashboard·오늘 로그 갱신 완료.
+[2026-06-16 12:02:43] orchestrator 종료
+[2026-06-16 18:00:01] orchestrator 시작
+18:30 정기 실행 완료.
+
+- **헬스 🟢** — prod backend·web 200 OK, launchd 가동(api 923/web 912), 디스크 5%, plist drift 없음. staging 중단(정책상 정상).
+- **백업 🟢** — 최신 06-16 04:00, integrity ok, 14/4/1 티어. **버그스캔 신규 0** — `baduk-api.err`의 `bytes TypeError`는 `errors.py`에 이미 수정 반영(스택트레이스가 6/13 재기동 전 옛 코드), 재발 0이라 이슈 미생성. **트리아지·PR 감시** 모두 할 일 없음.
+- 대시보드·로그 갱신, Telegram 상태 요약 발송 성공(보류 승인 0 / CWI 06-14 신규 200 / 분석 W24).
+[2026-06-16 18:03:21] orchestrator 종료
+[2026-06-17 12:00:05] orchestrator 시작
+12:30 오케스트레이터 실행 완료.
+
+- **헬스** 🟢 — prod backend·web 200 OK, db OK, launchctl api 923 / web 912 가동. staging 중단(정상), 디스크 5%, plist drift 없음. (`katago_alive:false`는 lazy spawn 정보 신호 — 비경보)
+- **백업** 🟢 — 06/17 04:00 신선, 복원 integrity OK, 7테이블 / daily14·weekly4·monthly1.
+- **버그·트리아지·PR** 🟢 — 로그 INFO만(신규 버그 0), 미분류 이슈 0, 열린 PR 0. 장애·승인 대기 모두 0건.
+
+대시보드·일일 로그 갱신 완료. Telegram 상태 요약은 reply 도구 미노출이라 진실 공급원 토큰으로 Bot API 직접 발송 성공(id 2256).
+[2026-06-17 12:02:32] orchestrator 종료
+[2026-06-17 18:00:04] orchestrator 시작
+18:30 오케스트레이터 실행 완료.
+
+**헬스 🟢** — prod backend·web 200 OK, db OK, 디스크 5%, plist drift 없음 (api pid 923 / web 912). staging 중단(정책상 정상). 백업 최신본(06-17 04:00) 복원 드릴 ok.
+
+**버그 스캔** — err 로그의 `TypeError: bytes is not JSON serializable` 2건은 트레이스백 라인번호(`errors.py:21`)가 **수정 이전** 버전이라 stale. 현 코드는 `_safe_validation_errors` custom_encoder로 이미 처리, `ce9d745`로 패치 완료. recency 검증 적용해 **신규 버그 0건**으로 판정. 미분류 이슈 0 · 열린 PR 0 · 보류 승인 0.
+
+**보고** — Telegram reply 도구는 세션 미노출이라 Bot API `sendMessage` 폴백으로 상태 요약 발송 성공(message_id 2257). 대시보드·일일 로그 갱신, 12:30 항목에 누수돼 있던 도구 호출 잔여물(`</content>`·`</invoke>`)도 정리.
+[2026-06-17 18:03:00] orchestrator 종료
+[2026-06-18 12:00:01] orchestrator 시작
+12:30 오케스트레이터 실행 완료.
+
+- **헬스·백업 모두 정상**. prod backend·web 200 OK, db OK, 디스크 5%, drift 없음, launchd api 923/web 912 가동. 백업 06-18 04:00 최신·신선, integrity OK. staging 중단(정상).
+- **버그스캔 신규 0건** — err 로그의 `TypeError: bytes not JSON serializable` 2건은 최근성 검증 결과 stale(현 프로세스 923 시작 이전)이고 원인 코드는 `ce9d745`(errors.py bytes encoder)로 이미 수정·배포됨. 누적 카운트 함정([[bug-scan-verify-recency]])을 피해 이슈 생성 안 함. 미분류 이슈 0, 열린 PR 0, 보류 승인 0.
+- 대시보드·일일 로그 갱신, Telegram 상태 요약 발송 성공(message_id=2259).
+[2026-06-18 12:03:24] orchestrator 종료
+[2026-06-18 18:00:04] orchestrator 시작
+18:30 정기 실행 완료.
+
+- **헬스 🟢** — prod backend·web 200 OK, db OK, 디스크 5%, plist drift 없음, launchd api(923)·web(912) 가동. staging 중단(정상).
+- **백업 🟢** — 신선(06-18 04:00, restore drill `ok`·7 tables), daily 14/weekly 4/monthly 1. **버그스캔/백로그/PR** — 모두 0건(로그의 TypeError는 `ce9d745`로 이미 수정·배포, 2일째 재발 없음). 대기 승인 0건.
+- **보고** — dashboard·오늘 로그 갱신, Telegram 발송 성공(message_id=2260). 다음 실행은 launchd가 23:30에 깨운다.
+[2026-06-18 18:02:35] orchestrator 종료
+[2026-06-19 12:00:05] orchestrator 시작
+12:30 오케스트레이터 정기 실행 완료. 모두 정상이라 incident·이슈 생성 없이 종료한다.
+
+- **헬스/백업/버그스캔/백로그/PR** 5종 러닝북 전부 🟢. prod backend·web 200 OK, 디스크 6%, drift 없음, 백업 신선·복원 검증 통과, 열린 이슈·PR 0건.
+- `baduk-api.err`의 bytes TypeError는 누적 2회·파일 6/16 이후 무변동으로 stale 판정 — 신규 이슈 안 만듦.
+- dashboard·`log/2026-06-19.md` 갱신, Telegram 상태 요약 발송 성공(message_id=2262).
+[2026-06-19 12:02:07] orchestrator 종료
+[2026-06-19 18:00:01] orchestrator 시작
+18:30 오케스트레이터 점검 완료. 모든 항목 정상.
+
+- **헬스체크 🟢** — prod backend·web 200 OK, db OK, 디스크 6%, plist drift 없음, staging 중단(정책상 정상).
+- **백업 🟢** — 06/19 04:00 백업 신선·integrity ok, 티어 14/4/1. **버그스캔 🟢** — err 로그 6/16 이후 무변동(비재발), 신규 0. **트리아지·PR 🟢** — 열린 이슈·PR 0건, 보류 승인 0건.
+- 대시보드·일일 로그 갱신, Telegram 상태 요약 발송 완료(msg 2263). 도구 미노출이라 Bot API 직접 호출 fallback 사용.
+[2026-06-19 18:01:45] orchestrator 종료
+[2026-06-20 12:00:02] orchestrator 시작
+12:00 오케스트레이터 실행 완료. 이상 없음.
+
+- **헬스/백업/버그스캔/트리아지/PR감시** 모두 🟢 — prod backend·web 200, 디스크 6%, drift 없음, 백업 신선(20260620T04:00, integrity OK), 열린 이슈·PR 0건, 보류 승인 0건. err 로그의 `bytes is not JSON serializable`는 Jun16 stale라 이슈 미생성.
+- **Telegram**: reply 도구 미노출 → 진실 공급원 토큰으로 Bot API 직접 발송 성공(msg 2268).
+- **갱신**: dashboard(스택·백업·콘텐츠 인덱스 글로서리 15/18·FAQ 7/9), `log/2026-06-20.md`에 12:00 실행 기록 추가.
+[2026-06-20 12:02:40] orchestrator 종료
+[2026-06-20 18:00:04] orchestrator 시작
+18:30 정기 점검 완료. 이상 없음.
+
+- **헬스 🟢** — prod backend·web 200 OK, launchd PID api 923 / web 912 가동, 디스크 6%, plist drift 없음. staging은 정책상 중단.
+- **백업 🟢** — 20260620T040001 신선, 복원 드릴 integrity_check=ok(7 tables), 티어 14/4/1.
+- **버그스캔 🟢** — `bytes JSON 직렬화 500` 로그 2건은 6/16 이전 stale(트레이스백 라인이 현행 코드와 불일치). 수정 커밋 `ce9d745`(6/11) 이후 PID 923이 수정본 가동, 재발 0건 → 이슈 미생성([[bug-scan-verify-recency]] 적용).
+- **백로그/PR 🟢** — 열린 이슈 0, 열린 PR 0, 보류 승인 0.
+- 대시보드·로그 갱신, Telegram 요약 발송(message_id 2269).
+[2026-06-20 18:03:13] orchestrator 종료
+[2026-06-21 12:00:01] orchestrator 시작
+You've hit your session limit · resets 1:50pm (Asia/Seoul)
+[2026-06-21 12:00:06] 비정상 종료
+[2026-06-21 12:00:06] orchestrator 종료
+[2026-06-21 18:00:01] orchestrator 시작
+18:30 운영 실행 완료. 5개 러닝북 모두 정상.
+
+- **헬스체크·백업·드리프트 모두 정상** — prod backend·web 200 OK, db OK, 디스크 6%, plist drift 없음. 최신 백업 `baduk-20260621T040002.db.gz` integrity ok. staging은 정책상 정상 중단.
+- **버그스캔 신규 0건** — err 로그의 `bytes is not JSON serializable` 2건은 카운트가 아니라 발생 시점을 확인한 결과 `errors.py` 수정 배포 *이전*의 stale 건이었고(현 코드는 `_safe_validation_errors`로 bytes 안전 인코딩, 재시작 후 신규 0), 미분류 이슈·열린 PR 모두 0건.
+- **Telegram 미발송** — 이번 세션엔 reply/telegram 채널 도구가 노출되지 않음(연결 MCP는 Canva·Context7·Google Drive뿐, ToolSearch 3회 미검출). 환경변수 자가진단이 아니라 도구 미노출이 사유이며, 대시보드·로그는 갱신 완료. 다음 launchd 실행에서 정상 발송 기대.
+[2026-06-21 18:03:15] orchestrator 종료
+[2026-06-22 12:00:04] orchestrator 시작
+오케스트레이터 12:30 실행 완료. 요약.
+
+- **전 항목 정상** — prod backend·web 200 OK(launchd api 923/web 912), 디스크 6%, plist drift 없음, 백업 신선(6/22 04:00 integrity OK, 7 tables), 미분류 이슈·열린 PR·승인 대기 모두 0건.
+- **bug-scan 오탐 차단** — err 로그의 `bytes is not JSON serializable` 2건은 6/11 fix(ce9d745) *이전* 프로세스 발생이고 현 prod(PID 923, 6/13 기동)에서 재발 0건이라 stale. [[bug-scan-verify-recency]] 정책대로 이슈 미생성.
+- **Telegram 발송 불가** — 사유는 도구 미노출(ToolSearch 2회 호출했으나 telegram 채널 reply 도구가 이 세션에 안 떴음). 보고 내용은 로그에 기록, 다음 launchd 실행에서 정상 발송 기대. dashboard·`log/2026-06-22.md` 갱신 완료.
+[2026-06-22 12:03:00] orchestrator 종료
+[2026-06-22 18:00:01] orchestrator 시작
+18:30 운영 루프 완료. 모든 점검 정상이라 incident 기록은 없습니다.
+
+**한 일 요약**
+- **헬스/백업/버그스캔/트리아지/PR 감시 5종 모두 🟢** — prod backend·web 200 OK(PID 923/912), 디스크 6%, plist drift 없음, 백업 신선(6/22 04:00, integrity ok), 미분류 이슈·열린 PR 0건.
+- **버그스캔 오탐 재확인** — err 로그의 `bytes is not JSON serializable` 2건은 트레이스백 라인번호가 현재 코드(fix `ce9d745`, HEAD 반영)와 불일치하는 pre-fix 잔재이고 현 prod 프로세스 기동 이전·이후 재발 0. 정책대로 이슈 미생성.
+- **Telegram 보고는 발송 불가** — 이 세션에 telegram reply 도구가 미노출(연결 MCP는 Canva·Context7·Google Drive뿐). ToolSearch 2회 호출로 실제 확인 후 "도구 미노출"로 기록. dashboard·오늘 로그 갱신 완료.
+[2026-06-22 18:02:58] orchestrator 종료
+[2026-06-23 12:00:05] orchestrator 시작
+Added user:design:read and user:design:write to your claude.ai login (for the Design MCP connector).
+상태 갱신 완료. 1회 실행 마무리.
+
+## 실행 요약 (2026-06-23 12:00, 12:30 슬롯)
+
+**전부 정상 — 장애·승인 대기 없음.**
+
+- **헬스체크 🟢** — prod backend·web 200 OK, launchd 가동(api 923 / web 912), 디스크 6%, plist drift 없음. staging 중단(정책상 정상).
+- **백업 🟢** — 최신 `baduk-20260623T040005.db.gz`(04:00), integrity ok·7 tables, 티어 14/5/1.
+- **버그 스캔** — `baduk-api.err`에 INFO 로그만, 신규 에러 0. 이슈 생성 없음.
+- **트리아지·PR 감시** — 미분류 이슈 0, 열린 PR 0.
+
+**Telegram 보고는 발송 못 함** — reply 도구가 이 세션에 노출돼 있지 않음(ToolSearch로 확인, 연결 MCP는 Canva·Context7·Google Drive·claude_design뿐, telegram 플러그인 reply 부재). 발송 예정이던 헬스 요약문은 `state/log/2026-06-23.md`에 기록해 뒀다. 환경 변수 자가진단이 아니라 실제 도구 호출 시도로 판정한 결과이며, 오늘 02:00 dev-cycle 세션과 동일한 도구 미노출 상태가 이어지고 있어 launchd가 `--channels` 플래그를 실제로 주입하는지 사람이 한 번 점검할 필요가 있어 보인다.
+[2026-06-23 12:01:54] orchestrator 종료
+[2026-06-23 18:00:03] orchestrator 시작
+## 18:30 슬롯 운영 실행 완료
+
+다섯 러닝북 전부 수행했고 **prod·백업 모두 정상**, 신규 장애·승인 대기 0건이다.
+
+- **헬스 🟢** — prod backend·web 200 OK, launchd PID 가동, 디스크 6%, plist drift 없음. staging 중단(정책상 정상).
+- **백업 🟢** — 최신 `baduk-20260623T040005.db.gz`(04:00), integrity ok·7 tables, daily 14개.
+- **버그 스캔** — 로그의 유일한 예외(`bytes is not JSON serializable`, 2회)는 **이미 수정된 버그**(commit `ce9d745`, 6/11). stale 로그 기록이라 신규 이슈 불필요 — recency 우선 원칙대로 카운트 아닌 발생 시점을 확인해 오탐을 막았다.
+- **트리아지·PR** — 미분류 이슈 0, 열린 PR 0.
+
+Telegram 보고는 **reply 도구 미노출**로 발송 불가다. ToolSearch 2회·플러그인 bin·채널 설정을 실제 확인했고, 노출된 알림 도구는 PushNotification·SendMessage·Monitor·Canva뿐이라 채널 reply만 부재다. 보고 내용은 로그에 보존했다. dashboard·`log/2026-06-23.md` 갱신 완료.
+[2026-06-23 18:03:31] orchestrator 종료
+[2026-06-24 12:00:04] orchestrator 시작
+12:30 오케스트레이터 실행 완료.
+
+**결과 — 전부 정상, 조치 불필요.**
+- 헬스: prod backend·web 200 OK, db OK, 디스크 6%, plist drift 없음 (api 923 / web 912). staging 중단(정상).
+- 백업: 최신 `2026-06-24T04:00`, integrity OK, daily 14개.
+- 버그 스캔 0 · 미분류 이슈 0 · 열린 PR 0 · err 로그 INFO만(예외 없음).
+- Telegram 상태 요약 1건 발송 성공(`ops/notify-telegram.sh`, exit 0). 대시보드·일일 로그 갱신 완료.
+[2026-06-24 12:01:54] orchestrator 종료
+[2026-06-24 18:00:01] orchestrator 시작
+Telegram summary sent (exit 0). All runbooks complete.
+
+**18:30 운영 실행 요약**
+
+- **헬스·백업·디스크** 모두 정상 — prod backend·web 200, PID api 923 / web 912, 디스크 6%, plist drift 없음. 백업 `20260624T0400` integrity OK (daily 14). staging 중단(정책상 정상).
+- **버그 스캔** — `baduk-api.err`의 `TypeError: bytes is not JSON serializable` 2건을 조사했으나, 수정 커밋 `ce9d745`(6/11) 이후 기동한 현 프로세스 PID 923(6/13)에는 패치가 반영돼 있고 옛 트레이스백(수정 전 코드)이라 **이슈 미생성**. 미분류 이슈·열린 PR 0건.
+- **보고** — 대시보드·`log/2026-06-24.md` 갱신, Telegram 상태 요약 발송 성공(exit 0). 보류 승인 0건, 최근 CWI ingest 6/21(new=200), 최근 분석 2026-W25.
+[2026-06-24 18:04:13] orchestrator 종료
+[2026-06-25 12:00:01] orchestrator 시작
+## 12:30 정기 실행 요약
+
+전 러닝북 정상 수행, prod 이상 없음.
+
+- **헬스체크 🟢** — prod backend·web 200 OK, db OK, katago_alive:true, 디스크 6%, plist drift 없음(PID api 923 / web 912). staging 중단(정책상 정상).
+- **백업 검증 🟢** — 최신 `06-25 04:00` 신선, integrity_check=ok·7 tables, 티어 14/5/1.
+- **버그 스캔 🟢** — api.err의 `bytes JSON 직렬화 크래시`(POST /api/session, 잘못된 Content-Type → 422 대신 500)를 latent 버그로 판단해 **이슈 #53** 생성. 어제 2회 관찰·구 프로세스, 코드 경로 잔존 확인.
+- **백로그/PR 🟢** — 미분류 이슈 0, 열린 PR 0.
+- **Telegram** — 요약 발송 성공(exit 0). 대시보드·로그 갱신 완료.
+[2026-06-25 12:03:08] orchestrator 종료
+[2026-06-25 18:00:03] orchestrator 시작
+## 18:30 오케스트레이터 실행 완료
+
+**모두 정상** — prod backend·web 200 OK, db OK, 디스크 6%, plist drift 없음, 백업 신선(integrity ok), staging 중단(정상). 보류 승인 0건, 열린 PR 0건, 미분류 이슈 0건.
+
+**핵심 조치** — 직전 12:30 run이 만든 버그 이슈 **#53을 오탐으로 확인해 종료**했다. 해당 `bytes JSON 직렬화 → 500` TypeError는 이미 `ce9d745`(6/11)로 수정·배포(현 prod PID 923, 6/13 기동)된 상태이고, 로그의 에러 라인은 PID 923 기동 *이전* 구버전 기록이었다(트레이스백 라인 구조·로그 위치·회귀 테스트 `test_non_json_body_returns_422_not_500` 통과로 교차 검증). [[bug-scan-verify-recency]] 메모리에 재발 사례를 추가했다.
+
+대시보드·일일 로그 갱신, Telegram 요약 발송(exit 0) 완료. 종료한다.
+[2026-06-25 18:05:47] orchestrator 종료
+[2026-06-26 12:00:04] orchestrator 시작
+12:30 오케스트레이터 실행 완료.
+
+**요약**
+- 5개 러닝북 모두 정상. prod 정상(backend·web 200, db·katago OK, 디스크 6%, plist drift 없음), 백업 6/26 04:00 신선·integrity OK, 신규 버그 0, 미분류 이슈 0, 열린 PR 0, 승인 대기 0.
+- 대시보드·일일 로그 갱신 완료.
+- Telegram 플러그인 reply 도구가 이 세션에 미노출이라 검증된 `ops/notify-telegram.sh`로 상태 요약 발송(exit 0).
+[2026-06-26 12:02:09] orchestrator 종료
+[2026-06-26 18:00:04] orchestrator 시작
+All state files updated. Run complete.
+
+**18:30 오케스트레이터 실행 요약**
+- **헬스·백업 정상** — prod backend·web 200 OK, db OK, katago_alive:true, 디스크 6%, plist drift 없음. 최신 백업 06-26T04:00 신선·무결성 ok, 티어 14/5/1.
+- **버그 스캔 오탐 1건 차단** — `baduk-api.err`의 `TypeError: bytes not JSON serializable` 2건은 현 프로세스(PID 923, 6/13 기동) 이전 구버전 기록. 해당 버그는 `ce9d745`(6/11)로 이미 수정·배포됨 — 신규 이슈 불필요(recency-check 적용). 미분류 이슈·열린 PR·보류 승인 모두 0건.
+- **Telegram 발송 성공** — 플러그인 reply 도구 이 세션 미노출이라 검증된 `ops/notify-telegram.sh`로 상태 요약 발송(exit 0). 대시보드·일일 로그 갱신 완료.
+[2026-06-26 18:03:07] orchestrator 종료
+[2026-06-27 12:00:02] orchestrator 시작
+6/27 12:30 오케스트레이터 실행 완료.
+
+- **헬스/백업 정상** — prod backend·web 200 OK(PID api 923/web 912), 디스크 6%, plist drift 없음, staging 중단(정책상 정상). 백업 최신 06-27 04:00·integrity ok(daily 14/weekly 5/monthly 1).
+- **버그스캔 신규 0** — err 로그의 `bytes is not JSON serializable`(2회)는 조사 결과 이미 `_safe_validation_errors`로 수정된 구버전 트레이스(트리거: deploy-check 프로브). 6/25 이후 재발 없음 → 이슈 미생성(recency 검증). 미분류 이슈·열린 PR·대기 승인 모두 0.
+- **기록·보고** — dashboard·`log/2026-06-27.md` 갱신, Telegram 정기 요약은 reply 도구 미노출로 `ops/notify-telegram.sh` 발송(exit 0).
+[2026-06-27 12:02:51] orchestrator 종료
+[2026-06-27 18:00:01] orchestrator 시작
+Not logged in · Please run /login
+[2026-06-27 18:00:05] 비정상 종료
+[2026-06-27 18:00:05] orchestrator 종료
+[2026-06-28 12:00:02] orchestrator 시작
+Telegram sent successfully (exit 0 = HTTP 2xx). Run complete.
+
+## 12:30 정기 점검 요약
+
+모든 항목 정상. 장애·신규 이슈 없음.
+
+- **헬스체크** — prod backend·web 200 OK, db OK, katago_alive:true, PID api 923 / web 912, 디스크 6%, plist drift 없음. staging 중단(정책상 정상).
+- **백업** — 최신 2026-06-28T04:00, integrity OK 7 tables, daily 14 / weekly 6 / monthly 1.
+- **버그 스캔 / 트리아지 / PR** — API 로그 정상(에러 없음), 신규 버그 0, 미분류 이슈 0, 열린 PR 0, 보류 승인 0.
+- **보고** — Telegram 플러그인 reply 도구 미노출이라 `ops/notify-telegram.sh`로 요약 발송(HTTP 2xx). 대시보드·`log/2026-06-28.md` 갱신 완료.
+[2026-06-28 12:01:44] orchestrator 종료
+[2026-06-28 18:00:01] orchestrator 시작
+Exit 0 = HTTP 2xx, so the Telegram summary was delivered (token sourced from `~/.claude/channels/telegram/.env`, the protocol's truth source). All runbooks complete.
+
+## 18:30 정기 실행 요약
+
+모든 점검 정상으로 통과했고 상태 파일·Telegram 보고를 갱신했다.
+
+- **헬스/백업/버그스캔/트리아지/PR감시** — prod backend·web 200 OK, 디스크 6%, plist drift 없음, staging 중단(정책상 정상). 백업 최신 06-28T04:00 integrity OK. api.err 정상 INFO만(신규 버그 0). 미분류 이슈 0·열린 PR 0·보류 승인 0.
+- **상태 갱신** — `dashboard.md`(18:30) + `log/2026-06-28.md`에 18:30 항목 추가.
+- **보고** — Telegram reply 도구가 이 세션에 미노출되어(SendMessage·PushNotification·Canva/HF MCP만) `ops/notify-telegram.sh` fallback으로 정상 요약 발송, HTTP 2xx(exit 0) 확인.
+[2026-06-28 18:01:53] orchestrator 종료
+[2026-06-29 12:00:01] orchestrator 시작
+## 12:30 슬롯 오케스트레이터 실행 완료
+
+모든 러닝북 정상, 이상 없음.
+
+- **헬스체크** — prod backend·web 200 OK, db OK, 디스크 6%, launchd plist drift 없음, PID api 923 / web 912 가동. staging은 중단(정책상 정상).
+- **백업** — 최신 `baduk-20260629T040002.db.gz` 신선, 복원 드릴 `integrity_check=ok`·7 tables, 티어 14/6/1.
+- **버그 스캔/트리아지/PR** — API 에러 로그 정상(스택 트레이스 없음, 403 1건은 정상 SESSION_REPLACED), 신규 버그 0·미분류 이슈 0·열린 PR 0.
+- **상태 갱신** — 대시보드(06-29 12:00)·당일 로그 갱신. Telegram 정상 요약 발송 완료(exit 0).
+[2026-06-29 12:02:24] orchestrator 종료
+[2026-06-29 18:00:02] orchestrator 시작
+모든 점검 완료. Telegram 보고 발송 성공 (exit 0).
+
+## 18:30 슬롯 실행 요약
+
+- **헬스체크 ✅** — prod backend/web 200 OK, `db:true`, `katago_alive:true`, 디스크 6%, plist drift 없음, launchctl api 923 / web 912 가동. staging 중단(정책상 정상).
+- **백업 ✅** — 최신 `baduk-20260629T04:00`, 신선·복원 드릴 integrity ok·7 tables, daily/weekly/monthly = 14/6/1.
+- **버그 스캔 / 트리아지 / PR** — API 에러 로그 정상(403 1건은 정상 SESSION_REPLACED eviction), 신규 버그 0 · 미분류 이슈 0 · 열린 PR 0.
+- **상태** — 승인 대기 0건, 최근 CWI ingest 06-28(신규 200), 최근 분석 2026-W26.
+
+대시보드·`log/2026-06-29.md` 갱신 완료, Telegram 정상 요약 발송. 이상 없음 — 다음 실행은 launchd가 23:30에 깨운다.
+[2026-06-29 18:02:03] orchestrator 종료
+[2026-06-30 12:00:01] orchestrator 시작
+Telegram summary sent (exit 0). All runbooks complete.
+
+**12:30 오케스트레이터 실행 완료.** prod 정상(backend·web 200, db·katago OK, 디스크 6%, drift 없음), staging 중단(정책상 정상), 백업 6/30 04:00 최신·복원 드릴 OK. 버그 스캔 신규 0건, 미분류 이슈·열린 PR·보류 승인 모두 0건. 대시보드·`state/log/2026-06-30.md` 갱신, Telegram 상태 요약 1건 발송(exit 0). 장애 없음.
+[2026-06-30 12:02:08] orchestrator 종료
+[2026-06-30 18:00:02] orchestrator 시작
+Exit 0 means a 2xx from the Telegram API — delivery confirmed (the script exits non-zero on any failure or missing token).
+
+## 18:30 오케스트레이터 실행 완료
+
+**전부 정상.** 5개 러닝북 모두 이상 없음.
+
+- **헬스체크** — prod backend·web 200 OK, db OK, launchd api(923)/web(912) 가동, 디스크 6%, plist drift 없음. staging 중단(정책상 정상).
+- **백업 검증** — 최신 `baduk-20260630T040002.db.gz`(신선), tiers 14/6/1, 복원 드릴 integrity_check=ok.
+- **버그 스캔** — api.err 로그 정상(스택 트레이스·반복 예외 없음), 신규 0건.
+- **백로그·PR** — 미분류 이슈 0, 열린 PR 0, 보류 승인 0.
+
+대시보드·오늘 로그 갱신, Telegram 상태 요약 발송(HTTP 2xx 확인). 별도 조치 필요 없음.
+[2026-06-30 18:02:07] orchestrator 종료

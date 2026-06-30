@@ -1,20 +1,20 @@
 # 운영 대시보드
 
-- 갱신: 2026-06-06 18:00
+- 갱신: 2026-06-30 18:30
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
-| prod | 정상 — backend·web 200 OK, db OK, katago_alive:true, 디스크 5%, plist drift 없음. ✅ 배포 갭 해소 — backend가 6/6 17:39:49 재기동(pid **46350**), HEAD(`1ea5246`, #45 머지 이후)에서 가동 → ws.py RuntimeError 가드 라이브. 재기동 이후 신규 RuntimeError 0건 | 2026-06-06 18:00 |
-| staging | 중단 (정책상 정상) | 2026-06-06 18:00 |
+| prod | 정상 — backend·web 200 OK, db OK, katago_alive:true, 디스크 6%, plist drift 없음. PID api 923 / web 912 ✅ | 2026-06-30 18:30 |
+| staging | 중단 (정책상 정상) | 2026-06-30 18:30 |
 
 ## 백업 상태
 
 | 항목 | 값 |
 |---|---|
-| 최신 백업 | 2026-06-06T04:00 (baduk-20260606T040005.db.gz, integrity OK, 7 tables, 약 8h) |
-| daily / weekly / monthly | 14 / 2 / 1 |
+| 최신 백업 | 2026-06-30T04:00 (baduk-20260630T040002.db.gz, integrity OK, 7 tables) |
+| daily / weekly / monthly | 14 / 6 / 1 |
 
 ## 콘텐츠 인덱스
 
@@ -24,25 +24,25 @@
 | 테마 수 | 6 |
 | 월간 픽 URL | 14 (최근 12개월 + 현재 + 다음 달) |
 | sitemap URL 수 | 약 1137 (정적 5 + 프로 1111 + 테마 6 + 픽 인덱스 1 + 월간 픽 14, 재생성 시 갱신) |
-| 최근 CWI ingest | 2026-06-06 15:44 (fetched=200 new=200 duplicate=0 error=0, cap=200) |
+| 최근 CWI ingest | 2026-06-28 03:06 (fetched=1237 new=200 duplicate=1037 error=0, cap=200) |
 | 이 달의 명국 | 353 |
-| 글로서리 | 11/18 |
-| FAQ | 6/9 |
+| 글로서리 | 15/18 |
+| FAQ | 7/9 |
 | sitemap 글로서리·FAQ URL | 5 (글로서리 3 + FAQ 2) |
 
 ## 분석
 
 | 항목 | 값 |
 |---|---|
-| 최근 주간 리포트 | 2026-W22.md |
-| 누적 리포트 수 | 2 |
+| 최근 주간 리포트 | 2026-W26.md |
+| 누적 리포트 수 | 6 |
 
 ## 개발 현황
 
 | 항목 | 값 |
 |---|---|
-| 열린 이슈 | 0건 — #39(WS RuntimeError)은 2026-06-05 22:37 PR #45 머지로 close. ✅ 6/6 17:39 prod 재기동으로 현 프로세스에 반영(배포 갭 해소). |
-| 열린 PR | 0건 — #43 `fix/issue-42-sqlite-pool-size`은 2026-06-07 close(이슈 #42가 오탐·PR #30으로 이미 해소, pool_size=1은 동시성 저하 변경이라 비채택). |
+| 열린 이슈 | 0건 — bug #53(잘못된 Content-Type → 500)은 6/25 종료(이미 `ce9d745`로 수정·배포된 구버전 기록 오탐). 미분류 0. |
+| 열린 PR | 0건 — #47·#50·#52 머지 완료. 주의 PR 없음. |
 
 ## 보류 승인
 
