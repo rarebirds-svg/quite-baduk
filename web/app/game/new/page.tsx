@@ -13,11 +13,12 @@ import RankAdvisor from "@/components/RankAdvisor";
 import BoardSizePicker from "@/components/BoardSizePicker";
 import HandicapPicker from "@/components/HandicapPicker";
 import type { AiStyle } from "@/components/StylePicker";
-import PlayerPicker, {
+import {
   type PlayerId,
   PLAYER_GROUPS,
   randomPlayerId,
 } from "@/components/PlayerPicker";
+import OpponentCuration from "@/components/OpponentCuration";
 import { toast } from "sonner";
 
 const VALID_HANDICAPS_BY_SIZE: Record<number, number[]> = {
@@ -211,7 +212,7 @@ export default function NewGamePage() {
             {t("game.aiPlayerHint")}
           </span>
         </div>
-        <PlayerPicker value={aiPlayer} onChange={setAiPlayer} />
+        <OpponentCuration value={aiPlayer} onChange={setAiPlayer} />
       </section>
 
       <Button
@@ -222,7 +223,11 @@ export default function NewGamePage() {
           busy || aiPlayer === null || (handicap === 0 && userColor === null)
         }
       >
-        {busy ? "…" : t("game.start")}
+        {busy
+          ? "…"
+          : aiPlayer
+            ? t("game.startVs", { name: t(`game.players.${aiPlayer}.name`) })
+            : t("game.start")}
       </Button>
     </div>
   );
