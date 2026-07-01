@@ -190,7 +190,7 @@ export default function NicknameGate() {
               {hint}
             </p>
             {error && <p role="alert" className="mt-1 text-sm text-oxblood">{error}</p>}
-            <p className="mt-2 font-sans text-xs text-ink-faint leading-relaxed">
+            <p className="mt-2 font-sans text-xs text-ink-mute leading-relaxed">
               {t("home.footerNote")}
             </p>
           </div>

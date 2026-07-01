@@ -40,7 +40,7 @@ export default function Footer() {
                 Inkbaduk
               </span>
             </Link>
-            <p className="font-sans text-xs text-ink-faint">
+            <p className="font-sans text-xs text-ink-mute">
               {t("footer.tagline")}
             </p>
           </div>
@@ -62,7 +62,7 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
-            <p className="font-mono text-[11px] tabular-nums text-ink-faint">
+            <p className="font-mono text-[11px] tabular-nums text-ink-mute">
               © {year} Inkbaduk · 잉크바둑
             </p>
           </nav>

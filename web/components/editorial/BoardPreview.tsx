@@ -21,7 +21,7 @@ export function BoardPreview() {
   return (
     <figure className="mx-auto mt-12 flex max-w-[300px] flex-col items-center gap-3 md:mt-16">
       <Board size={SIZE} board={BOARD} lastMove={{ x: 5, y: 5 }} disabled />
-      <figcaption className="font-mono text-[11px] uppercase tracking-label text-ink-faint text-center">
+      <figcaption className="font-mono text-[11px] uppercase tracking-label text-ink-mute text-center">
         {t("home.previewCaption")}
       </figcaption>
     </figure>
