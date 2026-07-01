@@ -456,6 +456,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
 
   return (
     <div className="flex flex-col gap-4 py-4 md:grid md:grid-cols-[minmax(0,1fr)_280px] md:gap-8">
+      <h1 className="sr-only">{t("game.playTitle")}</h1>
       <div className="flex flex-col gap-4">
         <PlayerCaption
           color={meta?.user_color === "black" ? "white" : "black"}
@@ -543,7 +544,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
         )}
       </div>
 
-      <aside className="flex flex-col gap-6">
+      <aside className="flex flex-col gap-6" aria-label={t("game.sidebarLabel")}>
         <AnalysisDensityToggle />
         {hint.length > 0 && hintWinrate !== null ? (
           <AnalysisOverlay topMoves={hint} winrate={hintWinrate} />

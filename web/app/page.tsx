@@ -182,6 +182,7 @@ export default function NicknameGate() {
               placeholder={t("session.nicknamePlaceholder")}
               maxLength={32}
               className="w-full border border-ink/20 rounded-sm bg-paper px-4 py-3 text-ink text-lg outline-none transition-base focus:border-oxblood"
+              aria-label={t("session.nicknameHeading")}
               aria-describedby="nickname-hint"
               autoComplete="off"
             />
@@ -212,9 +213,9 @@ export default function NicknameGate() {
               <span className="font-mono tabular-nums text-xs text-oxblood">
                 0{n}
               </span>
-              <h3 className="font-serif text-lg text-ink leading-snug">
+              <h2 className="font-serif text-lg text-ink leading-snug">
                 {t(`home.valueTitle${n}`)}
-              </h3>
+              </h2>
               <p className="font-sans text-sm text-ink-mute leading-relaxed">
                 {t(`home.valueDesc${n}`)}
               </p>
