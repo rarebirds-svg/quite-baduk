@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to coding agents (Claude Code, Codex, Gemini) when working with code in this repository. CLAUDE.md and GEMINI.md are symlinks to this file.
 
 ## Project
 
@@ -36,6 +36,8 @@ npm run lint                            # next lint / eslint
 npm run type-check                      # tsc --noEmit
 npm test -- --run                       # Vitest (jsdom)
 npm test -- --run tests/board.test.ts   # single file
+bash scripts/build-app.sh               # 앱 셸 정적 export (web/out, Capacitor용)
+npx cap sync android                    # export 결과를 android/ 네이티브 프로젝트에 동기화
 ```
 
 ### End-to-end (from repo root)
@@ -74,6 +76,10 @@ Process-wide singletons: one shared `KataGoAdapter`, a `dict[game_id, asyncio.Lo
 ### Frontend state — `web/store/`
 
 Zustand: `authStore` (user session), `gameStore` (board + move list + analysis). Board rendering is SVG in `components/Board.tsx`. WebSocket client in `lib/ws.ts` reconnects on disconnect and reconciles with the `state` payload from the server (authoritative). `lib/i18n/` is a small homegrown dictionary loader, not i18next.
+
+### App shell (Capacitor) — `web/capacitor.config.ts`, `web/android/`
+
+Capacitor 8 기반 모바일 셸. `BUILD_TARGET=app`이면 `next.config.js`가 `output:"export"`로 전환되고, `scripts/build-app.sh`가 웹 전용 라우트(admin·faq·glossary·picks·themes·[id] 동적 세그먼트 등)를 임시 제외해 `web/out`을 만든다. 앱 셸은 쿠키 대신 Bearer 토큰(`lib/sessionToken.ts`, Capacitor Preferences)을 쓰고, 동적 화면은 쿼리 진입점(`/game/play?id=` 등, `lib/routes.ts` 헬퍼)으로 진입한다. 네이티브 브리지는 `components/AppShellBridge.tsx`. APK 빌드는 JDK 21 + Android SDK 필요: `cd android && ./gradlew assembleDebug`.
 
 ### Auth
 
@@ -118,11 +124,11 @@ Email + bcrypt password, JWT (access + refresh) in HttpOnly cookies. `app/securi
 
 **i18n** — 새 문구는 `web/lib/i18n/ko.json`과 `en.json`에 **동시** 추가. 키 누락은 `korean-copy-qa` 에이전트가 체크.
 
-**자동 가드** — `.Codex/hooks/design-token-check.sh`가 `Write`/`Edit` 후 `web/components/*` 또는 `web/app/*`에서 하드코딩 hex·이모지를 검출해 경고합니다. `design-token-guardian` 에이전트로 수동 감사 가능.
+**자동 가드** — `.claude/hooks/design-token-check.sh`가 `Write`/`Edit` 후 `web/components/*` 또는 `web/app/*`에서 하드코딩 hex·이모지를 검출해 경고합니다. `design-token-guardian` 에이전트로 수동 감사 가능.
 
 ## 프로젝트 에이전트 팀
 
-`.Codex/agents/` 에 5개 커스텀 에이전트 정의:
+`.claude/agents/` 에 5개 커스텀 에이전트 정의:
 
 - **`editorial-implementer`** — 화면 1개를 디자인 스펙대로 구현 (frontend-design 스킬 강제, sonnet)
 - **`design-token-guardian`** — 토큰 준수 감사 (read-only, haiku)
