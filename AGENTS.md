@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to coding agents (Claude Code, Codex, Gemini) when working with code in this repository. CLAUDE.md and GEMINI.md are symlinks to this file.
+This file provides guidance to coding agents (Claude Code, Codex) when working with code in this repository. CLAUDE.md is a symlink to this file.
 
 ## Project
 
