@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # launchd가 매주 일요일 03:00 호출 — prod venv에서 CWI 자동 수집 스크립트를 실행.
 set -euo pipefail
+# launchd는 로그인 셸 PATH를 상속하지 않는다 — Homebrew 경로(gh·claude 등)를 명시적으로 앞에 붙인다.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 ROOT="/Users/daegong/projects/baduk"
 cd "$ROOT/backend"
 
