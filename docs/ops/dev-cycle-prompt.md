@@ -17,10 +17,10 @@
 2. **선점** — 고른 이슈에 `in-progress` 라벨을 단다.
 3. **처리** — `dev-pipeline.md`의 자율 경로 1~4단계를 `.worktrees/dev-cycle`
    worktree에서 수행한다. 한 번에 이슈 1개만.
-4. **마무리** — 너는 PR을 만들 수 없다(`git push`가 deny됨). 커밋까지 완료했으면
-   `dev-pipeline.md` 3단계대로 핸드오프 코멘트(브랜치·SHA·사람이 실행할 push+PR
-   명령)를 이슈에 남기고 `in-progress`를 뗀다. 결과를 `state/log/YYYY-MM-DD.md`에
-   기록한다.
+4. **마무리** — `dev-pipeline.md` 3단계대로 push + `gh pr create`까지 **자율로**
+   끝낸다(feature 패턴 브랜치 push·PR 생성은 🟢). 이슈에 브랜치·SHA·PR 링크를
+   코멘트로 남기고 `in-progress`를 뗀다. 결과를 `state/log/YYYY-MM-DD.md`에
+   기록한다. **PR 머지는 하지 않는다**(🟡 — 사람).
 5. **보고** — `docs/ops/runbooks/telegram-protocol.md` 알림 형식으로 Telegram에
    결과(처리한 이슈·브랜치·SHA — 또는 막힌 경우 사유)를 1건 보낸다.
    - **환경 자가진단 금지.** `ops/ops.env`의 토큰 유무·`--channels` 플래그 가시성으로
