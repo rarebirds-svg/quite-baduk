@@ -196,6 +196,24 @@
     "valueDesc2": "Seven play styles and 19 historic masters — Lee Chang-ho, Cho Chikun, Shin Jinseo, Ke Jie, and more.",
     "valueTitle3": "Deep positional read",
     "valueDesc3": "Live winrate and score lead, endgame-phase detection, and KataGo-ownership-driven dead-stone scoring.",
+    "cluster": {
+      "heading": "Learn about KataGo & AI Baduk",
+      "glossaryGroup": "Glossary",
+      "faqGroup": "FAQ",
+      "glossary": {
+        "katago": "KataGo",
+        "alphago": "AlphaGo",
+        "aiBaduk": "AI Baduk",
+        "humanSl": "Human-SL",
+        "winRate": "Win rate & score lead",
+        "aiJeongseok": "AI joseki & new moves"
+      },
+      "faq": {
+        "shinJinseo": "Can I play the same KataGo that beat Shin Jinseo?",
+        "playAgainst": "Can I play a game against KataGo?",
+        "handicap": "Can I beat the AI with a handicap?"
+      }
+    },
     "previewCaption": "A real game — same engine, 9 kyu to 9 dan",
     "scrollHint": "Enter a nickname below to begin",
     "footerNote": "Nickname-based ephemeral session — auto-expires after 1 hour of inactivity. See the Privacy Policy for full data retention details.",
