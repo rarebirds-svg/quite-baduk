@@ -8,6 +8,7 @@ import { setSessionToken } from "@/lib/sessionToken";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { BoardPreview } from "@/components/editorial/BoardPreview";
+import { NewsHook } from "@/components/editorial/NewsHook";
 
 type CheckResp = { available: boolean; reason?: "taken" | "invalid" };
 
@@ -163,12 +164,13 @@ export default function NicknameGate() {
           {subtitle}
         </p>
         <BoardPreview />
+        <NewsHook />
       </section>
 
       <RuleDivider weight="strong" />
 
       {/* Nickname form — anchored as the call to action */}
-      <section className="mt-10">
+      <section id="start" className="mt-10">
         <p className="font-sans text-xs font-semibold uppercase tracking-label text-ink-mute mb-3">
           {t("home.scrollHint")}
         </p>
