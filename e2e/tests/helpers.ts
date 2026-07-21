@@ -67,7 +67,8 @@ export async function createGame(page: Page, opts: CreateGameOpts = {}): Promise
     await page.getByRole("radiogroup", { name: /상대|opponent/i }).getByRole("radio").first().click();
   }
 
-  const start = page.getByRole("button", { name: /^대국 시작$|^Start$/ });
+  // 라벨이 startVs("{name} 대국 시작" / "{name} — Start game")로 바뀌어(657cc30) 정적 이름 정확매치가 깨졌다. 동적·정적 라벨 모두 커버.
+  const start = page.getByRole("button", { name: /대국 시작$|Start game$|^Start$/ });
   await expect(start).toBeEnabled({ timeout: 5000 });
   await start.click();
   await expect(page).toHaveURL(/\/game\/play\/\d+$/);
