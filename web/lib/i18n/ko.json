@@ -196,6 +196,24 @@
     "valueDesc2": "세력·실리·전투·속기 등 7가지 기풍, 이창호·조치훈·신진서 등 19명의 기사 중 한 명을 상대로.",
     "valueTitle3": "깊이 있는 형세 판단",
     "valueDesc3": "실시간 승률과 집차(scoreLead), 공배 단계 자동 감지, KataGo ownership 기반 자동 사석 판정까지.",
+    "cluster": {
+      "heading": "카타고·AI 바둑 알아보기",
+      "glossaryGroup": "용어사전",
+      "faqGroup": "자주 묻는 질문",
+      "glossary": {
+        "katago": "카타고(KataGo)",
+        "alphago": "알파고(AlphaGo)",
+        "aiBaduk": "AI 바둑",
+        "humanSl": "휴먼 SL(Human-SL)",
+        "winRate": "승률·집차",
+        "aiJeongseok": "AI 신정석·신수"
+      },
+      "faq": {
+        "shinJinseo": "신진서가 이긴 그 카타고, 저도 상대할 수 있나요?",
+        "playAgainst": "카타고 상대로 바둑을 둘 수 있나요?",
+        "handicap": "AI를 접바둑으로 이길 수 있나요?"
+      }
+    },
     "previewCaption": "실제 대국 — 9급부터 9단까지, 같은 엔진으로",
  "scrollHint": "아래 닉네임을 입력해 한 판 시작",
     "footerNote": "닉네임 기반 일회성 세션 — 1시간 무활동 시 자동 만료. 자세한 데이터 보관 정책은 개인정보처리방침을 참조하세요.",

@@ -9,6 +9,7 @@ import { BrandMark } from "@/components/editorial/BrandMark";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { BoardPreview } from "@/components/editorial/BoardPreview";
 import { NewsHook } from "@/components/editorial/NewsHook";
+import { ClusterLinks } from "@/components/editorial/ClusterLinks";
 
 type CheckResp = { available: boolean; reason?: "taken" | "invalid" };
 
@@ -225,6 +226,11 @@ export default function NicknameGate() {
           ))}
         </div>
       </section>
+
+      {/* Content cluster — internal links into KataGo/AI-baduk glossary + FAQ.
+          Delete this render call (and components/editorial/ClusterLinks.tsx)
+          once the Shin Jinseo news cools down and the cluster is retired. */}
+      <ClusterLinks />
 
     </div>
   );
