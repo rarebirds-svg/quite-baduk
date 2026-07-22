@@ -16,6 +16,8 @@ export interface ContentItem {
   // 검색 결과 노출용 제목 — frontmatter에 있으면 <title>에 우선 사용(검색 의도형 롱테일).
   // 없으면 title 기반 기본 템플릿으로 폴백한다.
   seoTitle?: string;
+  // 같은 kind 내 관련 항목 slug 목록 — 상세 페이지 상호 내부링크(크롤 깊이·주제 권위)용.
+  related?: string[];
   created_at?: string;
   excerpt: string;
   html: string;
@@ -89,6 +91,9 @@ export function getContent(kind: ContentKind, slug: string): ContentItem | null 
       typeof data.seoTitle === "string" && data.seoTitle.trim()
         ? data.seoTitle.trim()
         : undefined,
+    related: Array.isArray(data.related)
+      ? data.related.filter((r): r is string => typeof r === "string" && r.trim() !== "")
+      : undefined,
     created_at: data.created_at ? String(data.created_at) : undefined,
     excerpt,
     html,
