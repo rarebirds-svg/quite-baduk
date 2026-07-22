@@ -15,7 +15,8 @@ export function generateMetadata(
   const description = c.excerpt || c.title;
   const canonical = `${BASE}/faq/${c.slug}`;
   return {
-    title,
+    // absolute — 루트 template("%s — Inkbaduk")의 브랜드 재부착을 막아 이중 브랜딩 방지.
+    title: { absolute: title },
     description,
     alternates: { canonical },
     openGraph: {
