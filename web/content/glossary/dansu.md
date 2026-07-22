@@ -2,6 +2,7 @@
 slug: dansu
 kind: glossary
 title: 단수
+related: [chuk, pae, sahwal]
 seoTitle: 바둑 단수(아타리)란? 뜻과 살리는 법 — inkbaduk
 created_at: 2026-05-31
 draft_by: agent v1

@@ -2,6 +2,7 @@
 slug: gyega
 kind: glossary
 title: 계가·집
+related: [komi, okjip, sahwal]
 seoTitle: 바둑 계가·집 세는 법 한눈에 — inkbaduk
 created_at: 2026-05-27
 draft_by: agent v1

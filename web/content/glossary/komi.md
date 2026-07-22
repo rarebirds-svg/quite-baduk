@@ -2,6 +2,7 @@
 slug: komi
 kind: glossary
 title: 덤
+related: [handicap, gyega]
 seoTitle: 바둑 덤이란? 한국 규칙 6.5집 계산법 — inkbaduk
 created_at: 2026-05-31
 draft_by: agent v1

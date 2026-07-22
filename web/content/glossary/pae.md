@@ -2,6 +2,7 @@
 slug: pae
 kind: glossary
 title: 패
+related: [dansu, sahwal]
 created_at: 2026-05-31
 draft_by: agent v1
 ---

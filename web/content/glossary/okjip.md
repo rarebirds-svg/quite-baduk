@@ -2,6 +2,7 @@
 slug: okjip
 kind: glossary
 title: 옥집
+related: [sahwal, bik, gyega]
 created_at: 2026-06-20
 draft_by: agent v1
 ---

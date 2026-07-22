@@ -2,6 +2,7 @@
 slug: chuk
 kind: glossary
 title: 축
+related: [dansu, pae]
 created_at: 2026-05-25
 draft_by: agent v1
 ---
