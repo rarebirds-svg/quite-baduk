@@ -188,7 +188,7 @@
     "newsHook": {
       "kicker": "Breaking",
       "body": "9-dan Shin Jinseo just beat KataGo 2–1 in a three-game match at a 2-stone handicap. The opponent waiting on Inkbaduk is that same KataGo (Human-SL) network.",
-      "cta": "Start a game now"
+      "guide": "Enter a nickname below to start a game."
     },
     "valueTitle1": "Truly human-like AI",
     "valueDesc1": "Not a labeled difficulty — an actual Human-SL network trained on real games at that rank, 9-kyu to 9-dan.",
