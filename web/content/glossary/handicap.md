@@ -2,6 +2,7 @@
 slug: handicap
 kind: glossary
 title: 접바둑·치수
+seoTitle: 접바둑 치수·덤·집차이 — 몇 점 접고 덤은 몇 집? — inkbaduk
 created_at: 2026-05-30
 draft_by: agent v1
 ---
