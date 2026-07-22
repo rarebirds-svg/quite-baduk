@@ -72,6 +72,7 @@ export default function TopNav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
         <Link
           href="/game/new"
+          rel="nofollow"
           className="flex shrink-0 items-center gap-2"
           aria-label={t("app.title")}
         >

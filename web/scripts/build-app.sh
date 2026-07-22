@@ -10,7 +10,7 @@ EXCLUDES=(
   "app/admin" "app/dev" "app/support" "app/supporters"
   "app/faq" "app/glossary"
   "app/spectate/picks" "app/spectate/themes"
-  "app/spectate/[id]" "app/spectate/pro/[id]"
+  "app/spectate/[id]" "app/spectate/pro/[id]" "app/spectate/pro/archive"
   "app/game/play/[id]" "app/game/review/[id]"
   "app/sitemap.ts" "app/robots.ts"
 )
