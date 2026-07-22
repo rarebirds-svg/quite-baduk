@@ -1,7 +1,7 @@
 // FAQ 인덱스 — server fetch + client wrapper (Hero + accordion + CTA).
 import type { Metadata } from "next";
 
-import { getContent, getContentSlugs } from "../../lib/content";
+import { getContent, getContentSlugs, htmlToText } from "../../lib/content";
 import { FaqClient } from "./_FaqClient";
 
 // 콘텐츠 md 추가를 재빌드·재시작 없이 노출 — 요청 시 fs 재읽기.
@@ -14,20 +14,6 @@ export const metadata: Metadata = {
   description: "inkbaduk의 AI 바둑·복기·세션 등에 대한 자주 묻는 질문.",
   alternates: { canonical: `${BASE}/faq` },
 };
-
-// FAQPage 구조화 데이터용 — 렌더된 html에서 태그·엔티티를 제거해 순수 텍스트로 축약.
-function htmlToText(html: string): string {
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#(?:39|x27);/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 export default function FaqIndex() {
   const slugs = getContentSlugs("faq");

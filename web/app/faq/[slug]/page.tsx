@@ -2,10 +2,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { getContent, getContentSlugs } from "../../../lib/content";
+import { getContent, getContentSlugs, htmlToText } from "../../../lib/content";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { Button } from "@/components/ui/button";
+
+const BASE = "https://inkbaduk.com";
 
 interface AdjacentEntry {
   slug: string;
@@ -29,8 +31,43 @@ export default function FaqDetail({ params }: { params: { slug: string } }) {
   if (c === null) notFound();
   const { prev, next } = adjacents(params.slug);
 
+  // 검색 결과 Q&A 리치 표시를 위한 구조화 데이터 (schema.org QAPage).
+  const qaJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "QAPage",
+    mainEntity: {
+      "@type": "Question",
+      name: c.title,
+      acceptedAnswer: { "@type": "Answer", text: htmlToText(c.html) },
+    },
+  };
+
+  // 탐색 경로 리치 표시를 위한 구조화 데이터 (schema.org BreadcrumbList).
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "홈", item: `${BASE}/` },
+      { "@type": "ListItem", position: 2, name: "자주 묻는 질문", item: `${BASE}/faq` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: c.title,
+        item: `${BASE}/faq/${c.slug}`,
+      },
+    ],
+  };
+
   return (
     <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(qaJsonLd).replace(/</g, "\\u003c") }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
       <nav className="mb-6 flex items-center gap-2 font-mono text-xs uppercase tracking-label text-ink-faint">
         <Link href="/faq" className="transition-base hover:text-oxblood">
           FAQ
@@ -74,7 +111,7 @@ export default function FaqDetail({ params }: { params: { slug: string } }) {
           )}
         </div>
         <Button asChild>
-          <Link href="/game/new">대국 시작 →</Link>
+          <Link href="/game/new" rel="nofollow">대국 시작 →</Link>
         </Button>
       </footer>
     </article>

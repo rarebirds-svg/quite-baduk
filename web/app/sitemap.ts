@@ -1,6 +1,6 @@
 // 검색엔진 제출용 사이트맵 — 정적 공개 페이지 + 동적 프로 기보 페이지(911+).
 import type { MetadataRoute } from "next";
-import { getContentSlugs } from "../lib/content";
+import { getContent, getContentSlugs } from "../lib/content";
 
 const BASE = "https://inkbaduk.com";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -64,12 +64,15 @@ function contentUrls(kind: "glossary" | "faq"): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
-    ...slugs.map((s) => ({
-      url: `${BASE}/${kind}/${s}`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.5,
-    })),
+    ...slugs.map((s) => {
+      const c = getContent(kind, s);
+      return {
+        url: `${BASE}/${kind}/${s}`,
+        lastModified: c?.created_at ? new Date(c.created_at) : new Date(),
+        changeFrequency: "monthly" as const,
+        priority: 0.5,
+      };
+    }),
   ];
 }
 
@@ -91,6 +94,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "monthly",
     priority: 0.6,
   }));
+
+  const proArchive: MetadataRoute.Sitemap = [{
+    url: `${BASE}/spectate/pro/archive`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: 0.5,
+  }];
 
   const themesList = await fetchThemesList();
   const themeUrls: MetadataRoute.Sitemap = themesList.map((t) => ({
@@ -117,6 +127,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticUrls,
     ...proUrls,
+    ...proArchive,
     ...themeUrls,
     ...picksIndex,
     ...pickUrls,

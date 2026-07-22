@@ -2,6 +2,7 @@
 slug: samsam
 kind: glossary
 title: 삼삼
+seoTitle: 바둑 삼삼(3-3) 침입 정석과 뜻 — inkbaduk
 created_at: 2026-05-31
 draft_by: agent v1
 ---

@@ -11,14 +11,21 @@ export function generateMetadata(
 ): Metadata {
   const c = getContent("faq", params.slug);
   if (c === null) return { robots: { index: false, follow: false } };
-  const title = `${c.title} — inkbaduk FAQ`;
-  const description = c.title;
+  const title = c.seoTitle ?? `${c.title} — inkbaduk FAQ`;
+  const description = c.excerpt || c.title;
   const canonical = `${BASE}/faq/${c.slug}`;
   return {
     title,
     description,
     alternates: { canonical },
-    openGraph: { title, description, url: canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: "article",
+      locale: "ko_KR",
+      images: ["/og-image.png"],
+    },
   };
 }
 
