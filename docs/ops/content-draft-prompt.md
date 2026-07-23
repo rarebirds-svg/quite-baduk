@@ -48,6 +48,8 @@
    - `git add web/content/<kind>/<slug>.md` — **이 파일만** 스테이징한다. 작업트리의 다른 변경(`state/` 로그·대시보드 등)은 절대 함께 add 하지 않는다.
    - `git commit -m "content(<kind>): <slug> 게시"`
    - `git push origin main` — 거부되면(non-fast-forward) `git pull --rebase origin main` 후 1회만 재시도. 그래도 실패하면 push는 보류하고 로그에 기록한다(커밋은 로컬에 남고 prod 작업트리에 이미 반영되므로 라이브에는 노출됨).
+   - **IndexNow 통보(네이버 재크롤 가속)** — 게시가 라이브에 노출된 뒤 실행. best-effort라 실패해도 게시엔 영향 없음:
+     `bash scripts/seo/indexnow-submit.sh https://inkbaduk.com/<kind>/<slug> || true`
    - 게시 완료를 Telegram으로 **사후 보고**(승인 요청 아님): "<slug> ({kind}) 게시 완료 — /{kind}/<slug>".
    참고: `/glossary`·`/faq` 목록과 상세는 동적 렌더라 재빌드·재시작 없이 즉시 노출된다.
 
