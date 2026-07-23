@@ -8,7 +8,10 @@ interface ProGameMeta {
   id: number;
   black_player?: string | null;
   white_player?: string | null;
+  black_rank?: string | null;
+  white_rank?: string | null;
   event?: string | null;
+  round?: string | null;
   game_date?: string | null;
   result?: string | null;
 }
@@ -26,20 +29,25 @@ export async function generateMetadata(
     const g = (await res.json()) as ProGameMeta;
     const black = g.black_player ?? "Black";
     const white = g.white_player ?? "White";
-    const event = g.event
+    const eventParen = g.event
       ? ` (${g.event}${g.game_date ? `, ${g.game_date}` : ""})`
       : "";
-    const title = `${black} vs ${white}${event} — inkbaduk`;
+    // 한국어 검색 매칭용 키워드(바둑 기보)를 제목에 포함. absolute로 브랜드 재부착 방지.
+    const title = `${black} vs ${white} 바둑 기보${eventParen} — inkbaduk`;
+    const blackName = `${black}${g.black_rank ? ` ${g.black_rank}` : ""}`;
+    const whiteName = `${white}${g.white_rank ? ` ${g.white_rank}` : ""}`;
+    const meta = [g.event, g.round, g.game_date, g.result ? `결과 ${g.result}` : null]
+      .filter(Boolean)
+      .join(" · ");
     const description =
-      [g.event, g.game_date, g.result ? `결과 ${g.result}` : null]
-        .filter(Boolean)
-        .join(" · ") || "inkbaduk 프로 기보 관전";
+      `${blackName} vs ${whiteName} 대국을 KataGo로 수순별 복기·관전.` +
+      (meta ? ` ${meta}.` : "");
     const canonical = `${BASE}/spectate/pro/${g.id}`;
     return {
-      title,
+      title: { absolute: title },
       description,
       alternates: { canonical },
-      openGraph: { title, description, url: canonical },
+      openGraph: { title, description, url: canonical, type: "article", locale: "ko_KR" },
     };
   } catch {
     return {};
