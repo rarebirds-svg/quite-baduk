@@ -2,6 +2,8 @@
 slug: susangjeon
 kind: glossary
 title: 수상전
+seoTitle: 바둑 수상전이란? 수읽기와 활로 계산 — inkbaduk
+related: [sahwal, dansu, chuk, jachung]
 created_at: 2026-07-08
 draft_by: agent v1
 ---

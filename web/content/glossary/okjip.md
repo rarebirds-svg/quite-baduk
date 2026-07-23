@@ -2,6 +2,7 @@
 slug: okjip
 kind: glossary
 title: 옥집
+seoTitle: 바둑 옥집이란? 진짜 눈과 가짜 눈 구별 — inkbaduk
 related: [sahwal, bik, gyega]
 created_at: 2026-06-20
 draft_by: agent v1

@@ -2,6 +2,8 @@
 slug: hwajeom
 kind: glossary
 title: 화점
+seoTitle: 바둑 화점이란? 위치와 4-4 포석 — inkbaduk
+related: [poseok, handicap, jeongseok]
 created_at: 2026-05-31
 draft_by: agent v1
 ---

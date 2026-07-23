@@ -2,6 +2,7 @@
 slug: review-and-analysis
 kind: faq
 title: 복기·승부처 분석은 무엇인가요?
+seoTitle: 바둑 복기·승부처 분석이란? — inkbaduk FAQ
 created_at: 2026-05-31
 draft_by: agent v1
 ---

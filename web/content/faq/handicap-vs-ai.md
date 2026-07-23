@@ -2,6 +2,7 @@
 slug: handicap-vs-ai
 kind: faq
 title: AI를 접바둑으로 이길 수 있나요?
+seoTitle: 바둑 AI 접바둑으로 이기는 법 — inkbaduk FAQ
 created_at: 2026-07-22
 draft_by: hand
 ---

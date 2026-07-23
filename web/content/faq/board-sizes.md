@@ -2,6 +2,7 @@
 slug: board-sizes
 kind: faq
 title: 9로·13로·19로 중 무엇으로 둘까요?
+seoTitle: 바둑판 크기 9로·13로·19로 차이와 추천 — inkbaduk FAQ
 created_at: 2026-06-13
 draft_by: agent v1
 ---

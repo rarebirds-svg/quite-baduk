@@ -2,6 +2,7 @@
 slug: resign-and-pass
 kind: faq
 title: 기권하거나 대국을 끝내려면?
+seoTitle: 바둑 기권·패스로 대국 끝내는 법 — inkbaduk FAQ
 created_at: 2026-06-24
 draft_by: agent v1
 ---

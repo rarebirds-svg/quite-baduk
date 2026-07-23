@@ -2,6 +2,7 @@
 slug: nickname-session
 kind: faq
 title: 닉네임 세션이란?
+seoTitle: 닉네임 세션이란? 가입 없이 바둑 — inkbaduk FAQ
 created_at: 2026-05-31
 draft_by: agent v1
 ---

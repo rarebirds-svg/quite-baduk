@@ -2,6 +2,8 @@
 slug: poseok
 kind: glossary
 title: 포석
+seoTitle: 바둑 포석이란? 초반 돌 배치 전략 — inkbaduk
+related: [jeongseok, hwajeom, seryeok-silli, haengma]
 created_at: 2026-06-27
 draft_by: agent v1
 ---

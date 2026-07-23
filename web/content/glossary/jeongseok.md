@@ -2,6 +2,8 @@
 slug: jeongseok
 kind: glossary
 title: 정석
+seoTitle: 바둑 정석이란? 뜻과 귀 정석 기본 — inkbaduk
+related: [poseok, ai-jeongseok, hwajeom, haengma]
 created_at: 2026-06-06
 draft_by: agent v1
 ---

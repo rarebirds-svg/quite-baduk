@@ -2,6 +2,8 @@
 slug: katago
 kind: glossary
 title: 카타고(KataGo)
+seoTitle: 카타고(KataGo)란? 오픈소스 바둑 AI 정리 — inkbaduk
+related: [ai-baduk, human-sl, alphago]
 created_at: 2026-07-21
 draft_by: hand
 ---

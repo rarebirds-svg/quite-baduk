@@ -2,6 +2,7 @@
 slug: korean-vs-japanese-rules
 kind: faq
 title: 한국 규칙과 일본 규칙의 차이는?
+seoTitle: 바둑 한국 규칙 vs 일본 규칙 차이 — inkbaduk FAQ
 created_at: 2026-05-31
 draft_by: agent v1
 ---

@@ -2,6 +2,8 @@
 slug: alphago
 kind: glossary
 title: 알파고(AlphaGo)
+seoTitle: 알파고(AlphaGo)란? 이세돌 대국과 바둑 AI — inkbaduk
+related: [ai-baduk, katago, human-sl]
 created_at: 2026-07-22
 draft_by: hand
 ---

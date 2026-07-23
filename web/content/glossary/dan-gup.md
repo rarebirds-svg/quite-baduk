@@ -2,6 +2,8 @@
 slug: dan-gup
 kind: glossary
 title: 단·급
+seoTitle: 바둑 단·급이란? 급수·단수 실력 등급 정리 — inkbaduk
+related: [handicap, win-rate]
 created_at: 2026-05-23
 draft_by: hand
 ---

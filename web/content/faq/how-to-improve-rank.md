@@ -2,6 +2,7 @@
 slug: how-to-improve-rank
 kind: faq
 title: 단을 얻으려면 어떻게 두면 되나요?
+seoTitle: 바둑 실력·단 올리는 법 — inkbaduk FAQ
 created_at: 2026-05-31
 draft_by: agent v1
 ---

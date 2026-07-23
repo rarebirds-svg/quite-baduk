@@ -2,6 +2,7 @@
 slug: ai-strength-levels
 kind: faq
 title: AI 기력(난이도)은 어떻게 정해지나요?
+seoTitle: 바둑 AI 난이도·기력은 어떻게 정해지나 — inkbaduk FAQ
 created_at: 2026-05-31
 draft_by: agent v1
 ---

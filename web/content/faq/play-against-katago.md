@@ -2,6 +2,7 @@
 slug: play-against-katago
 kind: faq
 title: 카타고 상대로 바둑을 둘 수 있나요?
+seoTitle: 카타고와 바둑 두는 법 — inkbaduk FAQ
 created_at: 2026-07-21
 draft_by: hand
 ---

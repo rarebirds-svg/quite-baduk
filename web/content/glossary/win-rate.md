@@ -2,6 +2,8 @@
 slug: win-rate
 kind: glossary
 title: 승률·집차
+seoTitle: 바둑 승률·집차이란? AI 형세판단 읽는 법 — inkbaduk
+related: [ai-baduk, seryeok-silli, katago]
 created_at: 2026-07-22
 draft_by: hand
 ---

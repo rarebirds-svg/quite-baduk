@@ -2,6 +2,8 @@
 slug: seryeok-silli
 kind: glossary
 title: 세력·실리
+seoTitle: 바둑 세력과 실리 — 두터움 vs 집 차이 — inkbaduk
+related: [poseok, win-rate, kkutnaegi]
 created_at: 2026-07-01
 draft_by: agent v1
 ---

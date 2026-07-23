@@ -2,6 +2,7 @@
 slug: spectate-pro
 kind: faq
 title: 프로 기보 감상은 무엇인가요?
+seoTitle: 프로 바둑 기보 감상·복기란? — inkbaduk FAQ
 created_at: 2026-07-04
 draft_by: agent v1
 ---

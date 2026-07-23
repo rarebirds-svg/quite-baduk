@@ -5,7 +5,7 @@ title: 사활
 seoTitle: 바둑 사활이란? 뜻과 두 눈·삶과 죽음 정리 — inkbaduk
 created_at: 2026-07-22
 draft_by: agent v1
-related: [okjip, bik, pae, gyega]
+related: [okjip, bik, pae, gyega, jachung]
 ---
 
 사활은 한 무리의 돌이 최종적으로 살아 있는지 죽어 있는지를 가리는 문제를 말한다. 글자 그대로 죽을 사(死)와 살 활(活)을 합친 말로, 바둑에서 돌의 삶과 죽음을 다루는 가장 근본적인 주제다. 대국의 승패는 결국 어느 쪽 돌이 살아남고 어느 쪽이 잡히느냐로 갈리므로, 사활을 읽는 힘이 곧 기력이라고 해도 지나치지 않다.

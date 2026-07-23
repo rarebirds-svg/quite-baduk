@@ -10,6 +10,12 @@ const nextConfig = isAppShell
         return [
           { source: "/api/:path*", destination: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") + "/api/:path*" }
         ];
+      },
+      async redirects() {
+        return [
+          // 사활 페이지 슬러그 통합 — 옛 kasaeng을 정확한 슬러그 sahwal로 301 이전(중복 색인 제거).
+          { source: "/glossary/kasaeng", destination: "/glossary/sahwal", permanent: true }
+        ];
       }
     };
 module.exports = nextConfig;

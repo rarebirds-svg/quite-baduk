@@ -2,6 +2,8 @@
 slug: ai-baduk
 kind: glossary
 title: AI 바둑
+seoTitle: AI 바둑이란? 인공지능 바둑의 역사와 원리 — inkbaduk
+related: [alphago, katago, ai-jeongseok, human-sl]
 created_at: 2026-07-21
 draft_by: hand
 ---

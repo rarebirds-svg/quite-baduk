@@ -2,6 +2,7 @@
 slug: pae
 kind: glossary
 title: 패
+seoTitle: 바둑 패란? 뜻과 패싸움·팻감 규칙 — inkbaduk
 related: [dansu, sahwal]
 created_at: 2026-05-31
 draft_by: agent v1

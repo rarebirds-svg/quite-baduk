@@ -2,6 +2,7 @@
 slug: shin-jinseo-katago
 kind: faq
 title: 신진서가 이긴 그 카타고, 저도 상대할 수 있나요?
+seoTitle: 신진서가 이긴 카타고 상대하기 — inkbaduk FAQ
 created_at: 2026-07-21
 draft_by: hand
 ---

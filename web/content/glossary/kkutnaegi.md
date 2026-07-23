@@ -2,6 +2,8 @@
 slug: kkutnaegi
 kind: glossary
 title: 끝내기
+seoTitle: 바둑 끝내기란? 뜻과 큰 곳 계산법 — inkbaduk
+related: [gyega, gongbae, seryeok-silli]
 created_at: 2026-06-17
 draft_by: agent v1
 ---

@@ -2,6 +2,8 @@
 slug: ai-jeongseok
 kind: glossary
 title: AI 신정석·신수
+seoTitle: AI 신정석·신수 — 알파고 이후 바뀐 정석 — inkbaduk
+related: [jeongseok, alphago, katago, poseok]
 created_at: 2026-07-22
 draft_by: hand
 ---

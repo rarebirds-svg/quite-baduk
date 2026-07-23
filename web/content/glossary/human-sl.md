@@ -2,6 +2,8 @@
 slug: human-sl
 kind: glossary
 title: 휴먼 SL(Human-SL)
+seoTitle: 카타고 Human-SL이란? 사람처럼 두는 AI — inkbaduk
+related: [katago, ai-baduk, alphago]
 created_at: 2026-07-21
 draft_by: hand
 ---

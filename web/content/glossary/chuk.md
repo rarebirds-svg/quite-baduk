@@ -2,7 +2,8 @@
 slug: chuk
 kind: glossary
 title: 축
-related: [dansu, pae]
+seoTitle: 바둑 축(단수 추격)이란? 뜻과 축머리 — inkbaduk
+related: [dansu, pae, jangmun]
 created_at: 2026-05-25
 draft_by: agent v1
 ---

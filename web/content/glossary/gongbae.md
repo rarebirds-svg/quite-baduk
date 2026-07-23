@@ -2,6 +2,8 @@
 slug: gongbae
 kind: glossary
 title: 공배
+seoTitle: 바둑 공배란? 뜻과 계가 시 처리 — inkbaduk
+related: [gyega, bik, kkutnaegi]
 created_at: 2026-06-03
 draft_by: agent v1
 ---
