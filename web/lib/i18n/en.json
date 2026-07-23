@@ -201,6 +201,7 @@
       "heading": "Learn about KataGo & AI Baduk",
       "glossaryGroup": "Glossary",
       "faqGroup": "FAQ",
+      "basicsGroup": "Baduk fundamentals",
       "glossary": {
         "katago": "KataGo",
         "alphago": "AlphaGo",
@@ -208,6 +209,13 @@
         "humanSl": "Human-SL",
         "winRate": "Win rate & score lead",
         "aiJeongseok": "AI joseki & new moves"
+      },
+      "basics": {
+        "sahwal": "Life & death",
+        "dansu": "Atari (single-liberty)",
+        "gyega": "Scoring",
+        "handicap": "Handicap",
+        "samsam": "3-3 point"
       },
       "faq": {
         "shinJinseo": "Can I play the same KataGo that beat Shin Jinseo?",

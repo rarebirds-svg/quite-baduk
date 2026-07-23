@@ -1,6 +1,6 @@
 "use client";
 // 홈 랜딩용 카타고·AI 바둑 콘텐츠 클러스터(용어사전·FAQ) 내부 링크 묶음 섹션
-import { BookOpen, HelpCircle, ArrowRight } from "lucide-react";
+import { BookOpen, HelpCircle, Sword, ArrowRight } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 
@@ -24,6 +24,15 @@ const FAQ_LINKS: ClusterLink[] = [
   { href: "/faq/shin-jinseo-katago", labelKey: "home.cluster.faq.shinJinseo" },
   { href: "/faq/play-against-katago", labelKey: "home.cluster.faq.playAgainst" },
   { href: "/faq/handicap-vs-ai", labelKey: "home.cluster.faq.handicap" },
+];
+
+// 실제 검색 유입이 있는 기초 전술 용어 — 홈에서 링크해 랭킹 페이지로 내부 권위 전달.
+const BASICS_LINKS: ClusterLink[] = [
+  { href: "/glossary/sahwal", labelKey: "home.cluster.basics.sahwal" },
+  { href: "/glossary/dansu", labelKey: "home.cluster.basics.dansu" },
+  { href: "/glossary/gyega", labelKey: "home.cluster.basics.gyega" },
+  { href: "/glossary/handicap", labelKey: "home.cluster.basics.handicap" },
+  { href: "/glossary/samsam", labelKey: "home.cluster.basics.samsam" },
 ];
 
 function LinkGroup({
@@ -78,11 +87,16 @@ export function ClusterLinks() {
         <h2 className="font-serif text-lg text-ink leading-snug">
           {t("home.cluster.heading")}
         </h2>
-        <div className="mt-6 grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-12">
+        <div className="mt-6 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-12">
           <LinkGroup
             icon={<BookOpen size={16} strokeWidth={1.5} aria-hidden="true" />}
             heading={t("home.cluster.glossaryGroup")}
             links={GLOSSARY_LINKS}
+          />
+          <LinkGroup
+            icon={<Sword size={16} strokeWidth={1.5} aria-hidden="true" />}
+            heading={t("home.cluster.basicsGroup")}
+            links={BASICS_LINKS}
           />
           <LinkGroup
             icon={<HelpCircle size={16} strokeWidth={1.5} aria-hidden="true" />}

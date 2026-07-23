@@ -201,6 +201,7 @@
       "heading": "카타고·AI 바둑 알아보기",
       "glossaryGroup": "용어사전",
       "faqGroup": "자주 묻는 질문",
+      "basicsGroup": "바둑 기초 용어",
       "glossary": {
         "katago": "카타고(KataGo)",
         "alphago": "알파고(AlphaGo)",
@@ -208,6 +209,13 @@
         "humanSl": "휴먼 SL(Human-SL)",
         "winRate": "승률·집차",
         "aiJeongseok": "AI 신정석·신수"
+      },
+      "basics": {
+        "sahwal": "사활",
+        "dansu": "단수",
+        "gyega": "계가·집",
+        "handicap": "접바둑·치수",
+        "samsam": "삼삼"
       },
       "faq": {
         "shinJinseo": "신진서가 이긴 그 카타고, 저도 상대할 수 있나요?",
