@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     # ``X-Forwarded-For`` is never trusted: it is too easy for clients to set.
     cf_trusted_proxy: bool = False
 
+    # Google Search Console API. 미설정 시 GSC 연동은 꺼진 상태로 동작.
+    gsc_property_url: str = ""          # env: GSC_PROPERTY_URL (예: sc-domain:inkbaduk.com)
+    gsc_service_account_json: str = ""  # env: GSC_SERVICE_ACCOUNT_JSON (키 파일 경로)
+
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"
