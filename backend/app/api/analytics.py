@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from app.client_ip import client_country, client_ip
@@ -12,6 +12,7 @@ from app.core.analytics.hashing import daily_salt, visitor_hash
 from app.core.analytics.referrer import classify_source, parse_referrer_host
 from app.deps import DbSession
 from app.models.visit_hit import VisitHit
+from app.rate_limit import rate_limiter
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
@@ -32,9 +33,12 @@ async def hit(body: HitBody, request: Request, db: DbSession) -> Response:
     ua = request.headers.get("user-agent")
     if is_bot(ua):
         return Response(status_code=204)
+    ip = client_ip(request)
+    # 페이지뷰 비콘: IP당 분당 60건이면 정상 사용자 트래픽엔 충분히 여유롭다.
+    if not await rate_limiter.check(f"analytics-hit:{ip}", max_hits=60, window_sec=60):
+        raise HTTPException(status_code=429, detail="rate_limited")
     host = parse_referrer_host(body.referrer)
     day = datetime.now(UTC).strftime("%Y-%m-%d")
-    ip = client_ip(request)
     db.add(
         VisitHit(
             path=body.path[:512],

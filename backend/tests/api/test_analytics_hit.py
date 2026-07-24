@@ -46,3 +46,15 @@ async def test_hit_direct_source(client):
         row = (await db.execute(select(VisitHit))).scalars().one()
     assert row.source == "direct"
     assert row.referrer_host is None
+
+
+@pytest.mark.asyncio
+async def test_hit_rate_limited(client):
+    headers = {"User-Agent": "Mozilla/5.0 (iPhone) Safari"}
+    for _ in range(60):
+        r = await client.post("/api/analytics/hit",
+                              json={"path": "/", "referrer": ""}, headers=headers)
+        assert r.status_code == 204
+    r = await client.post("/api/analytics/hit",
+                          json={"path": "/", "referrer": ""}, headers=headers)
+    assert r.status_code == 429
