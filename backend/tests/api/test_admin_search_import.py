@@ -22,7 +22,8 @@ async def test_import_naver_csv(client):
     from app.db import AsyncSessionLocal
     from app.models.search_query import SearchQuery
     async with AsyncSessionLocal() as db:
-        rows = (await db.execute(select(SearchQuery).where(SearchQuery.source == "naver"))).scalars().all()
+        result = await db.execute(select(SearchQuery).where(SearchQuery.source == "naver"))
+        rows = result.scalars().all()
     assert {x.query for x in rows} == {"바둑 사활", "삼삼"}
 
 

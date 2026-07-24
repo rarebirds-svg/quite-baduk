@@ -22,7 +22,8 @@ async def test_list_search_queries(client):
         db.add(SearchQuery(source="google", query="바둑 사활", page="/g/s",
                            clicks=5, impressions=50, ctr=0.1, position=3.0, date=date(2026, 7, 22)))
         db.add(SearchQuery(source="naver", query="접바둑 덤", page=None,
-                           clicks=3, impressions=40, ctr=0.075, position=None, date=date(2026, 7, 22)))
+                           clicks=3, impressions=40, ctr=0.075, position=None,
+                           date=date(2026, 7, 22)))
         await db.commit()
     await _signup(client, ADMIN_NICK)
     r = await client.get("/api/admin/search-queries?source=all&days=90&top=10")
