@@ -72,6 +72,7 @@ def create_app() -> FastAPI:
     from app.api import admin as admin_router
     from app.api import admin_analytics as admin_analytics_router
     from app.api import admin_pro as admin_pro_router
+    from app.api import admin_search as admin_search_router
     from app.api import analysis as analysis_router
     from app.api import analytics as analytics_router
     from app.api import daily as daily_router
@@ -93,6 +94,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_router.router)
     app.include_router(admin_analytics_router.router)
     app.include_router(admin_pro_router.router)
+    app.include_router(admin_search_router.router)
     app.include_router(daily_router.router)
     app.include_router(spectate_pro_router.router)
     app.include_router(spectate_router.router)
