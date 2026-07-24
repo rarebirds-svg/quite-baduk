@@ -15,12 +15,23 @@ interface Overview {
   countries: { country: string | null; pageviews: number; uniques: number }[];
 }
 
+interface SearchRow {
+  query: string;
+  page: string | null;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number | null;
+  source: string;
+}
+
 export default function AnalyticsPage() {
   const { session } = useAuthStore();
   const router = useRouter();
   const [days, setDays] = useState(30);
   const [data, setData] = useState<Overview | null>(null);
   const [forbidden, setForbidden] = useState(false);
+  const [queries, setQueries] = useState<SearchRow[]>([]);
 
   useEffect(() => {
     if (!session) { router.replace("/"); return; }
@@ -31,6 +42,22 @@ export default function AnalyticsPage() {
       .then(setData)
       .catch((e) => { if (e instanceof ApiError && e.status === 403) setForbidden(true); });
   }, [days]);
+
+  useEffect(() => {
+    api<SearchRow[]>("/api/admin/search-queries?source=all&days=90&top=50")
+      .then((rows) => setQueries(Array.isArray(rows) ? rows : []))
+      .catch(() => {});
+  }, []);
+
+  async function uploadNaver(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    await fetch("/api/admin/search-queries/import", { method: "POST", body: fd, credentials: "include" });
+    const rows = await api<SearchRow[]>("/api/admin/search-queries?source=all&days=90&top=50");
+    setQueries(rows);
+  }
 
   if (forbidden) return <p className="p-8 text-ink-mute">관리자 전용 페이지입니다.</p>;
 
@@ -71,6 +98,20 @@ export default function AnalyticsPage() {
       </Section>
       <Section title="인기 페이지">
         {data?.top_pages.map((p, i) => <Row key={i} label={p.path} value={p.pageviews} />)}
+      </Section>
+      <Section title="검색 유입 (검색어)">
+        <li className="flex justify-end py-2">
+          <label className="cursor-pointer font-mono text-xs text-oxblood hover:underline">
+            네이버 CSV 업로드
+            <input type="file" accept=".csv" onChange={uploadNaver} className="hidden" />
+          </label>
+        </li>
+        {queries.map((q, i) => (
+          <li key={i} className="flex items-center justify-between py-2 font-sans text-sm text-ink">
+            <span className="truncate">{q.query} <span className="font-mono text-xs text-ink-faint">· {q.source}</span></span>
+            <span className="font-mono tabular-nums text-ink-mute">{q.clicks}↑ / {q.impressions}노출</span>
+          </li>
+        ))}
       </Section>
     </div>
   );
