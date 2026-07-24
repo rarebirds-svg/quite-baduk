@@ -9,6 +9,7 @@ import { fontVariables } from "@/lib/fonts";
 import { Toaster } from "sonner";
 import AppShellBridge from "@/components/AppShellBridge";
 import SkipToMainLink from "@/components/SkipToMainLink";
+import VisitBeacon from "@/components/VisitBeacon";
 
 // --paper light: rgb(245 239 230) = #F5EFE6  (from globals.css :root)
 // --paper dark:  rgb(28 25 23)   = #1C1917   (from globals.css .dark)
@@ -145,6 +146,7 @@ export default function RootLayout({
       <body className="bg-paper text-ink">
         <ThemeProviderClient>
           <AppShellBridge />
+          <VisitBeacon />
           <OfflineBanner />
           <AuthGate>
             <div className="flex min-h-dvh flex-col">

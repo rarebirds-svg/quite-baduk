@@ -418,6 +418,7 @@
           "Session token (HttpOnly cookie, opaque random value — not a JWT)",
           "Connection time and last-activity time (auto-purged after 1 hour of inactivity)",
           "Server logs: IP address (rate-limiting and abuse prevention only), request path, response time — see the Retention section below for retention details",
+          "We run self-hosted visit analytics: no raw IP is stored, only a country code and a daily anonymised hash",
           "What we do NOT collect: email, phone number, payment details, location, device identifiers, profile photo"
         ]
       },
