@@ -70,6 +70,7 @@ def create_app() -> FastAPI:
 
     # Routers
     from app.api import admin as admin_router
+    from app.api import admin_analytics as admin_analytics_router
     from app.api import admin_pro as admin_pro_router
     from app.api import analysis as analysis_router
     from app.api import analytics as analytics_router
@@ -90,6 +91,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router.router)
     app.include_router(ws_router.router)
     app.include_router(admin_router.router)
+    app.include_router(admin_analytics_router.router)
     app.include_router(admin_pro_router.router)
     app.include_router(daily_router.router)
     app.include_router(spectate_pro_router.router)
