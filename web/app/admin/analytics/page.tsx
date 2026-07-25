@@ -32,6 +32,7 @@ export default function AnalyticsPage() {
   const [data, setData] = useState<Overview | null>(null);
   const [forbidden, setForbidden] = useState(false);
   const [queries, setQueries] = useState<SearchRow[]>([]);
+  const [uploadMsg, setUploadMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session) { router.replace("/"); return; }
@@ -50,13 +51,31 @@ export default function AnalyticsPage() {
   }, []);
 
   async function uploadNaver(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const input = e.target;
+    const file = input.files?.[0];
     if (!file) return;
-    const fd = new FormData();
-    fd.append("file", file);
-    await fetch("/api/admin/search-queries/import", { method: "POST", body: fd, credentials: "include" });
-    const rows = await api<SearchRow[]>("/api/admin/search-queries?source=all&days=90&top=50");
-    setQueries(rows);
+    setUploadMsg("업로드 중…");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/search-queries/import", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        setUploadMsg(`업로드 실패 (HTTP ${res.status})`);
+        return;
+      }
+      const result = (await res.json()) as { imported?: number };
+      const rows = await api<SearchRow[]>("/api/admin/search-queries?source=all&days=90&top=50");
+      setQueries(Array.isArray(rows) ? rows : []);
+      setUploadMsg(`${result.imported ?? 0}건 반영됨`);
+    } catch {
+      setUploadMsg("업로드 실패");
+    } finally {
+      input.value = ""; // 같은 파일 재선택 가능하도록 리셋
+    }
   }
 
   if (forbidden) return <p className="p-8 text-ink-mute">관리자 전용 페이지입니다.</p>;
@@ -85,8 +104,11 @@ export default function AnalyticsPage() {
         <div className="border border-ink-faint p-4">
           <div className="font-mono text-xs uppercase tracking-label text-ink-faint">순방문자</div>
           <div className="font-mono text-3xl tabular-nums text-ink">{data?.totals.unique_visitors ?? "–"}</div>
+          <div className="mt-1 font-sans text-xs text-ink-faint">일 단위 익명 해시 기준</div>
         </div>
       </div>
+
+      {data && data.daily.length > 0 && <DailyTrend daily={data.daily} />}
 
       <Section title="유입 경로">
         {data?.sources.map((s, i) => (
@@ -100,10 +122,17 @@ export default function AnalyticsPage() {
         {data?.top_pages.map((p, i) => <Row key={i} label={p.path} value={p.pageviews} />)}
       </Section>
       <Section title="검색 유입 (검색어)">
-        <li className="flex justify-end py-2">
-          <label className="cursor-pointer font-mono text-xs text-oxblood hover:underline">
+        <li className="flex items-center justify-end gap-3 py-2">
+          {uploadMsg && <span className="font-mono text-xs text-ink-faint">{uploadMsg}</span>}
+          <label className="cursor-pointer font-mono text-xs text-oxblood hover:underline focus-within:underline">
             네이버 CSV 업로드
-            <input type="file" accept=".csv" onChange={uploadNaver} className="hidden" />
+            <input
+              type="file"
+              accept=".csv"
+              onChange={uploadNaver}
+              className="sr-only"
+              aria-label="네이버 검색어 CSV 업로드"
+            />
           </label>
         </li>
         {queries.map((q, i) => (
@@ -114,6 +143,27 @@ export default function AnalyticsPage() {
         ))}
       </Section>
     </div>
+  );
+}
+
+function DailyTrend({ daily }: { daily: Overview["daily"] }) {
+  const max = Math.max(...daily.map((d) => d.pageviews), 1);
+  return (
+    <section className="mb-8">
+      <h2 className="mb-2 border-b border-ink-faint pb-1 font-mono text-xs uppercase tracking-label text-ink-faint">
+        일별 추이 (방문수)
+      </h2>
+      <div className="flex h-20 items-end gap-px">
+        {daily.map((d) => (
+          <div
+            key={d.date}
+            className="flex-1 bg-ink-mute transition-base hover:bg-oxblood"
+            style={{ height: `${Math.round((d.pageviews / max) * 100)}%` }}
+            title={`${d.date} · ${d.pageviews}회`}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
