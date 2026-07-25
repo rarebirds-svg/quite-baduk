@@ -4,10 +4,10 @@
 
 `visit_hits`는 방문마다 1행씩 쌓이므로 주기적으로 오래된 행을 지운다.
 
-- 주기: 매일 또는 매주 1회.
-- 실행: `cd backend && python -m scripts.prune_visits`
+- **launchd 등록됨**: `com.inkbaduk.prune-visits` — 매일 04:15 자동 실행(래퍼 `ops/prune-visits.sh`, plist `ops/launchd/com.inkbaduk.prune-visits.plist`). 로그는 `docs/ops/state/log/prune-visits-runs.log`.
+- 수동 실행: `bash ops/prune-visits.sh` 또는 `cd backend && .venv311/bin/python -m scripts.prune_visits`.
 - 동작: 180일(`DEFAULT_RETENTION_DAYS`)보다 오래된 `visit_hits` 행 삭제, 삭제 건수를 structlog로 남긴다. 방문량이 적으면 삭제 0건이어도 정상.
-- launchd로 돌릴 경우 `scripts.sync_gsc`와 같은 스케줄 슬롯에 이어 붙이면 된다.
+- plist 변경 시 `bash ops/sync-launchd.sh`로 재동기화한다.
 
 ## 국적·순방문자 정확도 전제 — `cf_trusted_proxy`
 
