@@ -24,8 +24,16 @@ def test_parse_referrer_host(ref, host):
     ("bing.com", "search"),
     ("facebook.com", "social"),
     ("t.co", "social"),
+    ("x.com", "social"),
+    ("m.x.com", "social"),
+    ("google.co.kr", "search"),
     ("inkbaduk.com", "internal"),
     ("someblog.tistory.com", "referral"),
+    # 라벨 경계 매칭 — substring 오분류가 재발하지 않도록 고정.
+    ("netflix.com", "referral"),      # 'x.com' 부분문자열 포함하지만 social 아님
+    ("content.com", "referral"),      # 't.co' 부분문자열 포함하지만 social 아님
+    ("researchgate.net", "referral"),
+    ("mygoogle-fan.net", "referral"),  # 'google' 라벨이 아니므로 search 아님
 ])
 def test_classify_source(host, source):
     assert classify_source(host) == source

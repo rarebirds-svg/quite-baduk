@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from datetime import date as _date
 
 from fastapi import APIRouter, UploadFile
 from pydantic import BaseModel
@@ -50,7 +49,7 @@ async def list_search_queries(
 ) -> list[SearchQueryRow]:
     days = max(1, min(days, 480))
     top = max(1, min(top, 200))
-    start = _date.today() - timedelta(days=days)
+    start = datetime.now(UTC).date() - timedelta(days=days)
     stmt = select(SearchQuery).where(SearchQuery.date >= start)
     if source in ("google", "naver"):
         stmt = stmt.where(SearchQuery.source == source)

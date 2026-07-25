@@ -122,7 +122,7 @@ Email + bcrypt password, JWT (access + refresh) in HttpOnly cookies. `app/securi
 
 **다크 모드** — `next-themes` `attribute="class"` 사용. `ThemeBootstrapper`와 `lib/theme.ts`는 폐기 예정 (Phase 1에서 next-themes로 교체).
 
-**i18n** — 새 문구는 `web/lib/i18n/ko.json`과 `en.json`에 **동시** 추가. 키 누락은 `korean-copy-qa` 에이전트가 체크.
+**i18n** — 새 문구는 `web/lib/i18n/ko.json`과 `en.json`에 **동시** 추가. 키 누락은 `korean-copy-qa` 에이전트가 체크. **예외**: `web/app/admin/*` 관리자 전용 화면은 한국어 단독 운영자만 보므로 i18n을 거치지 않고 한국어 하드코딩을 허용한다(사용자 대면 화면만 ko/en 동시 필수).
 
 **자동 가드** — `.claude/hooks/design-token-check.sh`가 `Write`/`Edit` 후 `web/components/*` 또는 `web/app/*`에서 하드코딩 hex·이모지를 검출해 경고합니다. `design-token-guardian` 에이전트로 수동 감사 가능.
 
