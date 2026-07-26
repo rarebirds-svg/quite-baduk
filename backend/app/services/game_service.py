@@ -245,17 +245,11 @@ async def place_move(
 
     # Lock per game
     async with game_lock(game.id):
-        # Back-compat self-heal. Games created before the "delete on undo"
-        # fix have is_undone=True rows sitting in the moves table — those
-        # collide with the UNIQUE(game_id, move_number) constraint on the
-        # next INSERT. Purge them up front so those games can still be
-        # played instead of raising IntegrityError forever.
-        await db.execute(
-            delete(MoveRow).where(
-                MoveRow.game_id == game.id, MoveRow.is_undone.is_(True)
-            )
-        )
-        # Validate + apply user move
+        # Validate + apply the user move in memory. All DB writes for this
+        # round are deferred to a single batch AFTER the KataGo genmove/analyze
+        # below, so the SQLite write lock is never held across the multi-second
+        # engine call — holding it there starved concurrent games and surfaced
+        # "database is locked" mid-game (frozen UI).
         try:
             new_state = play(state, Move(color=user_side, coord=coord))
         except IllegalMoveError as e:
@@ -264,17 +258,11 @@ async def place_move(
         # Figure out captures by user
         user_captures = new_state.captures.get(user_side, 0) - state.captures.get(user_side, 0)
 
-        # Persist user move
-        move_no = game.move_count + 1
-        await _record_move(
-            db,
-            game_id=game.id,
-            move_number=move_no,
-            color=user_side,
-            coord=coord,
-            captures=user_captures,
-        )
-        game.move_count = move_no
+        user_move_no = game.move_count + 1
+        # In-memory only — no DB query runs before the batch below, so this
+        # stays unflushed and does not acquire the write lock early via
+        # autoflush. on_user_applied reads game.move_count, so set it here.
+        game.move_count = user_move_no
 
         # Sync the shared KataGo adapter with the rules state (including the
         # user's latest move). The adapter is process-wide, so its internal
@@ -320,14 +308,16 @@ async def place_move(
         ai_captures = 0
         game_over = False
         result_str: str | None = None
+        ai_move_no: int | None = None
 
         if is_game_over(new_state):
-            # two passes -> finalize
+            # two passes -> finalize (KataGo ownership + score; mutates the
+            # game object in memory, does no DB write of its own)
             await _finalize_game(db, game, new_state)
             game_over = True
             result_str = game.result
         else:
-            # AI responds
+            # AI responds — genmove runs with NO write lock held.
             ai_move = await adapter.genmove(ai_side)
             prev_captures_ai = new_state.captures.get(ai_side, 0)
             try:
@@ -346,18 +336,44 @@ async def place_move(
 
             ai_captures = new_state.captures.get(ai_side, 0) - prev_captures_ai
             if not game_over:
-                move_no += 1
-                await _record_move(
-                    db, game_id=game.id, move_number=move_no, color=ai_side,
-                    coord=(None if ai_move.lower() == "resign" else ai_move),
-                    captures=ai_captures,
-                )
-                game.move_count = move_no
+                ai_move_no = user_move_no + 1
+                game.move_count = ai_move_no
                 if is_game_over(new_state):
                     await _finalize_game(db, game, new_state)
                     game_over = True
                     result_str = game.result
 
+        # ---- Single DB write batch: the ONLY point the write lock is held
+        # this round. Purge stale is_undone rows FIRST (before the move INSERTs
+        # flush) so they don't collide on UNIQUE(game_id, move_number), then
+        # persist the user move, the AI move (if any), plus any in-memory
+        # finalize/resign mutations, and commit.
+        await db.execute(
+            delete(MoveRow).where(
+                MoveRow.game_id == game.id, MoveRow.is_undone.is_(True)
+            )
+        )
+        await _record_move(
+            db,
+            game_id=game.id,
+            move_number=user_move_no,
+            color=user_side,
+            coord=coord,
+            captures=user_captures,
+        )
+        if ai_move_no is not None:
+            await _record_move(
+                db,
+                game_id=game.id,
+                move_number=ai_move_no,
+                color=ai_side,
+                coord=(
+                    None
+                    if ai_move is not None and ai_move.lower() == "resign"
+                    else ai_move
+                ),
+                captures=ai_captures,
+            )
         await db.commit()
         cache_state(game.id, new_state)
 
