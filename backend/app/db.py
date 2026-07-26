@@ -24,12 +24,12 @@ def _configure_sqlite_connection(dbapi_connection, _connection_record) -> None: 
     try:
         cursor.execute("PRAGMA foreign_keys=ON")
         # Wait for a competing writer instead of failing the request outright.
-        # `place_move` holds an open write transaction across the multi-second
-        # KataGo genmove/analyze (user move INSERT → genmove → AI move INSERT →
-        # single commit), so a concurrent game's write can wait several seconds
-        # for the lock. 5 s was too short and surfaced "database is locked"
-        # mid-game (frozen UI); 30 s comfortably covers a slow high-rank genmove
-        # hold. Combined with WAL (`enable_wal()` at startup).
+        # With concurrent games/sessions writing to the one SQLite file, a
+        # writer can briefly queue behind another's commit; 30 s absorbs that
+        # instead of surfacing a user-visible "database is locked". Defense in
+        # depth — `place_move` no longer holds the write lock across the
+        # multi-second KataGo genmove (that reorder is the primary fix). 5 s was
+        # too short and froze live games. Combined with WAL (`enable_wal()`).
         cursor.execute("PRAGMA busy_timeout=30000")
     finally:
         cursor.close()
