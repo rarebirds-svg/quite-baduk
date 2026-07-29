@@ -59,8 +59,8 @@
       "Bash(pip install -g*)",
       "Bash(pip install --system*)",
       "Bash(sudo *)",
-      "Write(/Users/daegong/projects/baduk/backend/data/*.db)",
-      "Write(/Users/daegong/projects/baduk/backend/katago/models/*)"
+      "Edit(/Users/daegong/projects/baduk/backend/data/*.db)",
+      "Edit(/Users/daegong/projects/baduk/backend/katago/models/*)"
     ]
   },
   "hooks": {
