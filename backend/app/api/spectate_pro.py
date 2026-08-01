@@ -4,9 +4,11 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
+import structlog
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import ColumnElement, UnaryExpression, func, or_, select
+from sqlalchemy import ColumnElement, UnaryExpression, func, or_, select, update
+from sqlalchemy.exc import OperationalError
 
 from app.core.pro.monthly_pick import InvalidYearMonth, pick_for_month
 from app.core.pro.themes import THEMES, theme_by_slug, theme_query_clause
@@ -16,6 +18,7 @@ from app.models import ProGame
 from app.schemas.datetime_utc import utc_iso
 
 router = APIRouter(prefix="/api/spectate/pro", tags=["spectate"])
+log = structlog.get_logger()
 
 
 class ProGameRow(BaseModel):
@@ -215,15 +218,31 @@ async def get_pro_game(
     if game is None:
         raise HTTPException(status_code=404, detail="pro_game_not_found")
 
-    game.view_count += 1
-    await db.commit()
-    await db.refresh(game)
-
+    # 조회수 쓰기 전에 응답에 쓸 값을 먼저 확정한다 — 아래 rollback이 ORM 객체를
+    # expire시키므로, 그 뒤에 game 속성을 읽으면 지연 로딩 IO가 발생한다.
     parsed = parse_pro_sgf(game.sgf)
     base = ProGameRow.model_validate(game, from_attributes=True)
+    komi = game.komi
+
+    # 조회수는 텔레메트리성 쓰기다. read-modify-write 대신 원자적 UPDATE 한 문장으로
+    # 갱신 유실을 없애고, 락 경합으로 실패하면 삼켜서 상세 응답을 막지 않는다.
+    # 크롤러 유입 후 이 쓰기가 'database is locked' 500을 내던 문제 (#65).
+    try:
+        await db.execute(
+            update(ProGame)
+            .where(ProGame.id == game_id)
+            .values(view_count=ProGame.view_count + 1)
+            .execution_options(synchronize_session=False)
+        )
+        await db.commit()
+        base.view_count += 1  # synchronize_session=False라 응답용으로 직접 반영
+    except OperationalError:
+        await db.rollback()
+        log.warning("pro_view_count_bump_skipped", game_id=game_id)
+
     return ProGameDetail(
         **base.model_dump(),
-        komi=game.komi,
+        komi=komi,
         moves=[
             ProMoveOut(move_number=m.move_number, color=m.color, coord=m.coord)
             for m in parsed.moves

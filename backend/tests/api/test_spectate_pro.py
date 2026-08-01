@@ -1,10 +1,13 @@
 # 프로 기보 공개 조회 API(/api/spectate/pro) 계약 테스트
 from __future__ import annotations
 
+import sqlite3
 from datetime import date, timedelta
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.sgf.import_sgf import parse_pro_sgf
 from app.models import ProGame
@@ -139,6 +142,28 @@ async def test_detail_increments_view_count(client, db_session):
     assert r1.json()["view_count"] == 6
     r2 = await client.get(f"/api/spectate/pro/{gid}")
     assert r2.json()["view_count"] == 7
+
+
+@pytest.mark.asyncio
+async def test_detail_survives_view_count_lock(client, db_session, monkeypatch):
+    # 조회수는 텔레메트리성 쓰기다 — SQLite 락 경합으로 증가에 실패해도
+    # 상세 응답 자체는 정상(200)이어야 한다. (#65)
+    gid = await _add(db_session, collection="masterpiece",
+                     game_date=date.today() - timedelta(days=400), views=5, suffix="pd")
+
+    async def _locked(self, *args, **kwargs):
+        raise OperationalError(
+            "UPDATE pro_games SET view_count=? WHERE pro_games.id = ?",
+            {},
+            sqlite3.OperationalError("database is locked"),
+        )
+
+    monkeypatch.setattr(AsyncSession, "commit", _locked)
+    r = await client.get(f"/api/spectate/pro/{gid}")
+    assert r.status_code == 200, r.text
+    assert r.json()["id"] == gid
+    assert len(r.json()["moves"]) == 2
+    assert r.json()["view_count"] == 5  # 증가 실패분은 반영하지 않는다
 
 
 @pytest.mark.asyncio
