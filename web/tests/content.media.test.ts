@@ -46,4 +46,21 @@ describe("marked image override", () => {
     expect(html).toMatch(/&lt;script&gt;/);
     expect(html).toMatch(/&quot;/);
   });
+
+  // <figure>는 <p>의 허용 자식이 아니다. 브라우저가 <p>를 자동 종료해 빈 문단이 남고
+  // .editorial-prose p 여백이 어긋나므로, 단독 이미지 문단은 <p> 없이 figure만 낸다.
+  it("does not wrap a standalone image figure in a paragraph", () => {
+    const html = marked.parse("![캡션](/a.svg)", { async: false }) as string;
+    expect(html).toMatch(/<figure class="content-image">/);
+    expect(html).not.toMatch(/<p>\s*<figure/);
+    expect(html).not.toMatch(/<\/figure>\s*<\/p>/);
+  });
+
+  // 문단 중간의 인라인 이미지는 figure로 승격하지 않는다 — 문단을 쪼갤 수 없기 때문.
+  it("keeps an inline image as a plain img inside its paragraph", () => {
+    const md = "앞 텍스트 ![캡션](/a.svg) 뒤 텍스트";
+    const html = marked.parse(md, { async: false }) as string;
+    expect(html).toMatch(/<p>앞 텍스트 <img src="\/a\.svg" alt="캡션" loading="lazy" \/> 뒤 텍스트<\/p>/);
+    expect(html).not.toMatch(/<figure/);
+  });
 });
