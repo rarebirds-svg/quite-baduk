@@ -20,7 +20,8 @@ export function HintNudge({
   dismissLabel,
 }: HintNudgeProps) {
   return (
-    <aside
+    <div
+      role="status"
       className="border border-oxblood bg-paper-deep px-3 py-2 flex items-baseline gap-2 font-sans text-sm"
       aria-live="polite"
     >
@@ -50,6 +51,6 @@ export function HintNudge({
           <X size={14} strokeWidth={1.5} />
         </button>
       </div>
-    </aside>
+    </div>
   );
 }

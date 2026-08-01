@@ -21,6 +21,7 @@ import httpx
 import structlog
 from sqlalchemy import select
 
+from app.core.pro.classify import classify_collection
 from app.core.sgf.import_sgf import InvalidProSgf, ParsedProGame, parse_pro_sgf
 from app.db import AsyncSessionLocal
 from app.models import ProGame
@@ -31,6 +32,9 @@ CWI_INDEX_URL = "https://homepages.cwi.nl/~aeb/go/games/"
 ALLOWED_HOSTS = {"homepages.cwi.nl"}
 ALLOWED_PATH_PREFIX = "/~aeb/go/games/"
 CACHE_PATH = Path.home() / ".baduk" / "ingest-cwi.cache"
+MAX_DEPTH = 4
+MAX_PAGES = 500
+MAX_NEW_PER_RUN = 200
 
 
 def is_cwi_url(url: str) -> bool:
@@ -62,6 +66,58 @@ def extract_sgf_links(html: str, base_url: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
+def extract_subdir_links(html: str, base_url: str) -> list[str]:
+    """HTML에서 하위 디렉터리(/ 로 끝나는) 링크를 절대 URL로 추출. CWI만 통과.
+    Apache 정렬 링크(?…)·상위(prefix 밖)·외부 도메인은 제외한다."""
+    hrefs = re.findall(r'href=["\']([^"\']+)["\']', html, flags=re.IGNORECASE)
+    out: list[str] = []
+    for href in hrefs:
+        if not href.endswith("/"):
+            continue
+        if href.startswith("?") or href.startswith("../") or href == "./":
+            continue
+        absolute = urljoin(base_url, href)
+        if is_cwi_url(absolute):
+            out.append(absolute)
+    return list(dict.fromkeys(out))
+
+
+async def crawl_sgf_links(
+    http: httpx.AsyncClient,
+    start_url: str,
+    *,
+    max_depth: int,
+    max_pages: int,
+) -> list[str]:
+    """start_url에서 CWI 하위 디렉터리를 BFS로 따라가 .sgf 절대 URL을 수집한다.
+    visited-set으로 순환 방지, max_depth/max_pages로 폭주 방지."""
+    queue: list[tuple[str, int]] = [(start_url, 0)]
+    visited: set[str] = set()
+    found: list[str] = []
+    pages = 0
+    while queue and pages < max_pages:
+        url, depth = queue.pop(0)
+        if url in visited:
+            continue
+        visited.add(url)
+        try:
+            resp = await http.get(url)
+            resp.raise_for_status()
+            html = resp.text
+        except Exception as exc:  # noqa: BLE001 — 디렉터리 1장 실패는 건너뛰고 계속
+            log.warning("cwi.dir.fetch_failed", url=url, err=str(exc))
+            continue
+        pages += 1
+        for sgf in extract_sgf_links(html, url):
+            if sgf not in found:
+                found.append(sgf)
+        if depth < max_depth:
+            for sub in extract_subdir_links(html, url):
+                if sub not in visited:
+                    queue.append((sub, depth + 1))
+    return found
+
+
 def index_changed(html: str) -> bool:
     """index 페이지 md5가 캐시와 다르면 True (재처리 필요)."""
     current = hashlib.md5(html.encode("utf-8"), usedforsecurity=False).hexdigest()
@@ -79,7 +135,11 @@ def save_index_hash(html: str) -> None:
 def _build_pro_game(parsed: ParsedProGame) -> ProGame | None:
     """parse_pro_sgf 결과에서 ProGame 인스턴스 생성. ProGame.from_parsed() 위임."""
     try:
-        return ProGame.from_parsed(parsed, collection="cwi", source_note=CWI_INDEX_URL)
+        return ProGame.from_parsed(
+            parsed,
+            collection=classify_collection(parsed.event),
+            source_note=CWI_INDEX_URL,
+        )
     except (AttributeError, TypeError) as exc:
         log.warning("cwi.progame.build_failed", err=str(exc))
         return None
@@ -101,7 +161,10 @@ async def main_async() -> dict[str, int]:
             log.info("cwi.index.unchanged")
             return summary
 
-        links = extract_sgf_links(html, CWI_INDEX_URL)
+        links = await crawl_sgf_links(
+            http, CWI_INDEX_URL, max_depth=MAX_DEPTH, max_pages=MAX_PAGES
+        )
+        capped = False
         async with AsyncSessionLocal() as db:
             for url in links:
                 summary["fetched"] += 1
@@ -134,10 +197,15 @@ async def main_async() -> dict[str, int]:
                     continue
                 db.add(pro)
                 summary["new"] += 1
+                if summary["new"] >= MAX_NEW_PER_RUN:
+                    capped = True
+                    log.info("cwi.ingest.capped", cap=MAX_NEW_PER_RUN)
+                    break
 
             await db.commit()
 
-    save_index_hash(html)
+    if not capped:
+        save_index_hash(html)
     log.info("cwi.ingest.complete", **summary)
     return summary
 

@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { Sun, Moon, Laptop } from "lucide-react";
 import { useT, useLocale, setLocale } from "@/lib/i18n";
 import { api } from "@/lib/api";
+import { setSessionToken } from "@/lib/sessionToken";
 import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ export default function TopNav() {
     try {
       await api("/api/session/end", { method: "POST" });
     } catch {}
+    await setSessionToken(null);
     setSession(null);
     router.push("/");
   };
@@ -70,6 +72,7 @@ export default function TopNav() {
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
         <Link
           href="/game/new"
+          rel="nofollow"
           className="flex shrink-0 items-center gap-2"
           aria-label={t("app.title")}
         >
@@ -96,6 +99,11 @@ export default function TopNav() {
                 <Link href="/spectate">{t("nav.spectate")}</Link>
               </Button>
             </>
+          )}
+          {!session && (
+            <Button asChild size="sm" variant="outline">
+              <Link href="/spectate/pro">{t("spectate.tabPro")}</Link>
+            </Button>
           )}
 
           <button

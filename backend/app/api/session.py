@@ -10,7 +10,7 @@ import datetime as _dt
 import secrets
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, Header, HTTPException, Request, Response, status
 from sqlalchemy import delete as _sa_delete
 from sqlalchemy import select
 from sqlalchemy import update as _sa_update
@@ -20,7 +20,7 @@ from app.client_ip import client_country as _client_country
 from app.client_ip import client_ip as _client_key
 from app.config import settings
 from app.core.nickname import InvalidNickname, normalize, to_key, validate
-from app.deps import COOKIE_SESSION, CurrentSession, DbSession
+from app.deps import COOKIE_SESSION, CurrentSession, DbSession, bearer_token
 from app.models import Session
 from app.rate_limit import rate_limiter
 from app.schemas.session import NicknameAvailability, SessionCreateRequest, SessionPublic
@@ -107,7 +107,7 @@ async def create_session(
         await db.commit()
 
         _set_session_cookie(response, token)
-        return SessionPublic(id=sess.id, nickname=sess.nickname)
+        return SessionPublic(id=sess.id, nickname=sess.nickname, token=token)
     except HTTPException:
         await registry.release(key)
         raise
@@ -126,16 +126,18 @@ async def end_session(
     response: Response,
     db: DbSession,
     baduk_session: Annotated[str | None, Cookie(alias=COOKIE_SESSION)] = None,
+    authorization: Annotated[str | None, Header()] = None,
 ) -> Response:
     """Idempotent logout. Browsers fire this twice (explicit logout +
     pagehide beacon, React StrictMode dev double-effect, mobile Safari's
     duplicate unload), so missing/already-deleted sessions must succeed
     rather than 500 on a stale-row race or 401 on the second attempt."""
     response.status_code = 204
-    if not baduk_session:
+    token_value = baduk_session or bearer_token(authorization)
+    if not token_value:
         _clear_session_cookie(response)
         return response
-    res = await db.execute(select(Session).where(Session.token == baduk_session))
+    res = await db.execute(select(Session).where(Session.token == token_value))
     sess = res.scalar_one_or_none()
     if sess is None:
         _clear_session_cookie(response)

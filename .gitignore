@@ -63,3 +63,12 @@ e2e/screenshots-mobile/
 
 # watchdog cooldown 마커 파일 (임시 상태, 커밋 불필요)
 docs/ops/state/.watchdog-cooldown-*
+
+# 클론 worktree 런타임 (임시)
+.clone/
+
+# Cloudflare wrangler 빌드 캐시
+.wrangler/
+
+# e2e 일회성 캡처 스크립트 (임시 산출물)
+e2e/capture-end-ui.js

@@ -1,234 +1,67 @@
-"use client";
-// 프로 기보 재생 화면 — 저장된 SGF 수순을 스크러버로 되짚어 보는 페이지.
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import Board from "@/components/Board";
-import { api, ApiError } from "@/lib/api";
-import { useT } from "@/lib/i18n";
-import { useAuthStore } from "@/store/authStore";
-import { gtpToXy, replay, type ReplayMove } from "@/lib/board";
-import { Button } from "@/components/ui/button";
-import { Hero } from "@/components/editorial/Hero";
+// 웹 전용 path 진입점 — 서버에서 기보를 fetch해 SSR(ISR 1h)로 렌더. 본체는 ProGameScreen.
+import { notFound } from "next/navigation";
+import ProGameScreen, {
+  type ProGameDetail,
+} from "@/components/screens/ProGameScreen";
 
-interface ProMove {
-  move_number: number;
-  color: "B" | "W";
-  coord: string | null;
-}
-interface ProGameDetail {
-  id: number;
-  black_player: string;
-  white_player: string;
-  black_rank: string | null;
-  white_rank: string | null;
-  event: string | null;
-  game_date: string | null;
-  result: string | null;
-  board_size: number;
-  handicap: number;
-  komi: number;
-  move_count: number;
-  moves: ProMove[];
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BASE = "https://inkbaduk.com";
+
+// 탐색 경로 리치 표시를 위한 구조화 데이터 (schema.org BreadcrumbList).
+function breadcrumbJsonLd(game: ProGameDetail) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "홈", item: `${BASE}/` },
+      { "@type": "ListItem", position: 2, name: "프로 기보", item: `${BASE}/spectate/pro` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `${game.black_player} vs ${game.white_player}`,
+        item: `${BASE}/spectate/pro/${game.id}`,
+      },
+    ],
+  };
 }
 
-export default function ProGameWatchPage() {
-  const t = useT();
-  const router = useRouter();
-  const params = useParams<{ id: string }>();
-  const gameId = parseInt(params.id, 10);
-  const { session } = useAuthStore();
-
-  const [game, setGame] = useState<ProGameDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(false);
-
-  useEffect(() => {
-    if (!session) {
-      router.replace("/");
-      return;
-    }
-    api<ProGameDetail>(`/api/spectate/pro/${gameId}`)
-      .then((g) => {
-        setGame(g);
-        setError(null);
-      })
-      .catch((e) => {
-        if (e instanceof ApiError && e.status === 404) setError("not_found");
-        else if (e instanceof ApiError && e.status === 401) router.replace("/");
-        else setError("load_failed");
-      });
-  }, [session, gameId, router]);
-
-  const replayMoves: ReplayMove[] = useMemo(
-    () =>
-      game
-        ? game.moves.map((m) => ({
-            color: m.color,
-            coord: m.coord,
-            is_undone: false,
-          }))
-        : [],
-    [game],
-  );
-
-  const board = useMemo(
-    () =>
-      game
-        ? replay(game.board_size, replayMoves, idx, game.handicap ?? 0)
-        : "",
-    [game, replayMoves, idx],
-  );
-  const lastMove = useMemo(() => {
-    if (!game || idx === 0) return null;
-    const m = game.moves[idx - 1];
-    if (!m || !m.coord || m.coord === "pass") return null;
-    const xy = gtpToXy(m.coord, game.board_size);
-    return xy ? { x: xy[0], y: xy[1] } : null;
-  }, [game, idx]);
-
-  // 자동 재생 — 1초마다 한 수씩 진행, 마지막 수에 닿으면 멈춘다.
-  useEffect(() => {
-    if (!playing || !game) return;
-    if (idx >= game.moves.length) {
-      setPlaying(false);
-      return;
-    }
-    const timer = setTimeout(
-      () => setIdx((i) => Math.min(game.moves.length, i + 1)),
-      1000,
-    );
-    return () => clearTimeout(timer);
-  }, [playing, idx, game]);
-
-  if (!session) return null;
-
-  if (error === "not_found") {
-    return (
-      <div className="space-y-4">
-        <Hero title={t("spectate.tabPro")} subtitle="" />
-        <p className="text-sm text-oxblood">{t("spectate.proNotFound")}</p>
-        <Link href="/spectate?tab=pro" className="text-oxblood hover:underline text-sm">
-          ← {t("spectate.proBackToList")}
-        </Link>
-      </div>
-    );
+// 404(없는 기보)와 일시 장애(backend down 등)를 구분해 반환한다.
+async function fetchProGame(
+  id: string,
+): Promise<ProGameDetail | "not_found" | "unavailable"> {
+  if (!/^\d+$/.test(id)) return "not_found";
+  try {
+    const res = await fetch(`${API}/api/spectate/pro/${id}`, {
+      next: { revalidate: 3600 },
+    });
+    if (res.status === 404) return "not_found";
+    if (!res.ok) return "unavailable";
+    return (await res.json()) as ProGameDetail;
+  } catch {
+    return "unavailable";
   }
-  if (!game) {
-    return <p className="text-sm text-ink-mute p-4 text-center">…</p>;
+}
+
+export default async function ProGameByPath({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const game = await fetchProGame(params.id);
+  if (game === "not_found") notFound();
+  if (game === "unavailable") {
+    // 서버 fetch 실패 시 기존 클라이언트 fetch로 폴백 — 동작은 전환 이전과 동일
+    return <ProGameScreen gameId={Number(params.id)} />;
   }
-
-  const blackLabel = `${game.black_player}${
-    game.black_rank ? ` ${game.black_rank}` : ""
-  }`;
-  const whiteLabel = `${game.white_player}${
-    game.white_rank ? ` ${game.white_rank}` : ""
-  }`;
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-baseline justify-between gap-3 flex-wrap">
-        <Hero title={t("spectate.tabPro")} subtitle="" />
-        <Link
-          href="/spectate?tab=pro"
-          className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
-        >
-          ← {t("spectate.proBackToList")}
-        </Link>
-      </div>
-
-      <div className="flex flex-wrap items-baseline justify-between gap-2 font-mono text-xs text-ink-mute">
-        <span className="tabular-nums">
-          {idx} / {game.moves.length}
-        </span>
-        <span className="flex items-baseline gap-2 text-ink">
-          <span className="font-sans">{blackLabel}</span>
-          <span className="text-ink-faint">vs</span>
-          <span className="font-sans">{whiteLabel}</span>
-          {game.result && (
-            <span className="text-ink-faint ml-1">· {game.result}</span>
-          )}
-        </span>
-      </div>
-
-      {(game.event || game.game_date) && (
-        <p className="font-sans text-xs text-ink-faint">
-          {[game.event, game.game_date].filter(Boolean).join(" · ")}
-        </p>
-      )}
-
-      <div className="w-full mx-auto">
-        <Board size={game.board_size} board={board} lastMove={lastMove} />
-      </div>
-
-      <div className="relative">
-        <input
-          type="range"
-          min={0}
-          max={game.moves.length}
-          value={idx}
-          onChange={(e) => {
-            setPlaying(false);
-            setIdx(Number(e.target.value));
-          }}
-          className="w-full accent-oxblood block"
-          aria-label={t("review.scrubber")}
-        />
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            if (!playing && idx >= game.moves.length) setIdx(0);
-            setPlaying((p) => !p);
-          }}
-        >
-          {playing ? t("review.pause") : t("review.play")}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setPlaying(false);
-            setIdx(0);
-          }}
-        >
-          {t("review.first")}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setPlaying(false);
-            setIdx((i) => Math.max(0, i - 1));
-          }}
-        >
-          {t("review.prev")}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setPlaying(false);
-            setIdx((i) => Math.min(game.moves.length, i + 1));
-          }}
-        >
-          {t("review.next")}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setPlaying(false);
-            setIdx(game.moves.length);
-          }}
-        >
-          {t("review.last")}
-        </Button>
-      </div>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd(game)).replace(/</g, "\\u003c"),
+        }}
+      />
+      <ProGameScreen gameId={game.id} initialGame={game} />
+    </>
   );
 }

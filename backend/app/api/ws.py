@@ -123,8 +123,11 @@ async def ws_game(
     game_id: int,
     db: DbSession,
     baduk_session: Annotated[str | None, Cookie(alias=COOKIE_SESSION)] = None,
+    token: str | None = None,
 ) -> None:
-    sess = await _authenticate_ws(baduk_session, db)
+    # 쿠키(웹) 우선, 쿼리 파라미터(앱 셸 WebView)는 폴백. 토큰이 URL에 남는
+    # 노출면은 자체 서버 wss 한정이라 수용한다.
+    sess = await _authenticate_ws(baduk_session or token, db)
     if sess is None:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
@@ -351,6 +354,20 @@ async def ws_game(
                 await websocket.send_json({"type": "error", "code": e.code, "detail": e.detail})
     except WebSocketDisconnect:
         pass
+    except RuntimeError as e:
+        # A concurrent close (heartbeat expiry, eviction by a newer
+        # connection, or the client dropping mid-`place_move`) can flip the
+        # socket to DISCONNECTED between operations. Starlette then raises one
+        # of two RuntimeErrors instead of WebSocketDisconnect:
+        #   - send_json after close: 'Cannot call "send" once a close message
+        #     has been sent.' (#39 send path, line 241)
+        #   - receive_json after close: 'WebSocket is not connected. Need to
+        #     call "accept" first.' (#39 receive-side variant, line 186)
+        # The peer is already gone in both cases, so exit quietly instead of
+        # leaking a full traceback to baduk-api.err. Re-raise anything else.
+        msg = str(e)
+        if 'close message has been sent' not in msg and 'not connected' not in msg:
+            raise
     finally:
         hb_task.cancel()
         try:

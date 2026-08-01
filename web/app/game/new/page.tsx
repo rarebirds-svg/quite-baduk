@@ -2,20 +2,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useT } from "@/lib/i18n";
+import { gamePlayHref } from "@/lib/routes";
 import { api, ApiError, errorMessageKey } from "@/lib/api";
 import type { BoardSize } from "@/lib/board";
 import { Hero } from "@/components/editorial/Hero";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import RankPicker, { RANKS, type Rank } from "@/components/RankPicker";
+import RankAdvisor from "@/components/RankAdvisor";
 import BoardSizePicker from "@/components/BoardSizePicker";
 import HandicapPicker from "@/components/HandicapPicker";
 import type { AiStyle } from "@/components/StylePicker";
-import PlayerPicker, {
+import {
   type PlayerId,
   PLAYER_GROUPS,
   randomPlayerId,
 } from "@/components/PlayerPicker";
+import OpponentCuration from "@/components/OpponentCuration";
 import { toast } from "sonner";
 
 const VALID_HANDICAPS_BY_SIZE: Record<number, number[]> = {
@@ -113,7 +116,7 @@ export default function NewGamePage() {
           user_rank: userRank,
         }),
       });
-      router.push(`/game/play/${res.id}`);
+      router.push(gamePlayHref(res.id));
     } catch (e: unknown) {
       if (e instanceof ApiError && e.status === 401) {
         router.replace("/");
@@ -132,16 +135,19 @@ export default function NewGamePage() {
       <Hero title={t("game.newGame")} subtitle={t("game.newGameSubtitle")} />
 
       <div className="divide-y divide-ink-faint/40 border-y border-ink-faint/40">
-        <section className="flex items-center justify-between gap-4 py-3">
-          <Label
-            htmlFor="rank-picker"
-            className="text-xs font-semibold uppercase tracking-label text-ink-mute"
-          >
-            {t("game.rank")}
-          </Label>
-          <div className="w-40">
-            <RankPicker value={rank} onChange={setRank} />
+        <section className="flex flex-col gap-3 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <Label
+              htmlFor="rank-picker"
+              className="text-xs font-semibold uppercase tracking-label text-ink-mute"
+            >
+              {t("game.rank")}
+            </Label>
+            <div className="w-40">
+              <RankPicker value={rank} onChange={setRank} />
+            </div>
           </div>
+          <RankAdvisor onSelect={setRank} />
         </section>
 
         <section className="flex items-center justify-between gap-4 py-3">
@@ -206,7 +212,7 @@ export default function NewGamePage() {
             {t("game.aiPlayerHint")}
           </span>
         </div>
-        <PlayerPicker value={aiPlayer} onChange={setAiPlayer} />
+        <OpponentCuration value={aiPlayer} onChange={setAiPlayer} />
       </section>
 
       <Button
@@ -217,7 +223,11 @@ export default function NewGamePage() {
           busy || aiPlayer === null || (handicap === 0 && userColor === null)
         }
       >
-        {busy ? "…" : t("game.start")}
+        {busy
+          ? "…"
+          : aiPlayer
+            ? t("game.startVs", { name: t(`game.players.${aiPlayer}.name`) })
+            : t("game.start")}
       </Button>
     </div>
   );

@@ -40,14 +40,15 @@
       "Bash(curl -s -o /dev/null *http://localhost:*)",
       "Bash(lsof -i :*)",
       "Bash(chmod +x *)",
-      "Bash(mkdir -p *)"
+      "Bash(mkdir -p *)",
+      "Bash(scripts/ai/codex-review.sh*)",
+      "Bash(scripts/ai/gemini-analyze.sh*)"
     ],
     "deny": [
       "Bash(git push --force*)",
       "Bash(git push -f*)",
       "Bash(git push * --force*)",
       "Bash(git push * -f *)",
-      "Bash(git push origin main*)",
       "Bash(git push origin master*)",
       "Bash(git push origin HEAD:main*)",
       "Bash(git push origin HEAD:master*)",
@@ -84,6 +85,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-header.sh",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "Stop": [
@@ -93,6 +104,11 @@
             "type": "command",
             "command": "bash .claude/hooks/stop-bell.sh",
             "timeout": 2
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-tests-ran.sh",
+            "timeout": 10
           }
         ]
       }

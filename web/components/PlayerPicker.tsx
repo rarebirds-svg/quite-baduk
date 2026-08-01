@@ -114,6 +114,12 @@ export default function PlayerPicker({ value, onChange }: PlayerPickerProps) {
   // the small ⓘ button is a separate target that opens the dialog without
   // selecting, so a curious user can browse without committing.
   const [detailOf, setDetailOf] = useState<PlayerId | null>(null);
+  // 기풍 필터 — 19명을 한 번에 펼치는 과부하를 줄인다. "전체"면 전 그룹 표시.
+  const [styleFilter, setStyleFilter] = useState<AiStyle | "all">("all");
+  const visibleGroups =
+    styleFilter === "all"
+      ? PLAYER_GROUPS
+      : PLAYER_GROUPS.filter((g) => g.style === styleFilter);
 
   // Resolve the style for whichever player the dialog is showing — so we
   // can pull the style label/desc keys out of i18n without storing a copy.
@@ -121,10 +127,37 @@ export default function PlayerPicker({ value, onChange }: PlayerPickerProps) {
     ? (PLAYER_GROUPS.find((g) => g.players.includes(detailOf))?.style ?? null)
     : null;
 
+  const filterChip = (active: boolean) =>
+    "rounded-full px-3 py-1 font-sans text-xs font-semibold transition-base " +
+    (active
+      ? "bg-ink text-paper"
+      : "border border-ink-faint text-ink-mute hover:border-ink-mute hover:text-ink");
+
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("game.styleFilterLabel")}>
+        <button
+          type="button"
+          aria-pressed={styleFilter === "all"}
+          onClick={() => setStyleFilter("all")}
+          className={filterChip(styleFilter === "all")}
+        >
+          {t("game.styleFilterAll")}
+        </button>
+        {PLAYER_GROUPS.map((g) => (
+          <button
+            key={g.style}
+            type="button"
+            aria-pressed={styleFilter === g.style}
+            onClick={() => setStyleFilter(g.style)}
+            className={filterChip(styleFilter === g.style)}
+          >
+            {t(`game.aiStyleName.${g.style}`)}
+          </button>
+        ))}
+      </div>
       <div role="radiogroup" aria-label={resolvedLabel} className="flex flex-col gap-5">
-        {PLAYER_GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.style} className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between">
               <span className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood">

@@ -8,6 +8,8 @@ class SessionCreateRequest(BaseModel):
 class SessionPublic(BaseModel):
     id: int
     nickname: str
+    # 앱 셸(Capacitor)용 Bearer 토큰. 세션 생성 응답에만 채워진다.
+    token: str | None = None
 
 
 class NicknameAvailability(BaseModel):

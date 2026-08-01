@@ -29,3 +29,27 @@
 - slug: kasaeng
   title: 사활
   prompt_hint: 돌의 삶과 죽음. 두 눈의 원칙. 사활 문제는 기력 향상의 핵심.
+- slug: jeongseok
+  title: 정석
+  prompt_hint: 귀에서 흑백이 서로 최선을 주고받아 정형화된 수순. 외워 두면 초반 손해 방지. 상황·주변 배치에 맞게 선택.
+- slug: poseok
+  title: 포석
+  prompt_hint: 초반에 판 전체의 큰 자리(귀→변→중앙)를 배치하는 전략 단계. 화점·소목 등. 세력과 실리의 균형.
+- slug: dansu
+  title: 단수
+  prompt_hint: 돌의 활로가 하나만 남아 다음에 따낼 수 있는 상태. 바둑의 가장 기본 개념. 단수에 몰린 돌은 잇거나 달아나야 함.
+- slug: gongbae
+  title: 공배
+  prompt_hint: 흑·백 어느 쪽 집도 아닌 중립 점. 한국 룰에서 종국 때 메워도 점수에 영향 없음. 수상전에서는 중요한 변수.
+- slug: kkutnaegi
+  title: 끝내기
+  prompt_hint: 종반에 집의 경계를 확정하는 작은 수들. 선수·후수와 집 크기 계산. 역전이 자주 나는 단계.
+- slug: susangjeon
+  title: 수상전
+  prompt_hint: 서로 잡으러 가는 돌끼리 활로를 메워 먼저 잡는 쪽이 이기는 싸움. 수 계산·공배·옥집·빅이 변수.
+- slug: okjip
+  title: 옥집
+  prompt_hint: 눈처럼 보이지만 결함이 있어 결국 메워지는 가짜 눈. 사활에서 진짜 눈과 구별하는 것이 핵심.
+- slug: seryeok-silli
+  title: 세력·실리
+  prompt_hint: 세력은 두터움·영향력, 실리는 확정된 집. 둘의 균형이 바둑 전략의 축. 삼삼 침입 등은 둘의 거래.

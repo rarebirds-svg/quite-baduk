@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+from app.schemas.datetime_utc import UtcDatetime
 
 Rank = Literal[
     "9k", "8k", "7k", "6k", "5k", "4k", "3k", "2k", "1k",
@@ -48,8 +49,8 @@ class GameSummary(BaseModel):
     user_nickname: str | None = None
     user_rank: str | None = None
     user_country: str | None = None
-    started_at: datetime
-    finished_at: datetime | None
+    started_at: UtcDatetime
+    finished_at: UtcDatetime | None
 
 
 class MoveEntry(BaseModel):

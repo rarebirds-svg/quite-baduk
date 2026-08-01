@@ -47,7 +47,7 @@ async def seed() -> None:
                 log.info("seed_pro_games.empty", dir=str(seed_dir))
                 continue
 
-            inserted = skipped = failed = 0
+            inserted = skipped = failed = updated = 0
             for path in sgf_files:
                 try:
                     parsed = parse_pro_sgf(
@@ -66,13 +66,19 @@ async def seed() -> None:
                     continue
                 dup = (
                     await db.execute(
-                        select(ProGame.id).where(
+                        select(ProGame).where(
                             ProGame.content_hash == parsed.content_hash
                         )
                     )
                 ).scalar_one_or_none()
                 if dup is not None:
-                    skipped += 1
+                    # 기적재분 — round 가 비어 있으면 채우고(backfill), 그 외엔 스킵.
+                    if dup.round is None and parsed.round is not None:
+                        dup.round = parsed.round
+                        updated += 1
+                    else:
+                        skipped += 1
+                    seen.add(parsed.content_hash)
                     continue
                 db.add(ProGame.from_parsed(parsed, collection=collection))
                 seen.add(parsed.content_hash)
@@ -83,6 +89,7 @@ async def seed() -> None:
                 collection=collection,
                 inserted=inserted,
                 skipped=skipped,
+                updated=updated,
                 failed=failed,
             )
 

@@ -234,3 +234,37 @@ describe("Board territoryMarkers prop", () => {
     expect(container.querySelectorAll('[data-territory]').length).toBe(0);
   });
 });
+
+describe("Board last-move marker", () => {
+  it("흑돌 마지막 수에는 흰색 채움 점을 그린다", () => {
+    useBoardTheme.setState({ theme: "paper" });
+    const board = "B" + ".".repeat(9 * 9 - 1);
+    const { container } = render(
+      <Board size={9} board={board} lastMove={{ x: 0, y: 0 }} />
+    );
+    const dot = container.querySelector("circle[data-last-move]");
+    expect(dot).not.toBeNull();
+    expect(dot?.getAttribute("fill")).toBe("rgb(250 245 236)"); // stone-white
+  });
+
+  it("백돌 마지막 수에는 검은색 채움 점을 그린다", () => {
+    useBoardTheme.setState({ theme: "paper" });
+    const board = "W" + ".".repeat(9 * 9 - 1);
+    const { container } = render(
+      <Board size={9} board={board} lastMove={{ x: 0, y: 0 }} />
+    );
+    const dot = container.querySelector("circle[data-last-move]");
+    expect(dot?.getAttribute("fill")).toBe("rgb(15 13 12)"); // stone-black
+  });
+
+  it("패착(blunder) 강조는 기존 링 마커를 유지한다", () => {
+    useBoardTheme.setState({ theme: "paper" });
+    const board = "B" + ".".repeat(9 * 9 - 1);
+    const { container } = render(
+      <Board size={9} board={board} lastMove={{ x: 0, y: 0 }} lastMoveKind="blunder" />
+    );
+    expect(container.querySelector("circle[data-last-move]")).toBeNull();
+    const rings = container.querySelectorAll('circle[stroke="rgb(var(--oxblood))"]');
+    expect(rings.length).toBeGreaterThanOrEqual(2);
+  });
+});

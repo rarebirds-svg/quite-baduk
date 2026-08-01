@@ -2,6 +2,7 @@
 slug: ai-baduk-vs-human
 kind: faq
 title: AI 바둑은 사람과 어떻게 다른가요?
+seoTitle: AI 바둑과 사람 바둑의 차이 — inkbaduk FAQ
 created_at: 2026-05-23
 draft_by: hand
 ---

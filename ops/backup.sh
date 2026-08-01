@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # prod SQLite DB의 로컬 다중 세대(일·주·월) 백업 생성 + 보존 정책 정리.
 set -euo pipefail
+# launchd는 로그인 셸 PATH를 상속하지 않는다 — Homebrew 경로(gh·claude 등)를 명시적으로 앞에 붙인다.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 

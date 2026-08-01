@@ -2,6 +2,8 @@
 slug: bik
 kind: glossary
 title: 빅
+seoTitle: 바둑 빅이란? 뜻과 공배·삶의 원리 — inkbaduk
+related: [sahwal, okjip, gongbae]
 created_at: 2026-05-23
 draft_by: agent v1
 ---

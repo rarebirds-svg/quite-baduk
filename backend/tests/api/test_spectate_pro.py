@@ -1,15 +1,30 @@
 # 프로 기보 공개 조회 API(/api/spectate/pro) 계약 테스트
 from __future__ import annotations
 
+from datetime import date, timedelta
+
 import pytest
 from httpx import AsyncClient
 
 from app.core.sgf.import_sgf import parse_pro_sgf
 from app.models import ProGame
 
+
+async def _add(db_session, *, collection, game_date, event="E", views=0, suffix="pd"):
+    g = ProGame.from_parsed(
+        parse_pro_sgf(f"(;GM[1]FF[4]SZ[19]KM[6.5]EV[{event}];B[{suffix}];W[dp])"),
+        collection=collection,
+    )
+    g.game_date = game_date
+    g.view_count = views
+    db_session.add(g)
+    await db_session.commit()
+    await db_session.refresh(g)
+    return g.id
+
 _SGF = (
     "(;GM[1]FF[4]SZ[19]KM[6.5]PB[Lee]PW[Cho]BR[9p]WR[9p]"
-    "EV[Demo Cup]DT[2026-02-01]RE[W+2.5];B[pd];W[dp];B[pp];W[dd])"
+    "EV[Demo Cup]DT[2024-02-01]RE[W+2.5];B[pd];W[dp];B[pp];W[dd])"
 )
 
 
@@ -28,11 +43,12 @@ async def _insert_pro_game(db_session, collection: str = "masterpiece") -> int:
 
 
 @pytest.mark.asyncio
-async def test_pro_list_requires_session(client: AsyncClient) -> None:
+async def test_pro_list_is_public(client: AsyncClient) -> None:
+    # 프로 기보 목록은 비로그인 공개 — 세션 없이도 200을 반환한다.
     fresh = AsyncClient(transport=client._transport, base_url=client.base_url)
     try:
         r = await fresh.get("/api/spectate/pro")
-        assert r.status_code == 401
+        assert r.status_code == 200
     finally:
         await fresh.aclose()
 
@@ -54,6 +70,18 @@ async def test_pro_list_returns_inserted_game(
 
 
 @pytest.mark.asyncio
+async def test_pro_sitemap_created_at_has_utc_z(
+    client: AsyncClient, db_session
+) -> None:
+    """pro 사이트맵의 created_at은 UTC 'Z'로 직렬화(수기 isoformat → utc_iso)."""
+    await _insert_pro_game(db_session)
+    r = await client.get("/api/spectate/pro/sitemap")
+    assert r.status_code == 200
+    rows = r.json()
+    assert rows and all(x["created_at"].endswith("Z") for x in rows)
+
+
+@pytest.mark.asyncio
 async def test_pro_list_collection_filter(
     client: AsyncClient, db_session
 ) -> None:
@@ -62,6 +90,55 @@ async def test_pro_list_collection_filter(
     r = await client.get("/api/spectate/pro", params={"collection": "recent"})
     ids = {x["id"] for x in r.json()["rows"]}
     assert mid not in ids
+
+
+@pytest.mark.asyncio
+async def test_recent_tab_only_within_one_year(client, db_session):
+    recent_id = await _add(db_session, collection="masterpiece",
+                           game_date=date.today() - timedelta(days=30), suffix="pd")
+    old_id = await _add(db_session, collection="masterpiece",
+                        game_date=date.today() - timedelta(days=400), suffix="pp")
+    null_id = await _add(db_session, collection="world",
+                         game_date=None, suffix="dd")
+    r = await client.get("/api/spectate/pro?collection=recent")
+    ids = {row["id"] for row in r.json()["rows"]}
+    assert recent_id in ids
+    assert old_id not in ids and null_id not in ids
+
+
+@pytest.mark.asyncio
+async def test_masterpiece_tab_excludes_recent_includes_null(client, db_session):
+    recent_id = await _add(db_session, collection="masterpiece",
+                           game_date=date.today() - timedelta(days=30), suffix="pd")
+    old_id = await _add(db_session, collection="masterpiece",
+                        game_date=date.today() - timedelta(days=400), suffix="pp")
+    null_id = await _add(db_session, collection="masterpiece",
+                         game_date=None, suffix="dd")
+    r = await client.get("/api/spectate/pro?collection=masterpiece")
+    ids = {row["id"] for row in r.json()["rows"]}
+    assert old_id in ids and null_id in ids
+    assert recent_id not in ids
+
+
+@pytest.mark.asyncio
+async def test_sort_popular(client, db_session):
+    low = await _add(db_session, collection="masterpiece",
+                     game_date=date.today() - timedelta(days=400), views=1, suffix="pd")
+    high = await _add(db_session, collection="masterpiece",
+                      game_date=date.today() - timedelta(days=400), views=99, suffix="pp")
+    r = await client.get("/api/spectate/pro?collection=masterpiece&sort=popular")
+    ids = [row["id"] for row in r.json()["rows"]]
+    assert ids.index(high) < ids.index(low)
+
+
+@pytest.mark.asyncio
+async def test_detail_increments_view_count(client, db_session):
+    gid = await _add(db_session, collection="masterpiece",
+                     game_date=date.today() - timedelta(days=400), views=5, suffix="pd")
+    r1 = await client.get(f"/api/spectate/pro/{gid}")
+    assert r1.json()["view_count"] == 6
+    r2 = await client.get(f"/api/spectate/pro/{gid}")
+    assert r2.json()["view_count"] == 7
 
 
 @pytest.mark.asyncio
@@ -89,7 +166,7 @@ def _sgf(n: int) -> str:
     """n 마다 다른 content_hash 가 나오도록 결과값을 바꾼 SGF."""
     return (
         f"(;GM[1]FF[4]SZ[19]KM[6.5]PB[Lee]PW[Cho]BR[9p]WR[9p]"
-        f"EV[Demo Cup]DT[2026-02-01]RE[W+{n}.5];B[pd];W[dp];B[pp];W[dd])"
+        f"EV[Demo Cup]DT[2024-02-01]RE[W+{n}.5];B[pd];W[dp];B[pp];W[dd])"
     )
 
 
@@ -260,3 +337,23 @@ async def test_pick_monthly_deterministic(client: AsyncClient) -> None:
 async def test_pick_monthly_invalid_format(client: AsyncClient) -> None:
     resp = await client.get("/api/spectate/pro/pick/monthly/2026-13")
     assert resp.status_code == 400
+
+
+_SGF_ROUND = (
+    "(;GM[1]FF[4]SZ[19]KM[6.5]PB[Lee]PW[Cho]BR[9p]WR[9p]"
+    "EV[10th Chunlan Cup Final]RO[3]DT[2024-03-01]RE[B+R];B[pd];W[dp])"
+)
+
+
+@pytest.mark.asyncio
+async def test_list_pro_games_includes_round(
+    client: AsyncClient, db_session
+) -> None:
+    gid = await _insert_pro_game_sgf(db_session, _SGF_ROUND, "world")
+    await _signup(client, "watcher")
+    r = await client.get("/api/spectate/pro", params={"collection": "world"})
+    assert r.status_code == 200
+    rows = r.json()["rows"]
+    row = next((x for x in rows if x["id"] == gid), None)
+    assert row is not None
+    assert row["round"] == "3"

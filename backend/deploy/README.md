@@ -135,3 +135,20 @@ Source these from `~/.baduk.env`. Generate `SESSION_SECRET` with
 - [ ] At least one R2 backup exists in the bucket
 - [ ] One restore drill verified
 - [ ] `tail -f ~/Library/Logs/baduk-api.log` shows JSON structlog lines
+
+## 머신 레벨 자동 복구 (필수)
+
+launchd KeepAlive는 프로세스 종료만 복구한다. 정전·재부팅 후 머신이 사람 개입
+없이 서비스로 복귀하려면 전원·로그인 설정이 필요하다.
+
+```bash
+backend/deploy/harden_macos.sh
+```
+
+- `pmset autorestart 1` — 정전 복구 시 자동 부팅
+- `pmset sleep 0` — 슬립 금지
+- **자동 로그인 수동 활성화** — 시스템 설정 → 사용자 및 그룹 → 자동 로그인.
+  `com.baduk.*`는 GUI 도메인 LaunchAgent라 로그인이 있어야 기동된다.
+
+검증: 맥미니를 강제 재부팅 → 사람 개입 0으로 `curl -s https://<domain>/api/health`가
+200을 반환하는지 확인.

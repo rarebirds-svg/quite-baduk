@@ -4,8 +4,12 @@ import { useRouter } from "next/navigation";
 import { api, errorMessageKey } from "@/lib/api";
 import { useAuthStore, type Session } from "@/store/authStore";
 import { useT } from "@/lib/i18n";
+import { setSessionToken } from "@/lib/sessionToken";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
+import { BoardPreview } from "@/components/editorial/BoardPreview";
+import { NewsHook } from "@/components/editorial/NewsHook";
+import { ClusterLinks } from "@/components/editorial/ClusterLinks";
 
 type CheckResp = { available: boolean; reason?: "taken" | "invalid" };
 
@@ -70,6 +74,7 @@ export default function NicknameGate() {
         method: "POST",
         body: JSON.stringify({ nickname: n }),
       });
+      await setSessionToken(sess.token ?? null);
       setSession(sess);
       router.replace("/game/new");
     } catch (e) {
@@ -159,12 +164,14 @@ export default function NicknameGate() {
         <p className="mt-6 md:mt-8 font-sans text-base md:text-lg text-ink-mute max-w-2xl leading-relaxed">
           {subtitle}
         </p>
+        <BoardPreview />
+        <NewsHook />
       </section>
 
       <RuleDivider weight="strong" />
 
       {/* Nickname form — anchored as the call to action */}
-      <section className="mt-10">
+      <section id="start" className="mt-10">
         <p className="font-sans text-xs font-semibold uppercase tracking-label text-ink-mute mb-3">
           {t("home.scrollHint")}
         </p>
@@ -178,6 +185,7 @@ export default function NicknameGate() {
               placeholder={t("session.nicknamePlaceholder")}
               maxLength={32}
               className="w-full border border-ink/20 rounded-sm bg-paper px-4 py-3 text-ink text-lg outline-none transition-base focus:border-oxblood"
+              aria-label={t("session.nicknameHeading")}
               aria-describedby="nickname-hint"
               autoComplete="off"
             />
@@ -185,7 +193,7 @@ export default function NicknameGate() {
               {hint}
             </p>
             {error && <p role="alert" className="mt-1 text-sm text-oxblood">{error}</p>}
-            <p className="mt-2 font-sans text-xs text-ink-faint leading-relaxed">
+            <p className="mt-2 font-sans text-xs text-ink-mute leading-relaxed">
               {t("home.footerNote")}
             </p>
           </div>
@@ -208,9 +216,9 @@ export default function NicknameGate() {
               <span className="font-mono tabular-nums text-xs text-oxblood">
                 0{n}
               </span>
-              <h3 className="font-serif text-lg text-ink leading-snug">
+              <h2 className="font-serif text-lg text-ink leading-snug">
                 {t(`home.valueTitle${n}`)}
-              </h3>
+              </h2>
               <p className="font-sans text-sm text-ink-mute leading-relaxed">
                 {t(`home.valueDesc${n}`)}
               </p>
@@ -218,6 +226,11 @@ export default function NicknameGate() {
           ))}
         </div>
       </section>
+
+      {/* Content cluster — internal links into KataGo/AI-baduk glossary + FAQ.
+          Delete this render call (and components/editorial/ClusterLinks.tsx)
+          once the Shin Jinseo news cools down and the cluster is retired. */}
+      <ClusterLinks />
 
     </div>
   );

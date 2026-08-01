@@ -1,7 +1,7 @@
 "use client";
 import { create } from "zustand";
 
-export interface Session { id: number; nickname: string; }
+export interface Session { id: number; nickname: string; token?: string | null; }
 
 interface AuthState {
   session: Session | null;

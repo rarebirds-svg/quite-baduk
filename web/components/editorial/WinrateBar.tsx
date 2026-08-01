@@ -33,7 +33,7 @@ export const WinrateBar = React.forwardRef<HTMLDivElement, WinrateBarProps>(
         )}
         <div
           role="progressbar"
-          aria-label={label}
+          aria-label={label ?? `${blackLabel} ${whiteLabel}`}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={hasValue ? blackPct : undefined}

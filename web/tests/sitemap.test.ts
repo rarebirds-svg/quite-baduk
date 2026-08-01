@@ -31,8 +31,10 @@ describe("sitemap", () => {
     const urls = await sitemap();
     // 정적 5개는 그대로
     expect(urls.find((u) => u.url === "https://inkbaduk.com/")).toBeDefined();
-    // 동적 항목은 없음
-    expect(urls.find((u) => u.url?.includes("/spectate/pro/"))).toBeUndefined();
+    // 정적 크롤 허브는 API와 무관하게 항상 포함
+    expect(urls.find((u) => u.url === "https://inkbaduk.com/spectate/pro/archive")).toBeDefined();
+    // 동적 기보 상세(숫자 id) 항목은 없음
+    expect(urls.find((u) => /\/spectate\/pro\/\d+$/.test(u.url))).toBeUndefined();
   });
 });
 

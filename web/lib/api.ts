@@ -1,4 +1,16 @@
-export const API_BASE = "";
+import { IS_APP_SHELL } from "./appShell";
+import { ensureSessionToken, getSessionToken } from "./sessionToken";
+
+// 웹: 동일 출처 상대경로(next rewrite). 앱 셸: 백엔드 절대 URL 직접 호출.
+export const API_BASE = IS_APP_SHELL
+  ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000")
+  : "";
+
+/** 앱 셸에서만 Bearer 헤더를 만든다. 웹은 쿠키가 처리하므로 빈 객체. */
+export function authHeaders(): Record<string, string> {
+  const t = IS_APP_SHELL ? getSessionToken() : null;
+  return t ? { Authorization: `Bearer ${t}` } : {};
+}
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, public detail?: unknown) {
@@ -27,9 +39,10 @@ export function errorMessageKey(e: unknown): string {
 }
 
 export async function api<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
+  if (IS_APP_SHELL) await ensureSessionToken();
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(init.headers || {}) },
+    headers: { "Content-Type": "application/json", ...authHeaders(), ...(init.headers || {}) },
     ...init
   });
   if (!res.ok) {

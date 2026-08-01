@@ -4,9 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
+import { formatProEvent } from "@/lib/proEvent";
+import { localizePlayer, localizeRank } from "@/lib/proLocale";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select";
+import { proGameHref } from "@/lib/routes";
 
 interface ProRow {
   id: number;
@@ -16,10 +22,12 @@ interface ProRow {
   black_rank: string | null;
   white_rank: string | null;
   event: string | null;
+  round: string | null;
   game_date: string | null;
   result: string | null;
   board_size: number;
   move_count: number;
+  view_count: number;
 }
 
 interface ProListResponse {
@@ -39,11 +47,13 @@ const PAGE_SIZE = 50;
 
 export function ProGameList() {
   const t = useT();
+  const [locale] = useLocale();
   const router = useRouter();
   const [collection, setCollection] = useState<Collection>("masterpiece");
   const [page, setPage] = useState(0);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
+  const [sort, setSort] = useState<"recent" | "oldest" | "popular">("recent");
   const [data, setData] = useState<ProListResponse | null>(null);
 
   // 검색어 디바운스 — 입력이 멎고 300ms 뒤 서버 질의. 새 검색은 첫 페이지로.
@@ -60,6 +70,7 @@ export function ProGameList() {
     setData(null);
     const params = new URLSearchParams({
       collection,
+      sort,
       limit: String(PAGE_SIZE),
       offset: String(page * PAGE_SIZE),
     });
@@ -78,7 +89,7 @@ export function ProGameList() {
     return () => {
       cancelled = true;
     };
-  }, [collection, page, debouncedQ, router]);
+  }, [collection, page, debouncedQ, sort, router]);
 
   const rows = data?.rows ?? null;
   const total = data?.total ?? 0;
@@ -115,6 +126,22 @@ export function ProGameList() {
           placeholder={t("spectate.proSearch")}
           className="max-w-xs"
         />
+        <Select
+          value={sort}
+          onValueChange={(v) => {
+            setSort(v as "recent" | "oldest" | "popular");
+            setPage(0);
+          }}
+        >
+          <SelectTrigger aria-label={t("spectate.sortLabel")} className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">{t("spectate.sortRecent")}</SelectItem>
+            <SelectItem value="oldest">{t("spectate.sortOldest")}</SelectItem>
+            <SelectItem value="popular">{t("spectate.sortPopular")}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {rows === null ? (
@@ -127,19 +154,19 @@ export function ProGameList() {
             {rows.map((r) => (
               <li key={r.id}>
                 <Link
-                  href={`/spectate/pro/${r.id}`}
+                  href={proGameHref(r.id)}
                   className="block border border-ink-faint p-3 hover:bg-paper-deep transition-base"
                 >
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-sans text-sm text-ink">
-                      {r.black_player}
-                      {r.black_rank && (
-                        <span className="text-ink-faint text-xs"> {r.black_rank}</span>
+                      {localizePlayer(r.black_player, locale)}
+                      {localizeRank(r.black_rank, locale) && (
+                        <span className="text-ink-faint text-xs"> {localizeRank(r.black_rank, locale)}</span>
                       )}
                       <span className="text-ink-faint"> vs </span>
-                      {r.white_player}
-                      {r.white_rank && (
-                        <span className="text-ink-faint text-xs"> {r.white_rank}</span>
+                      {localizePlayer(r.white_player, locale)}
+                      {localizeRank(r.white_rank, locale) && (
+                        <span className="text-ink-faint text-xs"> {localizeRank(r.white_rank, locale)}</span>
                       )}
                     </span>
                     <span className="font-mono text-xs text-ink-faint shrink-0">
@@ -147,7 +174,9 @@ export function ProGameList() {
                     </span>
                   </div>
                   <div className="mt-1 font-mono text-[11px] text-ink-faint tabular-nums flex flex-wrap gap-3">
-                    {r.event && <span>{r.event}</span>}
+                    {formatProEvent(r.event, r.round, locale) && (
+                      <span>{formatProEvent(r.event, r.round, locale)}</span>
+                    )}
                     {r.game_date && <span>{r.game_date}</span>}
                     <span>
                       {r.board_size}×{r.board_size}

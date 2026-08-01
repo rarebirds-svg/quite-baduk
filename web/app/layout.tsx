@@ -3,9 +3,13 @@ import "./globals.css";
 import TopNav from "@/components/TopNav";
 import Footer from "@/components/Footer";
 import AuthGate from "@/components/AuthGate";
+import OfflineBanner from "@/components/OfflineBanner";
 import { ThemeProviderClient } from "@/components/ThemeProviderClient";
 import { fontVariables } from "@/lib/fonts";
 import { Toaster } from "sonner";
+import AppShellBridge from "@/components/AppShellBridge";
+import SkipToMainLink from "@/components/SkipToMainLink";
+import VisitBeacon from "@/components/VisitBeacon";
 
 // --paper light: rgb(245 239 230) = #F5EFE6  (from globals.css :root)
 // --paper dark:  rgb(28 25 23)   = #1C1917   (from globals.css .dark)
@@ -30,7 +34,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://inkbaduk.com"),
   title: { default: "Inkbaduk · 조용한 승부", template: "%s — Inkbaduk" },
   description:
-    "KataGo Human-SL 인공지능과 두는 한국식 바둑. 9급부터 9단까지, 18인의 기풍을 골라 대국하고 복기에서 승부처를 분석합니다.",
+    "KataGo Human-SL 인공지능과 두는 한국식 바둑. 9급부터 9단까지, 19인의 기풍을 골라 대국하고 복기에서 승부처를 분석합니다.",
   keywords: [
     "바둑",
     "온라인 바둑",
@@ -141,10 +145,14 @@ export default function RootLayout({
       </head>
       <body className="bg-paper text-ink">
         <ThemeProviderClient>
+          <AppShellBridge />
+          <VisitBeacon />
+          <OfflineBanner />
           <AuthGate>
             <div className="flex min-h-dvh flex-col">
+              <SkipToMainLink />
               <TopNav />
-              <main className="p-4 max-w-7xl mx-auto w-full flex-1">
+              <main id="main-content" className="p-4 max-w-7xl mx-auto w-full flex-1">
                 {children}
               </main>
               <Footer />
