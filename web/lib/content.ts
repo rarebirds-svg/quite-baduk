@@ -5,6 +5,8 @@ import path from "node:path";
 import matter from "gray-matter";
 import { marked } from "marked";
 
+import { boardCodeBlockToHtml } from "./board-svg";
+
 const CONTENT_ROOT = path.join(process.cwd(), "content");
 
 export type ContentKind = "glossary" | "faq";
@@ -22,6 +24,55 @@ export interface ContentItem {
   excerpt: string;
   html: string;
 }
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// marked v18: renderer 함수가 객체 인자를 받는다.
+// ```board 코드블록은 board-svg가 figure로 변환, 나머지는 기본 처리.
+const renderer = new marked.Renderer();
+// 기본 구현은 prototype에서 꺼내 call로 위임한다. bind로 고정하면 marked가 렌더 직전에
+// 주입하는 this.parser 참조가 끊겨 paragraph 같은 inline 파싱 메서드가 죽는다.
+const base = marked.Renderer.prototype;
+renderer.code = function (token) {
+  if (token.lang === "board") {
+    return boardCodeBlockToHtml(token.text);
+  }
+  return base.code.call(this, token);
+};
+function imgTag(href?: string | null, text?: string | null): string {
+  const alt = escapeHtml(text ?? "");
+  const src = escapeHtml(href ?? "");
+  return `<img src="${src}" alt="${alt}" loading="lazy" />`;
+}
+
+// 인라인 이미지는 문단을 쪼갤 수 없으므로 <img> 그대로 둔다.
+// figure 승격은 아래 paragraph override가 "이미지 단독 문단"일 때만 수행한다.
+renderer.image = function ({ href, text }) {
+  return imgTag(href, text);
+};
+
+// <figure>는 <p>의 허용 자식이 아니다. marked는 이미지 하나짜리 줄도 문단으로 감싸므로,
+// 그 경우에만 <p>를 걷어내고 figure를 직접 낸다. 나머지 문단은 기본 처리.
+renderer.paragraph = function (token) {
+  const inline = (token.tokens ?? []).filter(
+    (t) => !(t.type === "space" || (t.type === "text" && t.raw.trim() === "")),
+  );
+  const only = inline.length === 1 ? inline[0] : null;
+  if (only && only.type === "image") {
+    const { href, text } = only as { href?: string; text?: string };
+    const alt = escapeHtml(text ?? "");
+    const caption = alt ? `<figcaption>${alt}</figcaption>` : "";
+    return `<figure class="content-image">${imgTag(href, text)}${caption}</figure>`;
+  }
+  return base.paragraph.call(this, token);
+};
+marked.use({ renderer });
 
 function contentDir(kind: ContentKind): string {
   return path.join(CONTENT_ROOT, kind);
