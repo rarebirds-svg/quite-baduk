@@ -4,7 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Board from "@/components/Board";
 import AnalysisOverlay from "@/components/AnalysisOverlay";
 import { api } from "@/lib/api";
-import { useT } from "@/lib/i18n";
+import { useT, useLocale } from "@/lib/i18n";
+import { formatGameResult } from "@/lib/formatResult";
 import { gtpToXy, totalCells } from "@/lib/board";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -48,6 +49,7 @@ function replay(size: number, moves: MoveEntryRaw[], upto: number): string {
 
 export default function GameReviewScreen({ gameId }: { gameId: number }) {
   const t = useT();
+  const [locale] = useLocale();
   const [game, setGame] = useState<GameDetail | null>(null);
   const [idx, setIdx] = useState(0);
   const [analysis, setAnalysis] = useState<AnalysisResp | null>(null);
@@ -180,7 +182,7 @@ export default function GameReviewScreen({ gameId }: { gameId: number }) {
   const heroSubtitle = [
     game.started_at ? game.started_at.slice(0, 10) : null,
     `${game.board_size}×${game.board_size}`,
-    game.result,
+    formatGameResult(game.result, locale),
   ]
     .filter(Boolean)
     .join(" · ");

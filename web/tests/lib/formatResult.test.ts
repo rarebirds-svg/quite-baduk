@@ -7,12 +7,21 @@ describe("formatGameResult (ko)", () => {
     expect(formatGameResult("W+50.4", "ko")).toBe("백 50.4집 승");
   });
 
-  it("renders black's point margin", () => {
-    expect(formatGameResult("B+12.5", "ko")).toBe("흑 12.5집 승");
+  it("renders a whole-point margin", () => {
+    expect(formatGameResult("B+2", "ko")).toBe("흑 2집 승");
   });
 
-  it("keeps a half-point margin unrounded", () => {
-    expect(formatGameResult("W+0.5", "ko")).toBe("백 0.5집 승");
+  // 한국 바둑 표기는 .5를 소수로 읽지 않는다 — 0.5는 반집, 2.5는 2집반.
+  it("renders a half-point win as 반집승", () => {
+    expect(formatGameResult("W+0.5", "ko")).toBe("백 반집승");
+  });
+
+  it("renders an n-and-a-half point margin as n집반", () => {
+    expect(formatGameResult("B+12.5", "ko")).toBe("흑 12집반 승");
+  });
+
+  it("keeps an irregular non-half margin as a decimal", () => {
+    expect(formatGameResult("W+50.4", "ko")).toBe("백 50.4집 승");
   });
 
   it("renders a resignation", () => {
@@ -39,8 +48,16 @@ describe("formatGameResult (ko)", () => {
 });
 
 describe("formatGameResult (en)", () => {
-  it("renders a point margin in English", () => {
-    expect(formatGameResult("W+50.4", "en")).toBe("White wins by 50.4");
+  it("renders a point margin in English with its unit", () => {
+    expect(formatGameResult("W+50.4", "en")).toBe("White wins by 50.4 points");
+  });
+
+  it("renders a half-point win in English", () => {
+    expect(formatGameResult("W+0.5", "en")).toBe("White wins by half a point");
+  });
+
+  it("renders an n-and-a-half margin in English", () => {
+    expect(formatGameResult("B+2.5", "en")).toBe("Black wins by 2.5 points");
   });
 
   it("renders a resignation in English", () => {

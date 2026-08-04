@@ -48,8 +48,16 @@ export function formatGameResult(
 
   const reason = REASON[margin.toLowerCase()];
   if (reason) return translate(locale, reason, { color });
-  // 반집(0.5)이 살아야 하므로 숫자를 파싱하지 않고 문자열 그대로 넘긴다.
+
   if (/^\d+(\.\d+)?$/.test(margin)) {
+    // 한국 바둑은 .5를 소수로 읽지 않는다 — 0.5는 "반집", 2.5는 "2집반".
+    const half = /^(\d+)\.5$/.exec(margin);
+    if (half) {
+      const whole = half[1];
+      if (whole === "0") return translate(locale, "game.resultText.byHalfPoint", { color });
+      return translate(locale, "game.resultText.byPointsHalf", { color, points: whole });
+    }
+    // 그 밖의 값(50.4 같은 불규칙 기록)은 원본 숫자를 그대로 보여준다.
     return translate(locale, "game.resultText.byPoints", { color, points: margin });
   }
 

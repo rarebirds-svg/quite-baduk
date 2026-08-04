@@ -702,7 +702,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
                 : t("game.scoringBreakdown")}
             </SheetTitle>
             <SheetDescription className="font-serif text-2xl text-ink">
-              {scoringDetail?.result ?? ""}
+              {formatGameResult(scoringDetail?.result, locale)}
             </SheetDescription>
           </div>
           {scoringDetail && (
