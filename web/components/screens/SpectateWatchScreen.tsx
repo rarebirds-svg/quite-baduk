@@ -13,6 +13,7 @@ import { Hero } from "@/components/editorial/Hero";
 import { formatRank } from "@/components/RankPicker";
 import { CountryFlag } from "@/components/CountryFlag";
 import { PLAYER_COUNTRY, type PlayerId } from "@/components/PlayerPicker";
+import { formatGameResult } from "@/lib/formatResult";
 
 interface MoveEntryRaw {
   move_number: number;
@@ -167,7 +168,7 @@ export default function SpectateWatchScreen({ gameId }: { gameId: number }) {
             </span>
           ) : (
             game.result && (
-              <span className="text-ink-faint ml-1">· {game.result}</span>
+              <span className="text-ink-faint ml-1">· {formatGameResult(game.result, locale)}</span>
             )
           )}
         </span>

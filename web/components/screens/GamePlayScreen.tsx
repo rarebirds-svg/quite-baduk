@@ -532,7 +532,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
         {g.gameOver && (
           <>
             <div className="border border-ink p-4 font-serif text-lg flex items-center">
-              <span>{t("game.result")}: {formatGameResult(g.result)}</span>
+              <span>{t("game.result")}: {formatGameResult(g.result, locale)}</span>
               <button
                 type="button"
                 className="ml-3 font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"

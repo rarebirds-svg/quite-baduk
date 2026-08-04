@@ -10,6 +10,7 @@ import { localizePlayer, localizeRank } from "@/lib/proLocale";
 import { gtpToXy, replay, type ReplayMove } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
+import { formatGameResult } from "@/lib/formatResult";
 
 interface ProMove {
   move_number: number;
@@ -147,7 +148,7 @@ export default function ProGameScreen({
           <span className="text-ink-faint">vs</span>
           <span className="font-sans">{whiteLabel}</span>
           {game.result && (
-            <span className="text-ink-faint ml-1">· {game.result}</span>
+            <span className="text-ink-faint ml-1">· {formatGameResult(game.result, locale)}</span>
           )}
         </span>
       </div>

@@ -1,6 +1,7 @@
 // 월간 픽 페이지 SEO 메타.
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { formatGameResult } from "@/lib/formatResult";
 
 const BASE = "https://inkbaduk.com";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -26,7 +27,7 @@ export async function generateMetadata(
     const p = (await res.json()) as PickMeta;
     const [y, m] = p.yyyymm.split("-");
     const title = `${y}년 ${Number(m)}월 이 달의 명국 — ${p.black_player} vs ${p.white_player} — inkbaduk`;
-    const description = [p.event, p.game_date, p.result ? `결과 ${p.result}` : null]
+    const description = [p.event, p.game_date, p.result ? `결과 ${formatGameResult(p.result)}` : null]
       .filter(Boolean)
       .join(" · ") || "inkbaduk 이 달의 명국";
     const canonical = `${BASE}/spectate/picks/monthly/${p.yyyymm}`;

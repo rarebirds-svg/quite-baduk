@@ -183,12 +183,12 @@ export default function HistoryPage() {
                       {g.winner === "user" ? (
                         <span className="font-sans font-semibold text-moss">
                           {t("admin.win")}
-                          {g.result ? <span className="ml-1 font-sans text-xs text-ink-mute">{formatGameResult(g.result)}</span> : null}
+                          {g.result ? <span className="ml-1 font-sans text-xs text-ink-mute">{formatGameResult(g.result, locale)}</span> : null}
                         </span>
                       ) : g.winner === "ai" ? (
                         <span className="font-sans font-semibold text-oxblood">
                           {t("admin.loss")}
-                          {g.result ? <span className="ml-1 font-sans text-xs text-ink-mute">{formatGameResult(g.result)}</span> : null}
+                          {g.result ? <span className="ml-1 font-sans text-xs text-ink-mute">{formatGameResult(g.result, locale)}</span> : null}
                         </span>
                       ) : (
                         <span className="text-ink-mute">{g.status}</span>

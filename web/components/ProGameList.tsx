@@ -13,6 +13,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { proGameHref } from "@/lib/routes";
+import { formatGameResult } from "@/lib/formatResult";
 
 interface ProRow {
   id: number;
@@ -169,8 +170,8 @@ export function ProGameList() {
                         <span className="text-ink-faint text-xs"> {localizeRank(r.white_rank, locale)}</span>
                       )}
                     </span>
-                    <span className="font-mono text-xs text-ink-faint shrink-0">
-                      {r.result ?? "—"}
+                    <span className="font-sans text-xs text-ink-faint shrink-0">
+                      {r.result ? formatGameResult(r.result, locale) : "—"}
                     </span>
                   </div>
                   <div className="mt-1 font-mono text-[11px] text-ink-faint tabular-nums flex flex-wrap gap-3">

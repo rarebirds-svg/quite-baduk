@@ -1,5 +1,6 @@
 // 이 달의 명국 — 결정적 픽 단일 게임 랜딩 페이지.
 import { notFound } from "next/navigation";
+import { formatGameResult } from "@/lib/formatResult";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -50,7 +51,7 @@ export default async function MonthlyPickPage({
         </h1>
         {data.event && <p className="text-ink-mute">{data.event}</p>}
         {data.game_date && <p className="text-ink-faint">{data.game_date}</p>}
-        {data.result && <p className="text-ink-faint">결과 {data.result}</p>}
+        {data.result && <p className="text-ink-faint">결과 {formatGameResult(data.result)}</p>}
       </header>
       <p className="not-prose">
         <a href={`/spectate/pro/${data.id}`}>관전·복기 →</a>
