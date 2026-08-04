@@ -1,25 +1,15 @@
 "use client";
 import ko from "./ko.json";
-import en from "./en.json";
 import { useSyncExternalStore } from "react";
+import { translate, type Locale } from "./translate";
 
-export type Locale = "ko" | "en";
-const dicts = { ko, en } as const;
+export type { Locale };
 
 type Dict = typeof ko;
 type NestedKey<T, P extends string = ""> =
   T extends object
     ? { [K in keyof T & string]: NestedKey<T[K], `${P}${P extends "" ? "" : "."}${K}`> }[keyof T & string]
     : P;
-
-function getFromPath(obj: unknown, path: string): unknown {
-  return path.split(".").reduce((acc: unknown, k: string) => {
-    if (acc && typeof acc === "object" && k in (acc as Record<string, unknown>)) {
-      return (acc as Record<string, unknown>)[k];
-    }
-    return null;
-  }, obj);
-}
 
 let currentLocale: Locale = "ko";
 const listeners = new Set<() => void>();
@@ -66,14 +56,7 @@ export function initLocale() {
 }
 
 export function t(key: string, params: Record<string, string | number> = {}): string {
-  const dict = dicts[currentLocale];
-  const raw = getFromPath(dict, key);
-  if (typeof raw !== "string") return key;
-  let value: string = raw;
-  for (const [k, v] of Object.entries(params)) {
-    value = value.replace(`{${k}}`, String(v));
-  }
-  return value;
+  return translate(currentLocale, key, params);
 }
 
 export function useT() {

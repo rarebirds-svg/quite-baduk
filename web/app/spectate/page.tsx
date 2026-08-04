@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/tabs";
 import { ProGameList } from "@/components/ProGameList";
 import { spectateWatchHref } from "@/lib/routes";
+import { formatGameResult } from "@/lib/formatResult";
 
 interface SpectateRow {
   id: number;
@@ -213,8 +214,8 @@ function SpectateGrid({
                     {t("spectate.liveBadge")}
                   </span>
                 ) : (
-                  <span className="font-mono text-xs text-ink-faint shrink-0">
-                    {r.result ?? "—"}
+                  <span className="font-sans text-xs text-ink-faint shrink-0">
+                    {r.result ? formatGameResult(r.result, locale) : "—"}
                   </span>
                 )}
               </div>

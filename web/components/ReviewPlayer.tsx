@@ -18,6 +18,7 @@ import {
   playStoneClick,
   setStoneSoundEnabled,
 } from "@/lib/soundfx";
+import { formatGameResult } from "@/lib/formatResult";
 
 interface MoveEntryRaw {
   move_number: number;
@@ -496,7 +497,7 @@ export default function ReviewPlayer({
                 <span className="font-sans text-xs">{whiteName}</span>
               </span>
               {game.result && (
-                <span className="text-ink-faint ml-1">· {game.result}</span>
+                <span className="text-ink-faint ml-1">· {formatGameResult(game.result, locale)}</span>
               )}
             </span>
           </div>

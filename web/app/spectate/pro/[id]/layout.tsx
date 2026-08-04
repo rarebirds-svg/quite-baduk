@@ -1,5 +1,6 @@
 // 프로 기보 상세 페이지용 레이아웃 — generateMetadata로 페이지별 title·description·canonical을 제공한다.
 import type { Metadata } from "next";
+import { formatGameResult } from "@/lib/formatResult";
 
 const BASE = "https://inkbaduk.com";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -36,7 +37,7 @@ export async function generateMetadata(
     const title = `${black} vs ${white} 바둑 기보${eventParen} — inkbaduk`;
     const blackName = `${black}${g.black_rank ? ` ${g.black_rank}` : ""}`;
     const whiteName = `${white}${g.white_rank ? ` ${g.white_rank}` : ""}`;
-    const meta = [g.event, g.round, g.game_date, g.result ? `결과 ${g.result}` : null]
+    const meta = [g.event, g.round, g.game_date, g.result ? `결과 ${formatGameResult(g.result)}` : null]
       .filter(Boolean)
       .join(" · ");
     const description =

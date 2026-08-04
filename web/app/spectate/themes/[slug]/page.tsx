@@ -1,5 +1,6 @@
 // 테마 페이지 — backend API 결과를 서버 컴포넌트로 렌더.
 import { notFound } from "next/navigation";
+import { formatGameResult } from "@/lib/formatResult";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -56,7 +57,7 @@ export default async function ThemePage({
               </span>
               {g.event && <span className="text-ink-mute"> · {g.event}</span>}
               {g.game_date && <span className="text-ink-faint"> · {g.game_date}</span>}
-              {g.result && <span className="text-ink-faint"> · {g.result}</span>}
+              {g.result && <span className="text-ink-faint"> · {formatGameResult(g.result)}</span>}
             </a>
           </li>
         ))}
