@@ -19,6 +19,7 @@ import { setSessionToken } from "@/lib/sessionToken";
 import { applyMoveWithCaptures, gtpToXy, xyToGtp } from "@/lib/board";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank, type Rank } from "@/components/RankPicker";
+import { formatGameResult } from "@/lib/formatResult";
 import { playStoneClick } from "@/lib/soundfx";
 import { IS_APP_SHELL } from "@/lib/appShell";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
@@ -531,7 +532,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
         {g.gameOver && (
           <>
             <div className="border border-ink p-4 font-serif text-lg flex items-center">
-              <span>{t("game.result")}: {g.result || ""}</span>
+              <span>{t("game.result")}: {formatGameResult(g.result)}</span>
               <button
                 type="button"
                 className="ml-3 font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
