@@ -2,8 +2,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, authFailure, type AuthFailure } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
+import { AdminAuthNotice } from "@/components/admin/AdminAuthNotice";
 import { formatRank } from "@/components/RankPicker";
 import { CountryFlag } from "@/components/CountryFlag";
 import { useAuthStore } from "@/store/authStore";
@@ -123,7 +124,7 @@ export default function AdminPage() {
   const t = useT();
   const [locale] = useLocale();
   const router = useRouter();
-  const { session, isAdmin, setIsAdmin } = useAuthStore();
+  const { session, setIsAdmin } = useAuthStore();
   const [sessions, setSessions] = useState<AdminSessionRow[] | null>(null);
   const [games, setGames] = useState<AdminGameRow[] | null>(null);
   const [gamesTotal, setGamesTotal] = useState(0);
@@ -136,7 +137,7 @@ export default function AdminPage() {
   const [toDate, setToDate] = useState("");
   const [gamesPage, setGamesPage] = useState(0);
   const GAMES_PAGE_SIZE = 10;
-  const [forbidden, setForbidden] = useState(false);
+  const [authError, setAuthError] = useState<AuthFailure | null>(null);
   const [reviewGameId, setReviewGameId] = useState<number | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<number | null>(null);
 
@@ -161,7 +162,10 @@ export default function AdminPage() {
       return;
     }
     let cancelled = false;
+    let stopped = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
     const poll = async () => {
+      if (stopped) return;
       try {
         const params = new URLSearchParams();
         if (filter !== "all") params.set("status_", filter);
@@ -185,20 +189,25 @@ export default function AdminPage() {
         setSummary(sum);
         setEngine(eng);
         setIsAdmin(true);
-        setForbidden(false);
+        setAuthError(null);
       } catch (e) {
         if (cancelled) return;
-        if (e instanceof ApiError && e.status === 403) {
-          setForbidden(true);
+        const failure = authFailure(e);
+        if (failure) {
+          // Auth won't recover on its own — stop the loop instead of hammering
+          // the API with requests that can only ever 401/403.
+          setAuthError(failure);
           setIsAdmin(false);
+          stopped = true;
+          if (timer) clearInterval(timer);
         }
       }
     };
     poll();
-    const id = setInterval(poll, REFRESH_SEC * 1000);
+    timer = setInterval(poll, REFRESH_SEC * 1000);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      if (timer) clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, filter, gamesPage, nicknameDebounced, fromDate, toDate]);
@@ -220,15 +229,12 @@ export default function AdminPage() {
   const activeGameCount = useMemo(() => games?.filter((g) => g.status === "active").length ?? 0, [games]);
 
   if (!session) return null;
-  if (forbidden || (session && isAdmin === false && sessions === null)) {
-    // The fetch already failed with 403 — show the denial banner.
-    if (forbidden) {
-      return (
-        <div className="mx-auto max-w-xl py-20">
-          <p className="text-sm text-oxblood">{t("admin.forbidden")}</p>
-        </div>
-      );
-    }
+  if (authError) {
+    return (
+      <div className="mx-auto max-w-xl py-20">
+        <AdminAuthNotice kind={authError} />
+      </div>
+    );
   }
 
   return (

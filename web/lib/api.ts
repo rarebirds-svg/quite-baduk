@@ -18,6 +18,19 @@ export class ApiError extends Error {
   }
 }
 
+// 인증 실패의 두 가지 원인. 401은 세션 만료(재로그인하면 풀림), 403은 권한 부족.
+export type AuthFailure = "expired" | "forbidden";
+
+// Classify an auth failure so callers can tell "log in again" from "you can't
+// have this". Returns null for anything that isn't an auth failure — a
+// transient 500 must not be mistaken for an expired session.
+export function authFailure(e: unknown): AuthFailure | null {
+  if (!(e instanceof ApiError)) return null;
+  if (e.status === 401) return "expired";
+  if (e.status === 403) return "forbidden";
+  return null;
+}
+
 // i18n key resolver for any thrown error. Keeps catch sites tidy and
 // guarantees no raw status code (e.g. "errors.500") ever leaks to the UI.
 //

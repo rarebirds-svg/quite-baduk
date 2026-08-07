@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { api, ApiError } from "@/lib/api";
+import { api, authFailure, type AuthFailure } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
+import { AdminAuthNotice } from "@/components/admin/AdminAuthNotice";
 import { formatRank } from "@/components/RankPicker";
 import { CountryFlag } from "@/components/CountryFlag";
 import { useAuthStore } from "@/store/authStore";
@@ -104,32 +105,41 @@ export default function AdminSessionDetailPage() {
   const router = useRouter();
   const { session } = useAuthStore();
   const [detail, setDetail] = useState<AdminSessionDetail | null>(null);
-  const [forbidden, setForbidden] = useState(false);
+  const [authError, setAuthError] = useState<AuthFailure | null>(null);
   const [reviewGameId, setReviewGameId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!session) { router.replace("/"); return; }
     let cancelled = false;
+    let stopped = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
     const poll = async () => {
+      if (stopped) return;
       try {
         const d = await api<AdminSessionDetail>(`/api/admin/sessions/${sessionId}`);
         if (!cancelled) setDetail(d);
       } catch (e) {
-        if (!cancelled && e instanceof ApiError && e.status === 403) {
-          setForbidden(true);
+        if (cancelled) return;
+        const failure = authFailure(e);
+        if (failure) {
+          // Auth won't recover on its own — stop the loop instead of hammering
+          // the API with requests that can only ever 401/403.
+          setAuthError(failure);
+          stopped = true;
+          if (timer) clearInterval(timer);
         }
       }
     };
     poll();
-    const id = setInterval(poll, REFRESH_SEC * 1000);
-    return () => { cancelled = true; clearInterval(id); };
+    timer = setInterval(poll, REFRESH_SEC * 1000);
+    return () => { cancelled = true; if (timer) clearInterval(timer); };
   }, [session, sessionId, router]);
 
   if (!session) return null;
-  if (forbidden) {
+  if (authError) {
     return (
       <div className="mx-auto max-w-xl py-20">
-        <p className="text-sm text-oxblood">{t("admin.forbidden")}</p>
+        <AdminAuthNotice kind={authError} />
       </div>
     );
   }

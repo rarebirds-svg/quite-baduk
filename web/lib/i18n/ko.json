@@ -69,6 +69,8 @@
     "liveBadge": "LIVE",
     "refreshed": "자동 새로고침 {sec}초",
     "forbidden": "관리자만 접근할 수 있습니다.",
+    "sessionExpired": "세션이 만료되어 자동 새로고침을 멈췄습니다.",
+    "relogin": "다시 로그인",
     "filterAll": "전체",
     "filterActive": "진행",
     "filterFinished": "완료",
