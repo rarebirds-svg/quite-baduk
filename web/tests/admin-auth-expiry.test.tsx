@@ -3,17 +3,17 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const apiMock = vi.hoisted(() => vi.fn());
+// zustand는 set() 뒤에도 session 참조를 유지한다. 목이 매 렌더 새 객체를 돌려주면
+// session을 deps로 쓰는 폴링 effect가 재실행돼 루프가 되살아난다 — 실제 동작이
+// 아니라 목의 인공물이므로 참조를 고정한다.
+const SESSION = vi.hoisted(() => ({ id: 1, nickname: "대공" }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
   useParams: () => ({ id: "1" }),
 }));
 vi.mock("@/store/authStore", () => ({
-  useAuthStore: () => ({
-    session: { id: 1, nickname: "대공" },
-    isAdmin: true,
-    setIsAdmin: vi.fn(),
-  }),
+  useAuthStore: () => ({ session: SESSION, isAdmin: true, setIsAdmin: vi.fn() }),
 }));
 vi.mock("@/lib/api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/api")>();
