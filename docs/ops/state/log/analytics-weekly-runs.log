@@ -46,3 +46,46 @@
 - **Telegram 푸시 완료** — `reply` 도구 미노출이라 curl Bot API 폴백, HTTP 200.
 - **운영 로그 기록** — `docs/ops/state/log/2026-06-28.md`에 한 줄 추가. 1회성 세션이므로 종료한다.
 [2026-06-28 09:01:35] analytics-weekly 종료
+[2026-07-05 09:00:04] analytics-weekly 시작
+주간 분석 리포트 완료.
+
+- **리포트 작성** — `docs/ops/state/reports/2026-W27.md` 신규 생성. 이번 주 게임 16판(전주 5판 대비 +11판, +220%), 누적 310판. 글로서리 17편·FAQ 9편(seryeok-silli, spectate-pro 각 1편 신규). 보류 승인 0건, 신규 인시던트 없음. `/api/stats`는 401 인증 응답이라 DB 직접 카운트로 대체하고 리포트에 그 사실을 명기함.
+- **Telegram 발송** — `reply` 도구가 없어 curl Bot API 폴백으로 발송, `"ok":true` 확인 (message_id 2322).
+- **로그 기록** — `docs/ops/state/log/2026-07-05.md`에 한 줄 추가. 세션 종료, 다음 실행은 다음 일요일 launchd.
+[2026-07-05 09:01:35] analytics-weekly 종료
+[2026-07-12 09:00:05] analytics-weekly 시작
+2026-W28 주간 분석 리포트를 작성하고 Telegram으로 발송했습니다.
+
+**핵심 수치** — 이번 주 게임은 3판으로, 전주 16판에서 13판(-81%) 줄었습니다. 누적은 313판입니다. sessions 테이블에 처음으로 행 1건이 적재됐고(지난 주까지 0), 보류 승인과 신규 인시던트는 모두 0건입니다. 콘텐츠는 글로서리 `susangjeon` 1편이 신규 게시되어 글로서리 18편·FAQ 9편이 됐습니다.
+
+**한 가지 짚어둘 점** — `/api/stats`가 401(인증 필요)을 돌려줘서 명세대로 직접 인용하지 못했습니다. 백엔드 자체는 정상입니다(`/api/health` 200, launchd `com.baduk.api` pid 1516이 :8000 LISTEN). W27 리포트에도 같은 401 기록이 있어 이번에도 DB 카운트를 근거로 삼았고, 리포트와 로그 양쪽에 그 사실을 명시했습니다. 이 엔드포인트에 리포트용 인증 경로를 붙일지는 판단이 필요한 부분이라 그대로 두었습니다.
+
+산출물은 `docs/ops/state/reports/2026-W28.md`(리포트)와 `docs/ops/state/log/2026-07-12.md`(운영 로그)이며, Telegram 발송은 ok:true / message_id 2364로 확인됐습니다.
+[2026-07-12 09:01:41] analytics-weekly 종료
+[2026-07-19 09:00:05] analytics-weekly 시작
+Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/baduk/backend/data/*.db) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/daegong/projects/baduk/backend/data/*.db) instead (Edit rules cover all file-editing tools).
+Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/baduk/backend/katago/models/*) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/daegong/projects/baduk/backend/katago/models/*) instead (Edit rules cover all file-editing tools).
+주간 분석 리포트 세션 완료:
+
+- **2026-W29 리포트 작성** — `docs/ops/state/reports/2026-W29.md`. 숫자는 sqlite3 출력 그대로 인용: 이번 주 대국 **0국**(전주 3 → **−100%**), 누적 **313국**, 신규 세션 0, 보드 19줄241·9줄60·13줄12, 핸디캡 0집304 우세, 글로서리18·FAQ9(신규 없음), 보류 승인 2건. `/api/stats` 엔드포인트가 무응답이라 DB 카운트로 대체하고 "(데이터 부족)"으로 명기.
+- **Telegram 요약 발송** — HTTP 200, `ok:true`.
+- **일일 로그** `2026-07-19.md`에 한 줄 기록. idempotent 체크 통과(기존 리포트 없음). 1회성 종료.
+[2026-07-19 09:01:18] analytics-weekly 종료
+[2026-07-26 09:00:06] analytics-weekly 시작
+Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/baduk/backend/data/*.db) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/daegong/projects/baduk/backend/data/*.db) instead (Edit rules cover all file-editing tools).
+Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/baduk/backend/katago/models/*) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/daegong/projects/baduk/backend/katago/models/*) instead (Edit rules cover all file-editing tools).
+2026-W30 주간 리포트를 작성해 `docs/ops/state/reports/2026-W30.md`에 보관하고, Telegram 요약(message_id 2452)과 `docs/ops/state/log/2026-07-26.md` 로그 한 항목을 남겼다.
+
+핵심 수치는 DB 카운트에서 그대로 인용했다 — 이번 주 대국 **18국**(전주 0국) / 누적 **331국**, 신규 세션 **1건**(sessions 테이블에 첫 레코드 적재, 직전 주까지 0), 글로서리 **27편**·FAQ **12편**(합 +12), 보류 승인 **2건**(AP-20260725-01, AP-20260723-01).
+
+한 가지 정정 사항이 있다. 지난 주 리포트는 `/api/stats`를 "무응답"으로 기록했지만 실제로는 **HTTP 401(인증 필요)** 이다 — 백엔드는 살아 있고 `/api/health`는 200이다. 이번 리포트에는 그렇게 적었다.
+[2026-07-26 09:01:26] analytics-weekly 종료
+[2026-08-02 09:00:05] analytics-weekly 시작
+Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/baduk/backend/data/*.db) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/daegong/projects/baduk/backend/data/*.db) instead (Edit rules cover all file-editing tools).
+Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/baduk/backend/katago/models/*) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/daegong/projects/baduk/backend/katago/models/*) instead (Edit rules cover all file-editing tools).
+2026-W31 주간 리포트를 작성했다.
+
+- `docs/ops/state/reports/2026-W31.md` 생성 — 이번 주 대국 **5국**(전주 18국 대비 -13, -72.2%)·누적 336국, `session_history` 신규 5건/누적 424건, 콘텐츠 신규 0편, 보류 승인 3건.
+- 스펙의 `sessions` 카운트는 총 0(활성 세션 테이블이 비어 있고 종료분은 `session_history`로 이관되는 구조)이라 두 수치를 병기했고, `/api/stats`는 HTTP 401(`no_session`)이라 DB 카운트로 대체했다 — 숫자는 모두 명령 출력 그대로다.
+- Telegram 발송 완료(message_id 2493), `docs/ops/state/log/2026-08-02.md`에 기록 추가.
+[2026-08-02 09:01:34] analytics-weekly 종료

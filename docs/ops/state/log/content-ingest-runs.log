@@ -52,3 +52,28 @@ CWI ingest 완료: fetched=1037 new=200 duplicate=837 error=0
 2026-06-28 03:06:21 [info     ] cwi.ingest.complete            duplicate=1037 error=0 fetched=1237 new=200
 CWI ingest 완료: fetched=1237 new=200 duplicate=1037 error=0
 [2026-06-28 03:06:21] content-ingest 종료
+[2026-07-05 03:00:04] content-ingest 시작
+2026-07-05 03:07:16 [info     ] cwi.ingest.capped              cap=200
+2026-07-05 03:07:16 [info     ] cwi.ingest.complete            duplicate=1237 error=0 fetched=1437 new=200
+CWI ingest 완료: fetched=1437 new=200 duplicate=1237 error=0
+[2026-07-05 03:07:16] content-ingest 종료
+[2026-07-12 03:00:05] content-ingest 시작
+2026-07-12 03:08:24 [info     ] cwi.ingest.capped              cap=200
+2026-07-12 03:08:24 [info     ] cwi.ingest.complete            duplicate=1437 error=0 fetched=1637 new=200
+CWI ingest 완료: fetched=1637 new=200 duplicate=1437 error=0
+[2026-07-12 03:08:24] content-ingest 종료
+[2026-07-19 03:00:05] content-ingest 시작
+2026-07-19 03:10:00 [info     ] cwi.ingest.capped              cap=200
+2026-07-19 03:10:00 [info     ] cwi.ingest.complete            duplicate=1637 error=0 fetched=1837 new=200
+CWI ingest 완료: fetched=1837 new=200 duplicate=1637 error=0
+[2026-07-19 03:10:00] content-ingest 종료
+[2026-07-26 03:00:06] content-ingest 시작
+2026-07-26 03:11:00 [info     ] cwi.ingest.capped              cap=200
+2026-07-26 03:11:00 [info     ] cwi.ingest.complete            duplicate=1860 error=0 fetched=2060 new=200
+CWI ingest 완료: fetched=2060 new=200 duplicate=1860 error=0
+[2026-07-26 03:11:00] content-ingest 종료
+[2026-08-02 03:00:05] content-ingest 시작
+2026-08-02 03:12:00 [info     ] cwi.ingest.capped              cap=200
+2026-08-02 03:12:00 [info     ] cwi.ingest.complete            duplicate=2060 error=0 fetched=2260 new=200
+CWI ingest 완료: fetched=2260 new=200 duplicate=2060 error=0
+[2026-08-02 03:12:00] content-ingest 종료
