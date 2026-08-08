@@ -69,6 +69,8 @@
     "liveBadge": "LIVE",
     "refreshed": "Auto-refreshing every {sec}s",
     "forbidden": "Admin only.",
+    "sessionExpired": "Your session expired, so auto-refresh has stopped.",
+    "relogin": "Log in again",
     "filterAll": "All",
     "filterActive": "Active",
     "filterFinished": "Finished",

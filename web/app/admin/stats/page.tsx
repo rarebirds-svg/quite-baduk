@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api, ApiError } from "@/lib/api";
+import { api, authFailure, type AuthFailure } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
+import { AdminAuthNotice } from "@/components/admin/AdminAuthNotice";
 import { useAuthStore } from "@/store/authStore";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -59,7 +60,7 @@ export default function AdminStatsPage() {
   const router = useRouter();
   const { session } = useAuthStore();
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [forbidden, setForbidden] = useState(false);
+  const [authError, setAuthError] = useState<AuthFailure | null>(null);
   const [days, setDays] = useState<DaysOption>(14);
 
   useEffect(() => {
@@ -68,30 +69,40 @@ export default function AdminStatsPage() {
       return;
     }
     let cancelled = false;
+    let stopped = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
     const poll = async () => {
+      if (stopped) return;
       try {
         const s = await api<AdminStats>(`/api/admin/stats?days=${days}`);
         if (cancelled) return;
         setStats(s);
-        setForbidden(false);
+        setAuthError(null);
       } catch (e) {
         if (cancelled) return;
-        if (e instanceof ApiError && e.status === 403) setForbidden(true);
+        const failure = authFailure(e);
+        if (failure) {
+          // Auth won't recover on its own — stop the loop instead of hammering
+          // the API with requests that can only ever 401/403.
+          setAuthError(failure);
+          stopped = true;
+          if (timer) clearInterval(timer);
+        }
       }
     };
     poll();
-    const id = setInterval(poll, REFRESH_SEC * 1000);
+    timer = setInterval(poll, REFRESH_SEC * 1000);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      if (timer) clearInterval(timer);
     };
   }, [session, days, router]);
 
-  if (forbidden) {
+  if (authError) {
     return (
       <div className="space-y-6">
         <Hero title={t("admin.statsHeading")} subtitle={t("admin.statsSubtitle")} />
-        <p className="text-sm text-oxblood">{t("admin.forbidden")}</p>
+        <AdminAuthNotice kind={authError} />
       </div>
     );
   }

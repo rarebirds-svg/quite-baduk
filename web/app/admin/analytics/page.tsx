@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { api, ApiError } from "@/lib/api";
+import { api, authFailure, type AuthFailure } from "@/lib/api";
+import { AdminAuthNotice } from "@/components/admin/AdminAuthNotice";
 import { useAuthStore } from "@/store/authStore";
 
 interface Overview {
@@ -30,7 +31,7 @@ export default function AnalyticsPage() {
   const router = useRouter();
   const [days, setDays] = useState(30);
   const [data, setData] = useState<Overview | null>(null);
-  const [forbidden, setForbidden] = useState(false);
+  const [authError, setAuthError] = useState<AuthFailure | null>(null);
   const [queries, setQueries] = useState<SearchRow[]>([]);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
 
@@ -41,7 +42,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     api<Overview>(`/api/admin/analytics?days=${days}`)
       .then(setData)
-      .catch((e) => { if (e instanceof ApiError && e.status === 403) setForbidden(true); });
+      .catch((e) => { const f = authFailure(e); if (f) setAuthError(f); });
   }, [days]);
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export default function AnalyticsPage() {
     }
   }
 
-  if (forbidden) return <p className="p-8 text-ink-mute">관리자 전용 페이지입니다.</p>;
+  if (authError) return <div className="p-8"><AdminAuthNotice kind={authError} /></div>;
 
   return (
     <div className="mx-auto max-w-5xl p-6">
