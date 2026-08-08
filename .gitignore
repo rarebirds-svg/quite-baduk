@@ -61,6 +61,12 @@ context-notes.md
 # 모바일 점검 스크린샷 산출물
 e2e/screenshots-mobile/
 
+# visual-qa / a11y-auditor 에이전트 산출물 (재실행으로 재생성)
+# baseline만 예외 — visual-qa가 픽셀 diff 기준으로 쓰는 참조 이미지라 추적한다
+e2e/screenshots/
+!e2e/screenshots/baseline/
+e2e/a11y/
+
 # watchdog cooldown 마커 파일 (임시 상태, 커밋 불필요)
 docs/ops/state/.watchdog-cooldown-*
 
@@ -72,3 +78,4 @@ docs/ops/state/.watchdog-cooldown-*
 
 # e2e 일회성 캡처 스크립트 (임시 산출물)
 e2e/capture-end-ui.js
+e2e/visual-qa-*.js
