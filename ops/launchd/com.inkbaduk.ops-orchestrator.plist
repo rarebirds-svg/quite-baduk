@@ -1,4 +1,4 @@
-<!-- 매일 12시·18시 운영 오케스트레이터를 깨우는 launchd 작업 정의. -->
+<!-- 매일 09시·21시 운영 오케스트레이터를 깨우는 launchd 작업 정의. -->
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -13,11 +13,11 @@
   <key>StartCalendarInterval</key>
   <array>
     <dict>
-      <key>Hour</key><integer>12</integer>
+      <key>Hour</key><integer>9</integer>
       <key>Minute</key><integer>0</integer>
     </dict>
     <dict>
-      <key>Hour</key><integer>18</integer>
+      <key>Hour</key><integer>21</integer>
       <key>Minute</key><integer>0</integer>
     </dict>
   </array>
