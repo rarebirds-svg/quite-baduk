@@ -4,12 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const apiMock = vi.hoisted(() => vi.fn());
 // zustand는 set() 뒤에도 session 참조를 유지한다. 목이 매 렌더 새 객체를 돌려주면
-// session을 deps로 쓰는 폴링 effect가 재실행돼 루프가 되살아난다 — 실제 동작이
-// 아니라 목의 인공물이므로 참조를 고정한다.
+// session·router처럼 deps로 쓰이는 값이 재실행돼 루프가 되살아난다 — 실제 동작이
+// 아니라 목의 인공물이므로 참조를 고정한다. (login-history·stats 페이지는 폴링
+// effect의 deps에 router를 포함하므로 router 목도 같은 문제를 겪는다.)
 const SESSION = vi.hoisted(() => ({ id: 1, nickname: "대공" }));
+const ROUTER = vi.hoisted(() => ({ replace: vi.fn(), push: vi.fn() }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ROUTER,
   useParams: () => ({ id: "1" }),
 }));
 vi.mock("@/store/authStore", () => ({
