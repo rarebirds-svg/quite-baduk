@@ -7,6 +7,7 @@ LOG_DIR="$ROOT/docs/ops/state/log"
 INCIDENTS="$ROOT/docs/ops/state/incidents.md"
 COOLDOWN_DIR="$ROOT/docs/ops/state"
 COOLDOWN_SECS=3600   # 같은 잡 1시간 1회 알림
+MARKER_DIR="${MARKER_DIR:-$HOME/.ops-report/markers}"   # 테스트가 픽스처로 덮어쓴다
 
 # 잡 정의: "표시명|로그파일|임계(초)|성공 종료 마커"
 JOBS=(
@@ -102,6 +103,28 @@ for entry in "${JOBS[@]}"; do
     write_cooldown "$job"
     incidents_added=$(( incidents_added + 1 ))
   fi
+done
+
+# 정기 다이제스트 미발송 검사 — 마커 부재가 "발송 실패 또는 미실행" 신호다.
+# 슬롯 정시(09:00·21:00) +30분이 지났는데 마커가 없으면 경보한다.
+today=$(date '+%Y-%m-%d')
+cur_min=$(( $(date '+%H') * 60 + $(date '+%M') ))
+for slot_def in "am|540" "pm|1260"; do   # 09:00=540분, 21:00=1260분
+  IFS='|' read -r slot slot_min <<<"$slot_def"
+  [ "$cur_min" -lt $(( slot_min + 30 )) ] && continue
+  for project in inkbaduk popory; do
+    marker="$MARKER_DIR/$project-$slot-$today"
+    [ -f "$marker" ] && continue
+    key="digest-$project-$slot"
+    if check_cooldown "$key"; then
+      echo "[$key] 미발송이지만 cooldown — skip notify" >&2
+      continue
+    fi
+    msg="[inkbaduk] $project $slot 다이제스트 미발송 — $today 정시 +30분 경과, 마커 없음"
+    "$ROOT/ops/notify.sh" "$msg" || echo "[$key] notify 채널 전부 실패" >&2
+    write_cooldown "$key"
+    incidents_added=$(( incidents_added + 1 ))
+  done
 done
 
 echo "watchdog 검사 완료 — 신규 incident $incidents_added 건"
