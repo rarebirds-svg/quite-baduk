@@ -21,12 +21,26 @@
    끝낸다(feature 패턴 브랜치 push·PR 생성은 🟢). 이슈에 브랜치·SHA·PR 링크를
    코멘트로 남기고 `in-progress`를 뗀다. 결과를 `state/log/YYYY-MM-DD.md`에
    기록한다. **PR 머지는 하지 않는다**(🟡 — 사람).
-5. **보고** — `docs/ops/runbooks/telegram-protocol.md` 알림 형식으로 Telegram에
-   결과(처리한 이슈·브랜치·SHA — 또는 막힌 경우 사유)를 1건 보낸다.
-   - **환경 자가진단 금지.** `ops/ops.env`의 토큰 유무·`--channels` 플래그 가시성으로
-     "발송 불가"를 사전 판단하지 말 것. launchd는 항상 채널을 부여한다(진실 공급원은
-     `~/.claude/channels/telegram/`). reply 도구가 노출돼 있으면 호출하고, 실패할 때만
-     그 에러를 사유로 적는다.
+5. **보고** — Telegram으로 직접 보내지 않는다. 대신 실행 결과를 상태 파일에 기록한다.
+
+   ```bash
+   ops/report-job-status.sh dev-cycle <ok|warn|fail> "<한 줄 요약 — 40자 이내>"
+   ```
+
+   09:00 다이제스트가 이 파일을 읽어 `자동화` 행에 합산한다. 새벽 2시에 알림을 울리지 않기
+   위해 발송을 오케스트레이터로 모았다.
+
+   **예외 — `fail`이면 즉시 경보도 보낸다.** 자동화가 죽은 것은 다음 정기 보고까지 기다릴 수 없다.
+
+   ```bash
+   echo '{"kind":"alert","project":"inkbaduk","at":"<ISO8601 KST>",
+          "what":"<무엇이 실패했나>","impact":"<무엇이 멈추나>","action":"<사람이 할 일>",
+          "once_key":"dev_cycle_fail"}' \
+     | python3 /Users/daegong/projects/scripts/ops-report/send.py \
+         --env-file=$HOME/.claude/channels/telegram/.env
+   ```
+
+   발송이 실패해도(비0 종료) 이 세션의 작업 판정을 바꾸지 않는다.
 
 ## 끝낼 때
 

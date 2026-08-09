@@ -56,9 +56,13 @@
    **숫자는 명령 출력에서 정확히 인용한다.** 환각 금지. 모호하면 "(데이터 부족)"으로
    적는다.
 
-4. **Telegram 푸시** — `docs/ops/runbooks/telegram-protocol.md` 알림 형식.
-   본문 100자 요약 + 보관 경로. `reply` 도구 없으면 curl Bot API 폴백
-   (`ops/ops.env`의 TELEGRAM_CHAT_ID).
+4. **보고** — Telegram으로 직접 보내지 않는다. 리포트 생성 결과를 상태 파일에 기록한다.
+
+   ```bash
+   ops/report-job-status.sh analytics-weekly ok "<주차> 리포트 생성 — 방문 <N>건"
+   ```
+
+   일요일 09:00 다이제스트가 `자동화` 행에 한 줄로 싣고 파일 경로를 푸터로 남긴다.
 
 5. **로그** — `docs/ops/state/log/YYYY-MM-DD.md`에 한 줄.
 
