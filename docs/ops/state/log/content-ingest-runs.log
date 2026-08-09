@@ -77,3 +77,8 @@ CWI ingest 완료: fetched=2060 new=200 duplicate=1860 error=0
 2026-08-02 03:12:00 [info     ] cwi.ingest.complete            duplicate=2060 error=0 fetched=2260 new=200
 CWI ingest 완료: fetched=2260 new=200 duplicate=2060 error=0
 [2026-08-02 03:12:00] content-ingest 종료
+[2026-08-09 03:00:04] content-ingest 시작
+2026-08-09 03:12:52 [info     ] cwi.ingest.capped              cap=200
+2026-08-09 03:12:52 [info     ] cwi.ingest.complete            duplicate=2260 error=0 fetched=2460 new=200
+CWI ingest 완료: fetched=2460 new=200 duplicate=2260 error=0
+[2026-08-09 03:12:52] content-ingest 종료
