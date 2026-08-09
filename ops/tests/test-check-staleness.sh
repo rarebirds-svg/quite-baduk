@@ -32,13 +32,16 @@ make_fixture() {
     echo "[$recent] backup 시작"
     echo "[$recent] backup 완료"
   } > "$logdir/backup.out.log"
+  # 다이제스트 마커도 픽스처 안에 둔다 — 실제 ~/.ops-report/markers를 읽으면
+  # 이 테스트가 벽시계 시각과 운영 마커 상태에 의존하게 된다.
+  mkdir -p "$root/markers"
   echo "$root"
 }
 
 # 이 케이스에서 incident가 난 잡 이름들을 개행 구분으로 출력한다.
 detected_jobs() {
   local root="$1"
-  ROOT="$root" bash "$TARGET" >/dev/null 2>&1
+  ROOT="$root" MARKER_DIR="$root/markers" bash "$TARGET" >/dev/null 2>&1
   local incidents="$root/docs/ops/state/incidents.md"
   [ -f "$incidents" ] || return 0
   grep -oE '^### WD-[0-9]+-[0-9]+ — [a-z-]+ stale' "$incidents" | awk '{print $4}'

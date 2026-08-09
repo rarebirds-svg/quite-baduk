@@ -37,8 +37,12 @@
           "what":"<무엇이 실패했나>","impact":"<무엇이 멈추나>","action":"<사람이 할 일>",
           "once_key":"dev_cycle_fail"}' \
      | python3 /Users/daegong/projects/scripts/ops-report/send.py \
-         --env-file=$HOME/.claude/channels/telegram/.env
+         --env-file=$HOME/.claude/channels/telegram/.env \
+         --env-file=/Users/daegong/projects/baduk/ops/ops.env
    ```
+
+   `--env-file`은 반복 가능하다. 토큰은 첫 파일, `TELEGRAM_CHAT_ID`는 `ops/ops.env`에 있으므로
+   둘을 다 넘긴다 — 하나만 넘기면 종료 코드 `4`로 발송이 무산된다.
 
    발송이 실패해도(비0 종료) 이 세션의 작업 판정을 바꾸지 않는다.
 

@@ -35,7 +35,10 @@
 
    - `service` — 헬스체크 결과. 예) `api·web 200 · 5xx 0/4.9k`
    - `jobs` — `state/jobs/*.json`을 전부 읽어 합산한다. 하나라도 `fail`이면 `fail`,
-     `warn`이 있으면 `warn`. 예) `잡 6/6 · 백업 04:00 ✓`
+     `warn`이 있으면 `warn`. 예) `잡 3/3 · 백업 04:00 ✓`
+     이 행은 `state/jobs/*.json`을 쓰는 세 잡(`dev-cycle`·`content-draft`·`analytics-weekly`)만
+     보고하며, **신선도는 watchdog의 책임이고 이 행의 책임이 아니다** — 합산은 `at`을 일부러
+     무시하므로 `fail`은 해당 잡이 다음에 실행될 때까지 다이제스트에 남는다.
    - `deploy` — `git rev-list --count HEAD..origin/main`과 **라이브 반영 여부**를 함께 본다.
      머지와 배포는 다르다 — 카운트 0이어도 프로세스가 옛 빌드를 물고 있을 수 있다.
      미반영이 있으면 `warn`. 예) `2커밋 미반영 72h`
@@ -52,8 +55,12 @@
 
    ```bash
    echo "$PAYLOAD" | python3 /Users/daegong/projects/scripts/ops-report/send.py \
-     --env-file=$HOME/.claude/channels/telegram/.env
+     --env-file=$HOME/.claude/channels/telegram/.env \
+     --env-file=/Users/daegong/projects/baduk/ops/ops.env
    ```
+
+   `--env-file`은 반복 가능하다. 토큰은 첫 파일, `TELEGRAM_CHAT_ID`는 `ops/ops.env`에 있으므로
+   둘을 다 넘긴다 — 하나만 넘기면 종료 코드 `4`가 나고 성공 마커가 남지 않아 watchdog가 오경보한다.
 
    종료 코드가 `2`면 계약 위반이니 JSON을 고쳐 다시 보낸다. `3`·`4`는 발송 계층 문제이므로
    사유를 `state/log/`에 적고 넘어간다 — **알림 실패로 이 사이클을 실패로 판정하지 않는다.**

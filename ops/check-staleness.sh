@@ -11,7 +11,7 @@ MARKER_DIR="${MARKER_DIR:-$HOME/.ops-report/markers}"   # 테스트가 픽스처
 
 # 잡 정의: "표시명|로그파일|임계(초)|성공 종료 마커"
 JOBS=(
-  "orchestrator|orchestrator-runs.log|64800|orchestrator 종료"      # 18h (plist는 12:00·18:00 두 슬롯, 야간 갭 18h 허용)
+  "orchestrator|orchestrator-runs.log|64800|orchestrator 종료"      # 18h (plist는 09:00·21:00 두 슬롯, 최장 갭 12h + 6h 마진)
   "dev-cycle|dev-cycle-runs.log|108000|dev-cycle 종료"              # 30h
   "content-draft|content-draft-runs.log|432000|content-draft 종료"  # 5d (plist 주 2회 토·수 02:00, 최장 4d 갭 + 1d 마진)
   "content-ingest|content-ingest-runs.log|777600|content-ingest 종료" # 9d (plist 주 1회 일 03:00, 7d 주기 + 2d 마진)
@@ -120,7 +120,7 @@ for slot_def in "am|540" "pm|1260"; do   # 09:00=540분, 21:00=1260분
       echo "[$key] 미발송이지만 cooldown — skip notify" >&2
       continue
     fi
-    msg="[inkbaduk] $project $slot 다이제스트 미발송 — $today 정시 +30분 경과, 마커 없음"
+    msg="[$project] $slot 다이제스트 미발송 — $today 정시 +30분 경과, 마커 없음"
     "$ROOT/ops/notify.sh" "$msg" || echo "[$key] notify 채널 전부 실패" >&2
     write_cooldown "$key"
     incidents_added=$(( incidents_added + 1 ))
