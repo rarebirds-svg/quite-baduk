@@ -108,7 +108,7 @@ done
 # 정기 다이제스트 미발송 검사 — 마커 부재가 "발송 실패 또는 미실행" 신호다.
 # 슬롯 정시(09:00·21:00) +30분이 지났는데 마커가 없으면 경보한다.
 today=$(date '+%Y-%m-%d')
-cur_min=$(( $(date '+%H') * 60 + $(date '+%M') ))
+cur_min=$(( 10#$(date '+%H') * 60 + 10#$(date '+%M') ))
 for slot_def in "am|540" "pm|1260"; do   # 09:00=540분, 21:00=1260분
   IFS='|' read -r slot slot_min <<<"$slot_def"
   [ "$cur_min" -lt $(( slot_min + 30 )) ] && continue
