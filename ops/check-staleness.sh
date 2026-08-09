@@ -2,7 +2,10 @@
 # launchd 잡들의 마지막 성공 실행 timestamp가 임계 초과로 stale인지 검사하고 incident·알림을 발생시킨다.
 set -euo pipefail
 
-ROOT="${ROOT:-/Users/daegong/projects/baduk}"   # 테스트가 픽스처 디렉터리로 덮어쓴다
+if [ -z "${ROOT:-}" ]; then
+  echo "check-staleness.sh: ROOT를 명시적으로 지정해야 한다 — 예) ROOT=/path/to/repo $0" >&2
+  exit 1
+fi
 LOG_DIR="$ROOT/docs/ops/state/log"
 INCIDENTS="$ROOT/docs/ops/state/incidents.md"
 COOLDOWN_DIR="$ROOT/docs/ops/state"
