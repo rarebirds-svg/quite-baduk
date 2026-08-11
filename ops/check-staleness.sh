@@ -10,6 +10,9 @@ LOG_DIR="$ROOT/docs/ops/state/log"
 INCIDENTS="$ROOT/docs/ops/state/incidents.md"
 COOLDOWN_DIR="$ROOT/docs/ops/state"
 COOLDOWN_SECS=3600   # 같은 잡 1시간 1회 알림
+# 다이제스트 미발송은 잡 stale과 달리 즉시 고쳐지지 않는다. watchdog 주기(1h)와 쿨다운이 같으면
+# 매 실행마다 쿨다운이 갓 만료돼 억제가 사실상 무효가 되므로 주기보다 길게 둔다.
+DIGEST_COOLDOWN_SECS=21600   # 6h
 MARKER_DIR="${MARKER_DIR:-$HOME/.ops-report/markers}"   # 테스트가 픽스처로 덮어쓴다
 
 # 잡 정의: "표시명|로그파일|임계(초)|성공 종료 마커"
@@ -51,12 +54,13 @@ extract_last_ts() {
 
 check_cooldown() {
   local job="$1"
+  local secs="${2:-$COOLDOWN_SECS}"
   local file="$COOLDOWN_DIR/.watchdog-cooldown-$job"
   [ -f "$file" ] || return 1   # cooldown 없음 → 알림 가능
   local last
   last=$(cat "$file" 2>/dev/null || echo 0)
   local diff=$(( now - last ))
-  [ "$diff" -lt "$COOLDOWN_SECS" ]   # true면 아직 cooldown 중
+  [ "$diff" -lt "$secs" ]   # true면 아직 cooldown 중
 }
 
 write_cooldown() {
@@ -119,7 +123,7 @@ for slot_def in "am|540" "pm|1260"; do   # 09:00=540분, 21:00=1260분
     marker="$MARKER_DIR/$project-$slot-$today"
     [ -f "$marker" ] && continue
     key="digest-$project-$slot"
-    if check_cooldown "$key"; then
+    if check_cooldown "$key" "$DIGEST_COOLDOWN_SECS"; then
       echo "[$key] 미발송이지만 cooldown — skip notify" >&2
       continue
     fi
