@@ -221,3 +221,10 @@ Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/badu
 - 유일한 slug 미매칭이던 `kasaeng`은 실제로는 `web/content/glossary/sahwal.md`로 이미 게시돼 있다(`grep -l '^title: 사활'`로 실측). 시드 파일이 통합 이전 slug를 들고 있어 기계적 집합 차집합에서는 후보로 잡히지만, title 기준으로는 커버돼 있어 중복 작성을 피했다.
 - 기록은 `docs/ops/state/log/2026-08-08.md`에 남겼다. 참고로 시드가 고갈된 상태라 사람이 `seed-glossary.yml`/`seed-faq.yml`에 항목을 추가하기 전까지 다음 사이클도 같은 결론이 반복된다 — 시드 확장과 `kasaeng`→`sahwal` slug 정정은 사람 판단 영역이라 파일을 수정하지 않았다.
 [2026-08-08 02:01:25] content-draft 종료
+[2026-08-12 02:00:03] content-draft 시작
+콘텐츠 초안 사이클 완료 — 무작업 종료다.
+
+- 시드 대조 결과 글로서리 18/18, FAQ 9/9로 **미작성 후보가 양쪽 모두 0개**라 초안·QA·게시 단계에 진입하지 않았다. 파일명이 없던 `kasaeng`은 `sahwal.md`의 frontmatter `title: 사활`로 이미 커버된 slug 통합분이라 gap이 아니다.
+- 규약대로 기존 항목은 개정하지 않았고, `docs/ops/state/log/2026-08-12.md`에 사유를 기록했다. `ops/report-job-status.sh content-draft ok "처리할 토픽 없음"` 기록 완료(다음 다이제스트가 합산).
+- 다음 사이클이 집을 토픽이 생기려면 `docs/ops/content/seed-glossary.yml`·`seed-faq.yml`에 시드 추가가 필요하다 — 현재 시드는 고갈 상태다.
+[2026-08-12 02:01:19] content-draft 종료
