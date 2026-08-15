@@ -359,6 +359,38 @@ ls -t /Users/daegong/projects/baduk/web/content/glossary | head -5
 
 ---
 
+## 5-5. 배포 순서 주의 — 마이그레이션 선행 필수
+
+이 브랜치는 alembic 마이그레이션 2개를 포함한다.
+
+- **0018** — 닉네임 유니크 제약 폐지 (일반 닉네임 중복 허용)
+- **0019** — analytics_salts 테이블 신규 추가 (방문 비콘 솔트 저장)
+
+**prod에 코드가 반영되기 전에** `cd backend && source .venv311/bin/activate && alembic upgrade head`를 먼저 실행해야 한다.
+
+### 배포 순서 위반 시 발생하는 문제
+
+1. **0018 미적용** → 중복 닉네임 재등록 요청이 HTTP 500으로 실패. DB UNIQUE 제약이 여전히 있기 때문.
+2. **0019 미적용** → 모든 방문 비콘(`/api/analytics/hit`) 요청이 HTTP 500으로 실패. 방문 통계 전량 유실되고 `.err` 로그 폭증.
+
+launchd 재시작(`launchctl kickstart -k gui/501/com.baduk.api`)은 **마이그레이션 후에** 한다.
+
+---
+
+## 5-6. 어드민 예약 키 90일 락아웃 복구 절차
+
+어드민 예약 닉네임("대공", "레어버드")은 라이브 세션이 존재하면 재등록이 HTTP 409로 막힌다. 세션 수명이 90일이 되면서, 어드민 세션을 쥔 브라우저를 잃으면(기기 분실·쿠키 삭제) 최대 90일간 새 어드민 세션을 만들 수 없다.
+
+### 복구 커맨드
+
+```bash
+sqlite3 /Users/daegong/projects/baduk/backend/data/baduk.db "DELETE FROM sessions WHERE nickname_key='대공';"
+```
+
+레어버드도 동일하게 `nickname_key='레어버드'`로 삭제한다. 실행 후 새 브라우저에서 해당 닉네임으로 재등록하면 된다.
+
+---
+
 ## 참고 문서
 
 - [gsc-sync.md](gsc-sync.md) — GSC 동기화 잡 자체의 운영

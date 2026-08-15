@@ -1,8 +1,8 @@
-"""Nickname normalization, validation, and uniqueness-key derivation.
+"""Nickname normalization, validation, and admin reserved-key check.
 
-The uniqueness key (``to_key``) is what the in-memory NicknameRegistry and
-the DB ``sessions.nickname_key`` UNIQUE constraint compare on. The display
-form (``normalize`` output) is what we show back to the user.
+Normalized nicknames are stored in the DB; general nicknames allow duplicates.
+The ``to_key`` function provides case-insensitive comparison for checking
+against admin reserved nicknames (``ADMIN_NICKNAME_KEYS``).
 """
 from __future__ import annotations
 
