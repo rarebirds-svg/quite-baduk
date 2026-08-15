@@ -98,10 +98,12 @@ export default function TopNav() {
           )}
           {!session && (
             <>
-              {/* 비로그인도 열람 가능한 공개 콘텐츠. 좁은 화면에선 폭이
-                  모자라므로 프로 기보는 sm 이상에서만 노출한다 —
-                  관전 허브의 프로 탭으로도 도달할 수 있다. */}
-              <Button asChild size="sm" variant="outline">
+              {/* 비로그인도 열람 가능한 공개 콘텐츠. 375px에선 CTA 옆에 보조
+                  링크가 하나만 들어가므로(브랜드 96 + 토글 88 + 여백을 빼면
+                  약 159px, "바로 시작" 76 + "관전" 48 + gap 8 = 132) 관전만
+                  남기고 나머지는 sm 이상에서 노출한다. 프로 기보는 관전 허브의
+                  프로 탭으로, 일일 챌린지는 콘텐츠 상세의 PlayCta로 도달한다. */}
+              <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/daily">{t("nav.daily")}</Link>
               </Button>
               <Button asChild size="sm" variant="outline">
