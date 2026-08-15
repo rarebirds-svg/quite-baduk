@@ -1,10 +1,10 @@
-// nickname-only 세션 가입 → 5k 호선 게임 생성 → 한 수 → 기권 → 히스토리 단언 — 전체 happy path.
+// 원클릭 시작 → 한 수 → 기권 → 히스토리 단언 — 전체 happy path.
 import { test, expect } from "@playwright/test";
-import { createSession, createGame } from "./helpers";
+import { quickStart } from "./helpers";
 
-test("nickname session, create 5k even game, play a move, resign, history shows game", async ({ page }) => {
-  await createSession(page);
-  await createGame(page, { rank: "5k", handicap: 0 });
+test("quick start, play a move, resign, history shows game", async ({ page }) => {
+  // 닉네임 입력 + 버튼 클릭 2번으로 9줄 9급 호선 대국이 열린다.
+  await quickStart(page);
 
   // 보드 SVG 렌더 단언 — 원본 유지.
   await expect(page.locator("svg[aria-label*='Go board']")).toBeVisible();

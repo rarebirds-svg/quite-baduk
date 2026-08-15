@@ -1,17 +1,12 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { api, errorMessageKey } from "@/lib/api";
-import { useAuthStore, type Session } from "@/store/authStore";
 import { useT } from "@/lib/i18n";
-import { setSessionToken } from "@/lib/sessionToken";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { BoardPreview } from "@/components/editorial/BoardPreview";
 import { NewsHook } from "@/components/editorial/NewsHook";
 import { ClusterLinks } from "@/components/editorial/ClusterLinks";
-
-type CheckResp = { available: boolean; reason?: "taken" | "invalid" };
+import QuickStartForm from "@/components/QuickStartForm";
 
 const HERO_SLOTS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -24,71 +19,13 @@ function pickHeroSlot(): (typeof HERO_SLOTS)[number] {
 
 export default function NicknameGate() {
   const t = useT();
-  const router = useRouter();
-  const session = useAuthStore((s) => s.session);
-  const setSession = useAuthStore((s) => s.setSession);
 
-  const [nickname, setNickname] = useState("");
-  const [status, setStatus] = useState<"idle" | "checking" | "available" | "taken" | "invalid">("idle");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   // Hero copy rotates: picked at mount so the reader gets variety across
   // visits without jittering while filling out the form. Lazy init avoids
   // running Math.random during SSR (hydration mismatch would flash the
   // fallback copy for a frame).
   const [heroSlot, setHeroSlot] = useState<(typeof HERO_SLOTS)[number] | null>(null);
   useEffect(() => { setHeroSlot(pickHeroSlot()); }, []);
-
-  // If the user already has a live session (came back via existing cookie),
-  // skip the form and go straight to the game flow.
-  useEffect(() => {
-    if (session) router.replace("/game/new");
-  }, [session, router]);
-
-  // Debounced availability check.
-  useEffect(() => {
-    const n = nickname.trim();
-    if (!n) { setStatus("idle"); return; }
-    setStatus("checking");
-    const t = setTimeout(async () => {
-      try {
-        const r = await api<CheckResp>(`/api/session/nickname/check?name=${encodeURIComponent(n)}`);
-        if (r.available) setStatus("available");
-        else setStatus(r.reason === "taken" ? "taken" : "invalid");
-      } catch {
-        setStatus("idle");
-      }
-    }, 400);
-    return () => clearTimeout(t);
-  }, [nickname]);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (submitting) return;
-    const n = nickname.trim();
-    if (!n) return;
-    setError(null);
-    setSubmitting(true);
-    try {
-      const sess = await api<Session>("/api/session", {
-        method: "POST",
-        body: JSON.stringify({ nickname: n }),
-      });
-      await setSessionToken(sess.token ?? null);
-      setSession(sess);
-      router.replace("/game/new");
-    } catch (e) {
-      setError(t(`errors.${errorMessageKey(e)}`));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const hint =
-    status === "available" ? t("session.nicknameAvailable") :
-    status === "taken" ? t("session.nicknameTaken") :
-    status === "invalid" ? t("session.nicknameInvalid") :
-    status === "checking" ? "…" : "";
 
   // Fall back to slot 1 during SSR so there's no layout shift.
   const slot = heroSlot ?? 1;
@@ -170,41 +107,15 @@ export default function NicknameGate() {
 
       <RuleDivider weight="strong" />
 
-      {/* Nickname form — anchored as the call to action */}
+      {/* Quick start — anchored as the call to action */}
       <section id="start" className="mt-10">
         <p className="font-sans text-xs font-semibold uppercase tracking-label text-ink-mute mb-3">
           {t("home.scrollHint")}
         </p>
-        <form onSubmit={submit} className="flex flex-col gap-3 md:flex-row md:items-start">
-          <div className="flex-1">
-            <input
-              autoFocus
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder={t("session.nicknamePlaceholder")}
-              maxLength={32}
-              className="w-full border border-ink/20 rounded-sm bg-paper px-4 py-3 text-ink text-lg outline-none transition-base focus:border-oxblood"
-              aria-label={t("session.nicknameHeading")}
-              aria-describedby="nickname-hint"
-              autoComplete="off"
-            />
-            <p id="nickname-hint" aria-live="polite" className="mt-2 text-sm text-ink-mute min-h-[1.25rem]">
-              {hint}
-            </p>
-            {error && <p role="alert" className="mt-1 text-sm text-oxblood">{error}</p>}
-            <p className="mt-2 font-sans text-xs text-ink-mute leading-relaxed">
-              {t("home.footerNote")}
-            </p>
-          </div>
-          <button
-            type="submit"
-            disabled={submitting || status !== "available"}
-            className="border border-ink bg-ink text-paper rounded-sm px-6 py-3 font-sans text-sm font-semibold uppercase tracking-label transition-base hover:bg-oxblood hover:border-oxblood disabled:opacity-30 disabled:hover:bg-ink disabled:hover:border-ink"
-          >
-            {t("session.nicknameSubmit")}
-          </button>
-        </form>
+        <QuickStartForm />
+        <p className="mt-3 font-sans text-xs text-ink-mute leading-relaxed">
+          {t("home.footerNote")}
+        </p>
       </section>
 
       {/* Value props — editorial 3-column lede */}
