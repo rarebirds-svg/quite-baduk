@@ -1,6 +1,6 @@
 "use client";
 // 프로 기보 목록 — 명국선·세계기전·최근 토글과 서버 검색·페이지네이션을 갖춘 관전 탭 본문.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
@@ -31,7 +31,7 @@ interface ProRow {
   view_count: number;
 }
 
-interface ProListResponse {
+export interface ProListResponse {
   rows: ProRow[];
   total: number;
 }
@@ -46,7 +46,20 @@ const COLLECTION_LABEL: Record<Collection, string> = {
 };
 const PAGE_SIZE = 50;
 
-export function ProGameList() {
+// 서버가 미리 받아올 첫 화면 질의 — 아래 초기 state와 한 글자도 어긋나면 안 되므로
+// 같은 상수에서 만들어 둔다. 서버 프리페치와 초기 클라이언트 질의를 일치시킨다.
+export const PRO_LIST_INITIAL_QUERY = new URLSearchParams({
+  collection: "masterpiece",
+  sort: "recent",
+  limit: String(PAGE_SIZE),
+  offset: "0",
+}).toString();
+
+export function ProGameList({
+  initialData = null,
+}: {
+  initialData?: ProListResponse | null;
+}) {
   const t = useT();
   const [locale] = useLocale();
   const router = useRouter();
@@ -55,7 +68,7 @@ export function ProGameList() {
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [sort, setSort] = useState<"recent" | "oldest" | "popular">("recent");
-  const [data, setData] = useState<ProListResponse | null>(null);
+  const [data, setData] = useState<ProListResponse | null>(initialData);
 
   // 검색어 디바운스 — 입력이 멎고 300ms 뒤 서버 질의. 새 검색은 첫 페이지로.
   useEffect(() => {
@@ -66,9 +79,15 @@ export function ProGameList() {
     return () => clearTimeout(id);
   }, [q]);
 
+  // 서버가 실어준 첫 화면은 지우지 않고 그대로 둔 채 뒤에서 갱신만 한다 — SSR로 그린
+  // 목록이 마운트 직후 "…"로 깜빡이는 것을 막는다. 필터가 바뀐 뒤로는 종전대로 비운다.
+  // 서버 결과가 비어 있으면(일시 장애 등) 지킬 것이 없으므로 평소대로 다시 받는다.
+  const keepInitial = useRef((initialData?.rows.length ?? 0) > 0);
+
   useEffect(() => {
     let cancelled = false;
-    setData(null);
+    if (keepInitial.current) keepInitial.current = false;
+    else setData(null);
     const params = new URLSearchParams({
       collection,
       sort,
