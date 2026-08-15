@@ -1,4 +1,5 @@
 from app.models.analysis_cache import AnalysisCache
+from app.models.analytics_salt import AnalyticsSalt
 from app.models.game import Game
 from app.models.move import Move
 from app.models.pro_game import ProGame
@@ -16,4 +17,5 @@ __all__ = [
     "ProGame",
     "VisitHit",
     "SearchQuery",
+    "AnalyticsSalt",
 ]

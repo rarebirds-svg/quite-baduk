@@ -28,3 +28,23 @@ async def test_prune_old_visits(client):
     async with AsyncSessionLocal() as db:
         paths = [r.path for r in (await db.execute(select(VisitHit))).scalars().all()]
     assert paths == ["/recent"]
+
+
+@pytest.mark.asyncio
+async def test_prune_removes_old_salts_only(client):
+    from app.db import AsyncSessionLocal
+    from app.models.analytics_salt import AnalyticsSalt
+
+    old_day = (datetime.utcnow() - timedelta(days=200)).strftime("%Y-%m-%d")
+    recent_day = (datetime.utcnow() - timedelta(days=10)).strftime("%Y-%m-%d")
+    async with AsyncSessionLocal() as db:
+        db.add(AnalyticsSalt(day=old_day, salt="old"))
+        db.add(AnalyticsSalt(day=recent_day, salt="recent"))
+        await db.commit()
+
+    async with AsyncSessionLocal() as db:
+        await prune_old_visits(db, days=180)
+
+    async with AsyncSessionLocal() as db:
+        days = [r.day for r in (await db.execute(select(AnalyticsSalt))).scalars().all()]
+    assert days == [recent_day]

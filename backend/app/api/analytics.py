@@ -39,13 +39,15 @@ async def hit(body: HitBody, request: Request, db: DbSession) -> Response:
         raise HTTPException(status_code=429, detail="rate_limited")
     host = parse_referrer_host(body.referrer)
     day = datetime.now(UTC).strftime("%Y-%m-%d")
+    # 솔트 조회는 방문 행을 붙이기 전에 끝낸다 — 캐시 미스 시 내부에서 커밋하기 때문이다.
+    salt = await daily_salt(db, day)
     db.add(
         VisitHit(
             path=body.path[:512],
             referrer_host=host,
             source=classify_source(host),
             country=client_country(request),
-            visitor_hash=visitor_hash(ip, daily_salt(day)),
+            visitor_hash=visitor_hash(ip, salt),
             device=_device(ua),
         )
     )
