@@ -228,3 +228,14 @@ Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/badu
 - 규약대로 기존 항목은 개정하지 않았고, `docs/ops/state/log/2026-08-12.md`에 사유를 기록했다. `ops/report-job-status.sh content-draft ok "처리할 토픽 없음"` 기록 완료(다음 다이제스트가 합산).
 - 다음 사이클이 집을 토픽이 생기려면 `docs/ops/content/seed-glossary.yml`·`seed-faq.yml`에 시드 추가가 필요하다 — 현재 시드는 고갈 상태다.
 [2026-08-12 02:01:19] content-draft 종료
+[2026-08-15 02:00:03] content-draft 시작
+Status recorded. Summary of this cycle:
+
+**무작업 사이클 — 처리할 토픽 없음.**
+
+- 시드 슬러그가 **전량 게시 완료**다. `seed-glossary.yml` 18개 / `seed-faq.yml` 9개 모두 `web/content/`에 이미 존재해 미작성 후보가 양쪽 다 0개, 게시 비율 1.00이라 most-behind 균형 판정도 적용할 게 없었다. 초안·QA·게시·push·IndexNow 전부 미실행, 커밋 0건.
+- 유일한 슬러그 불일치인 `kasaeng`는 결번이 아니다 — 시드 항목의 title이 **사활**이고 `web/content/glossary/sahwal.md`로 이미 게시돼 있다(옛 `kasaeng` → `sahwal` 308 통합). 파일명만 보고 미작성으로 오판했다면 폐기 슬러그를 되살리고 사활 문서를 이중화했을 것이라 생성하지 않았다.
+- `docs/ops/state/log/2026-08-15.md` 기록 + `report-job-status.sh content-draft ok "처리할 토픽 없음"` 반영(`jobs/content-draft.json` 확인). 로그 파일 커밋은 선례대로 09:00 오케스트레이터에 맡겼다.
+
+**사람 판단 필요** — 시드가 고갈됐으므로 다음 사이클(8/19 수)도 동일하게 무작업이 반복된다. `seed-glossary.yml`·`seed-faq.yml`에 신규 토픽을 보충해야 content-draft가 다시 일한다.
+[2026-08-15 02:01:17] content-draft 종료
