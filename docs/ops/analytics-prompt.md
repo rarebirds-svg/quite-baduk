@@ -28,6 +28,20 @@
    # 컬럼 주의: games는 started_at, sessions는 created_at.
    ```
 
+   **유입 소스 (visit_hits 주간 집계)** — 어디서 들어오는지가 콘텐츠 판단의 근거다.
+   세 가지를 모두 뽑는다. 읽기 전용 SELECT만 쓴다.
+   ```bash
+   # source 분포 (search/direct/internal/referral) — 주간 방문 수와 순방문자 수.
+   sqlite3 backend/data/baduk.db "SELECT source, COUNT(*) AS hits, COUNT(DISTINCT visitor_hash) AS visitors FROM visit_hits WHERE created_at >= datetime('now', '-7 days') GROUP BY source ORDER BY hits DESC;"
+   # 상위 referrer_host — 검색엔진·외부 링크 출처.
+   sqlite3 backend/data/baduk.db "SELECT referrer_host, COUNT(*) FROM visit_hits WHERE created_at >= datetime('now', '-7 days') AND referrer_host IS NOT NULL AND source != 'internal' GROUP BY referrer_host ORDER BY 2 DESC LIMIT 10;"
+   # 상위 랜딩 경로군 — 첫 두 세그먼트로 묶어 글로서리·FAQ·프로기보 등 섹션 단위로 본다.
+   sqlite3 backend/data/baduk.db "SELECT CASE WHEN instr(substr(path,2),'/')>0 THEN substr(path,1,instr(substr(path,2),'/')) ELSE path END AS section, COUNT(*) AS hits, COUNT(DISTINCT visitor_hash) AS visitors FROM visit_hits WHERE created_at >= datetime('now', '-7 days') GROUP BY section ORDER BY hits DESC LIMIT 10;"
+   # 전주 대비: 위 첫 쿼리의 WHERE를 created_at >= datetime('now','-14 days') AND created_at < datetime('now','-7 days')로 바꿔 한 번 더.
+   ```
+   주의. `visit_hits.created_at`은 UTC naive이고, 봇은 수집 단계에서 이미 걸러져 있다.
+   `source='internal'`은 사이트 내부 이동이므로 신규 유입 판단에서 분리해 읽는다.
+
    추가 운영 카운트:
    ```bash
    # 보류 승인 — '## 대기 중'~'## 처리 완료' 구간의 실제 AP 항목(### AP-)만 센다.
@@ -48,6 +62,8 @@
    본문 구성:
    - **사용량** — 이번 주 게임 수 / 전체 누적, 전주 대비 증감(±N, ±%).
    - **세션** — 이번 주 신규 세션 / 전체 누적. (재방문 정밀 추정은 불가 — 단순 카운트.)
+   - **유입** — source 분포(hits·순방문자, 전주 대비 증감), 상위 referrer_host 3개,
+     상위 랜딩 경로군 3개. 검색 유입이 어느 섹션으로 떨어지는지 한 줄로 짚는다.
    - **분포** — 인기 보드 크기(9·13·19), 핸디캡 분포 상위.
    - **콘텐츠** — 글로서리·FAQ 게시 수. 신규 1개 있으면 강조.
    - **운영** — 보류 승인 건, incidents 최근.
