@@ -15,7 +15,9 @@ import { Input } from "@/components/ui/input";
 // 랜딩의 다른 요소(보드 프리뷰 등)가 이 입력에 포커스를 줄 수 있도록 id를 공개한다.
 export const QUICK_START_INPUT_ID = "quickstart-nickname";
 
-export default function QuickStartForm() {
+// autoFocus는 랜딩처럼 폼이 화면의 주역일 때만 켠다. 콘텐츠 본문 하단에 삽입될
+// 때는 꺼서 페이지가 열리자마자 CTA로 스크롤이 튀는 것을 막는다.
+export default function QuickStartForm({ autoFocus = true }: { autoFocus?: boolean }) {
   const t = useT();
   const router = useRouter();
   const session = useAuthStore((s) => s.session);
@@ -67,7 +69,7 @@ export default function QuickStartForm() {
           <div className="flex-1">
             <Input
               id={QUICK_START_INPUT_ID}
-              autoFocus
+              autoFocus={autoFocus}
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               placeholder={t("session.nicknamePlaceholder")}

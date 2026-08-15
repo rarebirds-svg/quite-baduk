@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ProGameScreen, {
   type ProGameDetail,
 } from "@/components/screens/ProGameScreen";
+import PlayCta from "@/components/editorial/PlayCta";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const BASE = "https://inkbaduk.com";
@@ -51,7 +52,12 @@ export default async function ProGameByPath({
   if (game === "not_found") notFound();
   if (game === "unavailable") {
     // 서버 fetch 실패 시 기존 클라이언트 fetch로 폴백 — 동작은 전환 이전과 동일
-    return <ProGameScreen gameId={Number(params.id)} />;
+    return (
+      <>
+        <ProGameScreen gameId={Number(params.id)} />
+        <PlayCta className="mt-12" />
+      </>
+    );
   }
   return (
     <>
@@ -62,6 +68,7 @@ export default async function ProGameByPath({
         }}
       />
       <ProGameScreen gameId={game.id} initialGame={game} />
+      <PlayCta className="mt-12" />
     </>
   );
 }

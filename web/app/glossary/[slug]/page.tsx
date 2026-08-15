@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getContent } from "../../../lib/content";
+import PlayCta from "@/components/editorial/PlayCta";
 
 const BASE = "https://inkbaduk.com";
 
@@ -77,6 +78,7 @@ export default function GlossaryDetail({
           </ul>
         </nav>
       )}
+      <PlayCta className="mt-12" />
     </article>
   );
 }

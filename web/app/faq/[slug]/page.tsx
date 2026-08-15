@@ -1,11 +1,11 @@
-// FAQ 상세 — Breadcrumb + Hero + editorial-prose 본문 + prev/next + CTA (글로서리 상세와 동일 패턴).
+// FAQ 상세 — Breadcrumb + Hero + editorial-prose 본문 + 체험 CTA + prev/next (글로서리 상세와 동일 패턴).
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { getContent, getContentSlugs, htmlToText } from "../../../lib/content";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
-import { Button } from "@/components/ui/button";
+import PlayCta from "@/components/editorial/PlayCta";
 
 const BASE = "https://inkbaduk.com";
 
@@ -83,6 +83,8 @@ export default function FaqDetail({ params }: { params: { slug: string } }) {
         dangerouslySetInnerHTML={{ __html: c.html }}
       />
 
+      <PlayCta className="mt-12" />
+
       <RuleDivider weight="strong" className="mt-12" />
 
       <footer className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -110,9 +112,6 @@ export default function FaqDetail({ params }: { params: { slug: string } }) {
             </Link>
           )}
         </div>
-        <Button asChild>
-          <Link href="/game/new" rel="nofollow">대국 시작 →</Link>
-        </Button>
       </footer>
     </article>
   );
