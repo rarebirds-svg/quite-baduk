@@ -67,6 +67,29 @@ async def get_current_session(
     return sess
 
 
+async def get_optional_session(
+    db: DbSession,
+    baduk_session: Annotated[str | None, Cookie()] = None,
+    authorization: Annotated[str | None, Header()] = None,
+) -> Session | None:
+    """:func:`get_current_session`의 익명 허용판 — 자격증명이 없거나
+    무효하면 401 대신 ``None``을 돌려준다.
+
+    공개 콘텐츠(데일리 퍼즐·관전)에서 세션 유무로 동작을 나누되 로그인
+    벽은 세우지 않을 때 쓴다. 유효한 세션이면 인증 경로와 동일하게
+    ``last_seen_at``을 디바운스 stamp 한다.
+    """
+    token = baduk_session or bearer_token(authorization)
+    if not token:
+        return None
+    result = await db.execute(select(Session).where(Session.token == token))
+    sess = result.scalar_one_or_none()
+    if sess is None:
+        return None
+    last_seen_cache.stamp(sess.id)
+    return sess
+
+
 # Admin gate: the app has no proper admin auth layer — for the single-operator
 # dev use case we gate on a well-known nickname key. The `대공` key is
 # case-folded NFKC, matching what `session.nickname_key` stores. Registering
@@ -79,6 +102,7 @@ def is_admin(sess: Session) -> bool:
 
 
 CurrentSession = Annotated[Session, Depends(get_current_session)]
+OptionalSession = Annotated[Session | None, Depends(get_optional_session)]
 
 
 async def require_admin(sess: CurrentSession) -> Session:

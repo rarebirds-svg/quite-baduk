@@ -11,17 +11,22 @@ Endpoints:
 
 Grading is a fresh KataGo analyse + a play — no DB persistence, no
 per-user attempt log (V1 deliberate non-goal). Anonymous-friendly.
+
+세션은 어디에서도 요구하지 않는다. GET 3종은 순수 카탈로그 조회라
+익명 공개이고, POST /answer만 세션 유무에 따라 레이트리밋 키·한도를
+바꾼다 (익명은 IP당 10회/분).
 """
 from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
+from app.client_ip import client_ip
 from app.core.rules.board import BLACK, WHITE
 from app.core.rules.engine import IllegalMoveError, Move, play
-from app.deps import CurrentSession
+from app.deps import OptionalSession
 from app.engine_pool import get_adapter
 from app.rate_limit import rate_limiter
 from app.services.daily_challenge import (
@@ -54,7 +59,7 @@ def _serialise(challenge: DailyChallenge) -> dict[str, Any]:
 
 
 @router.get("")
-async def todays_challenge(sess: CurrentSession) -> dict[str, Any]:
+async def todays_challenge() -> dict[str, Any]:
     """Legacy entry point — returns today's puzzle for the cycle. The
     frontend's "다음 문제" flow uses /random with filters instead."""
     return _serialise(get_today())
@@ -71,7 +76,6 @@ _DifficultyQ = Literal["easy", "medium", "hard"]
 
 @router.get("/random")
 async def random_challenge(
-    sess: CurrentSession,
     board_size: Annotated[int | None, Query(ge=9, le=19)] = None,
     difficulty: Annotated[_DifficultyQ | None, Query()] = None,
     topic: Annotated[_TopicQ | None, Query()] = None,
@@ -106,7 +110,7 @@ async def random_challenge(
 
 
 @router.get("/catalogue")
-async def catalogue(sess: CurrentSession) -> dict[str, Any]:
+async def catalogue() -> dict[str, Any]:
     """Option lists + a sparse availability matrix so the UI can disable
     filter combinations that have no puzzles instead of letting the user
     hit a 404. Avoids surprising dead-ends in the picker."""
@@ -135,12 +139,21 @@ class AnswerRequest(BaseModel):
 
 @router.post("/answer")
 async def grade_answer(
+    request: Request,
     body: AnswerRequest,
-    sess: CurrentSession,
+    sess: OptionalSession,
 ) -> dict[str, Any]:
-    if not await rate_limiter.check(
-        f"daily:{sess.id}", max_hits=30, window_sec=60
-    ):
+    # 채점은 KataGo 분석 2회를 태우는 비싼 경로다. 익명 열람은 허용하되
+    # 세션 없는 호출은 IP 단위로 훨씬 좁은 한도를 건다.
+    if sess is not None:
+        allowed = await rate_limiter.check(
+            f"daily_answer:{sess.id}", max_hits=30, window_sec=60
+        )
+    else:
+        allowed = await rate_limiter.check(
+            f"daily_answer_anon:{client_ip(request)}", max_hits=10, window_sec=60
+        )
+    if not allowed:
         raise HTTPException(status_code=429, detail="rate_limited")
 
     # The daily limit is gone — any catalogue id is gradable, not just

@@ -6,11 +6,14 @@ import { useAuthStore, type Session } from "@/store/authStore";
 import { setSessionToken } from "@/lib/sessionToken";
 
 const PUBLIC_PATHS = new Set(["/", "/privacy", "/terms", "/support", "/supporters"]);
-// Content (SEO) route prefixes — viewable without a session, including their
-// sub-paths. Crawlers and logged-out visitors can read pro games, themes,
-// monthly picks, glossary, and FAQ. Interactive areas (/game, /admin,
-// /settings, /history, the live-spectate hub) stay session-gated.
-const PUBLIC_PREFIXES = ["/glossary", "/faq", "/spectate/pro", "/spectate/themes", "/spectate/picks"];
+// Public route prefixes — viewable without a session, including their
+// sub-paths. Logged-out visitors and crawlers can read the glossary, FAQ,
+// the daily puzzle, and every spectate surface (live hub, pro games,
+// themes, monthly picks) — all of them are read-only. The "/spectate"
+// prefix subsumes the pro/themes/picks subtrees, so they aren't listed
+// separately. Interactive areas (/game, /admin, /settings, /history) stay
+// session-gated.
+const PUBLIC_PREFIXES = ["/glossary", "/faq", "/daily", "/spectate"];
 
 export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;

@@ -2,10 +2,9 @@
 // 관전 목록 — 잉크바둑 대국과 프로 기보를 탭으로 나눠 보여주는 페이지.
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { api, ApiError } from "@/lib/api";
+import { useSearchParams } from "next/navigation";
+import { api } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
-import { useAuthStore } from "@/store/authStore";
 import { Hero } from "@/components/editorial/Hero";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { formatRank } from "@/components/RankPicker";
@@ -68,25 +67,20 @@ export default function SpectateListPage() {
 function SpectateListContent() {
   const t = useT();
   const [locale] = useLocale();
-  const router = useRouter();
   const searchParams = useSearchParams();
   // 프로 기보 재생 화면에서 ?tab=pro로 돌아오면 프로 탭을 펼친다.
   const initialTab = searchParams.get("tab") === "pro" ? "pro" : "inkbaduk";
-  const { session } = useAuthStore();
   const [rows, setRows] = useState<SpectateRow[] | null>(null);
 
+  // 관전은 읽기 전용이라 세션이 없어도 그대로 폴링한다.
   useEffect(() => {
-    if (!session) {
-      router.replace("/");
-      return;
-    }
     let cancelled = false;
     const poll = async () => {
       try {
         const data = await api<{ rows: SpectateRow[] }>("/api/spectate");
         if (!cancelled) setRows(data.rows);
-      } catch (e) {
-        if (e instanceof ApiError && e.status === 401) router.replace("/");
+      } catch {
+        // 일시적 실패는 다음 폴링에서 회복한다.
       }
     };
     poll();
@@ -95,9 +89,7 @@ function SpectateListContent() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [session, router]);
-
-  if (!session) return null;
+  }, []);
 
   const live = rows?.filter((r) => r.is_live) ?? [];
   const ended = rows?.filter((r) => !r.is_live) ?? [];

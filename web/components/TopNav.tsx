@@ -101,9 +101,20 @@ export default function TopNav() {
             </>
           )}
           {!session && (
-            <Button asChild size="sm" variant="outline">
-              <Link href="/spectate/pro">{t("spectate.tabPro")}</Link>
-            </Button>
+            <>
+              {/* 비로그인도 열람 가능한 공개 콘텐츠. 좁은 화면에선 폭이
+                  모자라므로 프로 기보는 sm 이상에서만 노출한다 —
+                  관전 허브의 프로 탭으로도 도달할 수 있다. */}
+              <Button asChild size="sm" variant="outline">
+                <Link href="/daily">{t("nav.daily")}</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/spectate">{t("nav.spectate")}</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
+                <Link href="/spectate/pro">{t("spectate.tabPro")}</Link>
+              </Button>
+            </>
           )}
 
           <button

@@ -16,6 +16,10 @@ describe("isPublicPath", () => {
       "/glossary/dansu",
       "/faq",
       "/faq/ai-strength-levels",
+      "/daily",
+      "/spectate",
+      "/spectate/789",
+      "/spectate/watch",
       "/spectate/pro",
       "/spectate/pro/123",
       "/spectate/themes",
@@ -35,16 +39,16 @@ describe("isPublicPath", () => {
       "/admin/sessions",
       "/settings",
       "/history",
-      "/spectate", // live-spectate hub
-      "/spectate/789", // a live game, not pro content
     ]) {
       expect(isPublicPath(p)).toBe(false);
     }
   });
 
   it("does not let a prefix match leak a sibling path", () => {
-    // "/spectate/pro" must not make "/spectate/promotions" public.
-    expect(isPublicPath("/spectate/promotions")).toBe(false);
+    // Prefix matching is segment-aware: "/daily" must not make
+    // "/dailyreport" public, nor "/spectate" make "/spectatex" public.
+    expect(isPublicPath("/dailyreport")).toBe(false);
+    expect(isPublicPath("/spectatex")).toBe(false);
     expect(isPublicPath("/glossaryx")).toBe(false);
   });
 });

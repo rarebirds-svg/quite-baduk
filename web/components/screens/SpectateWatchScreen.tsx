@@ -1,12 +1,10 @@
 "use client";
 // 라이브 관전 화면 본체 — path/query 두 진입점이 공유한다.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Board from "@/components/Board";
 import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
-import { useAuthStore } from "@/store/authStore";
 import { gtpToXy, replay } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
@@ -41,9 +39,6 @@ const POLL_MS = 4000;
 export default function SpectateWatchScreen({ gameId }: { gameId: number }) {
   const t = useT();
   const [locale] = useLocale();
-  const router = useRouter();
-  const { session } = useAuthStore();
-
   const [game, setGame] = useState<SpectateGame | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
@@ -58,18 +53,14 @@ export default function SpectateWatchScreen({ gameId }: { gameId: number }) {
       setIdx((prev) => (followLive.current ? g.moves.length : prev));
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) setError("not_found");
-      else if (e instanceof ApiError && e.status === 401) router.replace("/");
       else setError("load_failed");
     }
-  }, [gameId, router]);
+  }, [gameId]);
 
+  // 관전은 읽기 전용이라 세션 없이도 열람 가능하다.
   useEffect(() => {
-    if (!session) {
-      router.replace("/");
-      return;
-    }
     load();
-  }, [session, load, router]);
+  }, [load]);
 
   // 진행 중 대국만 폴링.
   useEffect(() => {
@@ -91,8 +82,6 @@ export default function SpectateWatchScreen({ gameId }: { gameId: number }) {
     const xy = gtpToXy(m.coord, game.board_size);
     return xy ? { x: xy[0], y: xy[1] } : null;
   }, [game, idx]);
-
-  if (!session) return null;
 
   if (error === "not_found") {
     return (

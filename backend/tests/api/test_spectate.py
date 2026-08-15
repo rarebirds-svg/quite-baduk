@@ -30,12 +30,20 @@ async def _set_move_count(db: AsyncSession, gid: int, n: int) -> None:
 
 
 @pytest.mark.asyncio
-async def test_spectate_requires_session(client: AsyncClient) -> None:
-    """닉네임 세션 없이는 401."""
+async def test_spectate_is_anonymous(client: AsyncClient) -> None:
+    """읽기 전용이라 닉네임 세션 없이도 목록·상세 모두 200."""
+    await _signup(client, "watcher")
+    gid = await _create_game(client)
+
     fresh = AsyncClient(transport=client._transport, base_url=client.base_url)
     try:
         r = await fresh.get("/api/spectate")
-        assert r.status_code == 401
+        assert r.status_code == 200
+        assert any(x["id"] == gid for x in r.json()["rows"])
+
+        r = await fresh.get(f"/api/spectate/{gid}")
+        assert r.status_code == 200
+        assert r.json()["id"] == gid
     finally:
         await fresh.aclose()
 

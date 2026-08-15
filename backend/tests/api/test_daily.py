@@ -35,9 +35,58 @@ def test_get_today_returns_known_challenge() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_endpoint_unauth_returns_401(client: AsyncClient) -> None:
-    r = await client.get("/api/daily-challenge")
-    assert r.status_code == 401
+async def test_get_endpoints_are_anonymous(client: AsyncClient) -> None:
+    """세션 없이도 조회 3종은 200 — 검색 유입 방문자가 로그인 없이
+    퍼즐을 볼 수 있어야 한다."""
+    for url in (
+        "/api/daily-challenge",
+        "/api/daily-challenge/random",
+        "/api/daily-challenge/catalogue",
+    ):
+        r = await client.get(url)
+        assert r.status_code == 200, f"{url} → {r.status_code}"
+
+
+@pytest.mark.asyncio
+async def test_answer_anonymous_is_graded(client: AsyncClient) -> None:
+    """세션 없는 채점 요청도 200. 익명 개방의 핵심 경로."""
+    today = get_today()
+    used = {coord.upper() for _, coord in today.setup}
+    candidate = next(
+        c for c in ("A1", "B1", "C1", "D1", "F1", "H1", "J1") if c not in used
+    )
+    r = await client.post(
+        "/api/daily-challenge/answer",
+        json={"challenge_id": today.id, "coord": candidate},
+    )
+    assert r.status_code == 200
+    assert r.json()["verdict"] in ("best", "ok", "weak", "miss", "illegal")
+
+
+@pytest.mark.asyncio
+async def test_answer_anonymous_rate_limited_after_10(client: AsyncClient) -> None:
+    """익명 채점은 IP당 10회/분. 11번째는 429.
+
+    레이트리밋은 카탈로그 조회보다 앞서 걸리므로 존재하지 않는 id로
+    저렴하게(KataGo 미호출) 버킷을 소진시킨다.
+    """
+    body = {"challenge_id": "ch-not-real", "coord": "A1"}
+    for i in range(10):
+        r = await client.post("/api/daily-challenge/answer", json=body)
+        assert r.status_code == 404, f"{i}번째 요청이 {r.status_code}"
+    r = await client.post("/api/daily-challenge/answer", json=body)
+    assert r.status_code == 429
+    assert r.json()["error"]["code"] == "rate_limited"
+
+
+@pytest.mark.asyncio
+async def test_answer_with_session_keeps_wider_limit(client: AsyncClient) -> None:
+    """세션이 있으면 익명 한도(10)가 아니라 기존 세션 한도(30)를 쓴다."""
+    await client.post("/api/session", json={"nickname": "daily_limit"})
+    body = {"challenge_id": "ch-not-real", "coord": "A1"}
+    for i in range(11):
+        r = await client.post("/api/daily-challenge/answer", json=body)
+        assert r.status_code == 404, f"{i}번째 요청이 {r.status_code}"
 
 
 @pytest.mark.asyncio

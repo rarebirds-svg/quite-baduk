@@ -17,7 +17,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import ColumnElement, and_, func, or_, select
 
-from app.deps import ADMIN_NICKNAME_KEYS, CurrentSession, DbSession
+from app.deps import ADMIN_NICKNAME_KEYS, DbSession
 from app.models import Game, Move, Session
 from app.schemas.datetime_utc import UtcDatetime
 from app.schemas.game import GameDetail, GameSummary, MoveEntry
@@ -124,11 +124,10 @@ class SpectateList(BaseModel):
 
 @router.get("", response_model=SpectateList)
 async def list_spectatable(
-    _: CurrentSession,
     db: DbSession,
     limit: int = 50,
 ) -> SpectateList:
-    """관전 가능 대국 목록. 닉네임 세션은 필요하지만 소유권은 불필요.
+    """관전 가능 대국 목록. 읽기 전용이라 세션 없이도 열람 가능하다.
     진행 중 대국이 위로 오도록 정렬 (started_at 역순)."""
     effective_limit = max(1, min(limit, 100))
     rows = (
@@ -167,10 +166,10 @@ async def list_spectatable(
 @router.get("/{game_id}", response_model=GameDetail)
 async def spectate_game(
     game_id: int,
-    _: CurrentSession,
     db: DbSession,
 ) -> GameDetail:
-    """관전 가능한 대국의 상세(수순 포함). 필터를 통과하지 못하면 404 —
+    """관전 가능한 대국의 상세(수순 포함). 목록과 마찬가지로 읽기 전용이라
+    세션 없이 열람 가능하다. 필터를 통과하지 못하면 404 —
     버려진 대국·존재하지 않는 대국 모두 동일하게 숨긴다."""
     game = (
         await db.execute(
