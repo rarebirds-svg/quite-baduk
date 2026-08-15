@@ -23,9 +23,11 @@ class Settings(BaseSettings):
     katago_pool_size: int = 4
     cors_origins: str = "http://localhost:3000"
 
-    # Ephemeral-session auth
-    session_idle_ttl_sec: int = 3600  # 1 hour
-    session_purge_interval_sec: int = 60
+    # Nickname-session auth. Sliding expiry — every request refreshes
+    # ``last_seen_at`` (and the cookie), so a session only dies after 90
+    # consecutive days without a visit.
+    session_ttl_sec: int = 7_776_000  # 90 days
+    session_purge_interval_sec: int = 3600
     # When unset, cookie_secure is True in production and False otherwise.
     # Explicit `COOKIE_SECURE=true|false` always wins.
     cookie_secure_override: bool | None = None

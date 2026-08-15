@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     purge_task = asyncio.create_task(
         run_purge_loop(
             interval_sec=settings.session_purge_interval_sec,
-            ttl_sec=settings.session_idle_ttl_sec,
+            ttl_sec=settings.session_ttl_sec,
         )
     )
     try:

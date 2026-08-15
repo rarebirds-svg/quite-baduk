@@ -10,7 +10,7 @@ async def _signup(client: AsyncClient, email: str | None = None) -> None:
     global _ctr
     _ctr += 1
     # Derive a nickname from call order / optional email hint so repeat calls
-    # inside a single test don't collide with the DB UNIQUE(nickname_key).
+    # inside a single test stay distinguishable in assertions and logs.
     nick = (email or "p").replace("@", "_").replace(".", "_")[:24]
     nick = f"{nick}_{_ctr}"
     r = await client.post("/api/session", json={"nickname": nick})

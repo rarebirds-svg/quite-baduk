@@ -18,7 +18,9 @@ class Session(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     token: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     nickname: Mapped[str] = mapped_column(String(32), nullable=False)
-    nickname_key: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
+    # Not unique — many sessions may share a nickname. Only the reserved
+    # admin keys are gated, and that check lives in the session API.
+    nickname_key: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     last_seen_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     # 2-letter ISO 3166-1 country from Cloudflare's CF-IPCountry header,

@@ -11,9 +11,10 @@ async def test_create_session_sets_cookie_and_returns_public_info(client: AsyncC
     assert r.status_code == 201, r.text
     body = r.json()
     assert body["nickname"] == "alice"
-    # Session cookie present, no Max-Age / Expires.
+    # Session cookie present, and persisted for 90 days.
     cookies = {c.name for c in client.cookies.jar}
     assert "baduk_session" in cookies
+    assert "Max-Age=7776000" in r.headers["set-cookie"]
 
 
 @pytest.mark.asyncio
@@ -25,23 +26,45 @@ async def test_get_session_after_create(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_session_reissues_sliding_cookie(client: AsyncClient) -> None:
+    """방문할 때마다 쿠키가 재발급되어 90일 만료가 앞으로 밀린다."""
+    await client.post("/api/session", json={"nickname": "slider"})
+    r = await client.get("/api/session")
+    assert r.status_code == 200
+    set_cookie = r.headers["set-cookie"]
+    assert "baduk_session=" in set_cookie
+    assert "Max-Age=7776000" in set_cookie
+
+
+@pytest.mark.asyncio
 async def test_get_session_without_cookie_is_401(client: AsyncClient) -> None:
     r = await client.get("/api/session")
     assert r.status_code == 401
 
 
 @pytest.mark.asyncio
-async def test_duplicate_nickname_returns_409(client: AsyncClient) -> None:
-    # First claim via one client
+async def test_duplicate_nickname_creates_independent_sessions(client: AsyncClient) -> None:
+    """닉네임은 더 이상 유니크하지 않다. 같은 이름의 두 세션은 각각 생성되고
+    서로의 대국 목록이 보이지 않아야 한다."""
     c1 = await client.post("/api/session", json={"nickname": "bob"})
     assert c1.status_code == 201
-    # Second attempt with the same nickname (from the same client — sends its cookie
-    # but that's irrelevant to uniqueness) must fail.
-    # Use a fresh client to avoid cookie reuse.
-    r2 = await AsyncClient(transport=client._transport, base_url=client.base_url).post(
-        "/api/session", json={"nickname": "BOB"},
+
+    other = AsyncClient(transport=client._transport, base_url=client.base_url)
+    c2 = await other.post("/api/session", json={"nickname": "BOB"})
+    assert c2.status_code == 201
+    assert c1.json()["id"] != c2.json()["id"]
+    assert c1.json()["token"] != c2.json()["token"]
+
+    # 첫 세션이 만든 대국은 두 번째 세션에게 보이지 않는다.
+    g = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black", "board_size": 9},
     )
-    assert r2.status_code == 409
+    assert g.status_code == 201, g.text
+    mine = await client.get("/api/games")
+    assert [row["id"] for row in mine.json()] == [g.json()["id"]]
+    theirs = await other.get("/api/games")
+    assert theirs.json() == []
 
 
 @pytest.mark.asyncio
@@ -70,11 +93,34 @@ async def test_nickname_check_reports_availability(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_nickname_check_reports_taken(client: AsyncClient) -> None:
+async def test_nickname_check_allows_reuse_of_live_nickname(client: AsyncClient) -> None:
+    """일반 닉네임은 이미 쓰이고 있어도 항상 사용 가능하다."""
     await client.post("/api/session", json={"nickname": "taken1"})
     r = await client.get("/api/session/nickname/check", params={"name": "taken1"})
     assert r.status_code == 200
-    assert r.json() == {"available": False, "reason": "taken"}
+    assert r.json()["available"] is True
+
+
+@pytest.mark.asyncio
+async def test_admin_nickname_is_reserved_while_live(client: AsyncClient) -> None:
+    """어드민 예약 키는 라이브 세션이 있으면 재선점할 수 없다 — 어드민 게이트가
+    닉네임 키 하나에 걸려 있기 때문이다."""
+    first = await client.post("/api/session", json={"nickname": "대공"})
+    assert first.status_code == 201
+
+    other = AsyncClient(transport=client._transport, base_url=client.base_url)
+    dup = await other.post("/api/session", json={"nickname": "대공"})
+    assert dup.status_code == 409
+    assert dup.json()["error"]["code"] == "nickname_taken"
+
+    check = await other.get("/api/session/nickname/check", params={"name": "대공"})
+    assert check.json() == {"available": False, "reason": "taken"}
+
+    # 세션이 끝나면 다시 열린다.
+    assert (await client.post("/api/session/end")).status_code == 204
+    assert (
+        await other.post("/api/session", json={"nickname": "대공"})
+    ).status_code == 201
 
 
 @pytest.mark.asyncio
@@ -112,16 +158,16 @@ async def test_create_session_too_long_nickname_is_422(client: AsyncClient) -> N
 
 
 @pytest.mark.asyncio
-async def test_nickname_check_invalid_then_taken(client: AsyncClient) -> None:
-    """Drive both 'invalid' and 'taken' branches in one test for parity."""
+async def test_nickname_check_invalid_then_available(client: AsyncClient) -> None:
+    """Drive both the 'invalid' and the available branch in one test."""
     invalid = await client.get("/api/session/nickname/check", params={"name": "x"})
     assert invalid.json()["reason"] == "invalid"
 
     await client.post("/api/session", json={"nickname": "claimed_one"})
-    taken = await client.get(
+    reused = await client.get(
         "/api/session/nickname/check", params={"name": "claimed_one"}
     )
-    assert taken.json()["reason"] == "taken"
+    assert reused.json()["available"] is True
 
 
 @pytest.mark.asyncio

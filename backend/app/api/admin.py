@@ -17,7 +17,6 @@ from app.deps import AdminSession, CurrentSession, DbSession, is_admin
 from app.engine_pool import get_adapter
 from app.models import Game, Session, SessionHistory
 from app.schemas.datetime_utc import UtcDatetime
-from app.session_registry import registry
 
 # Captured at module import so the admin console can show "backend uptime"
 # (the FastAPI app itself doesn't expose a boot timestamp).
@@ -681,7 +680,6 @@ async def disconnect_session(
         await db.commit()
         return
 
-    key = sess.nickname_key
     await db.execute(
         _sa_update(SessionHistory)
         .where(
@@ -695,7 +693,6 @@ async def disconnect_session(
     )
     await db.execute(_sa_delete(Session).where(Session.id == sess.id))
     await db.commit()
-    await registry.release(key)
 
     # Proactively close any open WS so the client sees the disconnect
     # immediately instead of waiting up to HEARTBEAT_SECONDS for the

@@ -29,23 +29,16 @@ def _wire_test_app(
     KataGo. Returns (client, cleanup) — caller invokes cleanup() in a
     finally block; it closes the client, disposes the engine and deletes
     the temp DB file."""
-    import app.api.session as _session_mod
     import app.api.ws as _ws_mod
     import app.engine_pool as _pool_mod
-    import app.session_registry as _reg_mod
     from app.core.katago.mock import MockKataGoAdapter
     from app.db import Base
     from app.engine_pool import set_adapter
     from app.rate_limit import rate_limiter
-    from app.session_registry import NicknameRegistry
 
-    # 테스트 격리: 이전 테스트에서 누적된 rate_limiter 버킷과 session_registry
-    # 상태를 초기화한다. 두 싱글턴 모두 프로세스-글로벌이라 파일 간 오염을 막는다.
+    # 테스트 격리: 이전 테스트에서 누적된 rate_limiter 버킷을 초기화한다.
+    # 프로세스-글로벌 싱글턴이라 파일 간 오염을 막아야 한다.
     rate_limiter._buckets.clear()
-    fresh_registry = NicknameRegistry()
-    monkeypatch.setattr(_reg_mod, "registry", fresh_registry)
-    # session.py가 registry를 직접 import해 쓰므로 해당 모듈도 패치한다.
-    monkeypatch.setattr(_session_mod, "registry", fresh_registry)
     # temp DB마다 game_id가 1부터 다시 시작하므로, 이전 테스트의 게임 상태
     # 캐시·락·WS 연결이 같은 id로 새 테스트에 재사용되지 않게 비운다.
     _pool_mod._game_locks.clear()

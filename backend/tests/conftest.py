@@ -81,7 +81,3 @@ async def client(db_engine, monkeypatch):
     # Reset rate limiter between tests
     from app.rate_limit import rate_limiter
     rate_limiter._buckets.clear()
-
-    # Reset nickname registry so client-based tests don't collide across runs
-    from app.session_registry import registry
-    registry._by_key.clear()

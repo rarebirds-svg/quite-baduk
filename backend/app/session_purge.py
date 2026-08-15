@@ -2,8 +2,8 @@
 
 Deletes ``sessions`` rows whose ``last_seen_at`` is older than
 ``ttl_sec``. Games detach via ``ON DELETE SET NULL`` (see migration 0008)
-so history survives. Also releases the nickname from the in-memory
-registry and closes out the corresponding ``session_history`` row.
+so history survives. Also closes out the corresponding
+``session_history`` row.
 """
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ from sqlalchemy import update as _sa_update
 
 import app.db as _db_module
 from app.models import Session, SessionHistory
-from app.session_registry import registry
 
 log = structlog.get_logger()
 
@@ -45,7 +44,6 @@ async def purge_expired_sessions_once(
                 )
             )
             await db.delete(s)
-            await registry.release(s.nickname_key)
         await db.commit()
     return len(expired)
 
