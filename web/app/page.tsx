@@ -1,36 +1,19 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useT } from "@/lib/i18n";
-import { BrandMark } from "@/components/editorial/BrandMark";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { BoardPreview } from "@/components/editorial/BoardPreview";
 import { NewsHook } from "@/components/editorial/NewsHook";
 import { ClusterLinks } from "@/components/editorial/ClusterLinks";
 import QuickStartForm from "@/components/QuickStartForm";
 
-const HERO_SLOTS = [
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-  11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-] as const;
-
-function pickHeroSlot(): (typeof HERO_SLOTS)[number] {
-  return HERO_SLOTS[Math.floor(Math.random() * HERO_SLOTS.length)];
-}
-
 export default function NicknameGate() {
   const t = useT();
 
-  // Hero copy rotates: picked at mount so the reader gets variety across
-  // visits without jittering while filling out the form. Lazy init avoids
-  // running Math.random during SSR (hydration mismatch would flash the
-  // fallback copy for a frame).
-  const [heroSlot, setHeroSlot] = useState<(typeof HERO_SLOTS)[number] | null>(null);
-  useEffect(() => { setHeroSlot(pickHeroSlot()); }, []);
-
-  // Fall back to slot 1 during SSR so there's no layout shift.
-  const slot = heroSlot ?? 1;
-  const headline = t(`home.hero.heading${slot}`);
-  const subtitle = t(`home.hero.sub${slot}`);
+  // Hero copy is fixed — one message repeated across visits so it can be
+  // learned and measured.
+  const headline = t("home.hero.heading1");
+  const subtitle = t("home.hero.sub1");
 
   // Auto-fit the hero headline to a single line. Starts at the CSS-declared
   // size and shrinks to the largest size that still fits in the container.
@@ -65,30 +48,10 @@ export default function NicknameGate() {
     };
   }, [headline]);
 
-  const editionTag = useMemo(() => {
-    // Tiny decorative "edition number" — stable per mount so it doesn't
-    // churn with re-renders but rotates across visits.
-    if (heroSlot === null) return "I";
-    return [
-      "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
-      "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX",
-    ][heroSlot - 1] ?? "I";
-  }, [heroSlot]);
-
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 md:py-16">
-      {/* Masthead */}
-      <header className="flex items-center justify-between border-b border-ink pb-4">
-        <BrandMark size={32} />
-        <div className="flex items-baseline gap-3 font-sans text-xs font-semibold uppercase tracking-widest text-ink-mute">
-          <span>{t("home.masthead")}</span>
-          <span className="text-ink-faint">·</span>
-          <span className="font-mono tabular-nums">No. {editionTag}</span>
-        </div>
-      </header>
-
-      {/* Hero — randomized headline + subtitle per visit */}
-      <section className="py-14 md:py-20">
+      {/* Hero — brand identity lives in TopNav, so no masthead here */}
+      <section className="pb-14 md:pb-20">
         <p className="font-sans text-xs font-semibold uppercase tracking-widest text-oxblood mb-5">
           {t("home.edition")}
         </p>

@@ -12,6 +12,9 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+// 랜딩의 다른 요소(보드 프리뷰 등)가 이 입력에 포커스를 줄 수 있도록 id를 공개한다.
+export const QUICK_START_INPUT_ID = "quickstart-nickname";
+
 export default function QuickStartForm() {
   const t = useT();
   const router = useRouter();
@@ -63,6 +66,7 @@ export default function QuickStartForm() {
         ) : (
           <div className="flex-1">
             <Input
+              id={QUICK_START_INPUT_ID}
               autoFocus
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}

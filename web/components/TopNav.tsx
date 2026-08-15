@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Laptop } from "lucide-react";
 import { useT, useLocale, setLocale } from "@/lib/i18n";
@@ -25,7 +25,6 @@ export default function TopNav() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { session, setSession, isAdmin, setIsAdmin } = useAuthStore();
   const router = useRouter();
-  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -44,9 +43,6 @@ export default function TopNav() {
     })();
     return () => { cancelled = true; };
   }, [session, setIsAdmin]);
-
-  // Hide the nav entirely on the nickname gate — that screen is its own hero
-  if (pathname === "/") return null;
 
   const endSession = async () => {
     if (!(await attemptNavigation())) return;
@@ -113,6 +109,10 @@ export default function TopNav() {
               </Button>
               <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/spectate/pro">{t("spectate.tabPro")}</Link>
+              </Button>
+              {/* 비로그인의 단 하나의 primary 행동 — 랜딩 #start 폼으로 보낸다. */}
+              <Button asChild size="sm" className="bg-oxblood text-paper hover:bg-oxblood/90">
+                <Link href="/#start">{t("nav.startNow")}</Link>
               </Button>
             </>
           )}
