@@ -33,9 +33,9 @@
 - slug: hwajeom
   title: 화점
   prompt_hint: 4-4점. 19로 반의 9개 화점 표시. 빠른 세력 확장의 거점.
-- slug: kasaeng
-  title: 사활
-  prompt_hint: 돌의 삶과 죽음. 두 눈의 원칙. 사활 문제는 기력 향상의 핵심.
+# 사활 항목은 slug `sahwal`로 통합 게시됨(web/content/glossary/sahwal.md).
+# 옛 slug `kasaeng`은 web/next.config.js에서 /glossary/sahwal로 301 리다이렉트되므로
+# 시드에서 제거했다 — 남겨 두면 파이프라인이 중복 사활 글을 게시한다.
 - slug: jeongseok
   title: 정석
   prompt_hint: 귀에서 흑백이 서로 최선을 주고받아 정형화된 수순. 외워 두면 초반 손해 방지. 상황·주변 배치에 맞게 선택.
