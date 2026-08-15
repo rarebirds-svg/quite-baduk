@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import os
 import re
 import sys
 from pathlib import Path
@@ -35,6 +36,9 @@ CACHE_PATH = Path.home() / ".baduk" / "ingest-cwi.cache"
 MAX_DEPTH = 4
 MAX_PAGES = 500
 MAX_NEW_PER_RUN = 200
+# 신규 기보 공개 URL 목록을 적어둘 파일 경로를 러너가 이 환경변수로 지정한다 (IndexNow 제출용).
+NEW_URLS_ENV = "CWI_NEW_URLS_FILE"
+PUBLIC_BASE_URL = "https://inkbaduk.com"
 
 
 def is_cwi_url(url: str) -> bool:
@@ -145,6 +149,20 @@ def _build_pro_game(parsed: ParsedProGame) -> ProGame | None:
         return None
 
 
+def write_new_urls(game_ids: list[int]) -> None:
+    """신규 기보의 공개 URL을 한 줄에 하나씩 파일로 남긴다. 경로 미지정이면 아무것도 하지 않는다.
+
+    ingest 본연의 동작을 막지 않도록 쓰기 실패는 경고만 남기고 삼킨다."""
+    path = os.environ.get(NEW_URLS_ENV)
+    if not path:
+        return
+    body = "".join(f"{PUBLIC_BASE_URL}/spectate/pro/{gid}\n" for gid in game_ids)
+    try:
+        Path(path).write_text(body, encoding="utf-8")
+    except OSError as exc:
+        log.warning("cwi.new_urls.write_failed", path=path, err=str(exc))
+
+
 async def main_async() -> dict[str, int]:
     """1회 ingest 루프. 결과 카운트 반환."""
     summary: dict[str, int] = {"fetched": 0, "new": 0, "duplicate": 0, "error": 0}
@@ -165,6 +183,7 @@ async def main_async() -> dict[str, int]:
             http, CWI_INDEX_URL, max_depth=MAX_DEPTH, max_pages=MAX_PAGES
         )
         capped = False
+        added: list[ProGame] = []
         async with AsyncSessionLocal() as db:
             for url in links:
                 summary["fetched"] += 1
@@ -196,6 +215,7 @@ async def main_async() -> dict[str, int]:
                     summary["error"] += 1
                     continue
                 db.add(pro)
+                added.append(pro)
                 summary["new"] += 1
                 if summary["new"] >= MAX_NEW_PER_RUN:
                     capped = True
@@ -203,6 +223,7 @@ async def main_async() -> dict[str, int]:
                     break
 
             await db.commit()
+            write_new_urls([pro.id for pro in added if pro.id is not None])
 
     if not capped:
         save_index_hash(html)

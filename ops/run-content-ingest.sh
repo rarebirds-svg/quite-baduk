@@ -13,8 +13,22 @@ mkdir -p "$ROOT/docs/ops/state/log"
 RUNLOG="$ROOT/docs/ops/state/log/content-ingest-runs.log"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] content-ingest 시작" >> "$RUNLOG"
 
+# 신규 삽입 기보의 공개 URL을 받아둘 임시 파일 — ingest가 여기에 한 줄에 하나씩 쓴다.
+NEWURLS="$(mktemp -t ingest-new-urls)"
+trap 'rm -f "$NEWURLS"' EXIT
+export CWI_NEW_URLS_FILE="$NEWURLS"
+
 source .venv311/bin/activate
 python -m scripts.ingest_cwi_weekly >> "$RUNLOG" 2>&1 \
   || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
+
+# IndexNow 통보는 best-effort — 실패해도 ingest 결과에는 영향을 주지 않는다.
+if [ -s "$NEWURLS" ]; then
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] IndexNow 제출 $(wc -l < "$NEWURLS" | tr -d ' ')건" >> "$RUNLOG"
+  bash "$ROOT/scripts/seo/indexnow-submit.sh" < "$NEWURLS" >> "$RUNLOG" 2>&1 \
+    || echo "[$(date '+%Y-%m-%d %H:%M:%S')] IndexNow 제출 실패 — 무시하고 진행" >> "$RUNLOG"
+else
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] 신규 0건 — IndexNow 생략" >> "$RUNLOG"
+fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] content-ingest 종료" >> "$RUNLOG"

@@ -223,8 +223,16 @@ async def test_main_async_ingests_new_sgfs(tmp_path, monkeypatch):
     test_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     monkeypatch.setattr(mod, "AsyncSessionLocal", test_session)
 
+    urls_file = tmp_path / "new-urls.txt"
+    monkeypatch.setenv(mod.NEW_URLS_ENV, str(urls_file))
+
     summary = await mod.main_async()
     assert summary["fetched"] == 2
     # 같은 SGF 본문이라 content_hash가 같음 → 하나는 신규, 하나는 중복
     assert summary["new"] + summary["duplicate"] == 2
     assert summary["error"] == 0
+
+    # 신규 삽입분의 공개 URL이 러너(IndexNow 제출)용 파일로 떨어진다.
+    lines = urls_file.read_text().splitlines()
+    assert len(lines) == summary["new"]
+    assert all(u.startswith(f"{mod.PUBLIC_BASE_URL}/spectate/pro/") for u in lines)
