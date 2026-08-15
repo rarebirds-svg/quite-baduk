@@ -174,7 +174,7 @@
       "heading13": "Even the AI hesitates, as humans do.",
       "sub13": "Human-SL is not a best-move calculator — it mirrors human hesitation and style, and sometimes wanders with you.",
       "heading14": "A cup of tea, a single game.",
-      "sub14": "Nickname-only ephemeral sessions — no timer, no ads, no notifications. Just a quiet match.",
+      "sub14": "A nickname is all it takes, and your session stays for 90 days — no timer, no ads, no notifications. Just a quiet match.",
       "heading15": "The endgame decides everything.",
       "sub15": "The dame-fill phase is detected automatically, and Korean half-point komi keeps every last point heavy.",
       "heading16": "Review is the second game.",
@@ -227,7 +227,7 @@
     },
     "previewCaption": "A real game — same engine, 9 kyu to 9 dan",
     "scrollHint": "Enter a nickname below to begin",
-    "footerNote": "Nickname-based ephemeral session — auto-expires after 1 hour of inactivity. See the Privacy Policy for full data retention details.",
+    "footerNote": "Your nickname session is kept in this browser for 90 days and renews on every visit. See the Privacy Policy for full data retention details.",
     "footerPro": "Pro Games",
     "footerGlossary": "Glossary",
     "footerFaq": "FAQ",
@@ -242,7 +242,7 @@
     "nicknameAvailable": "Available",
     "nicknameTaken": "This nickname is already in use",
     "nicknameInvalid": "2–32 characters, text only",
-    "privacyNote": "Nickname sessions auto-expire after 1 hour of inactivity. Game-history deletion can be requested per the procedure in the Privacy Policy.",
+    "privacyNote": "Your nickname session is kept in this browser for 90 days and renews on every visit. It is removed when you log out or after 90 days without a visit. Game-history deletion can be requested per the procedure in the Privacy Policy.",
     "ephemeralNote": "This list shows games played in the current session. Kifu records are kept on the server; for deletion, follow the procedure in the Privacy Policy.",
     "endSession": "End session",
     "expiredTitle": "Your session has expired",
@@ -415,10 +415,10 @@
       "collect": {
         "title": "Data we collect",
         "items": [
-          "Nickname (up to 32 characters) and a normalised nickname key (used for uniqueness checks only)",
+          "Nickname (up to 32 characters) and a normalised nickname key (used only to check reserved nicknames)",
           "Game history: board size, handicap, your colour, scores, win/loss, move sequence (kifu), start and end times",
           "Session token (HttpOnly cookie, opaque random value — not a JWT)",
-          "Connection time and last-activity time (auto-purged after 1 hour of inactivity)",
+          "Connection time and last-activity time (auto-purged 90 days after your last visit)",
           "Server logs: IP address (rate-limiting and abuse prevention only), request path, response time — see the Retention section below for retention details",
           "We run self-hosted visit analytics: no raw IP is stored, only a country code and a daily anonymised hash",
           "What we do NOT collect: email, phone number, payment details, location, device identifiers, profile photo"
@@ -428,7 +428,7 @@
         "title": "How we use it",
         "items": [
           "To provide game play and display your game history",
-          "To check nickname uniqueness (nickname_key field)",
+          "To check reserved nicknames (nickname_key field)",
           "To prevent abuse and maintain rate limits",
           "For aggregated, anonymised service statistics (daily active users, average game length, etc.)"
         ]
@@ -436,7 +436,7 @@
       "retention": {
         "title": "Retention",
         "items": [
-          "Session token: discarded after 1 hour of inactivity or on explicit logout",
+          "Session token: discarded 90 days after your last visit or on explicit logout (each visit restarts the 90 days)",
           "Game history: kept with a nickname snapshot; deleted on user request (see rights below)",
           "Server logs: emitted as JSON to standard output; rotation and deletion follow the log-collection workload's retention configuration in the production environment (the exact retention window depends on the operations infrastructure)."
         ]
@@ -505,9 +505,9 @@
       "account": {
         "title": "Account (nickname session)",
         "items": [
-          "No email or password registration is required — a nickname alone creates a temporary session.",
-          "Sessions expire automatically after 1 hour of inactivity.",
-          "A nickname already in use cannot be claimed by a new session (the API responds with HTTP 409); the existing session must expire or be explicitly logged out before the same nickname can be reused."
+          "No email or password registration is required — a nickname alone creates a session.",
+          "A session is kept in this browser for 90 days, and every visit restarts that period. It is removed when you log out or 90 days after your last visit.",
+          "Nicknames may be reused freely, and sessions sharing a nickname keep their game histories separate. Nicknames reserved by the operator are the exception — while one is in use, a new session cannot claim it (the API responds with HTTP 409)."
         ]
       },
       "nickname": {
@@ -515,11 +515,11 @@
         "items": [
           "Length must be between 2 and 32 characters; the limit is applied after Unicode NFKC normalisation and trimming surrounding whitespace.",
           "Disallowed characters — any whitespace (space, tab, newline, NBSP), control characters, emoji and pictographs, regional-indicator (flag) symbols, skin-tone and combining selectors (including ZWJ), and other invisible joiners. Hangul, Latin letters, digits, ordinary punctuation, and common symbols may be combined freely.",
-          "Nickname equivalence is decided by NFKC normalisation and case-folding. For example, 'GoMaster' and 'gomaster', or full-width 'Ｇｏ' and half-width 'Go', are treated as the same nickname and cannot both be registered at the same time.",
+          "Nickname equivalence is decided by NFKC normalisation and case-folding. For example, 'GoMaster' and 'gomaster', or full-width 'Ｇｏ' and half-width 'Go', are treated as the same nickname, and the operator's reserved-nickname restriction is applied on that same basis.",
           "The following nicknames may be restricted from use or registration — (a) impersonation of others or expressions that may be mistaken for staff, administrators, or an official account; (b) profanity, hate speech, discriminatory, sexual, or violent expressions; (c) advertising, spam, or external URLs; (d) expressions that infringe a third party's trademark, copyright, or personality rights; (e) expressions that violate applicable law; (f) nicknames reserved or designated by the operator (used for administrator identification and system messages).",
           "If a nickname matches the criteria above, the operator may reclaim or block it without prior notice and may refuse the creation of new sessions under the same nickname or its variants. In cases of repeated violations, access may be restricted at the IP level.",
           "Inappropriate nicknames may be reported to poporyfamily@gmail.com. The operator will review and act within 7 business days.",
-          "A nickname is held temporarily only while a session is active and confers no permanent ownership. After the session expires, the same nickname may be claimed by another user, so returning under the same nickname is not guaranteed."
+          "A nickname confers no ownership of any kind. Another user may use the same nickname at the same time, and because sessions are per-browser, a nickname alone neither identifies you nor restores your game history."
         ]
       },
       "prohibited": {
