@@ -4,6 +4,7 @@ import ProGameScreen, {
   type ProGameDetail,
 } from "@/components/screens/ProGameScreen";
 import PlayCta from "@/components/editorial/PlayCta";
+import ShareButtons from "@/components/editorial/ShareButtons";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const BASE = "https://inkbaduk.com";
@@ -55,6 +56,7 @@ export default async function ProGameByPath({
     return (
       <>
         <ProGameScreen gameId={Number(params.id)} />
+        <ShareButtons url={`${BASE}/spectate/pro/${params.id}`} className="mt-10" />
         <PlayCta className="mt-12" />
       </>
     );
@@ -68,6 +70,11 @@ export default async function ProGameByPath({
         }}
       />
       <ProGameScreen gameId={game.id} initialGame={game} />
+      <ShareButtons
+        title={`${game.black_player} vs ${game.white_player}`}
+        url={`${BASE}/spectate/pro/${game.id}`}
+        className="mt-10"
+      />
       <PlayCta className="mt-12" />
     </>
   );

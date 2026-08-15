@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { getContent } from "../../../lib/content";
 import PlayCta from "@/components/editorial/PlayCta";
+import ShareButtons from "@/components/editorial/ShareButtons";
 
 const BASE = "https://inkbaduk.com";
 
@@ -78,6 +79,11 @@ export default function GlossaryDetail({
           </ul>
         </nav>
       )}
+      <ShareButtons
+        title={c.title}
+        url={`${BASE}/glossary/${c.slug}`}
+        className="mt-10 border-t border-ink-faint pt-6"
+      />
       <PlayCta className="mt-12" />
     </article>
   );
