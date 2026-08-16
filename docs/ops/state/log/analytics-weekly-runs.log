@@ -98,3 +98,12 @@ Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/badu
 
 참고로 사용량이 18 → 5 → 1국으로 3주 연속 감소 중이다. 리포트는 사실만 기록했으니 판단이 필요하면 별도로 봐야 한다.
 [2026-08-09 09:01:41] analytics-weekly 종료
+[2026-08-16 09:00:05] analytics-weekly 시작
+2026-W33 주간 분석 리포트 작성을 완료했습니다.
+
+**한 일 요약**
+1. `docs/ops/state/reports/2026-W33.md` 신규 생성 — 이번 주 게임 1건(누적 338, 전주 대비 ±0), 방문 47 hits(search 25·direct 22, 전주 56 대비 −16%), 검색 유입은 네이버 모바일(15건) 중심으로 거의 전부 글로서리(37 hits)에 착지. 콘텐츠는 글로서리 27·FAQ 12로 신규 없음, 보류 승인 0건, 신규 incident 없음.
+2. `ops/report-job-status.sh analytics-weekly ok`로 상태 기록, `docs/ops/state/log/2026-08-16.md`에 한 줄 로그 추가.
+
+**특이사항 두 가지.** `/api/stats`가 401(no_session)을 반환해 DB 직접 조회로 대체했고 — 사이트 활성화 배포 이후 인증 요구로 바뀐 것으로 보이며 러닝북의 해당 명령은 손질이 필요할 수 있습니다. 또 `sessions` 테이블이 누적 0건으로 나왔는데(테이블은 존재), 90일 세션 도입과 어긋나 보여 세션 저장 위치가 다른 테이블일 가능성이 있습니다. 둘 다 리포트에 그대로 명기했습니다.
+[2026-08-16 09:01:29] analytics-weekly 종료
