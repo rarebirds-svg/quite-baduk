@@ -179,7 +179,7 @@ agents run on schedules — plists in `ops/launchd/`, runner scripts in `ops/`, 
 |-------|----------|------|
 | `com.inkbaduk.backup` | daily | Multi-generation SQLite backups (daily/weekly/monthly) |
 | `com.inkbaduk.ops-watchdog` | hourly | Staleness + KataGo/DB health checks, auto-recovery |
-| `com.inkbaduk.ops-orchestrator` | 12:00 / 18:00 | Headless Claude Code — status reports, PR watch |
+| `com.inkbaduk.ops-orchestrator` | 09:00 / 21:00 | Headless Claude Code — status reports, PR watch |
 | `com.inkbaduk.dev-cycle` | 04:30 | Autonomous bug-fix cycle (commits a branch; human pushes/PRs) |
 | `com.inkbaduk.content-draft` | Sat/Wed 02:00 | Drafts & publishes glossary/FAQ content |
 | `com.inkbaduk.content-ingest` | Sun 03:00 | Ingests public-domain pro game records |
