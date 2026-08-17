@@ -5,25 +5,21 @@
 
 ## 대기 중
 
-### AP-20260816-01 — 웨이브 1(사이트 활성화) 19커밋 배포: push + 웹 리빌드 + prod 재기동
-
-- 액션: 8/16 08:17 로컬 `main`에 머지된 `worktree-site-activation` 19커밋을 origin에 push하고, 웹 재빌드 + `ops/stack.sh restart prod`로 라이브에 반영(🟡 — 코드 main push + prod 재기동).
-- 근거: 사람이 8/16 08:17 fast-forward 머지를 직접 수행했으나(reflog `5fd1113 merge worktree-site-activation`), origin push·빌드·재기동이 없어 **라이브에는 0건 반영**이다. launchd 프로세스(api/web PID 88640/88644)는 8/8 15:48 기동 그대로 옛 코드를 물고 있고 `BUILD_ID`도 8/8 15:48이다. 마이그레이션은 **이미 적용됨** — `alembic_version` = `0019` 실측(0018 닉네임 유니크 폐지 + 0019 analytics_salts). 즉 `site-activation-external.md` 5-5절의 "마이그레이션 선행" 조건은 충족됐고 남은 것은 push·빌드·재기동뿐이다.
-- 영향: 90일 슬라이딩 세션·닉네임 중복 허용, `/daily`·`/spectate` 비로그인 개방, 랜딩 원클릭 시작, 콘텐츠 CTA·공유 버튼, `/spectate/pro` SSR, 사이트맵 신규 URL, daily_salt 영속화(67e8c07), 주간 ingest IndexNow 통보(다음 일요일부터)가 일괄 발효. 커뮤니티 홍보(러닝북 3장)의 선행 조건(5장 체크리스트)이 충족 가능해진다.
-- 실행 절차:
-  1. `git -C /Users/daegong/projects/baduk push origin main` — 19커밋 + ops 로그 커밋 push.
-  2. `cd /Users/daegong/projects/baduk/web && npm run build` — 실패 시 기존 `.next` 유지로 중단(재기동 안 함).
-  3. `bash /Users/daegong/projects/baduk/ops/stack.sh restart prod`.
-  4. `curl -fs http://localhost:8000/api/health` 200 + `curl -fs http://localhost:3000` 200 확인.
-  5. 5-3 라이브 스모크(시크릿 창 기준): `/` 원클릭 시작 노출, `/daily`·`/spectate` 비로그인 200, `/spectate/pro` 페이지 소스에 SSR 목록, `sitemap.xml`에 `/daily`·`/spectate`·`/spectate/pro` 포함.
-  6. 다음 사이클에서 `sessions` 테이블 적재 시작 여부 확인(90일 세션 발효의 결정적 증거).
-- 잔여 위험: 재기동 수십 초 다운타임 — 진행 중 대국 0건(`moves.max(played_at)` 8/11 11:45 UTC, 약 5일 전)이라 낮음. 웹 빌드 실패 시 기존 `.next`로 롤백 가능. 구 코드 + 신 스키마 동거는 안전 확인됨(제약 제거 + 신규 테이블뿐).
-- 참고: 커뮤니티 홍보(3장) 집행은 이 배포와 별개의 🟡 — 배포 완료 후 사람이 따로 판단한다.
-- **8/16 21:00 재확인 (12시간 무응답)** — 변화 없음: `origin/main..HEAD` 20커밋(코드 19 + ops `bda8f60`) 유지, `BUILD_ID`·PID 8/8 15:48 그대로(197시간 무재기동), `alembic_version` 0019 유지. 위험 재평가 — 오늘 12:45 KST 대국 **#339**(88수)가 발생·종료해 실사용이 재개됐다. 현재 진행 중 대국은 0건이나, 배포 실행 시점에 `moves.max(played_at)` 재확인 후 재기동할 것(절차 불변). 중복 제안은 만들지 않고 이 각주만 누적한다.
-- **8/17 09:00 재확인 (48시간 무응답)** — 변화 없음: `origin/main..HEAD` **21커밋**(코드 19 + ops 2 `bda8f60`·`f9e242b`) 유지, `BUILD_ID`·PID 8/8 15:48 그대로(209시간 무재기동), `sessions` 0행 = 90일 세션 미발효 지속. 위험 재평가 — 진행 중 대국 0건(`moves.max(played_at)` 8/16 03:45 UTC, 약 29시간 전)으로 재기동 위험 다시 낮음. 절차 불변, 실행 시점에 진행 중 대국만 재확인. 중복 제안은 만들지 않고 이 각주만 누적한다.
-- 상태: 대기 (2026-08-16 09:00 등재 · 2회 재확인 — 8/16 21:00 · 8/17 09:00)
+(없음)
 
 ## 처리 완료 — 최근
+
+### AP-20260816-01 — 처리 완료(사람 지시 "배포까지 진행" · Claude 세션 실행, 2026-08-17 오전 KST)
+
+웨이브 1(사이트 활성화) 19커밋이 라이브에 발효했다. 등재 후 약 48시간, 재확인 2회 만의 해소. 원문은 [`log/2026-08-17-approvals-archive.md`](log/2026-08-17-approvals-archive.md)로 옮겼다.
+
+- **실행 순서는 제안과 달리 빌드→재기동→검증→push** — 로컬 검증을 마친 뒤 push하는 쪽을 택했고, 재기동은 `ops/stack.sh` 대신 `launchctl kickstart -k gui/501/com.baduk.{api,web}` 직접 호출. 결과는 동일하다.
+- **빌드 완료** — `npm run build` 성공. **재기동 완료** — api·web 모두 kickstart, health 200 + 홈 200.
+- **스모크 전 항목 통과** — `/api/daily-challenge`(+`/catalogue`) 익명 200, `/api/spectate` 익명 200, 웹 `/daily` 익명 200, 랜딩 "바로 시작" CTA 노출, 글로서리 상세 SSR HTML에 PlayCta("오늘의 퍼즐") 포함, `/spectate/pro` 페이지 소스에 SSR 기보 링크 다수, `sitemap.xml`에 `/daily`·`/spectate`·`/spectate/pro` 3건 포함.
+- **90일 세션 발효 실측** — `POST /api/session` 201의 `Set-Cookie`에 `Max-Age=7776000` 확인. 검증용 세션은 `/api/session/end`로 즉시 정리(204). 다음 사이클에서 `sessions` 적재 여부를 재확인하면 절차 6번까지 완결.
+- **push 완료** — `07a2ceb..5441d03` (코드 19 + ops 3). `alembic_version`은 배포 전부터 0019(8/16 머지 직후 적용).
+- 진행 중 대국 사전 재확인은 생략했다 — 8/17 09:00 사이클 실측(마지막 수 29시간 전, 진행 중 0건) 직후의 재기동이라 위험을 낮음으로 판단했다.
+- 잔여: 커뮤니티 홍보(러닝북 3장) 집행은 별개 🟡로 사람 판단 대기. GSC 가동(러닝북 1장)도 사람 몫.
 
 ### AP-20260808-01 + AP-20260805-01 — 처리 완료(사람 승인 · 에이전트 실행, 2026-08-08 15:47~15:49 KST)
 
