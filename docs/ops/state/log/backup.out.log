@@ -349,3 +349,7 @@ weekly 티어 복사: baduk-20260816T040005.db.gz
 보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260802T040005.db.gz
 보존 정리: /Users/daegong/baduk-backups/weekly/baduk-20260621T040002.db.gz
 [2026-08-16 04:00:07] backup 완료
+[2026-08-17 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260817T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260803T040005.db.gz
+[2026-08-17 04:00:07] backup 완료

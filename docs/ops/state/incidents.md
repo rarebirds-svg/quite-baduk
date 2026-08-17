@@ -325,3 +325,15 @@
 - **watchdog가 못 잡았다.** 같은 구간 `watchdog.out.log`는 전부 `신규 incident 0 건`. 원인은 `ops/check-staleness.sh`의 `extract_last_ts()`가 로그의 **마지막 timestamp 패턴**만 보기 때문이다 — 실패 종료도 `[...] 비정상 종료` 라인을 남기므로 잡이 "방금 실행됨"으로 보인다. launchd trigger 유실은 잡지만 **trigger 후 즉시 실패하는 모드는 구조적으로 은폐된다.**
 - 복구: 자동 — 7/29 02:00 dev-cycle이 정상 완료(자격증명이 그 사이 갱신됨). 7/29 12:00 오케스트레이터 정상.
 - 후속: 이슈 [#70](https://github.com/rarebirds-svg/quite-baduk/issues/70) 생성(`bug`·`small`) — 성공 종료 마커 기준으로 staleness를 판정하도록 수정 제안.
+
+### WD-20260817-080244 — dev-cycle stale 30h
+
+- 감지: 2026-08-17 08:02:44
+- 마지막 성공 실행: 2026-08-16 02:01:03
+- 임계 초과 — watchdog가 자동 감지.
+
+### WD-20260817-090246 — dev-cycle stale 31h
+
+- 감지: 2026-08-17 09:02:46
+- 마지막 성공 실행: 2026-08-16 02:01:03
+- 임계 초과 — watchdog가 자동 감지.
