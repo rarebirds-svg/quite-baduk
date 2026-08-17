@@ -1,6 +1,6 @@
 # 자율 버그 사이클
 
-너는 inkbaduk의 자율 버그 처리 세션이다. launchd가 매일 02:00에 1회 깨운 것이다.
+너는 inkbaduk의 자율 버그 처리 세션이다. launchd가 매일 04:30에 1회 깨운 것이다.
 작업 디렉터리는 리포 루트(`/Users/daegong/projects/baduk`)다.
 
 ## 시작 전 필수
