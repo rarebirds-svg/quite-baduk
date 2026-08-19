@@ -239,3 +239,10 @@ Status recorded. Summary of this cycle:
 
 **사람 판단 필요** — 시드가 고갈됐으므로 다음 사이클(8/19 수)도 동일하게 무작업이 반복된다. `seed-glossary.yml`·`seed-faq.yml`에 신규 토픽을 보충해야 content-draft가 다시 일한다.
 [2026-08-15 02:01:17] content-draft 종료
+[2026-08-19 02:00:02] content-draft 시작
+콘텐츠 초안 사이클 완료 요약입니다.
+
+- **선택**: 비율 균형 기준으로 글로서리(17/57 게시 ≈ 30%)가 FAQ(9/24 ≈ 38%)보다 뒤처져 글로서리를 골랐고, 미작성 후보 알파벳 첫 항목인 `ai-chuchunsu`(AI 추천수)를 선정했습니다.
+- **QA·게시**: korean-copy-qa 지적(용어 혼동 "이 값"→"이 추천 자리", 문장 다듬기, CTA 추가)을 반영한 뒤 `web/content/glossary/ai-chuchunsu.md`로 게시 — 커밋 df52866, main push 및 IndexNow 통보(HTTP 200) 완료. 상태 파일과 오늘 일지에도 기록했습니다.
+- **참고**: QA가 슬러그 로마자 표기(`chuchun` vs `chucheon`) 관행 불일치를 지적했으나, 시드가 정의한 슬러그를 바꾸면 이후 사이클이 중복 게시하므로 시드 값을 유지하고 로그에 남겼습니다.
+[2026-08-19 02:07:31] content-draft 종료
