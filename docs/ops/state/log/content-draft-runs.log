@@ -246,3 +246,10 @@ Status recorded. Summary of this cycle:
 - **QA·게시**: korean-copy-qa 지적(용어 혼동 "이 값"→"이 추천 자리", 문장 다듬기, CTA 추가)을 반영한 뒤 `web/content/glossary/ai-chuchunsu.md`로 게시 — 커밋 df52866, main push 및 IndexNow 통보(HTTP 200) 완료. 상태 파일과 오늘 일지에도 기록했습니다.
 - **참고**: QA가 슬러그 로마자 표기(`chuchun` vs `chucheon`) 관행 불일치를 지적했으나, 시드가 정의한 슬러그를 바꾸면 이후 사이클이 중복 게시하므로 시드 값을 유지하고 로그에 남겼습니다.
 [2026-08-19 02:07:31] content-draft 종료
+[2026-08-22 02:00:03] content-draft 시작
+사이클 완료. 요약입니다.
+
+- **선택** — 글로서리 18/57(31.6%) < FAQ 9/24(37.5%)로 글로서리가 뒤처져 있어, 미작성 후보 알파벳 순 첫 항목인 `badukpan`(바둑판·바둑돌)을 선택했습니다.
+- **초안·QA** — 3단락 초안 작성 후 korean-copy-qa 지적 3건을 반영했습니다. "장기도 칸이 아닌 점에 둔다"는 사실 오류를 수정해 체스만 대비시켰고, 판 크기 표기를 기존 글로서리 관례인 "9로·13로·19로 반"으로 통일했으며, seoTitle 나열 순서를 오름차순으로 맞췄습니다.
+- **게시** — 덮어쓰기 가드 통과 후 `web/content/glossary/badukpan.md`로 이동, 커밋 e896576을 main에 push했고 IndexNow 통보(HTTP 200)와 상태 기록·일일 로그까지 마쳤습니다.
+[2026-08-22 02:04:03] content-draft 종료
