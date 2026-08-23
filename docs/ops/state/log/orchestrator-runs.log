@@ -1801,3 +1801,10 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 [2026-08-23 09:02:22] 비정상 종료
 [2026-08-23 09:02:22] orchestrator 종료
 [2026-08-23 19:18:43] orchestrator 시작
+19:18 복구 사이클 완료 — 커밋 `e483759` push까지 마쳤습니다(ahead 0).
+
+- **09:00 사이클 결번 원인 확정·해소** — Claude 세션 한도(9:30 리셋)로 시작 직후 비정상 종료. watchdog stale 4건(WD-20260823)은 이 실행으로 해소 기록했고, orchestrator 첫 사례라 스케줄 이동 제안은 보류(재발 시 🟡 상정). am 다이제스트는 anomaly=warn으로 결번을 명시해 지연 발송(exit 0).
+- **전 항목 정상** — api·web·inkbaduk.com 200, 5xx 0, 디스크 6%, drift 없음, 배포 갭 0커밋, 잡 3/3 ok, 백업 드릴 35연속(+112KB는 일요일 CWI ingest new=200과 정합), 이슈·PR·승인 대기 전부 0건.
+- **실사용·이상** — 신규 대국 0국(#355 유지), visit_hits 238→243, locked 재발 0건 23일째. W34 리포트의 `/api/stats` HTTP 에러는 401(미인증 호출)로 서비스 이상 아님을 확인.
+[2026-08-23 19:24:50] orchestrator 종료
+[2026-08-23 21:00:05] orchestrator 시작
