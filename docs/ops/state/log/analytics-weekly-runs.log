@@ -107,3 +107,10 @@ Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/badu
 
 **특이사항 두 가지.** `/api/stats`가 401(no_session)을 반환해 DB 직접 조회로 대체했고 — 사이트 활성화 배포 이후 인증 요구로 바뀐 것으로 보이며 러닝북의 해당 명령은 손질이 필요할 수 있습니다. 또 `sessions` 테이블이 누적 0건으로 나왔는데(테이블은 존재), 90일 세션 도입과 어긋나 보여 세션 저장 위치가 다른 테이블일 가능성이 있습니다. 둘 다 리포트에 그대로 명기했습니다.
 [2026-08-16 09:01:29] analytics-weekly 종료
+[2026-08-23 09:00:05] analytics-weekly 시작
+2026-W34 주간 분석 리포트 작성 완료.
+
+- `docs/ops/state/reports/2026-W34.md` 생성 — 이번 주 게임 17건(전주 1건, +16)·누적 355건, 방문 67 hits(전주 47, +43%), 검색 유입 45건(네이버 모바일 25건 최대), 랜딩은 홈 25·글로서리 20·관전 12. 글로서리 29건(+2), 보류 승인 0건.
+- 상태 파일에 `analytics-weekly ok` 기록, `docs/ops/state/log/2026-08-23.md`에 한 줄 로그 추가.
+- 참고. `/api/stats`가 HTTP 에러(curl exit 22)로 응답하지 않아(W33의 401과 같은 인증 변경 추정) 세션·게임 수치는 전부 DB 직접 조회로 인용했습니다.
+[2026-08-23 09:01:30] analytics-weekly 종료
