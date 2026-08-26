@@ -1850,3 +1850,10 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 상태 파일 커밋·push(`e7b635f`)와 Telegram pm 다이제스트 발송(exit 0)까지 마쳤습니다.
 [2026-08-25 21:03:48] orchestrator 종료
 [2026-08-26 09:00:05] orchestrator 시작
+8/26 09:00 사이클 완료. 요약입니다.
+
+- **전 항목 정상** — prod api·web 200(디스크 6%, drift 없음, PID 2038/2099 무변동 213h), 배포 갭 0커밋, 트레이스백·5xx 0건, locked 재발 0건 26일째. 밤사이 신규 대국 0국(`max(id)` 360 유지, 방문 +4뿐).
+- **백업 드릴 41회 연속 통과** — 오늘 04:00 백업(+576B, 어제 유입과 정합) 복원 드릴 `ok`·테이블 10. 이슈·PR·승인 대기 모두 0건, 새벽 잡 3/3 정상(content-draft `banjip` 게시 포함).
+- **유일한 이상 행 유지** — `web/lib/i18n/{en,ko}.json` 6줄 미커밋이 4사이클째 무응답(mtime 8/23 23:48 불변, 타 세션 저작). am 다이제스트(warn)로 재차 확인 요청했고, ops 커밋 `62e2701` push·다이제스트 발송(exit 0) 완료.
+[2026-08-26 09:03:48] orchestrator 종료
+[2026-08-26 21:00:05] orchestrator 시작
