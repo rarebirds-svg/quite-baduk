@@ -253,3 +253,10 @@ Status recorded. Summary of this cycle:
 - **초안·QA** — 3단락 초안 작성 후 korean-copy-qa 지적 3건을 반영했습니다. "장기도 칸이 아닌 점에 둔다"는 사실 오류를 수정해 체스만 대비시켰고, 판 크기 표기를 기존 글로서리 관례인 "9로·13로·19로 반"으로 통일했으며, seoTitle 나열 순서를 오름차순으로 맞췄습니다.
 - **게시** — 덮어쓰기 가드 통과 후 `web/content/glossary/badukpan.md`로 이동, 커밋 e896576을 main에 push했고 IndexNow 통보(HTTP 200)와 상태 기록·일일 로그까지 마쳤습니다.
 [2026-08-22 02:04:03] content-draft 종료
+[2026-08-26 02:00:02] content-draft 시작
+콘텐츠 초안 사이클 완료. 요약입니다.
+
+- **선택** — 비율 균형 계산에서 글로서리(19/57=33%)가 FAQ(9/24=38%)보다 뒤처져 글로서리를 골랐고, 미작성 후보 알파벳 순 첫 항목인 `banjip`(반집)을 선택했습니다.
+- **QA·게시** — korean-copy-qa 리뷰에서 사실 오류 없음 판정, 명확성 수정 1건(집 차이 계산 문장)을 반영한 뒤 `web/content/glossary/banjip.md`로 게시하고 커밋 `a874088`을 main에 push했습니다. IndexNow 통보 HTTP 200.
+- **기록** — `report-job-status.sh content-draft ok` 기록, `docs/ops/state/log/2026-08-26.md`에 한 줄 로그 남김.
+[2026-08-26 02:03:11] content-draft 종료
