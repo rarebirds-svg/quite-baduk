@@ -6,11 +6,15 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { errorMessageKey } from "@/lib/api";
 import { useT } from "@/lib/i18n";
+import type { BoardSize } from "@/lib/board";
 import { gamePlayHref } from "@/lib/routes";
-import { ensureSession, isNicknameFormatValid, quickStart } from "@/lib/quickStart";
+import { ensureSession, isNicknameFormatValid, quickStart, QUICK_START_GAME } from "@/lib/quickStart";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import RankPicker, { type Rank } from "@/components/RankPicker";
+import BoardSizePicker from "@/components/BoardSizePicker";
 
 // 랜딩의 다른 요소(보드 프리뷰 등)가 이 입력에 포커스를 줄 수 있도록 id를 공개한다.
 export const QUICK_START_INPUT_ID = "quickstart-nickname";
@@ -23,6 +27,8 @@ export default function QuickStartForm({ autoFocus = true }: { autoFocus?: boole
   const session = useAuthStore((s) => s.session);
 
   const [nickname, setNickname] = useState("");
+  const [boardSize, setBoardSize] = useState<BoardSize>(QUICK_START_GAME.board_size);
+  const [rank, setRank] = useState<Rank>(QUICK_START_GAME.ai_rank);
   const [busy, setBusy] = useState<"play" | "details" | null>(null);
   const [error, setError] = useState<string | null>(null);
   // 세션이 있으면 닉네임 입력 자체가 없으므로 형식 검증도 건너뛴다.
@@ -35,7 +41,7 @@ export default function QuickStartForm({ autoFocus = true }: { autoFocus?: boole
     setError(null);
     setBusy("play");
     try {
-      const id = await quickStart(nickname);
+      const id = await quickStart(nickname, { board_size: boardSize, ai_rank: rank });
       router.push(gamePlayHref(id));
     } catch (err) {
       setError(t(`errors.${errorMessageKey(err)}`));
@@ -60,6 +66,26 @@ export default function QuickStartForm({ autoFocus = true }: { autoFocus?: boole
 
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <div className="flex items-center gap-2">
+          <Label className="text-xs font-semibold uppercase tracking-label text-ink-mute">
+            {t("game.boardSize")}
+          </Label>
+          <BoardSizePicker value={boardSize} onChange={setBoardSize} />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor="quickstart-rank"
+            className="text-xs font-semibold uppercase tracking-label text-ink-mute"
+          >
+            {t("game.rank")}
+          </Label>
+          <div className="w-32">
+            <RankPicker value={rank} onChange={setRank} triggerId="quickstart-rank" />
+          </div>
+        </div>
+      </div>
+
       <form onSubmit={onPlay} className="flex flex-col gap-3 md:flex-row md:items-start">
         {session ? (
           <p className="flex-1 font-sans text-sm text-ink-mute md:py-3">

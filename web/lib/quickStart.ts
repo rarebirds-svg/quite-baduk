@@ -1,6 +1,8 @@
 // 닉네임 하나로 세션 확보부터 기본 대국 생성까지 처리하는 원클릭 시작 로직.
 import { api } from "@/lib/api";
+import type { BoardSize } from "@/lib/board";
 import { setSessionToken } from "@/lib/sessionToken";
+import type { Rank } from "@/components/RankPicker";
 import { useAuthStore, type Session } from "@/store/authStore";
 
 const MIN_LEN = 2;
@@ -33,15 +35,21 @@ export async function ensureSession(nickname: string): Promise<Session> {
   return created;
 }
 
+export interface QuickStartOptions {
+  board_size?: BoardSize;
+  ai_rank?: Rank;
+}
+
 /**
- * 닉네임 → 세션 → 기본 대국까지 한 번에 만들고 game id를 돌려준다.
+ * 닉네임 → 세션 → 대국까지 한 번에 만들고 game id를 돌려준다. board_size·ai_rank를
+ * 지정하지 않으면 QUICK_START_GAME 기본값(9줄·9급)을 쓴다.
  * 실패는 그대로 던져서 호출측이 폴백을 고르게 한다.
  */
-export async function quickStart(nickname: string): Promise<number> {
+export async function quickStart(nickname: string, opts: QuickStartOptions = {}): Promise<number> {
   await ensureSession(nickname);
   const game = await api<{ id: number }>("/api/games", {
     method: "POST",
-    body: JSON.stringify(QUICK_START_GAME),
+    body: JSON.stringify({ ...QUICK_START_GAME, ...opts }),
   });
   return game.id;
 }

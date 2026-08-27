@@ -65,6 +65,22 @@ describe("quickStart", () => {
     });
   });
 
+  it("board_size·ai_rank를 지정하면 요청 바디에 반영된다", async () => {
+    apiMock
+      .mockResolvedValueOnce({ id: 7, nickname: "돌하나", token: "tok" })
+      .mockResolvedValueOnce({ id: 55 });
+
+    const id = await quickStart("돌하나", { board_size: 19, ai_rank: "5d" });
+
+    expect(id).toBe(55);
+    expect(JSON.parse(apiMock.mock.calls[1][1].body)).toEqual({
+      board_size: 19,
+      ai_rank: "5d",
+      handicap: 0,
+      user_color: "black",
+    });
+  });
+
   it("세션이 있으면 세션 생성을 건너뛴다", async () => {
     useAuthStore.setState({ session: { id: 3, nickname: "기존", token: null } });
     apiMock.mockResolvedValueOnce({ id: 99 });
