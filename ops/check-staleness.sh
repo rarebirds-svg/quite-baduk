@@ -22,6 +22,7 @@ JOBS=(
   "content-draft|content-draft-runs.log|432000|content-draft 종료"  # 5d (plist 주 2회 토·수 02:00, 최장 4d 갭 + 1d 마진)
   "content-ingest|content-ingest-runs.log|777600|content-ingest 종료" # 9d (plist 주 1회 일 03:00, 7d 주기 + 2d 마진)
   "analytics-weekly|analytics-weekly-runs.log|691200|analytics-weekly 종료"  # 8d
+  "news-hook|news-hook-runs.log|691200|news-hook 종료"  # 8d (plist 주 1회 일 05:00, 7d 주기 + 1d 마진)
   "backup|backup.out.log|108000|backup 완료"                        # 30h
 )
 
