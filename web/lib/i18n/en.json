@@ -151,9 +151,7 @@
       "sub1": "9-kyu to 9-dan, modeled on real human play. KataGo's Human-SL network is your opponent."
     },
     "newsHook": {
-      "kicker": "Breaking",
-      "body": "Humanity just edged the strongest AI alive — 9-dan Shin Jinseo beat KataGo 2–1 in a three-game match at a two-stone handicap. That same KataGo (Human-SL) is waiting for you on Inkbaduk.",
-      "guide": "Enter a nickname and take on that very AI."
+      "kicker": "Breaking"
     },
     "valueTitle1": "Truly human-like AI",
     "valueDesc1": "Not a labeled difficulty — an actual Human-SL network trained on real games at that rank, 9-kyu to 9-dan.",

@@ -1,6 +1,7 @@
-// 홈 라우트 — 서버에서 메타데이터만 확정하고 본문은 클라이언트 랜딩 조각에 위임한다.
+// 홈 라우트 — 서버에서 메타데이터와 속보 훅 데이터를 확정하고 본문은 클라이언트 랜딩 조각에 위임한다.
 import type { Metadata } from "next";
 
+import { getNewsHook } from "@/lib/newsHook";
 import HomeLanding from "./_HomeLanding";
 
 export const metadata: Metadata = {
@@ -11,6 +12,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// 웹 배포는 매 요청 동적 렌더(news-hook.json 갱신이 재빌드 없이 즉시 반영되도록) —
+// 앱 셸(BUILD_TARGET=app) 정적 export는 그대로 유지한다.
+export const dynamic = process.env.BUILD_TARGET === "app" ? "force-static" : "force-dynamic";
+
 export default function HomePage() {
-  return <HomeLanding />;
+  return <HomeLanding newsHook={getNewsHook()} />;
 }
