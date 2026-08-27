@@ -16,5 +16,9 @@ export interface NewsHookData {
 export function getNewsHook(): NewsHookData | null {
   if (!fs.existsSync(NEWS_HOOK_PATH)) return null;
   const raw = fs.readFileSync(NEWS_HOOK_PATH, "utf-8");
-  return JSON.parse(raw) as NewsHookData;
+  try {
+    return JSON.parse(raw) as NewsHookData;
+  } catch {
+    return null;
+  }
 }
