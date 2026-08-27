@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
+// 웹 배포는 매 요청 동적 렌더(news-hook.json 갱신이 재빌드 없이 즉시 반영되도록) —
+// 앱 셸(BUILD_TARGET=app) 정적 export는 그대로 유지한다.
+export const dynamic = process.env.BUILD_TARGET === "app" ? "force-static" : "force-dynamic";
+
 export default function HomePage() {
   return <HomeLanding newsHook={getNewsHook()} />;
 }
