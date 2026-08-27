@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Nickname-session auth. Sliding expiry — every request refreshes
     # ``last_seen_at`` (and the cookie), so a session only dies after 90
     # consecutive days without a visit.
-    session_ttl_sec: int = 7_776_000  # 90 days
+    session_ttl_sec: int = 604_800  # 7 days
     session_purge_interval_sec: int = 3600
     # When unset, cookie_secure is True in production and False otherwise.
     # Explicit `COOKIE_SECURE=true|false` always wins.

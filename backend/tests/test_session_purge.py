@@ -30,14 +30,14 @@ async def wired_db(db_engine):
 async def test_purge_deletes_idle_sessions_preserves_game_history(db_session, wired_db):
     """Idle sessions are purged but their games are preserved (session_id
     detaches via SET NULL) so the admin console's audit trail persists."""
-    ttl = settings.session_ttl_sec  # 90일 슬라이딩
-    # Fresh — 89일 전 방문이면 아직 살아 있어야 한다.
+    ttl = settings.session_ttl_sec  # 7일 슬라이딩
+    # Fresh — 6일 전 방문이면 아직 살아 있어야 한다.
     fresh = Session(token="t-fresh", nickname="alice", nickname_key="alice",  # noqa: S106 (test session token, not a password)
-                    last_seen_at=dt.datetime.now(dt.UTC) - dt.timedelta(days=89))
+                    last_seen_at=dt.datetime.now(dt.UTC) - dt.timedelta(days=6))
     db_session.add(fresh)
-    # Stale — 91일 전 방문.
+    # Stale — 8일 전 방문.
     stale = Session(token="t-stale", nickname="bob", nickname_key="bob",  # noqa: S106 (test session token, not a password)
-                    last_seen_at=dt.datetime.now(dt.UTC) - dt.timedelta(days=91))
+                    last_seen_at=dt.datetime.now(dt.UTC) - dt.timedelta(days=8))
     db_session.add(stale)
     await db_session.commit()
     await db_session.refresh(fresh)

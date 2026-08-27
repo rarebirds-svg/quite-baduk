@@ -43,11 +43,11 @@
   },
   "admin": {
     "heading": "Admin console",
-    "subtitle": "Live view of active sessions and games.",
-    "sectionSessions": "Sessions",
+    "subtitle": "Login sessions (valid 7 days) and game activity. WS/LIVE marks only the ones currently connected via an open game screen.",
+    "sectionSessions": "Login sessions (7-day validity, not real-time)",
     "sectionGames": "Recent games",
     "colNickname": "Nickname",
-    "colCreated": "Connected",
+    "colCreated": "First login",
     "colLastSeen": "Last seen",
     "colGames": "Games",
     "colActive": "Active",
@@ -190,7 +190,7 @@
     "previewCaption": "A real game — same engine, 9 kyu to 9 dan",
     "boardPreviewCta": "Start from this board",
     "scrollHint": "Enter a nickname below to begin",
-    "footerNote": "Your nickname session is kept in this browser for 90 days and renews on every visit. See the Privacy Policy for full data retention details.",
+    "footerNote": "Your nickname session is kept in this browser for 7 days and renews on every visit. See the Privacy Policy for full data retention details.",
     "footerPro": "Pro Games",
     "footerGlossary": "Glossary",
     "footerFaq": "FAQ",
@@ -202,7 +202,7 @@
     "nicknameHeading": "Choose a nickname",
     "nicknamePlaceholder": "2–32 characters, no emoji",
     "nicknameInvalid": "2–32 characters, text only",
-    "privacyNote": "Your nickname session is kept in this browser for 90 days and renews on every visit. It is removed when you log out or after 90 days without a visit. Game-history deletion can be requested per the procedure in the Privacy Policy.",
+    "privacyNote": "Your nickname session is kept in this browser for 7 days and renews on every visit. It is removed when you log out or after 7 days without a visit. Game-history deletion can be requested per the procedure in the Privacy Policy.",
     "ephemeralNote": "This list shows games played in the current session. Kifu records are kept on the server; for deletion, follow the procedure in the Privacy Policy.",
     "endSession": "End session",
     "expiredTitle": "Your session has expired",
@@ -405,7 +405,7 @@
           "Nickname (up to 32 characters) and a normalised nickname key (used only to check reserved nicknames)",
           "Game history: board size, handicap, your colour, scores, win/loss, move sequence (kifu), start and end times",
           "Session token (HttpOnly cookie, opaque random value — not a JWT)",
-          "Connection time and last-activity time (auto-purged 90 days after your last visit)",
+          "Connection time and last-activity time (auto-purged 7 days after your last visit)",
           "Server logs: IP address (rate-limiting and abuse prevention only), request path, response time — see the Retention section below for retention details",
           "We run self-hosted visit analytics: no raw IP is stored, only a country code and a daily anonymised hash",
           "What we do NOT collect: email, phone number, payment details, location, device identifiers, profile photo"
@@ -423,7 +423,7 @@
       "retention": {
         "title": "Retention",
         "items": [
-          "Session token: discarded 90 days after your last visit or on explicit logout (each visit restarts the 90 days)",
+          "Session token: discarded 7 days after your last visit or on explicit logout (each visit restarts the 7 days)",
           "Game history: kept with a nickname snapshot; deleted on user request (see rights below)",
           "Server logs: emitted as JSON to standard output; rotation and deletion follow the log-collection workload's retention configuration in the production environment (the exact retention window depends on the operations infrastructure)."
         ]
@@ -493,7 +493,7 @@
         "title": "Account (nickname session)",
         "items": [
           "No email or password registration is required — a nickname alone creates a session.",
-          "A session is kept in this browser for 90 days, and every visit restarts that period. It is removed when you log out or 90 days after your last visit.",
+          "A session is kept in this browser for 7 days, and every visit restarts that period. It is removed when you log out or 7 days after your last visit.",
           "Nicknames may be reused freely, and sessions sharing a nickname keep their game histories separate. Nicknames reserved by the operator are the exception — while one is in use, a new session cannot claim it (the API responds with HTTP 409)."
         ]
       },
