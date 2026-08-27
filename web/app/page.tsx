@@ -1,6 +1,7 @@
-// 홈 라우트 — 서버에서 메타데이터만 확정하고 본문은 클라이언트 랜딩 조각에 위임한다.
+// 홈 라우트 — 서버에서 메타데이터와 속보 훅 데이터를 확정하고 본문은 클라이언트 랜딩 조각에 위임한다.
 import type { Metadata } from "next";
 
+import { getNewsHook } from "@/lib/newsHook";
 import HomeLanding from "./_HomeLanding";
 
 export const metadata: Metadata = {
@@ -12,5 +13,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <HomeLanding />;
+  return <HomeLanding newsHook={getNewsHook()} />;
 }

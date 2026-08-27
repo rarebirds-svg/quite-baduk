@@ -5,10 +5,11 @@ import { useT } from "@/lib/i18n";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { BoardPreview } from "@/components/editorial/BoardPreview";
 import { NewsHook } from "@/components/editorial/NewsHook";
+import type { NewsHookData } from "@/lib/newsHook";
 import { ClusterLinks } from "@/components/editorial/ClusterLinks";
 import QuickStartForm from "@/components/QuickStartForm";
 
-export default function HomeLanding() {
+export default function HomeLanding({ newsHook }: { newsHook: NewsHookData | null }) {
   const t = useT();
 
   // Hero copy is fixed — one message repeated across visits so it can be
@@ -66,7 +67,7 @@ export default function HomeLanding() {
           {subtitle}
         </p>
         <BoardPreview />
-        <NewsHook />
+        <NewsHook data={newsHook} />
       </section>
 
       <RuleDivider weight="strong" />
