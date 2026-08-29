@@ -260,3 +260,10 @@ Status recorded. Summary of this cycle:
 - **QA·게시** — korean-copy-qa 리뷰에서 사실 오류 없음 판정, 명확성 수정 1건(집 차이 계산 문장)을 반영한 뒤 `web/content/glossary/banjip.md`로 게시하고 커밋 `a874088`을 main에 push했습니다. IndexNow 통보 HTTP 200.
 - **기록** — `report-job-status.sh content-draft ok` 기록, `docs/ops/state/log/2026-08-26.md`에 한 줄 로그 남김.
 [2026-08-26 02:03:11] content-draft 종료
+[2026-08-29 02:00:03] content-draft 시작
+콘텐츠 초안 사이클 완료입니다.
+
+- **선정**: 게시 비율이 더 뒤처진 글로서리(20/57 ≈ 0.35 vs FAQ 9/24 ≈ 0.38)에서 미작성 후보 알파벳 첫 항목인 `beollim`(벌림)을 선택했습니다.
+- **QA·게시**: korean-copy-qa가 사실관계("일립이전 이립삼전")·용어·문체 모두 통과 판정했고, 유일한 지적인 seoTitle 구분자(`|` → `—`)를 반영한 뒤 `web/content/glossary/beollim.md`로 게시해 main에 커밋·push(49971b9)했습니다.
+- **후처리**: IndexNow 통보 성공(HTTP 200), `report-job-status.sh` ok 기록, `state/log/2026-08-29.md`에 한 줄 기록을 남겼습니다.
+[2026-08-29 02:03:08] content-draft 종료
