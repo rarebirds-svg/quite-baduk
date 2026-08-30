@@ -12,12 +12,12 @@ mkdir -p docs/ops/state/log docs/ops/state/reports
 RUNLOG="docs/ops/state/log/analytics-weekly-runs.log"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] analytics-weekly 시작" >> "$RUNLOG"
 
-# 세션 한도로 죽으면 리셋 시각 이후 1회 재시도한다 (ops/lib/session-retry.sh).
+# 타임아웃 가드(ops/claude-headless.sh)로 1회 실행하고, 세션 한도로 죽으면
+# 리셋 시각 이후 1회 재시도한다(ops/lib/session-retry.sh). 재시도가 바깥,
+# 타임아웃이 안쪽 — 순서를 뒤집으면 재시도 대기가 타임아웃에 잡아먹힌다.
 . ops/lib/session-retry.sh
 run_claude_with_session_retry "$RUNLOG" \
-  /opt/homebrew/bin/claude -p "$(cat docs/ops/analytics-prompt.md)" \
-  --dangerously-skip-permissions \
-  --channels plugin:telegram@claude-plugins-official \
+  ops/claude-headless.sh docs/ops/analytics-prompt.md \
   || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] analytics-weekly 종료" >> "$RUNLOG"

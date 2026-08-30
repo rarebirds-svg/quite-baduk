@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# launchd가 매일 12시·18시 호출 — 오케스트레이터 프롬프트로 헤드리스 Claude Code를 1회 실행.
+# launchd가 매일 09시·21시 호출 — 오케스트레이터 프롬프트로 헤드리스 Claude Code를 1회 실행.
 set -euo pipefail
 # launchd는 로그인 셸 PATH를 상속하지 않는다 — Homebrew 경로(gh·claude 등)를 명시적으로 앞에 붙인다.
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -14,14 +14,13 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] orchestrator 시작" >> "$RUNLOG"
 
 # 헤드리스 실행. 무인 스케줄이라 권한 프롬프트가 불가능 — 가드레일은
 # autonomy-policy.md(🟡 액션은 Telegram 승인)이지 OS 권한창이 아니다.
-# --channels: Telegram 플러그인 도구(reply 등)를 세션에 붙인다. 없으면
-# 오케스트레이터가 curl Bot API로 폴백한다.
-# 세션 한도로 죽으면 리셋 시각 이후 1회 재시도한다 (ops/lib/session-retry.sh).
+# Telegram 플러그인 도구가 없으면 오케스트레이터가 curl Bot API로 폴백한다.
+# 타임아웃 가드(ops/claude-headless.sh)로 1회 실행하고, 세션 한도로 죽으면
+# 리셋 시각 이후 1회 재시도한다(ops/lib/session-retry.sh). 재시도가 바깥,
+# 타임아웃이 안쪽 — 순서를 뒤집으면 재시도 대기가 타임아웃에 잡아먹힌다.
 . ops/lib/session-retry.sh
 run_claude_with_session_retry "$RUNLOG" \
-  /opt/homebrew/bin/claude -p "$(cat docs/ops/orchestrator-prompt.md)" \
-  --dangerously-skip-permissions \
-  --channels plugin:telegram@claude-plugins-official \
+  ops/claude-headless.sh docs/ops/orchestrator-prompt.md \
   || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] orchestrator 종료" >> "$RUNLOG"
