@@ -12,9 +12,12 @@ mkdir -p docs/ops/state/log
 RUNLOG="docs/ops/state/log/dev-cycle-runs.log"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] dev-cycle 시작" >> "$RUNLOG"
 
-/opt/homebrew/bin/claude -p "$(cat docs/ops/dev-cycle-prompt.md)" \
+# 세션 한도로 죽으면 리셋 시각 이후 1회 재시도한다 (ops/lib/session-retry.sh).
+. ops/lib/session-retry.sh
+run_claude_with_session_retry "$RUNLOG" \
+  /opt/homebrew/bin/claude -p "$(cat docs/ops/dev-cycle-prompt.md)" \
   --dangerously-skip-permissions \
   --channels plugin:telegram@claude-plugins-official \
-  >> "$RUNLOG" 2>&1 || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
+  || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] dev-cycle 종료" >> "$RUNLOG"

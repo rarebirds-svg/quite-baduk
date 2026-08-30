@@ -16,9 +16,12 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] orchestrator 시작" >> "$RUNLOG"
 # autonomy-policy.md(🟡 액션은 Telegram 승인)이지 OS 권한창이 아니다.
 # --channels: Telegram 플러그인 도구(reply 등)를 세션에 붙인다. 없으면
 # 오케스트레이터가 curl Bot API로 폴백한다.
-/opt/homebrew/bin/claude -p "$(cat docs/ops/orchestrator-prompt.md)" \
+# 세션 한도로 죽으면 리셋 시각 이후 1회 재시도한다 (ops/lib/session-retry.sh).
+. ops/lib/session-retry.sh
+run_claude_with_session_retry "$RUNLOG" \
+  /opt/homebrew/bin/claude -p "$(cat docs/ops/orchestrator-prompt.md)" \
   --dangerously-skip-permissions \
   --channels plugin:telegram@claude-plugins-official \
-  >> "$RUNLOG" 2>&1 || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
+  || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] orchestrator 종료" >> "$RUNLOG"
