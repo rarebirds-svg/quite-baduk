@@ -1911,3 +1911,7 @@ pm 사이클을 완료했습니다. 전 항목 정상입니다.
 - **보고·기록** — pm 다이제스트 발송 성공(exit 0, 마커 생성), 대시보드·일일 로그 갱신 후 `c2249da`로 main에 커밋·push. 승인 대기 0건이라 별도 승인 카드 없음.
 [2026-08-29 21:02:25] orchestrator 종료
 [2026-08-30 09:00:05] orchestrator 시작
+You've hit your session limit · resets 9:30am (Asia/Seoul)
+[2026-08-30 09:03:42] 비정상 종료
+[2026-08-30 09:03:42] orchestrator 종료
+[2026-08-30 23:31:59] orchestrator 시작
