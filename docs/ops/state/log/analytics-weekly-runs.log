@@ -114,3 +114,10 @@ Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/badu
 - 상태 파일에 `analytics-weekly ok` 기록, `docs/ops/state/log/2026-08-23.md`에 한 줄 로그 추가.
 - 참고. `/api/stats`가 HTTP 에러(curl exit 22)로 응답하지 않아(W33의 401과 같은 인증 변경 추정) 세션·게임 수치는 전부 DB 직접 조회로 인용했습니다.
 [2026-08-23 09:01:30] analytics-weekly 종료
+[2026-08-30 09:00:06] analytics-weekly 시작
+2026-W35 주간 분석 리포트 작성 완료.
+
+- **리포트 생성** — `docs/ops/state/reports/2026-W35.md`. 이번 주 게임 6건(전주 17건, −65%) / 누적 361건, 방문 67 hits(전주와 동일 — search 42·direct 23·internal 2), 최대 유입은 네이버 모바일 검색 → 글로서리. 글로서리 31건(+2), FAQ 12건, 보류 승인 0건.
+- **특이사항** — `/api/stats`가 HTTP 401을 반환해 지난주와 마찬가지로 DB 직접 조회 기준으로 작성했음을 리포트에 명기. 세션 테이블은 누적 2건으로 집계됨(출력 그대로 인용).
+- **기록** — `report-job-status.sh analytics-weekly ok` 마커 기록, `log/2026-08-30.md`에 한 줄 추가. 다음 실행은 다음 일요일 launchd.
+[2026-08-30 09:01:19] analytics-weekly 종료

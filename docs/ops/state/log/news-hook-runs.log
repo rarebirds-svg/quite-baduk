@@ -5,3 +5,11 @@
 - 해당 파일만 커밋(`08898d0`)해 `main`에 push 완료 — 홈 서버 컴포넌트가 매 요청 시 읽으므로 재빌드 불필요.
 - `report-job-status.sh news-hook ok` 보고 및 `docs/ops/state/log/2026-08-27.md`에 기록을 남겼습니다.
 [2026-08-27 22:13:38] news-hook 종료
+[2026-08-30 05:00:03] news-hook 시작
+**이번 주는 변경 없음으로 종료했습니다.**
+
+- 최근 7일 검색 결과, 게이트를 통과할 신규 뉴스가 없었습니다. 유일한 대형 사건인 김은지 9단의 여자 최초 '10대 500승'은 현재 게시된 훅과 동일 사건(8/27 게시)이고, 그 외는 여자바둑리그 개막식·해성 여자기성전 개막·삼성화재배 통합예선 등 정례 대회 소식뿐이며 AI-vs-인간 대국 뉴스는 없었습니다. 후보로 보였던 SOOPER MATCH(조훈현–유하준)는 1월, Alexander Qi 세계유스 우승은 2025년 8월 사건으로 확인되어 제외했습니다.
+- `news-hook.json`은 건드리지 않았고, `ops/report-job-status.sh news-hook ok "이번 주 대상 뉴스 없음"` 보고와 `state/log/2026-08-30.md` 한 줄 기록을 완료했습니다.
+
+Sources: [한국기원 바둑뉴스](https://m.baduk.or.kr/record/C04_list.asp), [NAGF News](https://news.nagofed.org/), [타이젬 뉴스 — 유하준 특별대국](https://m.tygem.com/news/news_view.html?seq=39442&gubun=0)
+[2026-08-30 05:01:47] news-hook 종료
