@@ -12,9 +12,7 @@ mkdir -p docs/ops/state/log
 RUNLOG="docs/ops/state/log/dev-cycle-runs.log"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] dev-cycle 시작" >> "$RUNLOG"
 
-/opt/homebrew/bin/claude -p "$(cat docs/ops/dev-cycle-prompt.md)" \
-  --dangerously-skip-permissions \
-  --channels plugin:telegram@claude-plugins-official \
+ops/claude-headless.sh docs/ops/dev-cycle-prompt.md \
   >> "$RUNLOG" 2>&1 || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] dev-cycle 종료" >> "$RUNLOG"
