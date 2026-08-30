@@ -12,10 +12,15 @@ mkdir -p docs/ops/state/log
 RUNLOG="docs/ops/state/log/orchestrator-runs.log"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] orchestrator 시작" >> "$RUNLOG"
 
-# 헤드리스 실행(공용 러너, 타임아웃 가드 포함). 무인 스케줄이라 권한 프롬프트가
-# 불가능 — 가드레일은 autonomy-policy.md(🟡 액션은 Telegram 승인)이지 OS 권한창이
-# 아니다. Telegram 플러그인 도구가 없으면 오케스트레이터가 curl Bot API로 폴백한다.
-ops/claude-headless.sh docs/ops/orchestrator-prompt.md \
-  >> "$RUNLOG" 2>&1 || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
+# 헤드리스 실행. 무인 스케줄이라 권한 프롬프트가 불가능 — 가드레일은
+# autonomy-policy.md(🟡 액션은 Telegram 승인)이지 OS 권한창이 아니다.
+# Telegram 플러그인 도구가 없으면 오케스트레이터가 curl Bot API로 폴백한다.
+# 타임아웃 가드(ops/claude-headless.sh)로 1회 실행하고, 세션 한도로 죽으면
+# 리셋 시각 이후 1회 재시도한다(ops/lib/session-retry.sh). 재시도가 바깥,
+# 타임아웃이 안쪽 — 순서를 뒤집으면 재시도 대기가 타임아웃에 잡아먹힌다.
+. ops/lib/session-retry.sh
+run_claude_with_session_retry "$RUNLOG" \
+  ops/claude-headless.sh docs/ops/orchestrator-prompt.md \
+  || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] orchestrator 종료" >> "$RUNLOG"

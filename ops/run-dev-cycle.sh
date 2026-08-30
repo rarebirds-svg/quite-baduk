@@ -12,7 +12,12 @@ mkdir -p docs/ops/state/log
 RUNLOG="docs/ops/state/log/dev-cycle-runs.log"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] dev-cycle 시작" >> "$RUNLOG"
 
-ops/claude-headless.sh docs/ops/dev-cycle-prompt.md \
-  >> "$RUNLOG" 2>&1 || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
+# 타임아웃 가드(ops/claude-headless.sh)로 1회 실행하고, 세션 한도로 죽으면
+# 리셋 시각 이후 1회 재시도한다(ops/lib/session-retry.sh). 재시도가 바깥,
+# 타임아웃이 안쪽 — 순서를 뒤집으면 재시도 대기가 타임아웃에 잡아먹힌다.
+. ops/lib/session-retry.sh
+run_claude_with_session_retry "$RUNLOG" \
+  ops/claude-headless.sh docs/ops/dev-cycle-prompt.md \
+  || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] dev-cycle 종료" >> "$RUNLOG"

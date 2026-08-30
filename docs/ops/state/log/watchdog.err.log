@@ -9,3 +9,6 @@
 [digest-inkbaduk-am] 미발송이지만 cooldown — skip notify
 [digest-inkbaduk-am] 미발송이지만 cooldown — skip notify
 [digest-inkbaduk-am] 미발송이지만 cooldown — skip notify
+[orchestrator] stale but in cooldown — skip notify
+[digest-inkbaduk-pm] 미발송이지만 cooldown — skip notify
+[digest-popory-pm] 미발송이지만 cooldown — skip notify
