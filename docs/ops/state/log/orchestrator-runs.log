@@ -1936,3 +1936,10 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 - **기록·보고** — 대시보드·일일 로그 갱신 후 `6b3007a`로 커밋·push, pm 다이제스트 발송 성공(exit 0, 성공 마커 생성).
 [2026-08-31 21:02:43] orchestrator 종료
 [2026-09-01 09:00:02] orchestrator 시작
+9/1 am 사이클을 완료했습니다.
+
+- **전 항목 정상.** prod api·web 200(5xx 0/최근 5천줄), launchd PID 유지, 디스크 6%, plist drift 없음. 백업 오늘 04:00 신선·복원 드릴 52회 연속 통과(monthly 3→4는 월초 정기 생성). 배포 갭 0, 열린 이슈·PR 0, 승인 대기 0, 잡 상태 4/4 ok.
+- **활동:** 신규 대국 5건(#366~370, 마지막 수 오늘 03:19 KST), `visit_hits` +4/12h. 트레이스백·신규 버그 0건.
+- **마감:** 대시보드·`state/log/2026-09-01.md` 갱신, am 다이제스트 발송 성공(exit 0), 상태 커밋 `0dce550` main push 완료.
+[2026-09-01 09:02:27] orchestrator 종료
+[2026-09-01 21:00:04] orchestrator 시작
