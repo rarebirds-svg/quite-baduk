@@ -1950,3 +1950,10 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 - 상태 파일 갱신 후 커밋·push(`8bf1871`), pm 다이제스트 발송 성공(exit 0).
 [2026-09-01 21:02:26] orchestrator 종료
 [2026-09-02 09:00:04] orchestrator 시작
+9/2 am 사이클을 완료했습니다.
+
+- **전 항목 정상** — prod api·web 200, 5xx 0/5천줄, 디스크 6%, plist drift 없음. 백업 신선(04:00)·복원 드릴 54회 연속 통과. 배포 갭 0, 잡 4/4 ok, 열린 PR·미분류 이슈·승인 대기 모두 0건.
+- **버그 스캔 1건 발굴** — 9/2 01:02 KST 게임 378의 89수에서 `moves` UNIQUE 제약 위반 2회(WS 재접속 반복과 동시 관측, DB에는 같은 수번호로 다른 좌표 기존재). 대국은 정상 종료돼 장애는 아니며, 이슈 [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81)로 등재해 다음 dev-cycle 처리 대상으로 남겼습니다.
+- 대시보드·일일 로그 갱신, am 다이제스트 발송 성공(anomaly ⚠️ 포함), 상태 커밋 `abbde98` push 완료. 신규 대국 1건(#381), visit_hits +3/12h.
+[2026-09-02 09:03:27] orchestrator 종료
+[2026-09-02 21:00:03] orchestrator 시작

@@ -1,19 +1,19 @@
 # 운영 대시보드
 
-- 갱신: 2026-09-02 09:00
+- 갱신: 2026-09-02 21:00
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
-| prod | 정상 — backend·web 200 OK, db OK, 디스크 6%, plist drift 없음. PID api **1709** / web **1698** (8/30 21:01 기동 유지). `.log` 최근 5천줄 200 4861 / 204 51 / 401 49 / 201 28 / 409 6 / 404 3 / 429 2 — **5xx 0건**. **신규 대국 1건**(#381, `max(games.id)` 380→381, 마지막 수 09-02 01:02 KST). `visit_hits` 350→**353**(+3/12h). `.err` 신규 트레이스백 1건 — moves UNIQUE 제약 위반(game 378 move 89, 9/2 01:02 KST ×2회) → 이슈 [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) 생성, 대국은 정상 종료(resigned)라 장애 아님.<br>(이전) 9/1 21:00 정상 — 신규 대국 10건(#371~380), `visit_hits` +17/12h. | 2026-09-02 09:00 |
-| staging | 중단 (정책상 정상) | 2026-09-02 09:00 |
+| prod | 정상 — backend·web 200 OK, db OK, 디스크 6%, plist drift 없음. PID api **1709** / web **1698** (8/30 21:01 기동 유지). `.log` 최근 5천줄 200 4843 / 204 53 / 401 51 / 201 36 / 404 9 / 409 6 / 429 2 — **5xx 0건**. **신규 대국 7건**(#382~388, `max(games.id)` 381→388, 마지막 수 09-02 16:03 KST). `visit_hits` 353→**357**(+4/12h). `.err` 신규 트레이스백 0건 — 잔존 UNIQUE 트레이스백은 9/2 01:02 KST game 378 건(오전에 [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) 등록 완료)뿐, 재발 없음.<br>(이전) 9/2 09:00 정상 — 신규 대국 1건(#381), moves UNIQUE 트레이스백 → 이슈 #81 생성. | 2026-09-02 21:00 |
+| staging | 중단 (정책상 정상) | 2026-09-02 21:00 |
 
 ## 백업 상태
 
 | 항목 | 값 |
 |---|---|
-| 최신 백업 | **2026-09-02T04:00** (baduk-20260902T040004.db.gz) — 신선, integrity_check ok·테이블 10 = **54회 연속** 통과, daily 14 / weekly 8 / monthly 4 (9/2 09:00 검증).<br>(이전) 9/1 21:00 검증 53회 연속.
+| 최신 백업 | **2026-09-02T04:00** (baduk-20260902T040004.db.gz) — 신선, integrity_check ok·테이블 10 = **55회 연속** 통과, daily 14 / weekly 8 / monthly 4 (9/2 21:00 검증).<br>(이전) 9/2 09:00 검증 54회 연속.
 | daily / weekly / monthly | **14 / 8 / 3** (8/16 09:00 실측). 8/16 04:00 생성과 함께 daily 8/2분·weekly 6/21분이 보존 정리돼 개수 유지. |
 
 ## 콘텐츠 인덱스
@@ -42,10 +42,10 @@
 
 | 항목 | 값 |
 |---|---|
-| 열린 이슈 | **(9/2 09:00) 1건 — 미분류 0건.** 신규 [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — place_move 중복 착수 moves UNIQUE 제약 위반(bug-scan 자동 생성). 다음 dev-cycle 처리 대상.<br>(이전) **(9/1 21:00) 0건.**
-| 열린 PR | **(9/2 09:00) 0건 — 주의 PR 0건.**<br>(이전) **(9/1 21:00) 0건.**
+| 열린 이슈 | **(9/2 21:00) 1건 — 미분류 0건.** [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — place_move 중복 착수 moves UNIQUE 제약 위반. 다음 dev-cycle(9/3 04:30) 처리 대상.<br>(이전) **(9/2 09:00) 1건 — #81 신규 생성.**
+| 열린 PR | **(9/2 21:00) 0건 — 주의 PR 0건.**<br>(이전) **(9/2 09:00) 0건.**
 | CI e2e 상태 | **(7/25 12:00) PR #66 런에서 e2e 잡 SUCCESS 확인** — #59 머지 이후 회복 상태 유지. `[[ci-e2e-disabled]]`의 "main 만성 RED" 서술은 현재 사실과 다르므로 갱신 대상. e2e 잡은 활성(`if:` 조건 없음). |
-| SQLite locked 판정 | **(9/2 09:00) 재발 0건 33일째.** 9/2 01:02 신규 트레이스백은 database-locked가 아니라 moves UNIQUE 제약 위반(#81) — 별건.<br>(이전) **(9/1 21:00) 재발 0건 32일째.**
+| SQLite locked 판정 | **(9/2 21:00) 재발 0건 33일째 유지.** UNIQUE(#81) 트레이스백도 9/2 01:02 이후 재발 없음.<br>(이전) **(9/2 09:00) 재발 0건 33일째.**
 | 미병합 브랜치 | **(7/24 18:00 정정) 로컬 미push 브랜치는 0건이다.** `git for-each-ref --format='%(upstream:short)'` 실측 — 로컬 13개 중 12개가 origin 추적 브랜치를 갖고, 나머지 1개는 워크트리용 `worktree-feat+glossary-media-phase1`(5/26)뿐이다. 7/24 02:00 dev-cycle 로그의 "미push 6개"(`feat/format-game-result` 등)와 아래 "로컬 전용 2건" 서술은 **모두 오탐** — 해당 브랜치들은 전부 origin에 존재한다. `[[dev-cycle-unpushed-branches]]` 대응 조치 불필요. 남은 것은 push 여부가 아니라 **정리(삭제) 여부**이며 이는 사람 재량.<br>**(이전 기록 7/14 18:30 · 7/17 18:30)** 원격 `feat/last-seen-at-debounce`·`fix/issue-39`는 **오탐** — PR #30·#45가 **squash merge**돼 원본 커밋이 main 조상이 아닐 뿐, 내용은 main에 반영됨(`git grep` 확인). 사람 판단 불필요. → 판정은 `--no-merged`가 아니라 PR 상태+`git grep <ref>`로. 원격 브랜치 잔여물 삭제는 사람 재량.<br>**superseded(폐기 가능) 4건** — `fix/sqlite-busy-timeout`·`fix/auto-resign-respect-score-margin`·`fix/scoring-gate-too-strict`·`fix/issue-12`: 수정 내용이 다른 커밋으로 main에 이미 반영됨.<br>**실제 사람 판단 대기 = 로컬 전용 2건**: `feat/format-game-result`(main에 `formatResult` 부재), `feat/i18n-ja-zh`(main 로케일 ko·en만) — PR 생성 또는 폐기. 둘 다 **최종 커밋 4/30 = 2.5개월 경과**, feature 경로라 dev-cycle 자율 범위 밖 → 오케스트레이터는 자율 push하지 않고 보고만 유지(정책 L16 보수 처리). |
 
 ## 보류 승인
