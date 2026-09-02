@@ -234,17 +234,27 @@ async def place_move(
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
-    state = get_cached_state(game.id)
-    if state is None:
-        state = await _replay_state(db, game)
-        cache_state(game.id, state)
-
     adapter = await get_adapter(game.id)
     user_side = BLACK if game.user_color == "black" else WHITE
     ai_side = WHITE if user_side == BLACK else BLACK
 
     # Lock per game
     async with game_lock(game.id):
+        # Re-read game + cached state INSIDE the lock. A concurrent place_move
+        # from a replaced WS connection may commit moves while this one waits
+        # on the lock; that connection's `game` row (loaded at WS accept, in a
+        # different DB session) is then stale, and computing move_number from
+        # its move_count inserts a duplicate (game_id, move_number) —
+        # IntegrityError, unhandled 5xx (#81). refresh() is a plain SELECT:
+        # nothing is dirty yet, so no autoflush, and no SQLite write lock.
+        await db.refresh(game)
+        if game.status != "active":
+            raise GameError("GAME_NOT_ACTIVE", game.status)
+        state = get_cached_state(game.id)
+        if state is None:
+            state = await _replay_state(db, game)
+            cache_state(game.id, state)
+
         # Validate + apply the user move in memory. All DB writes for this
         # round are deferred to a single batch AFTER the KataGo genmove/analyze
         # below, so the SQLite write lock is never held across the multi-second
