@@ -267,3 +267,12 @@ Status recorded. Summary of this cycle:
 - **QA·게시**: korean-copy-qa가 사실관계("일립이전 이립삼전")·용어·문체 모두 통과 판정했고, 유일한 지적인 seoTitle 구분자(`|` → `—`)를 반영한 뒤 `web/content/glossary/beollim.md`로 게시해 main에 커밋·push(49971b9)했습니다.
 - **후처리**: IndexNow 통보 성공(HTTP 200), `report-job-status.sh` ok 기록, `state/log/2026-08-29.md`에 한 줄 기록을 남겼습니다.
 [2026-08-29 02:03:08] content-draft 종료
+[2026-09-02 02:00:01] content-draft 시작
+You've hit your session limit · resets 4:20am (Asia/Seoul)
+[2026-09-02 02:00:07] 세션 한도 감지 — 8693s 대기 후 1회 재시도
+사이클 완료 요약입니다.
+
+- **선택**. 게시 비율이 더 뒤처진 글로서리(21/57=36.8% vs FAQ 37.5%)에서 알파벳 순 첫 미작성 후보 `bokgi`(복기)를 선택했습니다.
+- **초안·QA**. 3단락 초안 작성 후 korean-copy-qa 통과. 제안받은 문장 다듬기, `seoTitle`·`related` frontmatter, 승률 글로서리·복기 FAQ 내부 링크를 반영했습니다.
+- **게시**. `web/content/glossary/bokgi.md`로 이동해 커밋 `0606b0f`로 main push 완료, IndexNow 통보 200, 상태 파일·운영 로그 기록까지 마쳤습니다.
+[2026-09-02 04:28:48] content-draft 종료
