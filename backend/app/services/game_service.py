@@ -480,12 +480,20 @@ async def place_move(
 
                 if deep_confirms_loss:
                     game.loss_streak = (game.loss_streak or 0) + 1
+                    # Persist immediately: the round's batch commit already
+                    # ran, and the next round's in-lock refresh (#81) discards
+                    # pending changes — an uncommitted increment would reset
+                    # the streak to its DB value every round and the resign
+                    # threshold would never be reached. No engine call runs
+                    # after this point in the round, so the write is brief.
+                    await db.commit()
                 elif is_normal_ai_move:
                     # Reset streak on any AI turn that isn't confirming a
                     # crushing loss. Streak only reflects consecutive
                     # deep-confirmed losing ply.
                     if game.loss_streak:
                         game.loss_streak = 0
+                        await db.commit()
 
                 RESIGN_STREAK_THRESHOLD = 12 if is_handicap else 7
                 if game.loss_streak >= RESIGN_STREAK_THRESHOLD:
