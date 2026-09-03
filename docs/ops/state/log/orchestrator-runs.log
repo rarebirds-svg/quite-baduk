@@ -1957,3 +1957,10 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 - 대시보드·일일 로그 갱신, am 다이제스트 발송 성공(anomaly ⚠️ 포함), 상태 커밋 `abbde98` push 완료. 신규 대국 1건(#381), visit_hits +3/12h.
 [2026-09-02 09:03:27] orchestrator 종료
 [2026-09-02 21:00:03] orchestrator 시작
+9/2 pm 사이클 완료 — 전 항목 정상입니다.
+
+- **서비스·백업** — prod api·web 200, 디스크 6%, plist drift 없음. 백업 복원 드릴 55회 연속 통과(daily 14 / weekly 8 / monthly 4). staging 중단은 정책상 정상.
+- **이상 징후** — 신규 트레이스백 0건. 오전에 이슈 #81로 등록한 moves UNIQUE 건은 9/2 01:02 KST 발생분이 마지막으로 재발 없음. 5xx 0건, database-locked 33일째 무재발. 신규 대국 7건(#382~388, 오후 15:32~16:03 집중), visit_hits +4/12h.
+- **개발·보고** — 열린 PR 0건, 미분류 이슈 0건, 배포 갭 0커밋, 잡 4/4 ok, 승인 대기 0건. 상태 파일 갱신·커밋(`82c6987`) push 완료, pm 다이제스트 발송 성공(payload의 `project`는 `baduk`이 아니라 `inkbaduk`이어야 해서 1회 정정 후 exit 0).
+[2026-09-02 21:02:51] orchestrator 종료
+[2026-09-03 09:00:05] orchestrator 시작

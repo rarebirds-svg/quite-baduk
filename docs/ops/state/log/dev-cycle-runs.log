@@ -841,3 +841,10 @@ dev-cycle 완료 요약.
 - `gh issue list --state open` 결과 열린 이슈가 0건이라 `bug`·`small` 적격 이슈가 없었습니다. 선점·구현·PR 단계는 수행하지 않았습니다.
 - `docs/ops/state/log/2026-09-02.md`에 04:30 dev-cycle 무변경 종료를 기록하고, `ops/report-job-status.sh dev-cycle ok "처리할 버그 없음 — 열린 이슈 0건"`으로 상태 파일에 보고했습니다. 09:00 다이제스트가 이를 합산합니다.
 [2026-09-02 04:30:28] dev-cycle 종료
+[2026-09-03 04:30:04] dev-cycle 시작
+이번 사이클 완료 요약입니다.
+
+- **이슈 #81 처리 완료** — `place_move`의 UNIQUE 제약 위반은 WS 재접속 시 stale `game` 행으로 move_number를 계산한 것이 근본 원인. 상태 캐시 읽기와 `db.refresh(game)`를 게임 락 안으로 옮겨 원인을 제거하고(8d466e1), 리뷰에서 실측으로 잡힌 후속 회귀(refresh가 미커밋 `loss_streak`을 폐기해 AI 자동 기권 불능)도 즉시 커밋으로 수정(3490f28). 회귀 테스트 3건 모두 수정 전 실패를 확인했고, 585개 전체 테스트·ruff·mypy·커버리지 게이트 통과.
+- **PR [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83) 생성·push 완료** — 머지는 사람 승인(🟡) 대기. 리뷰 차집합 지적(undo_move에 동일 레이스 잔존)은 후속 이슈 [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84)로 분리해 보고.
+- #81 코멘트·`in-progress` 라벨 정리, `state/log/2026-09-03.md` 기록, 잡 상태 `ok` 보고까지 마쳤다. 세션 종료.
+[2026-09-03 04:47:42] dev-cycle 종료

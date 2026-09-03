@@ -5,6 +5,17 @@
 
 ## 대기 중
 
+### AP-20260903-01
+- 액션: PR [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83) 머지(🟡) + prod 반영 — 이슈 #81(place_move 중복 착수 UNIQUE 위반) 픽스.
+- 근거: 9/3 04:30 dev-cycle이 생성한 PR. WS 재접속 시 stale `game` 행의 move_count로 move_number를 계산해 중복 INSERT되는 레이스를 game_lock 안 `db.refresh(game)`로 원인 제거. code-reviewer(fable)가 잡은 후속 회귀(락 안 refresh가 미커밋 loss_streak를 폐기 → AI 자동 기권 불능)도 3490f28로 함께 수정. 회귀 테스트 3건 추가(수정 전 실패 확인), 585 passed·ruff·mypy·커버리지 82%. CI 4잡(backend·frontend·e2e·app-shell-build) 전부 SUCCESS, `MERGEABLE`.
+- 영향: game 378에서 실측된 IntegrityError 재발 경로가 닫힌다. 변경은 backend 4파일뿐(`game_service.py` + 테스트 3) — 마이그레이션 없음, 웹 재빌드 불필요.
+- 실행 절차:
+  1. `gh pr merge 83 --squash --delete-branch`
+  2. `git -C /Users/daegong/projects/baduk pull --ff-only`
+  3. 진행 중 대국 재확인(`moves.played_at` 최신값) 후 `launchctl kickstart -k gui/501/com.baduk.api`
+  4. `curl -fs http://localhost:8000/api/health` 200 확인
+- 상태: 대기 (9/3 09:00 등재)
+
 ## 처리 완료 — 최근
 
 ### AP-20260830-01 · AP-20260830-02 — 처리 완료(사람 승인 "진행해" · Claude 세션 실행, 2026-08-31 00:0x KST)
