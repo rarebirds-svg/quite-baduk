@@ -15,6 +15,7 @@
   3. 진행 중 대국 재확인(`moves.played_at` 최신값) 후 `launchctl kickstart -k gui/501/com.baduk.api`
   4. `curl -fs http://localhost:8000/api/health` 200 확인
 - 상태: 대기 (9/3 09:00 등재)
+- **9/3 21:00 재확인 (12시간째)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 참고 — 진행 중 대국 활동 활발(마지막 수 20:57 KST, active 2건)이므로 실행 시 절차 3의 진행 중 대국 재확인을 반드시 거칠 것.
 
 ## 처리 완료 — 최근
 
