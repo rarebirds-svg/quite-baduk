@@ -561,3 +561,4 @@
 - 04:30 dev-cycle·09:00 오케스트레이터 모두 `Failed to authenticate: OAuth session expired and could not be refreshed`로 시작 직후 비정상 종료. am 다이제스트 미발송, dev-cycle(#84) 미착수. 위 WD-20260904-* 15건(dev-cycle 10 · orchestrator 5)은 전부 이 건의 증상.
 - 복구: 키체인 자격증명 mdat 18:06:38 KST — 사람 재로그인(대화형 세션 17:45~18:03). 21:00 사이클 정상 인증·완주로 해소. `session-retry.sh`는 세션 한도 문구만 잡으므로 OAuth 만료엔 재시도 없음(설계대로). popory am 마커 실존 → baduk 헤드리스 잡에 국한.
 - OPS-20260728-01과 같은 유형의 재발. 조치: 화이트리스트에 따라 dev-cycle 1회 재트리거(`launchctl kickstart -k`). 상세: `log/2026-09-04.md`.
+- 후속: 브랜치 ops/claude-auth-guard — 사전 경고(check-claude-auth)·보류 재트리거(check-auth-recovery)·stale 경보 묶기.
