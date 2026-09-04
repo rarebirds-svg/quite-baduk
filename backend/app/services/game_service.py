@@ -579,6 +579,19 @@ async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: in
         raise GameError("UNDO_LIMIT_EXCEEDED", f"max {UNDO_LIMIT} undos per game")
 
     async with game_lock(game.id):
+        # Re-read the game row INSIDE the lock (same race as #81): a replaced
+        # WS connection holds a stale `game` loaded in its own DB session, so
+        # move_count/status/undo_count may be behind what the other
+        # connection committed. Decrementing the stale move_count would
+        # persist a wrong (even negative) value and re-open the UNIQUE
+        # (game_id, move_number) collision on the next place_move (#84).
+        # refresh() is a plain SELECT — nothing is dirty yet.
+        await db.refresh(game)
+        if game.status != "active":
+            raise GameError("GAME_NOT_ACTIVE", game.status)
+        if game.undo_count >= UNDO_LIMIT:
+            raise GameError("UNDO_LIMIT_EXCEEDED", f"max {UNDO_LIMIT} undos per game")
+
         # Delete the last N moves outright. Marking is_undone=True is
         # tempting for audit purposes, but the moves table has a
         # UNIQUE(game_id, move_number) constraint — a ghost row would
@@ -637,6 +650,12 @@ async def score_by_request(
         )
 
     async with game_lock(game.id):
+        # Re-check status on the fresh row (#84): a stale connection must not
+        # overwrite a result another connection already committed.
+        await db.refresh(game)
+        if game.status != "active":
+            raise GameError("GAME_NOT_ACTIVE", game.status)
+
         dead_stones = _dead_stones_from_ownership(state, analysis.ownership)
         result = score_engine(state, dead_stones=dead_stones)
         margin = result.margin
