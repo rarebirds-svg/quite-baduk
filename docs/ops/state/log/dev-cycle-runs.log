@@ -848,3 +848,8 @@ dev-cycle 완료 요약.
 - **PR [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83) 생성·push 완료** — 머지는 사람 승인(🟡) 대기. 리뷰 차집합 지적(undo_move에 동일 레이스 잔존)은 후속 이슈 [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84)로 분리해 보고.
 - #81 코멘트·`in-progress` 라벨 정리, `state/log/2026-09-03.md` 기록, 잡 상태 `ok` 보고까지 마쳤다. 세션 종료.
 [2026-09-03 04:47:42] dev-cycle 종료
+[2026-09-04 04:30:03] dev-cycle 시작
+Failed to authenticate: OAuth session expired and could not be refreshed
+[2026-09-04 04:30:07] 비정상 종료
+[2026-09-04 04:30:07] dev-cycle 종료
+[2026-09-04 21:04:48] dev-cycle 시작

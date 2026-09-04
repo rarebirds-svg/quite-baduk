@@ -1973,3 +1973,14 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 - 상태 파일 갱신분을 `8bd0f30`으로 커밋·push했습니다. 세션을 종료합니다 — 다음 실행은 21:00 launchd 트리거입니다.
 [2026-09-03 09:04:05] orchestrator 종료
 [2026-09-03 21:00:05] orchestrator 시작
+9/3 pm(21:00) 사이클을 완료했습니다.
+
+- **전 항목 정상.** prod api·web 200, 5xx 0건(최근 3천줄), 디스크 6%, plist drift 없음, 백업 integrity 57회 연속 통과, 잡 4/4 ok, 배포 갭 0커밋. 9/2 23:45 api 재기동은 am 사이클에서 이미 진단된 #82 배포 건으로 신규 이상 아님.
+- **실사용 활발** — 신규 대국 9건(#391~399, 12시간 만에 관측 상위 수준), 마지막 수가 사이클 직전 20:57 KST, `visit_hits` +12. #81 UNIQUE 재발·신규 트레이스백 0건.
+- **승인 대기 1건 유지** — AP-20260903-01(PR #83 머지 + backend 재기동), 12시간째·재확인 1회, CI SUCCESS·MERGEABLE 유지. 다이제스트와 승인 카드를 Telegram으로 발송했고(exit 0), 상태 파일을 `160a0d9`로 커밋·push했습니다. 실행 시 진행 중 대국 재확인(active 2건)이 필요하다는 주석을 승인 큐에 남겼습니다.
+[2026-09-03 21:03:21] orchestrator 종료
+[2026-09-04 09:00:01] orchestrator 시작
+Failed to authenticate: OAuth session expired and could not be refreshed
+[2026-09-04 09:00:04] 비정상 종료
+[2026-09-04 09:00:04] orchestrator 종료
+[2026-09-04 21:00:01] orchestrator 시작

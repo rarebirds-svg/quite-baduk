@@ -124,3 +124,6 @@
 [2026-09-03 04:15:05] prune-visits 시작
 2026-09-03 04:15:06 [info     ] visit_prune_done               deleted=0 retention_days=180
 [2026-09-03 04:15:06] prune-visits 종료
+[2026-09-04 04:15:02] prune-visits 시작
+2026-09-04 04:15:02 [info     ] visit_prune_done               deleted=0 retention_days=180
+[2026-09-04 04:15:02] prune-visits 종료

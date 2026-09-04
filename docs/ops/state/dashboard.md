@@ -1,19 +1,19 @@
 # 운영 대시보드
 
-- 갱신: 2026-09-03 21:00
+- 갱신: 2026-09-04 21:00
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
-| prod | 정상 — backend·web 200 OK, db OK, 디스크 6%, plist drift 없음. `.log` 최근 3천줄 **5xx 0건**(200 2931 / 201 21 / 204 19 / 401 16 / 404 11 / 422 2). **신규 대국 9건**(#391~399 — finished 3·resigned 4·active 2, `max(games.id)` 390→399, 마지막 수 9/3 20:57 KST = 사이클 직전, 실사용 활발). resigned 4건은 #82 게이트 발효 상태에서 발생, 이상 없음. `visit_hits` 358→**370**(+12/12h). `.err` 신규 트레이스백 0건, **#81 UNIQUE 재발 없음**.<br>(이전) 9/3 09:00 정상 — api 재기동 감지(PID 1709→92978, 9/2 23:45 SIGTERM 정상 재기동 = #82 배포), 신규 대국 2건(#389·#390), 5xx 0건.<br>(이전) 9/2 21:00 정상 — 신규 대국 7건(#382~388), 5xx 0건. | 2026-09-03 21:00 |
-| staging | 중단 (정책상 정상) | 2026-09-03 21:00 |
+| prod | 정상 — backend·web 200 OK, db OK, 디스크 6%, plist drift 없음. `.log` 최근 3천줄 **5xx 0건**(200 2917 / 201 27 / 204 21 / 401 17 / 404 16 / 422 2). **신규 대국 6건**(#400~405 — active 5·resigned 1, `max(games.id)` 399→405, 마지막 수 9/4 17:58 KST). `visit_hits` 370→**373**(+3/24h). `.err` 신규 트레이스백 0건, **#81 UNIQUE 재발 없음**. **주의 — 9/4 09:00 사이클은 OAuth 만료로 유실(OPS-20260904-01)**, 24h 감시 공백이었으나 prod는 무사고.<br>(이전) 9/3 21:00 정상 — 신규 대국 9건(#391~399), 5xx 0건, #81 재발 없음.<br>(이전) 9/3 09:00 정상 — api 재기동 감지(9/2 23:45 = #82 배포), 신규 대국 2건(#389·#390). | 2026-09-04 21:00 |
+| staging | 중단 (정책상 정상) | 2026-09-04 21:00 |
 
 ## 백업 상태
 
 | 항목 | 값 |
 |---|---|
-| 최신 백업 | **2026-09-03T04:00** (baduk-20260903T040003.db.gz) — 신선, integrity_check ok·테이블 10 = **57회 연속** 통과, daily 14 / weekly 8 / monthly 4 (9/3 21:00 검증).<br>(이전) 9/3 09:00 검증 56회 연속.
+| 최신 백업 | **2026-09-04T04:00** (baduk-20260904T040003.db.gz) — 신선, integrity_check ok·테이블 10 = **58회 연속** 통과, daily 14 / weekly 8 / monthly 4 (9/4 21:00 검증). 백업 잡은 9/4 OAuth 만료 사고와 무관하게 정상 실행.<br>(이전) 9/3 21:00 검증 57회 연속.
 | daily / weekly / monthly | **14 / 8 / 3** (8/16 09:00 실측). 8/16 04:00 생성과 함께 daily 8/2분·weekly 6/21분이 보존 정리돼 개수 유지. |
 
 ## 콘텐츠 인덱스
@@ -42,15 +42,15 @@
 
 | 항목 | 값 |
 |---|---|
-| 열린 이슈 | **(9/3 09:00) 2건 — 미분류 0건.** [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — PR #83으로 픽스 완료, 머지 대기(AP-20260903-01). [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84) `bug` — undo_move 동일 레이스 잔존(dev-cycle이 리뷰 차집합에서 분리한 후속), 다음 dev-cycle 처리 대상.<br>(이전) **(9/2 21:00) 1건 — #81.**
-| 열린 PR | **(9/3 09:00) 1건 — 주의 PR 0건.** [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83)(#81 픽스) CI 4잡 SUCCESS·MERGEABLE·9/3 04:46 생성 — 머지 승인 AP-20260903-01 등재.<br>(이전) **(9/2 21:00) 0건.**
+| 열린 이슈 | **(9/4 21:00) 2건 — 미분류 0건.** [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — PR #83으로 픽스 완료, 머지 대기(AP-20260903-01). [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84) `bug` — undo_move 동일 레이스 잔존, dev-cycle 처리 대상(9/4 04:30 dev-cycle은 OAuth 만료로 유실, 21:00 재트리거).<br>(이전) **(9/3 09:00) 2건 — 미분류 0건.**
+| 열린 PR | **(9/4 21:00) 1건 — 주의 PR 0건.** [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83)(#81 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN, 9/3 04:46 생성(2일째) — 머지 승인 AP-20260903-01 36시간째.<br>(이전) **(9/3 09:00) 1건** 등재 당시.<br>(이전) **(9/2 21:00) 0건.**
 | CI e2e 상태 | **(7/25 12:00) PR #66 런에서 e2e 잡 SUCCESS 확인** — #59 머지 이후 회복 상태 유지. `[[ci-e2e-disabled]]`의 "main 만성 RED" 서술은 현재 사실과 다르므로 갱신 대상. e2e 잡은 활성(`if:` 조건 없음). |
-| SQLite locked 판정 | **(9/3 21:00) 재발 0건 34일째 유지.** UNIQUE(#81) 트레이스백도 9/2 01:02 이후 재발 없음.<br>(이전) **(9/2 21:00) 재발 0건 33일째.**
+| SQLite locked 판정 | **(9/4 21:00) 재발 0건 35일째 유지.** UNIQUE(#81) 트레이스백도 9/2 01:02(line 225994) 이후 재발 없음 — `.err` 그 뒤 121줄 전부 INFO WS·재기동 배너.<br>(이전) **(9/3 21:00) 재발 0건 34일째.**
 | 미병합 브랜치 | **(7/24 18:00 정정) 로컬 미push 브랜치는 0건이다.** `git for-each-ref --format='%(upstream:short)'` 실측 — 로컬 13개 중 12개가 origin 추적 브랜치를 갖고, 나머지 1개는 워크트리용 `worktree-feat+glossary-media-phase1`(5/26)뿐이다. 7/24 02:00 dev-cycle 로그의 "미push 6개"(`feat/format-game-result` 등)와 아래 "로컬 전용 2건" 서술은 **모두 오탐** — 해당 브랜치들은 전부 origin에 존재한다. `[[dev-cycle-unpushed-branches]]` 대응 조치 불필요. 남은 것은 push 여부가 아니라 **정리(삭제) 여부**이며 이는 사람 재량.<br>**(이전 기록 7/14 18:30 · 7/17 18:30)** 원격 `feat/last-seen-at-debounce`·`fix/issue-39`는 **오탐** — PR #30·#45가 **squash merge**돼 원본 커밋이 main 조상이 아닐 뿐, 내용은 main에 반영됨(`git grep` 확인). 사람 판단 불필요. → 판정은 `--no-merged`가 아니라 PR 상태+`git grep <ref>`로. 원격 브랜치 잔여물 삭제는 사람 재량.<br>**superseded(폐기 가능) 4건** — `fix/sqlite-busy-timeout`·`fix/auto-resign-respect-score-margin`·`fix/scoring-gate-too-strict`·`fix/issue-12`: 수정 내용이 다른 커밋으로 main에 이미 반영됨.<br>**실제 사람 판단 대기 = 로컬 전용 2건**: `feat/format-game-result`(main에 `formatResult` 부재), `feat/i18n-ja-zh`(main 로케일 ko·en만) — PR 생성 또는 폐기. 둘 다 **최종 커밋 4/30 = 2.5개월 경과**, feature 경로라 dev-cycle 자율 범위 밖 → 오케스트레이터는 자율 push하지 않고 보고만 유지(정책 L16 보수 처리). |
 
 ## 보류 승인
 
-`state/pending-approvals.md` 참조 — **대기 1건 (9/3 09:00 등재, 21:00 기준 12시간째·재확인 1회).** **AP-20260903-01** — PR #83(#81 place_move 중복 착수 픽스) 머지 + backend 재기동. CI 4잡 SUCCESS·MERGEABLE·CLEAN 유지·마이그레이션 없음·웹 재빌드 불필요.<br>(이전) 대기 0건 (9/2 기준). AP-20260830-01·02는 8/31 00:0x 사람 승인으로 발효 완료.
+`state/pending-approvals.md` 참조 — **대기 1건 (9/3 09:00 등재, 9/4 21:00 기준 36시간째·재확인 2회 — 9/4 09:00 재확인은 OAuth 만료로 유실).** **AP-20260903-01** — PR #83(#81 place_move 중복 착수 픽스) 머지 + backend 재기동. CI 4잡 SUCCESS·MERGEABLE·CLEAN 유지·마이그레이션 없음·웹 재빌드 불필요. 진행 중 대국 활동 지속(9/4 마지막 수 17:58)이라 실행 시 절차 3 재확인 필수.<br>(이전) 대기 0건 (9/2 기준).
 
 - **AP-20260802-01 (8/2 12:00 신규 등재, 18:00 기준 6시간 무응답)** — 머지된 4커밋의 prod 배포(🟡). `git pull --ff-only` + `web` 재빌드 + `ops/stack.sh restart prod`.<br>**미배포의 대가가 이번 사이클에도 실측됐다** — `orchestrator-runs.log` **18:00:05** 항목에 #71이 고칠 `Write(...)` deny 무실효 경고 2건이 또 출력됐다(머지 후 19시간). 즉 prod DB·KataGo 모델 가드레일은 아직 실효가 없다.<br>**단계별 발효 범위** — 1단계 `git pull`만으로 #71(가드레일)·#72(watchdog 성공마커, 크래시 루프 사각지대)가 **재기동 없이** 즉시 발효한다. #66(spectate 원자적 UPDATE)은 backend 재기동, #73(용어집 다이어그램)은 웹 재빌드가 필요하다.<br>충돌 없음 실측(유입 9파일 ∩ 로컬 미커밋 = 공집합), 4커밋 전부 머지 시점 CI 4잡 SUCCESS. 진행 중 대국 0건이라 재기동 리스크 낮음. 중복 제안은 만들지 않았다.
 
@@ -64,7 +64,9 @@ AP-20260716-01(#55)·AP-20260717-01(#57)은 7/21 19:54 KST 사람 승인·머지
 
 `state/incidents.md` 참조.
 
-**신규 — OPS-20260830-01 (2026-08-30 09:03 ~ 23:31, 해소)**: 09:00 사이클이 작업 완주 후 세션 한도로 비정상 종료(성공 마커 없음 → WD stale 경보 7건), 20:59 사람 재부팅로 21:00 트리거 미발화(prod는 launchd 자동 복구, 중단 약 6분). 23:31 수동 실행 사이클이 성공 종료해 해소. 재발 방지 2건이 승인 대기(AP-20260830-01/02).
+**신규 — OPS-20260904-01 (2026-09-03 21:03 ~ 09-04 21:00, 해소)**: OAuth 만료(`OAuth session expired and could not be refreshed`)로 04:30 dev-cycle·09:00 오케스트레이터가 시작 직후 비정상 종료 — am 다이제스트 미발송, #84 dev-cycle 유실, 24h 감시 공백. prod 무사고(사후 검증 200·백업 정상·5xx 0·트레이스백 0). 18:06 사람 재로그인으로 복구, 21:00 사이클 정상 완주. OPS-20260728-01과 같은 유형의 **재발** — OAuth 갱신 실패는 session-retry 범위 밖이라 자동 복구 수단 없음. dev-cycle 1회 재트리거(화이트리스트).
+
+**OPS-20260830-01 (2026-08-30 09:03 ~ 23:31, 해소)**: 09:00 사이클이 작업 완주 후 세션 한도로 비정상 종료(성공 마커 없음 → WD stale 경보 7건), 20:59 사람 재부팅로 21:00 트리거 미발화(prod는 launchd 자동 복구, 중단 약 6분). 23:31 수동 실행 사이클이 성공 종료해 해소. 재발 방지 2건이 승인 대기(AP-20260830-01/02).
 
 **OPS-20260728-01 (2026-07-28 02:00 ~ 07-29 02:00, 자동 복구됨)**: 인증 만료(`OAuth session expired and could not be refreshed`)로 dev-cycle 1회 + orchestrator 2회가 **시작 직후 비정상 종료**. 약 24시간 운영 감시 공백. **같은 구간 prod는 무사고**(사후 검증: 200 OK · 백업 2회 정상 · 신규 트레이스백 0건) — 유실된 것은 서비스가 아니라 감시다. **watchdog는 전 구간 `신규 incident 0 건`으로 오판**했고, 원인은 아래 Watchdog 섹션의 사각지대 항목이다. 후속 이슈 [#70](https://github.com/rarebirds-svg/quite-baduk/issues/70).
 
