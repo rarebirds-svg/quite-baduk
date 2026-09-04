@@ -33,7 +33,8 @@
 
    5영역을 각각 한 줄(40자 이내)로 채운다.
 
-   - `service` — 헬스체크 결과. 예) `api·web 200 · 5xx 0/4.9k`
+   - `service` — 헬스체크 결과 + Claude 인증 상태. 예) `api·web 200 · 5xx 0/4.9k · Claude인증 D-29`
+     인증 상태는 `ops/check-claude-auth.sh` 결과에서. D-3 이내면 `warn`, 만료면 `fail`.
    - `jobs` — `state/jobs/*.json`을 전부 읽어 합산한다. 하나라도 `fail`이면 `fail`,
      `warn`이 있으면 `warn`. 예) `잡 3/3 · 백업 04:00 ✓`
      이 행은 `state/jobs/*.json`을 쓰는 네 잡(`dev-cycle`·`content-draft`·`analytics-weekly`·`news-hook`)만

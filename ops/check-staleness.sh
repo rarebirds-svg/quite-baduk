@@ -6,6 +6,8 @@ if [ -z "${ROOT:-}" ]; then
   echo "check-staleness.sh: ROOT를 명시적으로 지정해야 한다 — 예) ROOT=/path/to/repo $0" >&2
   exit 1
 fi
+. "$(dirname "$0")/lib/notify-once.sh"
+
 LOG_DIR="$ROOT/docs/ops/state/log"
 INCIDENTS="$ROOT/docs/ops/state/incidents.md"
 COOLDOWN_DIR="$ROOT/docs/ops/state"
@@ -13,7 +15,15 @@ COOLDOWN_SECS=3600   # 같은 잡 1시간 1회 알림
 # 다이제스트 미발송은 잡 stale과 달리 즉시 고쳐지지 않는다. watchdog 주기(1h)와 쿨다운이 같으면
 # 매 실행마다 쿨다운이 갓 만료돼 억제가 사실상 무효가 되므로 주기보다 길게 둔다.
 DIGEST_COOLDOWN_SECS=21600   # 6h
+# 인증 만료는 사람이 /login 하기 전까지 풀리지 않는다. 잡별 쿨다운(1h)으로 두면 묶음 경보가
+# 매 watchdog 실행마다 다시 쌓이므로 다이제스트와 같은 6h를 쓴다.
+AUTH_COOLDOWN_SECS=21600     # 6h
 MARKER_DIR="${MARKER_DIR:-$HOME/.ops-report/markers}"   # 테스트가 픽스처로 덮어쓴다
+# notify_once의 NOTIFY 기본값은 상대경로다 — 이 스크립트는 cd하지 않으므로 절대경로로 고정한다.
+NOTIFY="${NOTIFY:-$ROOT/ops/notify.sh}"
+# check-auth-recovery가 방금 재트리거한 잡은 아직 성공 로그를 남기지 못한다. 이 창 안에서는
+# stale 경보를 건너뛴다 — 곧바로 경보하면 오케스트레이터가 다시 kickstart 해 실행 중인 잡을 죽인다.
+RETRIGGER_GRACE_SECS=7200
 
 # 잡 정의: "표시명|로그파일|임계(초)|성공 종료 마커"
 JOBS=(
@@ -28,6 +38,39 @@ JOBS=(
 
 now=$(date +%s)
 incidents_added=0
+
+# Claude 인증이 만료되면 Claude 의존 잡이 한꺼번에 stale이 된다. 원인이 하나이므로 잡별로
+# 경보하지 않고 아래에서 1건으로 묶는다. 종료코드만 쓴다 — 0 ok / 1 만료 / 2 확인 불가·임박.
+# CLAUDE_CREDENTIALS_CMD·NOW는 환경으로 그대로 전달된다 (이 스크립트는 소문자 now를 쓴다).
+auth_rc=0
+bash "$(dirname "$0")/check-claude-auth.sh" >/dev/null 2>&1 || auth_rc=$?
+AUTH_EXPIRED=0
+if [ "$auth_rc" -eq 1 ]; then
+  AUTH_EXPIRED=1
+fi
+auth_stale_jobs=""
+
+# Claude를 쓰는 잡만 인증 만료 묶음 대상이다. backup·content-ingest는 Claude를 호출하지 않으므로
+# (run-content-ingest.sh는 session-retry를 source하지 않는다) 기존 개별 경보 경로를 그대로 탄다.
+is_claude_job() {
+  case "$1" in
+    orchestrator|dev-cycle|content-draft|analytics-weekly|news-hook) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# auth-retriggered-<job> 마커는 check-auth-recovery가 남긴다. 잡 표시명과 마커의 잡 이름은
+# 같은 값이라 별도 매핑이 필요 없다 (마커는 <job>-runs.log 이름에서 유래).
+recently_retriggered() {  # recently_retriggered <잡> <마지막 성공 epoch(빈값 가능)>
+  local job="$1" last="$2"
+  local file="$MARKER_DIR/auth-retriggered-$job"
+  [ -f "$file" ] || return 1
+  local ts
+  ts=$(cat "$file" 2>/dev/null || echo 0)
+  case "$ts" in ''|*[!0-9]*) return 1 ;; esac
+  [ -n "$last" ] && [ "$ts" -le "$last" ] && return 1
+  [ $(( now - ts )) -lt "$RETRIGGER_GRACE_SECS" ]
+}
 
 extract_last_ts() {
   # 마지막 "성공" 종료 마커의 timestamp를 epoch 초로 변환. 없으면 빈 문자열.
@@ -100,6 +143,15 @@ for entry in "${JOBS[@]}"; do
   fi
 
   if [ "$age" -ge "$threshold" ]; then
+    if recently_retriggered "$job" "$last_ts"; then
+      echo "[$job] stale이지만 재트리거 대기 중 — skip" >&2
+      continue
+    fi
+    if [ "$AUTH_EXPIRED" -eq 1 ] && is_claude_job "$job"; then
+      # 잡별 쿨다운 마커는 건드리지 않는다 — 인증 회복 후 개별 경보가 정상 동작해야 한다.
+      auth_stale_jobs="$auth_stale_jobs $job"
+      continue
+    fi
     if check_cooldown "$job"; then
       echo "[$job] stale but in cooldown — skip notify" >&2
       continue
@@ -112,6 +164,27 @@ for entry in "${JOBS[@]}"; do
     incidents_added=$(( incidents_added + 1 ))
   fi
 done
+
+# 인증 만료로 보류된 stale 잡들을 1건으로 묶어 기록한다.
+if [ -n "$auth_stale_jobs" ]; then
+  if check_cooldown "claude-auth" "$AUTH_COOLDOWN_SECS"; then
+    echo "[claude-auth] 인증 만료 stale이지만 cooldown — skip notify" >&2
+  else
+    # 이름을 정렬해 JOBS 배열 순서가 바뀌어도 incident 제목이 흔들리지 않게 한다.
+    auth_stale_list=$(printf '%s\n' $auth_stale_jobs | sort | paste -sd, - | sed 's/,/, /g')
+    {
+      echo ""
+      echo "### WD-$(date '+%Y%m%d')-$(date +%H%M%S) — Claude 인증 만료 (stale: $auth_stale_list)"
+      echo ""
+      echo "- 인증 만료로 Claude 잡 전부 정지 — claude /login 필요. 개별 stale 경보는 이 건으로 묶음."
+    } >> "$INCIDENTS"
+    # session-retry·check-auth-recovery와 같은 키를 써 인증 만료 알림을 하루 1회로 합친다.
+    msg="[inkbaduk] Claude 인증 만료 — 잡 정지: $auth_stale_list. claude /login 필요"
+    notify_once claude-auth "$msg" || echo "[claude-auth] notify 채널 전부 실패 (incident는 기록됨)" >&2
+    write_cooldown "claude-auth"
+    incidents_added=$(( incidents_added + 1 ))
+  fi
+fi
 
 # 정기 다이제스트 미발송 검사 — 마커 부재가 "발송 실패 또는 미실행" 신호다.
 # 슬롯 정시(09:00·21:00) +30분이 지났는데 마커가 없으면 경보한다.
