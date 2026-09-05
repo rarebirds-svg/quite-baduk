@@ -1,19 +1,19 @@
 # 운영 대시보드
 
-- 갱신: 2026-09-05 09:00
+- 갱신: 2026-09-05 21:00
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
-| prod | 정상 — backend·web 200 OK, db OK, 디스크 6%, plist drift 없음, **Claude 인증 D-27**(9/4 재로그인 반영). `.log` 최근 3천줄 **5xx 0건**(200 2937 / 201 19 / 204 18 / 401 14 / 404 10 / 422 2). **신규 대국 0건**(`max(games.id)` 405 유지, 마지막 수 9/4 17:58 KST). `visit_hits` **373**(+0/12h). `.err` 신규 트레이스백 0건, **#81 UNIQUE 재발 없음**. web `.err`의 `Failed to find Server Action` 누적 83건은 현 빌드에 없는 옛 액션 id를 재생하는 stale 클라이언트·크롤러(프로세스는 현 BUILD_ID 위) — 사용자 영향 없음, 기준선 3315줄/83건.<br>(이전) 9/4 21:00 정상 — 신규 대국 6건(#400~405), 5xx 0건, #81 재발 없음. 9/4 09:00 사이클은 OAuth 만료로 유실(OPS-20260904-01, 해소).<br>(이전) 9/3 21:00 정상 — 신규 대국 9건(#391~399). | 2026-09-05 09:00 |
-| staging | 중단 (정책상 정상) | 2026-09-05 09:00 |
+| prod | 정상 — backend·web 200 OK, db OK, 디스크 6%, plist drift 없음, **Claude 인증 D-27**. `.log` 최근 3천줄 **5xx 0건**(200 2868 / 204 53 / 401 48 / 201 23 / 404 6 / 422 2, 6천줄로 넓혀도 0). 401은 전부 쿠키 없는 `GET /api/session`(신규 방문자) — 오류 아님. **신규 대국 7건(#406~412)** 12:50~14:35 KST(13로 2·19로 5, #412 116수 기권 종료), 마지막 수 9/5 14:35 KST. `visit_hits` **409**(+36/12h). `.err` 신규 트레이스백 0건, **#81 UNIQUE 재발 없음**. web `.err` `Failed to find Server Action` 84건(+1) — 현 빌드에 없는 옛 액션 id 재생, 사용자 영향 없음.<br>(이전) 9/5 09:00 정상 — 신규 대국 0건, 5xx 0건, web Server Action 기준선 3315줄/83건.<br>(이전) 9/4 21:00 정상 — 신규 대국 6건(#400~405). 9/4 09:00 사이클은 OAuth 만료로 유실(OPS-20260904-01, 해소). | 2026-09-05 21:00 |
+| staging | 중단 (정책상 정상) | 2026-09-05 21:00 |
 
 ## 백업 상태
 
 | 항목 | 값 |
 |---|---|
-| 최신 백업 | **2026-09-05T04:00** (baduk-20260905T040002.db.gz, 4,125,268B) — 신선, integrity_check ok·테이블 10 = **59회 연속** 통과, daily 14 / weekly 8 / monthly 4 (9/5 09:00 검증).<br>(이전) 9/4 21:00 검증 58회 연속.
+| 최신 백업 | **2026-09-05T04:00** (baduk-20260905T040002.db.gz, 4,125,268B) — 신선, integrity_check ok·테이블 10 = **60회 연속** 통과, daily 14 / weekly 8 / monthly 4 (9/5 21:00 검증, am과 동일 파일 — 다음 생성 9/6 04:00).<br>(이전) 9/5 09:00 검증 59회 연속.
 | daily / weekly / monthly | **14 / 8 / 3** (8/16 09:00 실측). 8/16 04:00 생성과 함께 daily 8/2분·weekly 6/21분이 보존 정리돼 개수 유지. |
 
 ## 콘텐츠 인덱스
@@ -42,15 +42,15 @@
 
 | 항목 | 값 |
 |---|---|
-| 열린 이슈 | **(9/5 09:00) 2건 — 미분류 0건, 둘 다 PR 대기.** [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — PR #83, 머지 대기(AP-20260903-01). [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84) `bug` — **PR #86**(9/5 04:30 dev-cycle), 머지 대기(AP-20260905-01).<br>(이전) **(9/4 21:00) 2건** — #84는 dev-cycle 처리 대상.
-| 열린 PR | **(9/5 09:00) 2건 — 주의 PR 0건.** [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83)(#81 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN, 생성 3일째 — AP-20260903-01 48시간째. [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86)(#84 픽스) 9/5 04:34 생성, CI 4잡 SUCCESS·MERGEABLE·CLEAN — AP-20260905-01 신규. 둘 다 `game_service.py`를 고치나 독립 브랜치·`merge-tree` 충돌 0, #83 → #86 순차 머지 가능.<br>(이전) **(9/4 21:00) 1건** — #83.
+| 열린 이슈 | **(9/5 21:00) 2건 — 미분류 0건, 둘 다 PR 대기, 변동 없음.** [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — PR #83, 머지 대기(AP-20260903-01). [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84) `bug` — **PR #86**(9/5 04:30 dev-cycle), 머지 대기(AP-20260905-01).<br>(이전) **(9/4 21:00) 2건** — #84는 dev-cycle 처리 대상.
+| 열린 PR | **(9/5 21:00) 2건 — 주의 PR 0건.** [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83)(#81 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN, 생성 3일째 — AP-20260903-01 60시간째. [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86)(#84 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN — AP-20260905-01 12시간째. main CI 최근 3런 success. 둘 다 `game_service.py`를 고치나 독립 브랜치·`merge-tree` 충돌 0, #83 → #86 순차 머지 가능.<br>(이전) **(9/4 21:00) 1건** — #83.
 | CI e2e 상태 | **(7/25 12:00) PR #66 런에서 e2e 잡 SUCCESS 확인** — #59 머지 이후 회복 상태 유지. `[[ci-e2e-disabled]]`의 "main 만성 RED" 서술은 현재 사실과 다르므로 갱신 대상. e2e 잡은 활성(`if:` 조건 없음). |
-| SQLite locked 판정 | **(9/5 09:00) 재발 0건 36일째 유지.** UNIQUE(#81) 트레이스백도 9/2 01:02(line 225994) 이후 재발 없음 — `.err` 그 뒤 121줄 전부 INFO WS·재기동 배너(9/4 21:00과 동일, 라인 증가 0).<br>(이전) **(9/4 21:00) 재발 0건 35일째.**
+| SQLite locked 판정 | **(9/5 21:00) 재발 0건 36일째 유지.** UNIQUE(#81) 트레이스백도 9/2 01:02(line 225994) 이후 재발 없음 — 오늘 대국 7건(276수) 동안 `.err` 증가분 21줄 전부 INFO WS.<br>(이전) **(9/5 09:00) 재발 0건 36일째.**
 | 미병합 브랜치 | **(7/24 18:00 정정) 로컬 미push 브랜치는 0건이다.** `git for-each-ref --format='%(upstream:short)'` 실측 — 로컬 13개 중 12개가 origin 추적 브랜치를 갖고, 나머지 1개는 워크트리용 `worktree-feat+glossary-media-phase1`(5/26)뿐이다. 7/24 02:00 dev-cycle 로그의 "미push 6개"(`feat/format-game-result` 등)와 아래 "로컬 전용 2건" 서술은 **모두 오탐** — 해당 브랜치들은 전부 origin에 존재한다. `[[dev-cycle-unpushed-branches]]` 대응 조치 불필요. 남은 것은 push 여부가 아니라 **정리(삭제) 여부**이며 이는 사람 재량.<br>**(이전 기록 7/14 18:30 · 7/17 18:30)** 원격 `feat/last-seen-at-debounce`·`fix/issue-39`는 **오탐** — PR #30·#45가 **squash merge**돼 원본 커밋이 main 조상이 아닐 뿐, 내용은 main에 반영됨(`git grep` 확인). 사람 판단 불필요. → 판정은 `--no-merged`가 아니라 PR 상태+`git grep <ref>`로. 원격 브랜치 잔여물 삭제는 사람 재량.<br>**superseded(폐기 가능) 4건** — `fix/sqlite-busy-timeout`·`fix/auto-resign-respect-score-margin`·`fix/scoring-gate-too-strict`·`fix/issue-12`: 수정 내용이 다른 커밋으로 main에 이미 반영됨.<br>**실제 사람 판단 대기 = 로컬 전용 2건**: `feat/format-game-result`(main에 `formatResult` 부재), `feat/i18n-ja-zh`(main 로케일 ko·en만) — PR 생성 또는 폐기. 둘 다 **최종 커밋 4/30 = 2.5개월 경과**, feature 경로라 dev-cycle 자율 범위 밖 → 오케스트레이터는 자율 push하지 않고 보고만 유지(정책 L16 보수 처리). |
 
 ## 보류 승인
 
-`state/pending-approvals.md` 참조 — **대기 2건 (9/5 09:00 기준).** **AP-20260903-01**(48시간째·재확인 3회) — PR #83(#81 place_move 픽스) 머지 + backend 재기동. **AP-20260905-01**(신규) — PR #86(#84 undo_move·계가 신청 픽스) 머지 + backend 재기동. 둘 다 CI 4잡 SUCCESS·MERGEABLE·CLEAN·마이그레이션 없음·웹 재빌드 불필요이며 같은 파일을 고치되 충돌 0 실측 — **#83 → #86 순서로 함께 머지하고 재기동 1회**를 권장. active 대국 5건(마지막 수 9/4 17:58)이라 실행 시 진행 중 대국 재확인 필수.<br>(이전) 대기 1건 (9/4 21:00, AP-20260903-01 36시간째).
+`state/pending-approvals.md` 참조 — **대기 2건 (9/5 21:00 기준).** **AP-20260903-01**(60시간째·재확인 4회) — PR #83(#81 place_move 픽스) 머지 + backend 재기동. **AP-20260905-01**(12시간째·재확인 1회) — PR #86(#84 undo_move·계가 신청 픽스) 머지 + backend 재기동. 둘 다 CI 4잡 SUCCESS·MERGEABLE·CLEAN·마이그레이션 없음·웹 재빌드 불필요이며 같은 파일을 고치되 충돌 0 실측 — **#83 → #86 순서로 함께 머지하고 재기동 1회**를 권장. 오늘 대국 7건(마지막 수 9/5 14:35 KST)으로 활동 재개 — 실행 시 진행 중 대국 재확인 필수.<br>(이전) 대기 2건 (9/5 09:00, AP-20260903-01 48시간째·AP-20260905-01 신규).
 
 - **AP-20260802-01 (8/2 12:00 신규 등재, 18:00 기준 6시간 무응답)** — 머지된 4커밋의 prod 배포(🟡). `git pull --ff-only` + `web` 재빌드 + `ops/stack.sh restart prod`.<br>**미배포의 대가가 이번 사이클에도 실측됐다** — `orchestrator-runs.log` **18:00:05** 항목에 #71이 고칠 `Write(...)` deny 무실효 경고 2건이 또 출력됐다(머지 후 19시간). 즉 prod DB·KataGo 모델 가드레일은 아직 실효가 없다.<br>**단계별 발효 범위** — 1단계 `git pull`만으로 #71(가드레일)·#72(watchdog 성공마커, 크래시 루프 사각지대)가 **재기동 없이** 즉시 발효한다. #66(spectate 원자적 UPDATE)은 backend 재기동, #73(용어집 다이어그램)은 웹 재빌드가 필요하다.<br>충돌 없음 실측(유입 9파일 ∩ 로컬 미커밋 = 공집합), 4커밋 전부 머지 시점 CI 4잡 SUCCESS. 진행 중 대국 0건이라 재기동 리스크 낮음. 중복 제안은 만들지 않았다.
 

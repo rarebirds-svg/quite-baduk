@@ -1991,3 +1991,15 @@ Failed to authenticate: OAuth session expired and could not be refreshed
 - **승인 대기 1건 유지** — AP-20260903-01(PR #83 머지 + backend 재기동), 36시간째·재확인 2회. pm 다이제스트와 승인 카드를 발송했고(exit 0, 마커 생성), 상태 파일을 `f4f6e9f`로 커밋·push했습니다. 다음 실행은 9/5 09:00 launchd 트리거입니다.
 [2026-09-04 21:06:13] orchestrator 종료
 [2026-09-05 09:00:05] orchestrator 시작
+9/5 09:00 am 사이클을 마쳤다.
+
+**결과 요약**
+
+- **prod 전 항목 정상.** api·web 200, 디스크 6%, plist drift 없음, Claude 인증 D-27. 백업은 9/5 04:00분이 integrity ok로 59회 연속 통과했다. 최근 3천 줄 5xx 0건, 신규 트레이스백 0건, #81 UNIQUE 재발 없음. 신규 대국 0건(마지막 수 9/4 17:58 KST), visit_hits 373 유지. 배포 갭 0.
+- **잡 4/4 ok.** 9/4 21:04 재트리거된 dev-cycle은 세션 종료로 push가 빠졌지만 9/5 04:30 정기 실행이 이어받아 #84 픽스를 PR #86으로 올렸다. content-draft는 02:00에 FAQ `baduk-vs-omok`을 게시했고 라이브 200을 재확인했다.
+- **승인 대기 2건.** AP-20260903-01(PR #83, 48시간째·재확인 3회)에 더해 PR #86 머지 건을 AP-20260905-01로 신규 등재했다. 두 PR은 같은 `game_service.py`를 고치지만 `git merge-tree` 실측 충돌 0이라 #83 → #86 순서로 함께 머지하고 backend 재기동 1회로 발효하도록 권장했다.
+- **관찰 1건, 이슈 아님.** web `.err`의 `Failed to find Server Action` 누적 83건은 현 빌드에 없는 옛 액션 id를 재생하는 stale 클라이언트·크롤러로 판정했다. 프로세스는 현 BUILD_ID 위에서 돌고 있어 8/8의 빌드 불일치 유형이 아니다. 기준선을 로그에 남기고 판정 방법을 메모리에 저장했다.
+
+am 다이제스트와 승인 카드 2건을 발송했다(exit 0, 마커 생성). 상태 파일은 `21d1e86`으로 커밋·push했다. 다음 실행은 21:00 launchd 트리거다.
+[2026-09-05 09:06:35] orchestrator 종료
+[2026-09-05 21:00:04] orchestrator 시작
