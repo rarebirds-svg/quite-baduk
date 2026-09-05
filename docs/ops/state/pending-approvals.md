@@ -17,6 +17,19 @@
 - 상태: 대기 (9/3 09:00 등재)
 - **9/3 21:00 재확인 (12시간째)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 참고 — 진행 중 대국 활동 활발(마지막 수 20:57 KST, active 2건)이므로 실행 시 절차 3의 진행 중 대국 재확인을 반드시 거칠 것.
 - **9/4 21:00 재확인 (36시간째 · 재확인 2회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 9/4 09:00 사이클은 OAuth 만료(OPS-20260904-01)로 유실돼 재확인·승인 카드 발송이 한 슬롯 빠졌다. 오늘도 신규 대국 6건(#400~405, 마지막 수 17:58 KST)이라 절차 3 재확인 필수.
+- **9/5 09:00 재확인 (48시간째 · 재확인 3회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 신규 PR #86(#84 픽스, AP-20260905-01)이 같은 `game_service.py`를 고치지만 독립 브랜치이고 `git merge-tree` 충돌 0 — **#83 → #86 순서로 함께 머지하고 재기동 1회로 발효** 권장. 신규 대국 0건, 마지막 수 9/4 17:58 KST(15시간 전), active 5건이라 절차 3 재확인은 여전히 필수.
+
+### AP-20260905-01
+- 액션: PR [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86) 머지(🟡) + prod 반영 — 이슈 #84(undo_move·score_by_request도 stale 연결의 move_count로 커밋, #81과 동일 레이스 잔존) 픽스.
+- 근거: 9/5 04:30 dev-cycle이 생성한 PR(`fix/issue-84` cb4450a). 9/4 21:04 재트리거 실행이 구현·Fable 리뷰 승인까지 마쳤으나 세션 종료로 push가 누락됐고, 9/5 04:30 실행이 워크트리를 검증(신규 테스트 4건 수정 전 red 확인 → 586 passed·82.31%·ruff·mypy 통과)한 뒤 origin/main 위로 rebase·push·PR 생성. CI 4잡(backend·frontend·e2e·app-shell-build) 전부 SUCCESS, `MERGEABLE`·`CLEAN`. Codex 교차 리뷰는 쿼터 소진으로 건너뜀 — Fable 리뷰 차집합 1건(계가 신청 시 락 밖 `state` 수순 불일치 가능성)은 범위 밖으로 PR 본문에 기록, 사람 판단.
+- 영향: #83이 place_move에서 닫은 레이스와 같은 경로가 undo_move·계가 신청에서도 닫힌다. 변경은 backend 2파일(`game_service.py` + 테스트 1) — 마이그레이션 없음, 웹 재빌드 불필요. #83과 독립 브랜치이며 `git merge-tree` 충돌 0 실측.
+- 실행 절차 (AP-20260903-01과 묶어 1회 재기동 권장):
+  1. `gh pr merge 83 --squash --delete-branch` (AP-20260903-01)
+  2. `gh pr merge 86 --squash --delete-branch`
+  3. `git -C /Users/daegong/projects/baduk pull --ff-only`
+  4. 진행 중 대국 재확인(`moves.played_at` 최신값) 후 `launchctl kickstart -k gui/501/com.baduk.api`
+  5. `curl -fs http://localhost:8000/api/health` 200 확인
+- 상태: 대기 (9/5 09:00 등재)
 
 ## 처리 완료 — 최근
 

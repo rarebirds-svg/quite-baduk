@@ -853,3 +853,12 @@ Failed to authenticate: OAuth session expired and could not be refreshed
 [2026-09-04 04:30:07] 비정상 종료
 [2026-09-04 04:30:07] dev-cycle 종료
 [2026-09-04 21:04:48] dev-cycle 시작
+Fable 리뷰는 승인입니다. 지적 1건(계가 신청 시 위치 불일치 가드)은 Codex 리뷰 결과와 교집합 여부를 보고 처리하겠습니다. Codex 완료를 기다립니다.
+[2026-09-04 21:12:35] dev-cycle 종료
+[2026-09-05 04:30:05] dev-cycle 시작
+이번 사이클 완료 요약이다.
+
+- **#84 이어받아 마무리** — 9/4 21:04 재트리거 실행이 구현·커밋(480afbf)·Fable 리뷰 승인까지 하고 Codex 리뷰를 백그라운드로 기다리다 세션이 끝나 push·PR이 누락돼 있었다. 워크트리 상태를 검증(수정 전 코드로 신규 테스트 4건 red 재확인, 전체 586 passed·커버리지 82.31%·ruff·mypy 통과)한 뒤 origin/main 위로 rebase·push하고 PR [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86)을 생성했다. 이슈 #84에 브랜치·SHA(cb4450a)·PR 코멘트를 남기고 `in-progress`를 뗐다. 머지는 사람 승인(🟡).
+- **Codex 교차 리뷰는 건너뜀** — 쿼터 소진(10/2 04:35 리셋). Fable 리뷰 차집합 1건(계가 신청 시 락 밖에서 읽은 `state` 수순 불일치 가능성)은 범위 밖으로 PR 본문에 기록해 사람 판단에 맡겼다. #81은 이미 PR #83 대기라 재선택하지 않았다.
+- `state/log/2026-09-05.md` 기록, `report-job-status.sh dev-cycle ok` 보고 완료. 헤드리스 세션에서 백그라운드 리뷰 대기로 턴을 끝내면 세션이 죽는다는 교훈을 메모리에 남겼다.
+[2026-09-05 04:35:17] dev-cycle 종료

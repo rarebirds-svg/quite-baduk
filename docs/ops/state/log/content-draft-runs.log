@@ -276,3 +276,10 @@ You've hit your session limit · resets 4:20am (Asia/Seoul)
 - **초안·QA**. 3단락 초안 작성 후 korean-copy-qa 통과. 제안받은 문장 다듬기, `seoTitle`·`related` frontmatter, 승률 글로서리·복기 FAQ 내부 링크를 반영했습니다.
 - **게시**. `web/content/glossary/bokgi.md`로 이동해 커밋 `0606b0f`로 main push 완료, IndexNow 통보 200, 상태 파일·운영 로그 기록까지 마쳤습니다.
 [2026-09-02 04:28:48] content-draft 종료
+[2026-09-05 02:00:01] content-draft 시작
+콘텐츠 초안 사이클을 마쳤다.
+
+- **선택**: FAQ 게시 비율(9/24)이 글로서리(22/57)보다 낮아 FAQ를 골랐고, 미작성 후보 알파벳 첫 항목인 `baduk-vs-omok`(바둑과 오목은 어떻게 다른가요?)을 작성했다.
+- **QA·게시**: korean-copy-qa가 사실 오류와 깨진 내부링크 없음을 확인했고, seoTitle 대시·"9로 판" 표기·문장 2곳 지적을 반영했다. `web/content/faq/baduk-vs-omok.md` 한 파일만 커밋해 main에 push했다(1fc0f48). IndexNow 통보와 라이브 URL 모두 200이다.
+- **기록**: `ops/report-job-status.sh`로 잡 상태 ok를 남기고 `docs/ops/state/log/2026-09-05.md`에 한 줄 기록했다. 작업 트리에 미리 있던 state 로그 변경은 건드리지 않았다.
+[2026-09-05 02:04:34] content-draft 종료
