@@ -26,6 +26,7 @@ import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { HintNudge } from "@/components/HintNudge";
 import { PersonaIntro } from "@/components/PersonaIntro";
 import SoundToggle from "@/components/SoundToggle";
+import { ResultShare } from "@/components/ResultShare";
 import { useMovePref, resolveMoveConfirm } from "@/store/movePrefStore";
 import type { PlayerId } from "@/components/PlayerPicker";
 import { StatFigure } from "@/components/editorial/StatFigure";
@@ -660,6 +661,25 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
                 {t("game.viewKifu")}
               </button>
             </div>
+            <ResultShare
+              gameId={gameId}
+              size={g.boardSize}
+              board={g.board}
+              moveCount={g.moveCount}
+              title={t("game.share.cardTitle", {
+                nickname: nickname ?? t("game.you"),
+                opponent: meta?.ai_player
+                  ? t(`game.players.${meta.ai_player}.name`)
+                  : t("game.share.vsFallback"),
+              })}
+              subtitle={
+                meta
+                  ? `${g.boardSize}×${g.boardSize} · ${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`
+                  : `${g.boardSize}×${g.boardSize}`
+              }
+              resultText={formatGameResult(g.result, locale)}
+              lastMove={lastMoveXy ? { x: lastMoveXy[0], y: lastMoveXy[1] } : null}
+            />
           </>
         )}
       </div>
