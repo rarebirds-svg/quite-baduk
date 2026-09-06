@@ -27,6 +27,8 @@ export default function Board({
   overlay,
   territoryMarkers,
   ownership,
+  pendingMove = null,
+  pendingColor = "B",
 }: {
   size: number;
   board: string;
@@ -48,6 +50,9 @@ export default function Board({
   // When provided, paints a translucent heatmap behind the stones —
   // positive = Black-controlled, negative = White-controlled.
   ownership?: number[];
+  // 착수 확인 모드의 가착수 — 확정 전 반투명 돌과 점선 링으로 표시한다.
+  pendingMove?: { x: number; y: number } | null;
+  pendingColor?: "B" | "W";
 }) {
   const CELL = 30;
   const pad = CELL;
@@ -449,6 +454,29 @@ export default function Board({
           ))}
         </g>
       )}
+
+      {pendingMove && (() => {
+        const pcx = pad + pendingMove.x * CELL;
+        const pcy = pad + pendingMove.y * CELL;
+        const fill =
+          pendingColor === "B"
+            ? tokens.light["stone-black"]
+            : tokens.light["stone-white"];
+        return (
+          <g data-pending-move aria-hidden pointerEvents="none">
+            <circle cx={pcx} cy={pcy} r={CELL * 0.45} fill={fill} opacity={0.55} />
+            <circle
+              cx={pcx}
+              cy={pcy}
+              r={CELL * 0.5}
+              fill="none"
+              stroke="rgb(var(--oxblood))"
+              strokeWidth={1.5}
+              strokeDasharray="3 2"
+            />
+          </g>
+        );
+      })()}
 
       {interactive && kbCursor && (() => {
         const ccx = pad + kbCursor.x * CELL;

@@ -11,6 +11,12 @@ import {
   IconEstimate,
 } from "@/components/editorial/icons";
 import { useT } from "@/lib/i18n";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface GameControlsProps {
   onPass: () => void;
@@ -172,18 +178,37 @@ export default function GameControls({
           </Button>
         )}
         {showScoreButton && (
-          <Button
-            onClick={onScoreRequest}
-            disabled={scoreDisabled}
-            variant="outline"
-            className="flex flex-col h-auto py-3 px-1 sm:px-2 gap-1 min-w-0 data-[enabled=true]:border-moss data-[enabled=true]:text-moss"
-            data-enabled={scoringAvailable ? "true" : "false"}
-          >
-            <IconScore />
-            <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
-              {t("game.requestScoring")}
-            </span>
-          </Button>
+          // 계가 버튼은 종반(공배 단계)이 감지되기 전엔 비활성이라 초보자가
+          // 언제 눌리는지 모른다. disabled 버튼은 hover 이벤트를 내지 않으므로
+          // span으로 감싸 툴팁 트리거로 쓴다(포커스도 span이 받는다).
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="flex min-w-0"
+                  tabIndex={scoreDisabled && !disabled ? 0 : -1}
+                >
+                  <Button
+                    onClick={onScoreRequest}
+                    disabled={scoreDisabled}
+                    variant="outline"
+                    className="flex flex-col h-auto w-full py-3 px-1 sm:px-2 gap-1 min-w-0 data-[enabled=true]:border-moss data-[enabled=true]:text-moss"
+                    data-enabled={scoringAvailable ? "true" : "false"}
+                  >
+                    <IconScore />
+                    <span className="font-sans text-[10px] sm:text-xs font-semibold uppercase tracking-tight sm:tracking-label whitespace-nowrap">
+                      {t("game.requestScoring")}
+                    </span>
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {scoreDisabled && !disabled && (
+                <TooltipContent className="max-w-[16rem] whitespace-normal font-sans">
+                  {t("game.scoringLockedHint")}
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
         <Button
           onClick={onResign}
