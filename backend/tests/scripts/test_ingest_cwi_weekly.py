@@ -5,7 +5,9 @@ import hashlib
 
 import httpx
 import pytest
+from sqlalchemy import func, select
 
+from app.models import ProGame
 from scripts.ingest_cwi_weekly import (
     crawl_sgf_links,
     extract_sgf_links,
@@ -293,7 +295,17 @@ async def test_main_async_does_not_hold_write_lock_during_fetch(tmp_path, monkey
         async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession),
     )
 
-    summary = await mod.main_async()
-    await engine.dispose()
+    # 셸에 CWI_NEW_URLS_FILE이 있으면 운영용 URL 파일을 덮어쓰므로 격리한다.
+    monkeypatch.delenv(mod.NEW_URLS_ENV, raising=False)
+
+    try:
+        summary = await mod.main_async()
+        async with engine.connect() as conn:
+            persisted = (
+                await conn.execute(select(func.count()).select_from(ProGame))
+            ).scalar_one()
+    finally:
+        await engine.dispose()
     assert summary["new"] == 4
+    assert persisted == 4  # add_all + commit이 실제로 영속화됐는지
     assert lock_errors == []
