@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { BrandMark } from "@/components/editorial/BrandMark";
 import { Button } from "@/components/ui/button";
 import { attemptNavigation } from "@/lib/hooks/useNavigationGuard";
+import { IS_APP_SHELL } from "@/lib/appShell";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -94,6 +95,13 @@ export default function TopNav() {
               <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/spectate">{t("nav.spectate")}</Link>
               </Button>
+              {/* 용어사전·FAQ는 입문자 유입·검색 유입의 핵심 자산이라 푸터에서
+                  상단으로 올린다. 앱 셸 정적 export엔 없는 웹 전용 라우트. */}
+              {!IS_APP_SHELL && (
+                <Button asChild size="sm" variant="outline" className="hidden md:inline-flex">
+                  <Link href="/glossary">{t("nav.glossary")}</Link>
+                </Button>
+              )}
             </>
           )}
           {!session && (
@@ -112,6 +120,11 @@ export default function TopNav() {
               <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
                 <Link href="/spectate/pro">{t("spectate.tabPro")}</Link>
               </Button>
+              {!IS_APP_SHELL && (
+                <Button asChild size="sm" variant="outline" className="hidden md:inline-flex">
+                  <Link href="/glossary">{t("nav.glossary")}</Link>
+                </Button>
+              )}
               {/* 비로그인의 단 하나의 primary 행동 — 랜딩 #start 폼으로 보낸다. */}
               <Button asChild size="sm" className="bg-oxblood text-paper hover:bg-oxblood/90">
                 <Link href="/#start">{t("nav.startNow")}</Link>
@@ -153,6 +166,16 @@ export default function TopNav() {
                 <DropdownMenuItem asChild className="sm:hidden">
                   <Link href="/spectate">{t("nav.spectate")}</Link>
                 </DropdownMenuItem>
+                {!IS_APP_SHELL && (
+                  <>
+                    <DropdownMenuItem asChild className="md:hidden">
+                      <Link href="/glossary">{t("nav.glossary")}</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/faq">{t("nav.faq")}</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator className="sm:hidden" />
                 <DropdownMenuItem asChild>
                   <Link href="/history">{t("nav.history")}</Link>
