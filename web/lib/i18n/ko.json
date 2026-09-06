@@ -202,7 +202,7 @@
     "nicknameInvalid": "2–32자의 문자만 사용할 수 있습니다",
     "privacyNote": "닉네임 세션은 이 브라우저에 7일간 보관되며 방문할 때마다 자동 연장됩니다. 로그아웃하거나 7일간 방문하지 않으면 삭제됩니다. 게임 이력 삭제는 개인정보처리방침의 절차에 따라 요청하실 수 있습니다.",
     "ephemeralNote": "이 목록은 현재 세션에서 둔 대국을 표시합니다. 기보는 서버에 보관되며, 삭제 요청은 개인정보처리방침 안내를 따라주세요.",
-    "endSession": "세션 종료",
+    "endSession": "세션 종료", "continueWithGoogle": "이전에 Google 계정을 연동했나요? Google로 이어하기",
     "expiredTitle": "세션이 만료되었습니다",
     "expiredDesc": "닉네임을 다시 설정해주세요"
   },
@@ -388,7 +388,7 @@
     "colStarted": "시작",
     "colDuration": "소요"
   },
-  "settings": { "heading": "설정", "preferredRank": "선호 급수", "language": "언어", "theme": "테마", "themeLight": "밝게", "themeDark": "어둡게", "saved": "저장됨", "boardBg": "바둑판 배경", "boardBg_paper": "한지", "boardBg_wood": "나무결", "boardBg_kaya": "비자나무", "boardBg_slate": "슬레이트", "analysisView": "형세 정보 표시", "analysisViewHint": "초보 모드는 대국 중 승률·집차를 숨깁니다.", "moveConfirm": "착수 방식", "moveConfirm_auto": "자동", "moveConfirm_tap": "한 번에 착수", "moveConfirm_confirm": "확인 후 착수", "moveConfirmHint": "자동은 터치 기기에서만 확인 단계를 둡니다. 확인 후 착수는 가착수 자리를 한 번 더 누르거나 착수 버튼을 눌러 확정합니다.", "stoneSound": "착수음", "stoneSoundOn": "켜짐", "stoneSoundOff": "꺼짐", "personaCommentary": "기사 인트로·코멘트", "personaCommentaryOn": "켜짐", "personaCommentaryOff": "꺼짐", "personaCommentaryHint": "레전드 기사와 둘 때 시작 인트로와 대국 중 짧은 한마디를 보여줍니다." },
+  "settings": { "heading": "설정", "preferredRank": "선호 급수", "language": "언어", "theme": "테마", "themeLight": "밝게", "themeDark": "어둡게", "saved": "저장됨", "boardBg": "바둑판 배경", "boardBg_paper": "한지", "boardBg_wood": "나무결", "boardBg_kaya": "비자나무", "boardBg_slate": "슬레이트", "analysisView": "형세 정보 표시", "analysisViewHint": "초보 모드는 대국 중 승률·집차를 숨깁니다.", "moveConfirm": "착수 방식", "moveConfirm_auto": "자동", "moveConfirm_tap": "한 번에 착수", "moveConfirm_confirm": "확인 후 착수", "moveConfirmHint": "자동은 터치 기기에서만 확인 단계를 둡니다. 확인 후 착수는 가착수 자리를 한 번 더 누르거나 착수 버튼을 눌러 확정합니다.", "stoneSound": "착수음", "stoneSoundOn": "켜짐", "stoneSoundOff": "꺼짐", "personaCommentary": "기사 인트로·코멘트", "personaCommentaryOn": "켜짐", "personaCommentaryOff": "꺼짐", "personaCommentaryHint": "레전드 기사와 둘 때 시작 인트로와 대국 중 짧은 한마디를 보여줍니다.", "account": { "heading": "계정 연동", "hint": "닉네임만으로 계속 쓸 수 있습니다. Google 계정을 연동해 두면 브라우저를 바꾸거나 7일이 지나도 전적과 기보를 이어 볼 수 있습니다.", "linkGoogle": "Google 계정 연동", "linkedAs": "{email} 계정으로 연동됨", "linkedHint": "다른 기기에서는 첫 화면의 \"Google로 이어하기\"로 들어오면 됩니다.", "unlink": "연동 해제", "linked": "Google 계정을 연동했습니다", "unlinked": "연동을 해제했습니다. 기보는 계정에 남아 있어 다시 연동하면 돌아옵니다.", "error_generic": "계정 연동에 실패했습니다", "error_denied": "Google 로그인이 취소됐습니다", "error_state": "로그인 세션이 만료됐습니다. 다시 시도해주세요", "error_exchange": "Google 응답을 확인하지 못했습니다", "error_token": "Google 응답을 확인하지 못했습니다" } },
   "privacy": {
     "title": "개인정보처리방침",
     "eyebrow": "정책",

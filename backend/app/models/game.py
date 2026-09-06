@@ -59,5 +59,10 @@ class Game(Base):
     started_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     sgf_cache: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 대국을 만든 세션의 계정(연동돼 있었다면). 세션이 만료·삭제돼도 같은
+    # 계정으로 다시 연동한 새 세션이 이 대국을 자기 것으로 본다(app.ownership).
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     session: Mapped[Session] = relationship("Session", back_populates="games")

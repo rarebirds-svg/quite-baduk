@@ -33,9 +33,14 @@ from app.deps import (
     DbSession,
     bearer_token,
 )
-from app.models import Session
+from app.models import Account, Session
 from app.rate_limit import rate_limiter
-from app.schemas.session import NicknameAvailability, SessionCreateRequest, SessionPublic
+from app.schemas.session import (
+    AccountPublic,
+    NicknameAvailability,
+    SessionCreateRequest,
+    SessionPublic,
+)
 
 router = APIRouter(prefix="/api/session", tags=["session"])
 
@@ -127,11 +132,20 @@ async def create_session(
 
 
 @router.get("", response_model=SessionPublic)
-async def read_session(sess: CurrentSession, response: Response) -> SessionPublic:
+async def read_session(
+    sess: CurrentSession, response: Response, db: DbSession
+) -> SessionPublic:
     # 방문할 때마다 쿠키를 재발급해 Max-Age 7일을 앞으로 민다 (슬라이딩 만료).
     # 서버 측 슬라이딩은 last_seen_at 갱신이 담당한다.
     _set_session_cookie(response, sess.token)
-    return SessionPublic(id=sess.id, nickname=sess.nickname)
+    account: AccountPublic | None = None
+    if sess.account_id is not None:
+        acc = (
+            await db.execute(select(Account).where(Account.id == sess.account_id))
+        ).scalar_one_or_none()
+        if acc is not None:
+            account = AccountPublic(provider=acc.provider, email=acc.email)
+    return SessionPublic(id=sess.id, nickname=sess.nickname, account=account)
 
 
 @router.post("/end", status_code=204)

@@ -250,6 +250,7 @@ Before deploying publicly:
 - [ ] Run `bandit`, `pip-audit`, `npm audit` in CI and fix any `high` findings
 - [ ] Ensure the launchd backup job (`com.inkbaduk.backup`) is loaded or swap for off-host backup storage
 - [ ] Replace placeholder PWA icons under `web/public/icons/` with branded artwork (see icons/README.md)
+- [ ] (Optional) Google account linking: set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `PUBLIC_BASE_URL` and register `{PUBLIC_BASE_URL}/api/auth/google/callback` in the Google Cloud OAuth client. Leave them empty to keep nickname-only sessions. After deploying run `alembic upgrade head` (migration 0020 adds `accounts`).
 
 ## Quality Report
 

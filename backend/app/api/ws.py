@@ -11,6 +11,7 @@ from app import last_seen_cache
 from app.core.rules.engine import GameState
 from app.deps import COOKIE_SESSION, DbSession
 from app.models import Game, Session
+from app.ownership import owns
 from app.rate_limit import rate_limiter
 from app.services.game_service import (
     GameError,
@@ -134,7 +135,7 @@ async def ws_game(
 
     res = await db.execute(select(Game).where(Game.id == game_id))
     game = res.scalar_one_or_none()
-    if game is None or game.session_id != sess.id:
+    if game is None or not owns(game, sess):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 

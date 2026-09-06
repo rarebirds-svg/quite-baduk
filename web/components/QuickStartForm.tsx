@@ -2,6 +2,7 @@
 // 랜딩의 원클릭 시작 폼 — 닉네임 한 줄로 세션과 기본 대국을 만들어 대국 화면으로 보낸다.
 import { useState } from "react";
 import Link from "next/link";
+import GoogleContinueLink from "@/components/GoogleContinueLink";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { errorMessageKey } from "@/lib/api";
@@ -153,6 +154,7 @@ export default function QuickStartForm({ autoFocus = true }: { autoFocus?: boole
           {t("quickstart.details")}
         </Button>
       )}
+      {!session && <GoogleContinueLink />}
     </div>
   );
 }

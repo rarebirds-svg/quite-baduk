@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, String, func
+from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -26,6 +26,10 @@ class Session(Base):
     # 2-letter ISO 3166-1 country from Cloudflare's CF-IPCountry header,
     # captured once at session creation. Null in dev / non-Cloudflare paths.
     country: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    # 옵트인 계정 연동. 계정이 지워지면 세션은 익명 세션으로 돌아간다.
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     # We intentionally do NOT cascade-delete games when a session ends or is
     # purged — history should survive the session. The DB-level FK is

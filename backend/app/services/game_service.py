@@ -35,6 +35,7 @@ from app.engine_pool import (
 )
 from app.models import Game, Session
 from app.models import Move as MoveRow
+from app.ownership import owns
 
 log = structlog.get_logger()
 
@@ -136,6 +137,7 @@ async def create_game(
 
     game = Game(
         session_id=session.id,
+        account_id=session.account_id,
         user_nickname=session.nickname,
         user_rank=user_rank,
         user_country=session.country,
@@ -229,8 +231,8 @@ async def place_move(
     on_user_applied: Callable[[GameState, int], Awaitable[None]] | None = None,
     on_user_winrate: Callable[[float, float | None], Awaitable[None]] | None = None,
 ) -> MoveResult:
-    if game.session_id != session.id:
-        raise GameError("FORBIDDEN", "game.session_id != session.id")
+    if not owns(game, session):
+        raise GameError("FORBIDDEN", "not owner (session/account)")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
@@ -569,7 +571,7 @@ UNDO_LIMIT = 3
 
 
 async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: int = 2) -> GameState:
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
@@ -614,7 +616,7 @@ async def score_by_request(
     """Finalize the game "계가 신청" style — auto dead-stone, Korean territory
     scoring, full per-side breakdown. Rejects if the position isn't in the
     yose/dame-fill phase yet, so a user can't short-circuit an unsettled game."""
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
@@ -683,7 +685,7 @@ async def estimate_score(
     finalizing the game. Distinct from score_by_request — no endgame
     gating, no DB mutation. The caller can keep playing afterward.
     """
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
@@ -716,7 +718,7 @@ async def estimate_score(
 
 
 async def resign_game(db: AsyncSession, *, game: Game, session: Session) -> Game:
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
