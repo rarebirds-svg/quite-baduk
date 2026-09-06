@@ -12,6 +12,13 @@
   - 앱 셸 환경에서 후원 링크 숨김 (`IS_APP_SHELL` 감지).
 - CI 잡 `app-shell-build` 추가: `npm ci` + `bash scripts/build-app.sh` — 정적 export 가능 여부를 PR마다 검증.
 
+### Fixed
+- 같은 대국을 두 탭에서 열면 두 탭이 서로의 WebSocket을 1.5초마다 밀어내던 핑퐁 차단 — `SESSION_REPLACED`를 받은 탭은 재연결을 멈추고 "이 탭에서 이어두기" 버튼으로만 다시 붙는다. 오해를 부르던 "세션이 종료됐습니다" 문구도 연결 교체 안내로 교체.
+- 사용자 기권 후 결과 줄이 `결과:`로 비던 문제 — 기권 응답의 `result`(`W+R`/`B+R`)를 화면에 반영.
+- 첫 대국 힌트 코치마크와 30초 장고 프롬프트가 동시에 쌓이던 문제 — 코치마크가 닫힌 뒤에만 장고 타이머를 돌린다.
+- 상단 테마·언어 토글의 접근성 이름이 `Theme: undefined`/영문 하드코딩이던 문제 — i18n 라벨로 교체.
+- 프로 기보 기사명 인코딩 깨짐(`åœ‹æ ¾è ¡`) — `parse_pro_sgf`가 CA[] 없는 SGF를 ISO-8859-1로 읽던 sgfmill 기본값을 UTF-8로 고정하고, 주간 CWI 인제스트·시드·관리자 업로드가 HTTP 헤더 charset 대신 바이트를 직접 디코드(`decode_sgf_bytes`). 기적재 행은 `python -m scripts.repair_pro_mojibake`(`--dry-run` 지원)로 복구.
+
 ## [0.3.0] - 2026-06-06
 
 ### Added

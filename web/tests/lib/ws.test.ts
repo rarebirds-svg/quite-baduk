@@ -228,3 +228,55 @@ describe("openGameWS — outbound queue (P0-11)", () => {
     expect(FakeWS.instances[0].sent).toEqual([]);
   });
 });
+
+describe("openGameWS — SESSION_REPLACED handling", () => {
+  beforeEach(() => {
+    FakeWS.instances = [];
+    vi.stubGlobal("WebSocket", FakeWS as unknown as typeof WebSocket);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ status: 200 }));
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("forwards the error, fires onReplaced, and never reconnects", async () => {
+    const onMessage = vi.fn();
+    const onReplaced = vi.fn();
+    const { openGameWS } = await import("@/lib/ws");
+    const handle = openGameWS(21, onMessage, { onReplaced });
+    FakeWS.instances[0].simulateOpen();
+
+    FakeWS.instances[0].simulateMessage({ type: "error", code: "SESSION_REPLACED" });
+    expect(onMessage).toHaveBeenCalledWith({ type: "error", code: "SESSION_REPLACED" });
+    expect(onReplaced).toHaveBeenCalledTimes(1);
+
+    // The server closes the evicted socket next. Without the guard this
+    // would schedule a reconnect that evicts the other tab (ping-pong).
+    FakeWS.instances[0].simulateClose();
+    await vi.advanceTimersByTimeAsync(5000);
+    await flushMicrotasks();
+    expect(FakeWS.instances).toHaveLength(1);
+
+    // Sends after eviction are dropped rather than queued for a socket
+    // that will never open.
+    handle.send({ type: "move", coord: "D4" });
+    expect(FakeWS.instances[0].sent).toEqual([]);
+    handle.close();
+  });
+
+  it("still reconnects after other error codes", async () => {
+    const { openGameWS } = await import("@/lib/ws");
+    const handle = openGameWS(22, () => {});
+    FakeWS.instances[0].simulateOpen();
+    FakeWS.instances[0].simulateMessage({ type: "error", code: "ILLEGAL_KO" });
+    FakeWS.instances[0].simulateClose();
+    await vi.advanceTimersByTimeAsync(1500);
+    await flushMicrotasks();
+    expect(FakeWS.instances).toHaveLength(2);
+    handle.close();
+  });
+});

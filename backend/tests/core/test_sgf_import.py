@@ -87,3 +87,45 @@ def test_parse_pro_sgf_round_keeps_final_prefix_text():
     sgf_text = "(;FF[4]GM[1]SZ[19]RO[Final 2];B[pd];W[dp])"
     parsed = parse_pro_sgf(sgf_text)
     assert parsed.round == "Final 2"
+
+
+# --- 인코딩: CA[] 없는 SGF의 비ASCII 기사명이 깨지지 않아야 한다 ---
+
+_SGF_NO_CA = "(;GM[1]FF[4]SZ[19]KM[6.5]PB[國 insei]PW[이창호];B[pd];W[dp])"
+
+
+def test_parse_keeps_non_ascii_names_without_ca() -> None:
+    # sgfmill 기본값(ISO-8859-1)에 맡기면 'å\x9c\x8b insei'로 깨진다.
+    parsed = parse_pro_sgf(_SGF_NO_CA)
+    assert parsed.black_player == "國 insei"
+    assert parsed.white_player == "이창호"
+    # 정제 SGF는 CA[UTF-8]을 달고 나가 재파싱이 안정적이다.
+    assert "CA[UTF-8]" in parsed.clean_sgf
+    assert parse_pro_sgf(parsed.clean_sgf).white_player == "이창호"
+
+
+def test_decode_sgf_bytes_prefers_ca_then_utf8_then_latin1() -> None:
+    from app.core.sgf.import_sgf import decode_sgf_bytes
+
+    # CA[] 선언이 있으면 그 인코딩으로.
+    latin = "(;FF[4]CA[ISO-8859-1]SZ[19]PB[Émile];B[pd])".encode("latin-1")
+    assert "PB[Émile]" in decode_sgf_bytes(latin)
+    # 선언이 없으면 UTF-8 strict — 헤더 charset과 무관하게 한글이 살아난다.
+    assert "PW[이창호]" in decode_sgf_bytes(_SGF_NO_CA.encode("utf-8"))
+    # UTF-8이 아니면 무손실 폴백(latin-1)으로라도 파싱 가능한 문자열을 준다.
+    raw_latin = "(;FF[4]SZ[19]PB[Émile];B[pd])".encode("latin-1")
+    assert "PB[Émile]" in decode_sgf_bytes(raw_latin)
+    # 알 수 없는 CA 값은 무시하고 다음 단계로 넘어간다.
+    weird = "(;FF[4]CA[no-such-codec]SZ[19]PB[이창호];B[pd])".encode()
+    assert "PB[이창호]" in decode_sgf_bytes(weird)
+
+
+def test_repair_mojibake_roundtrip() -> None:
+    from app.core.sgf.import_sgf import repair_mojibake
+
+    broken = "國 insei".encode().decode("latin-1")
+    assert broken.startswith("å")
+    assert repair_mojibake(broken) == "國 insei"
+    # 이미 정상인 한글/ASCII는 건드리지 않는다.
+    assert repair_mojibake("이창호") is None
+    assert repair_mojibake("Lee Changho") is None

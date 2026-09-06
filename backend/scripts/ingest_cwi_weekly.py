@@ -23,7 +23,12 @@ import structlog
 from sqlalchemy import select
 
 from app.core.pro.classify import classify_collection
-from app.core.sgf.import_sgf import InvalidProSgf, ParsedProGame, parse_pro_sgf
+from app.core.sgf.import_sgf import (
+    InvalidProSgf,
+    ParsedProGame,
+    decode_sgf_bytes,
+    parse_pro_sgf,
+)
 from app.db import AsyncSessionLocal
 from app.models import ProGame
 
@@ -190,7 +195,9 @@ async def main_async() -> dict[str, int]:
                 try:
                     sgf_resp = await http.get(url)
                     sgf_resp.raise_for_status()
-                    sgf_text = sgf_resp.text
+                    # 헤더 charset 대신 바이트를 직접 디코드 — 아카이브 서버의
+                    # 잘못된 charset 선언으로 기사명이 깨지던 원인.
+                    sgf_text = decode_sgf_bytes(sgf_resp.content)
                 except Exception as exc:
                     log.warning("cwi.sgf.fetch_failed", url=url, err=str(exc))
                     summary["error"] += 1
