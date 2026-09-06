@@ -11,6 +11,7 @@ import BoardBgSwitcher from "@/components/BoardBgSwitcher";
 import AnalysisDensityToggle from "@/components/AnalysisDensityToggle";
 import MoveConfirmToggle from "@/components/MoveConfirmToggle";
 import SoundToggle from "@/components/SoundToggle";
+import PersonaCommentToggle from "@/components/PersonaCommentToggle";
 
 export default function SettingsPage() {
   const t = useT();
@@ -73,6 +74,10 @@ export default function SettingsPage() {
         <span className="text-xs text-ink-mute">{t("settings.moveConfirmHint")}</span>
       </div>
       <SoundToggle />
+      <div className="flex flex-col gap-1">
+        <PersonaCommentToggle />
+        <span className="text-xs text-ink-mute">{t("settings.personaCommentaryHint")}</span>
+      </div>
       <div className="pt-6 border-t border-ink-faint">
         <button
           onClick={endSession}

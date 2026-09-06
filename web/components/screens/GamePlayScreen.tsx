@@ -28,6 +28,13 @@ import { PersonaIntro } from "@/components/PersonaIntro";
 import SoundToggle from "@/components/SoundToggle";
 import { ResultShare } from "@/components/ResultShare";
 import { useMovePref, resolveMoveConfirm } from "@/store/movePrefStore";
+import { usePersonaPref } from "@/store/personaPrefStore";
+import {
+  decideTrigger,
+  initialCommentaryState,
+  markShown,
+  pickPersonaLine,
+} from "@/lib/personaComment";
 import type { PlayerId } from "@/components/PlayerPicker";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { DataBlock } from "@/components/editorial/DataBlock";
@@ -114,6 +121,23 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   const [pendingMove, setPendingMove] = useState<{ x: number; y: number } | null>(null);
   // 기사 페르소나 인트로 — 첫 수 전까지만, 닫으면 그 대국에선 다시 안 뜬다.
   const [introDismissed, setIntroDismissed] = useState(false);
+  // 기사 페르소나 한마디 — AI 착수 직후 상황(첫 수·따냄·우세·열세·주기)에 맞춰
+  // 상대 캡션 자리에 잠깐 띄운다. persist rehydrate 뒤에만 선호값을 반영한다.
+  const personaPref = usePersonaPref((s) => s.commentary);
+  const [personaOn, setPersonaOn] = useState(true);
+  useEffect(() => setPersonaOn(personaPref), [personaPref]);
+  const [personaLine, setPersonaLine] = useState<string | null>(null);
+  const personaState = useRef(initialCommentaryState());
+  const personaTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const metaRef = useRef<GameMeta | null>(null);
+  useEffect(() => {
+    metaRef.current = meta;
+  }, [meta]);
+  const showPersonaLine = (line: string) => {
+    if (personaTimer.current) clearTimeout(personaTimer.current);
+    setPersonaLine(line);
+    personaTimer.current = setTimeout(() => setPersonaLine(null), 8_000);
+  };
   const [pendingLeave, setPendingLeave] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
   // Preferred kifu dialog size — persisted so the user's choice sticks
@@ -248,6 +272,34 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
           toast(t("game.aiPassed"));
         }
         g.set({ lastAiMove: msg.coord, aiThinking: false });
+        // 페르소나 한마디 — 클로저의 g는 오래된 스냅샷이므로 store에서 직접 읽는다.
+        const m = metaRef.current;
+        if (m?.ai_player && c !== "resign") {
+          const live = useGameStore.getState();
+          const aiWinrate =
+            typeof live.winrateBlack === "number"
+              ? m.user_color === "black"
+                ? 1 - live.winrateBlack
+                : live.winrateBlack
+              : null;
+          const trigger = decideTrigger(
+            {
+              moveCount: Math.max(live.moveCount, expectedMoveCount.current),
+              capturedByAi: msg.captures ?? 0,
+              aiWinrate,
+            },
+            personaState.current,
+          );
+          const line = trigger ? pickPersonaLine(t, m.ai_player, trigger) : null;
+          if (trigger && line) {
+            personaState.current = markShown(
+              personaState.current,
+              Math.max(live.moveCount, expectedMoveCount.current),
+              trigger,
+            );
+            showPersonaLine(line);
+          }
+        }
       } else if (msg.type === "score_result") {
         setScoringDetail(msg);
       } else if (msg.type === "estimate_result") {
@@ -308,6 +360,9 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
       setEstimateLoading(false);
       setShowHeatmap(false);
       expectedMoveCount.current = 0;
+      personaState.current = initialCommentaryState();
+      if (personaTimer.current) clearTimeout(personaTimer.current);
+      setPersonaLine(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, wsEpoch]);
@@ -543,9 +598,15 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
               ? `${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`
               : t("game.aiRank")
           }
-          subtitle={g.aiThinking ? t("game.thinking") : ""}
+          subtitle={
+            g.aiThinking
+              ? t("game.thinking")
+              : personaOn && personaLine
+                ? `“${personaLine}”`
+                : ""
+          }
         />
-        {meta?.ai_player && ready && g.moveCount === 0 && !g.gameOver && !introDismissed && (
+        {personaOn && meta?.ai_player && ready && g.moveCount === 0 && !g.gameOver && !introDismissed && (
           <PersonaIntro
             playerId={meta.ai_player as PlayerId}
             rankLabel={`${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`}
