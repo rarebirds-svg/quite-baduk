@@ -3,22 +3,43 @@
 import { useState } from "react";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatRank, type Rank } from "@/components/RankPicker";
+import type { BoardSize } from "@/lib/board";
 
 type Step = "closed" | "q1" | "q2" | "result";
 
-export default function RankAdvisor({ onSelect }: { onSelect: (r: Rank) => void }) {
+export interface AdvisorResult {
+  rank: Rank;
+  boardSize: BoardSize;
+}
+
+// 문답 결과 → 급수 + 판 크기. 입문자는 9줄에서 시작해야 한 판을 끝까지 둘 수 있다.
+export const ADVISOR_PRESETS = {
+  q1New: { rank: "9k", boardSize: 9 },
+  q1Rules: { rank: "7k", boardSize: 9 },
+  q2Small: { rank: "5k", boardSize: 9 },
+  q2Finish: { rank: "3k", boardSize: 19 },
+  q2Club: { rank: "1k", boardSize: 19 },
+  q2Dan: { rank: "2d", boardSize: 19 },
+} as const satisfies Record<string, AdvisorResult>;
+
+export default function RankAdvisor({
+  onSelect,
+}: {
+  /** 적용 시 급수와 추천 판 크기를 함께 넘긴다 — 새 대국 폼이 둘 다 반영한다. */
+  onSelect: (r: Rank, boardSize: BoardSize) => void;
+}) {
   const t = useT();
   const [locale] = useLocale();
   const [step, setStep] = useState<Step>("closed");
-  const [result, setResult] = useState<Rank | null>(null);
+  const [result, setResult] = useState<AdvisorResult | null>(null);
 
-  const finish = (r: Rank) => {
+  const finish = (r: AdvisorResult) => {
     setResult(r);
     setStep("result");
   };
 
   const apply = () => {
-    if (result) onSelect(result);
+    if (result) onSelect(result.rank, result.boardSize);
     setStep("closed");
   };
 
@@ -49,25 +70,26 @@ export default function RankAdvisor({ onSelect }: { onSelect: (r: Rank) => void 
       {step === "q1" && (
         <>
           <p className="font-sans text-sm font-semibold text-ink">{t("game.advisor.q1Title")}</p>
-          <Option label={t("game.advisor.q1New")} onClick={() => finish("9k")} />
-          <Option label={t("game.advisor.q1Rules")} onClick={() => finish("7k")} />
+          <Option label={t("game.advisor.q1New")} onClick={() => finish(ADVISOR_PRESETS.q1New)} />
+          <Option label={t("game.advisor.q1Rules")} onClick={() => finish(ADVISOR_PRESETS.q1Rules)} />
           <Option label={t("game.advisor.q1Played")} onClick={() => setStep("q2")} />
         </>
       )}
       {step === "q2" && (
         <>
           <p className="font-sans text-sm font-semibold text-ink">{t("game.advisor.q2Title")}</p>
-          <Option label={t("game.advisor.q2Small")} onClick={() => finish("5k")} />
-          <Option label={t("game.advisor.q2Finish")} onClick={() => finish("3k")} />
-          <Option label={t("game.advisor.q2Club")} onClick={() => finish("1k")} />
-          <Option label={t("game.advisor.q2Dan")} onClick={() => finish("2d")} />
+          <Option label={t("game.advisor.q2Small")} onClick={() => finish(ADVISOR_PRESETS.q2Small)} />
+          <Option label={t("game.advisor.q2Finish")} onClick={() => finish(ADVISOR_PRESETS.q2Finish)} />
+          <Option label={t("game.advisor.q2Club")} onClick={() => finish(ADVISOR_PRESETS.q2Club)} />
+          <Option label={t("game.advisor.q2Dan")} onClick={() => finish(ADVISOR_PRESETS.q2Dan)} />
         </>
       )}
       {step === "result" && result && (
         <>
           <p className="font-sans text-sm text-ink-mute">
             {t("game.advisor.resultLabel")}{" "}
-            <span className="font-semibold text-ink">{formatRank(result, locale)}</span>
+            <span className="font-semibold text-ink">{formatRank(result.rank, locale)}</span>
+            <span className="font-mono text-ink-faint"> · {result.boardSize}×{result.boardSize}</span>
           </p>
           <div className="flex items-center gap-3">
             <button

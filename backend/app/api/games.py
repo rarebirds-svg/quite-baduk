@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import io
+import json
+import zipfile
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
@@ -89,6 +94,54 @@ async def list_games(
     q = q.limit(50).offset((page - 1) * 50)
     res = await db.execute(q)
     return [GameSummary.model_validate(g, from_attributes=True) for g in res.scalars().all()]
+
+
+@router.get("/export")
+async def export_games(
+    db: DbSession,
+    sess: CurrentSession,
+) -> Response:
+    """세션의 모든 대국을 SGF + 요약 JSON으로 묶은 zip. 닉네임 세션은 7일 뒤
+    사라지므로 사용자가 전적·기보를 스스로 보관할 수단이다.
+    `/{game_id}` 보다 먼저 선언해야 'export'가 int 경로로 잡히지 않는다."""
+    q = (
+        select(Game)
+        .where(Game.session_id == sess.id)
+        .order_by(Game.started_at.asc(), Game.id.asc())
+    )
+    games = (await db.execute(q)).scalars().all()
+
+    buf = io.BytesIO()
+    summary: list[dict[str, object]] = []
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for game in games:
+            sgf = game.sgf_cache
+            if not sgf:
+                state = get_cached_state(game.id)
+                if state is None:
+                    from app.services.game_service import _replay_state as replay
+                    state = await replay(db, game)
+                sgf = build_sgf(state, result=game.result or "")
+            day = game.started_at.strftime("%Y%m%d") if game.started_at else "unknown"
+            name = f"{day}_game{game.id}_{game.board_size}x{game.board_size}_{game.ai_rank}.sgf"
+            zf.writestr(name, sgf)
+            summary.append(
+                {**GameSummary.model_validate(game, from_attributes=True).model_dump(), "sgf": name}
+            )
+        zf.writestr(
+            "games.json",
+            json.dumps(summary, ensure_ascii=False, indent=2, default=str),
+        )
+
+    stamp = datetime.now(UTC).strftime("%Y%m%d")
+    return Response(
+        content=buf.getvalue(),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="inkbaduk_games_{stamp}.zip"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get("/{game_id}", response_model=GameDetail)

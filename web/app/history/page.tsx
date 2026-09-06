@@ -9,6 +9,7 @@ import { StatFigure } from "@/components/editorial/StatFigure";
 import { formatRank, type Rank } from "@/components/RankPicker";
 import { gameReviewHref } from "@/lib/routes";
 import { formatGameResult } from "@/lib/formatResult";
+import { Download } from "lucide-react";
 
 interface BucketRow {
   total: number;
@@ -145,7 +146,22 @@ export default function HistoryPage() {
       <RuleDivider weight="strong" className="my-8" />
 
       <section>
-        <h2 className="font-serif text-lg mb-3">{t("history.allGames")}</h2>
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+          <h2 className="font-serif text-lg">{t("history.allGames")}</h2>
+          {games.length > 0 && (
+            <div className="flex flex-col items-end gap-1">
+              <a
+                href="/api/games/export"
+                download
+                className="inline-flex items-center gap-2 border border-ink px-3 py-1.5 font-sans text-xs font-semibold uppercase tracking-label text-ink transition-base hover:bg-paper-deep"
+              >
+                <Download size={16} strokeWidth={1.5} aria-hidden />
+                {t("history.exportAll")}
+              </a>
+              <span className="font-sans text-xs text-ink-mute">{t("history.exportHint")}</span>
+            </div>
+          )}
+        </div>
         {games.length === 0 ? (
           <p className="text-sm text-ink-faint">{t("history.empty")}</p>
         ) : (
