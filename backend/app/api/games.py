@@ -15,6 +15,7 @@ from app.deps import CurrentSession, DbSession, is_admin
 from app.engine_pool import game_lock, get_cached_state
 from app.models import Game, Session
 from app.models import Move as MoveRow
+from app.ownership import owned_games_clause, owns
 from app.rate_limit import rate_limiter
 from app.schemas.game import (
     CreateGameRequest,
@@ -43,7 +44,7 @@ async def _fetch_owned_game(db: AsyncSession, game_id: int, sess: Session) -> Ga
     game = res.scalar_one_or_none()
     if game is None:
         raise HTTPException(status_code=404, detail="game_not_found")
-    if game.session_id != sess.id:
+    if not owns(game, sess):
         raise HTTPException(status_code=403, detail="forbidden")
     return game
 
@@ -54,7 +55,7 @@ async def _fetch_readable_game(db: AsyncSession, game_id: int, sess: Session) ->
     game = res.scalar_one_or_none()
     if game is None:
         raise HTTPException(status_code=404, detail="game_not_found")
-    if game.session_id != sess.id and not is_admin(sess):
+    if not owns(game, sess) and not is_admin(sess):
         raise HTTPException(status_code=403, detail="forbidden")
     return game
 
@@ -88,7 +89,7 @@ async def list_games(
     status_: str | None = None,
     page: int = Query(1, ge=1, le=10000),
 ) -> list[GameSummary]:
-    q = select(Game).where(Game.session_id == sess.id).order_by(Game.started_at.desc())
+    q = select(Game).where(owned_games_clause(sess)).order_by(Game.started_at.desc())
     if status_:
         q = q.where(Game.status == status_)
     q = q.limit(50).offset((page - 1) * 50)
@@ -106,7 +107,7 @@ async def export_games(
     `/{game_id}` 보다 먼저 선언해야 'export'가 int 경로로 잡히지 않는다."""
     q = (
         select(Game)
-        .where(Game.session_id == sess.id)
+        .where(owned_games_clause(sess))
         .order_by(Game.started_at.asc(), Game.id.asc())
     )
     games = (await db.execute(q)).scalars().all()

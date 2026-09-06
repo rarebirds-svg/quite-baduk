@@ -12,6 +12,7 @@ from app.core.rules.handicap import HANDICAP_TABLES
 from app.deps import CurrentSession, DbSession
 from app.engine_pool import get_adapter, set_adapter_owner
 from app.models import AnalysisCache, Game, Session
+from app.ownership import owns
 from app.rate_limit import rate_limiter
 from app.schemas.game import AnalysisResponse, HintMove
 
@@ -23,7 +24,7 @@ async def _fetch_owned(db: AsyncSession, game_id: int, sess: Session) -> Game:
     g = res.scalar_one_or_none()
     if g is None:
         raise HTTPException(status_code=404, detail="game_not_found")
-    if g.session_id != sess.id:
+    if not owns(g, sess):
         raise HTTPException(status_code=403, detail="forbidden")
     return g
 

@@ -50,6 +50,24 @@ class Settings(BaseSettings):
     gsc_property_url: str = ""          # env: GSC_PROPERTY_URL (예: sc-domain:inkbaduk.com)
     gsc_service_account_json: str = ""  # env: GSC_SERVICE_ACCOUNT_JSON (키 파일 경로)
 
+    # 구글 간편 계정 연동(옵트인). client_id/secret이 비어 있으면 기능 전체가 꺼진다.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    # 구글 콘솔에 등록한 콜백 URL. 비우면 public_base_url + /api/auth/google/callback.
+    google_redirect_uri: str = ""
+    # 사용자에게 보이는 사이트 주소(예: https://inkbaduk.com). 로그인 뒤 돌아올 곳.
+    public_base_url: str = ""
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def google_redirect(self) -> str:
+        if self.google_redirect_uri:
+            return self.google_redirect_uri
+        return f"{self.public_base_url.rstrip('/')}/api/auth/google/callback"
+
     @property
     def is_production(self) -> bool:
         return self.app_env.lower() == "production"

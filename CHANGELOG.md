@@ -21,6 +21,7 @@
 - 홈 랜딩 "오늘의 한 수" 프리뷰 카드 (`components/editorial/DailyPreviewCard.tsx`) — 오늘 문제의 판·차례·주제·난이도를 보여주고 `/daily`로 보낸다.
 - 대국 종료 후 결과 공유 (`components/ResultShare.tsx`) — 1200×630 결과 카드 PNG 저장(모바일은 공유 시트, `lib/resultCard.ts`), 10수 이상 대국은 관전 링크 복사·기기 공유·X 공유.
 - 레전드 기사 한마디 (`lib/personaComment.ts`) — AI 착수 직후 첫 수·따냄·우세·열세·주기(20수) 트리거에 맞춰 기사별 카피(19인 × 5트리거 × 2줄, ko/en `game.personaLines`)를 상대 캡션에 8초간 띄운다. 최소 8수 간격, 같은 트리거 연속 반복 금지. 설정 › 기사 인트로·코멘트로 인트로 카드와 함께 끌 수 있다.
+- 구글 간편 계정 연동(옵트인) — 닉네임 세션은 그대로 두고 `GET /api/auth/google/start` → 콜백에서 세션과 그 대국들을 `accounts` 행에 귀속한다. 다른 기기·7일 만료 뒤에는 첫 화면 "Google로 이어하기"로 새 세션을 만들면 예전 대국이 그대로 보인다(소유권 판정 `app/ownership.py`: 세션 일치 OR 계정 일치). 설정 › 계정 연동에서 연동·해제. `GOOGLE_CLIENT_ID`/`SECRET`이 비어 있으면 기능 전체가 꺼진다. 마이그레이션 0020 (`accounts`, `sessions.account_id`, `games.account_id`).
 
 ### Fixed
 - 같은 대국을 두 탭에서 열면 두 탭이 서로의 WebSocket을 1.5초마다 밀어내던 핑퐁 차단 — `SESSION_REPLACED`를 받은 탭은 재연결을 멈추고 "이 탭에서 이어두기" 버튼으로만 다시 붙는다. 오해를 부르던 "세션이 종료됐습니다" 문구도 연결 교체 안내로 교체.
