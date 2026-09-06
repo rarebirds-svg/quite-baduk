@@ -236,3 +236,64 @@ async def test_main_async_ingests_new_sgfs(tmp_path, monkeypatch):
     lines = urls_file.read_text().splitlines()
     assert len(lines) == summary["new"]
     assert all(u.startswith(f"{mod.PUBLIC_BASE_URL}/spectate/pro/") for u in lines)
+
+
+@pytest.mark.asyncio
+async def test_main_async_does_not_hold_write_lock_during_fetch(tmp_path, monkeypatch):
+    """#87 — SGF fetch(네트워크 I/O) 중에 쓰기 락을 잡고 있으면 안 된다.
+
+    파일 DB를 쓰고, 각 SGF 요청 시점마다 별도 커넥션이 짧은 busy_timeout으로 INSERT를
+    시도한다. ingest가 fetch 도중 트랜잭션을 열어 두면 이 프로브가 'database is locked'로
+    실패한다 — 실제 prod에서 진행 중 대국의 착수가 실패한 경로와 같다."""
+    import sqlite3
+
+    import scripts.ingest_cwi_weekly as mod
+    monkeypatch.setattr(mod, "CACHE_PATH", tmp_path / ".baduk" / "ingest-cwi.cache")
+
+    db_file = tmp_path / "ingest.db"
+    base = "https://homepages.cwi.nl/~aeb/go/games/"
+    index_html = "".join(f'<a href="g{i}.sgf">g{i}</a>' for i in range(4))
+    lock_errors: list[str] = []
+
+    def handler(request):
+        url = str(request.url)
+        if url == base:
+            return httpx.Response(200, text=index_html)
+        if url.endswith(".sgf"):
+            # ingest 세션이 쓰기 락을 쥐고 있으면 여기서 곧바로 locked가 난다.
+            probe = sqlite3.connect(db_file, timeout=0.2)
+            try:
+                probe.execute("INSERT INTO probe(url) VALUES (?)", (url,))
+                probe.commit()
+            except sqlite3.OperationalError as exc:
+                lock_errors.append(f"{url}: {exc}")
+            finally:
+                probe.close()
+            n = url.rstrip(".sgf")[-1]
+            return httpx.Response(200, text=f"(;FF[4]GM[1]SZ[19]EV[E{n}];B[pd];W[dc])")
+        return httpx.Response(404)
+
+    real_client = httpx.AsyncClient
+    def patched_client(*args, **kwargs):
+        kwargs.pop("timeout", None)
+        kwargs.pop("follow_redirects", None)
+        return real_client(transport=httpx.MockTransport(handler))
+    monkeypatch.setattr(httpx, "AsyncClient", patched_client)
+
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+    import app.models  # noqa: F401
+    from app.db import Base
+    engine = create_async_engine(f"sqlite+aiosqlite:///{db_file}")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+        await conn.exec_driver_sql("CREATE TABLE probe(url TEXT)")
+    monkeypatch.setattr(
+        mod, "AsyncSessionLocal",
+        async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession),
+    )
+
+    summary = await mod.main_async()
+    await engine.dispose()
+    assert summary["new"] == 4
+    assert lock_errors == []
