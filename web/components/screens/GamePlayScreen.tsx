@@ -24,6 +24,10 @@ import { playStoneClick } from "@/lib/soundfx";
 import { IS_APP_SHELL } from "@/lib/appShell";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { HintNudge } from "@/components/HintNudge";
+import { PersonaIntro } from "@/components/PersonaIntro";
+import SoundToggle from "@/components/SoundToggle";
+import { useMovePref, resolveMoveConfirm } from "@/store/movePrefStore";
+import type { PlayerId } from "@/components/PlayerPicker";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { DataBlock } from "@/components/editorial/DataBlock";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -101,6 +105,14 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   // 사용자가 "이 탭에서 이어두기"를 눌러 wsEpoch를 올릴 때만 한다.
   const [replaced, setReplaced] = useState(false);
   const [wsEpoch, setWsEpoch] = useState(0);
+  // 착수 확인(2단계) — 터치 기기 기본. 첫 탭은 가착수, 같은 자리 재탭·확인
+  // 버튼이 실제 착수. persist rehydrate 이후에만 선호값을 읽는다.
+  const moveConfirmPref = useMovePref((s) => s.moveConfirm);
+  const [confirmMode, setConfirmMode] = useState(false);
+  useEffect(() => setConfirmMode(resolveMoveConfirm(moveConfirmPref)), [moveConfirmPref]);
+  const [pendingMove, setPendingMove] = useState<{ x: number; y: number } | null>(null);
+  // 기사 페르소나 인트로 — 첫 수 전까지만, 닫으면 그 대국에선 다시 안 뜬다.
+  const [introDismissed, setIntroDismissed] = useState(false);
   const [pendingLeave, setPendingLeave] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
   // Preferred kifu dialog size — persisted so the user's choice sticks
@@ -299,6 +311,11 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, wsEpoch]);
 
+  // 상대 수가 오거나 대국이 끝나면 가착수는 의미를 잃는다.
+  useEffect(() => {
+    setPendingMove(null);
+  }, [g.moveCount, g.gameOver, g.aiThinking]);
+
   const takeOverGame = () => {
     setReplaced(false);
     // Bumping the epoch re-runs the WS effect: the old (already closed)
@@ -340,6 +357,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
     setHint([]);
     setHintWinrate(null);
     playStoneClick();
+    setPendingMove(null);
     wsRef.current?.send({ type: "move", coord });
     if (IS_APP_SHELL) {
       import("@capacitor/haptics")
@@ -382,6 +400,24 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
     setEstimateLoading(true);
     wsRef.current?.send({ type: "estimate_request" });
   };
+  const handleBoardClick = (x: number, y: number) => {
+    if (!confirmMode) {
+      sendMove(x, y);
+      return;
+    }
+    if (!ready || g.gameOver || g.aiThinking) return;
+    if (g.board[y * g.boardSize + x] !== ".") {
+      toast.error(t("errors.OCCUPIED"));
+      return;
+    }
+    // 같은 자리를 다시 누르면 확정, 다른 자리면 가착수를 옮긴다.
+    if (pendingMove && pendingMove.x === x && pendingMove.y === y) {
+      sendMove(x, y);
+      return;
+    }
+    setPendingMove({ x, y });
+  };
+
   const resign = async () => {
     setConfirmResign(false);
     try {
@@ -508,18 +544,47 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
           }
           subtitle={g.aiThinking ? t("game.thinking") : ""}
         />
+        {meta?.ai_player && ready && g.moveCount === 0 && !g.gameOver && !introDismissed && (
+          <PersonaIntro
+            playerId={meta.ai_player as PlayerId}
+            rankLabel={`${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`}
+            onDismiss={() => setIntroDismissed(true)}
+          />
+        )}
         <Board
           size={g.boardSize}
           board={g.board}
           lastMove={
             lastMoveXy ? { x: lastMoveXy[0], y: lastMoveXy[1] } : null
           }
-          onClick={sendMove}
+          onClick={handleBoardClick}
           disabled={!ready || g.aiThinking || g.gameOver}
           overlay={overlay}
           territoryMarkers={territoryMarkers}
           ownership={heatmapOwnership}
+          pendingMove={confirmMode ? pendingMove : null}
+          pendingColor={g.toMove === "W" ? "W" : "B"}
         />
+        {confirmMode && pendingMove && !g.gameOver && !g.aiThinking && (
+          <div
+            role="status"
+            className="flex flex-wrap items-center gap-3 border border-ink bg-paper-deep px-3 py-2 font-sans text-sm"
+          >
+            <span className="text-ink">
+              {t("game.moveConfirm.prompt", {
+                coord: xyToGtp(pendingMove.x, pendingMove.y, g.boardSize),
+              })}
+            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setPendingMove(null)}>
+                {t("game.cancel")}
+              </Button>
+              <Button size="sm" onClick={() => sendMove(pendingMove.x, pendingMove.y)}>
+                {t("game.moveConfirm.confirm")}
+              </Button>
+            </div>
+          </div>
+        )}
         <PlayerCaption
           color={meta?.user_color === "white" ? "white" : "black"}
           name={nickname ?? t("game.you")}
@@ -637,6 +702,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
         />
         <RuleDivider label={t("settings.boardBg")} />
         <BoardBgSwitcher compact />
+        <SoundToggle />
       </aside>
 
       <Dialog open={confirmPass} onOpenChange={setConfirmPass}>

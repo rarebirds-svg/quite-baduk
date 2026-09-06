@@ -11,6 +11,10 @@
   - 착수 햅틱: 착수 성공 시 Capacitor Haptics로 짧은 진동 피드백.
   - 앱 셸 환경에서 후원 링크 숨김 (`IS_APP_SHELL` 감지).
 - CI 잡 `app-shell-build` 추가: `npm ci` + `bash scripts/build-app.sh` — 정적 export 가능 여부를 PR마다 검증.
+- 착수 확인(2단계) 옵션 — 설정 › 착수 방식 (자동 / 한 번에 착수 / 확인 후 착수). 자동은 터치 기기(`pointer: coarse`)에서만 확인 단계를 두며, 가착수는 반투명 돌로 표시되고 같은 자리 재탭 또는 착수 버튼으로 확정한다 (`store/movePrefStore.ts`, `components/MoveConfirmToggle.tsx`).
+- 착수음 토글을 대국 사이드바와 설정 화면에 노출 (`components/SoundToggle.tsx`) — 기존엔 복기 모달에만 있었다.
+- 레전드 기사 인트로 카드 (`components/PersonaIntro.tsx`) — 첫 수 전에 기사 이름·국기·전성기·한 줄 소개를 보여준다.
+- 비활성 계가 버튼에 툴팁 — 종반 감지 전에는 언제 열리는지 안내한다.
 
 ### Fixed
 - 같은 대국을 두 탭에서 열면 두 탭이 서로의 WebSocket을 1.5초마다 밀어내던 핑퐁 차단 — `SESSION_REPLACED`를 받은 탭은 재연결을 멈추고 "이 탭에서 이어두기" 버튼으로만 다시 붙는다. 오해를 부르던 "세션이 종료됐습니다" 문구도 연결 교체 안내로 교체.
