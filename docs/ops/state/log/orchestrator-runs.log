@@ -2003,3 +2003,17 @@ Failed to authenticate: OAuth session expired and could not be refreshed
 am 다이제스트와 승인 카드 2건을 발송했다(exit 0, 마커 생성). 상태 파일은 `21d1e86`으로 커밋·push했다. 다음 실행은 21:00 launchd 트리거다.
 [2026-09-05 09:06:35] orchestrator 종료
 [2026-09-05 21:00:04] orchestrator 시작
+9/5 pm 사이클을 마쳤습니다.
+
+**결과 요약**
+- prod 전 항목 정상. api·web 200, 5xx 0건, 트레이스백 0건, 디스크 6%, plist drift 없음, Claude 인증 D-27, 백업 무결성 60회 연속 통과.
+- 신규 대국 7건(#406~412)이 12:50~14:35 KST에 몰렸고 #412는 116수 기권으로 종료됐다. 그 사이 #81 UNIQUE 위반 재발은 없었다. `.err` 증가분 21줄은 전부 WebSocket INFO 라인이다.
+- web `.err`의 `Failed to find Server Action` 84건(+1)은 현 빌드에 없는 옛 액션 id 재생으로 am 기준선과 같은 성격이라 이슈로 올리지 않았다. 401 48건은 전부 쿠키 없는 신규 방문자의 세션 조회이며 오류가 아니다.
+- 열린 PR #83·#86 둘 다 CI 4잡 SUCCESS·MERGEABLE·CLEAN이고 미분류 이슈 0건, 배포 갭 0커밋이다.
+- 승인 대기 2건(AP-20260903-01 60시간째·AP-20260905-01 12시간째)을 재확인하고 카드 2건과 함께 pm 다이제스트를 발송했다(exit 0, 마커 21:02). 상태 파일은 `7492e91`로 커밋·push했다.
+
+**사람 판단 대기**: PR #83 → #86 순서로 함께 머지하고 backend 재기동 1회. 오늘 대국 활동이 재개됐으니 실행 시 진행 중 대국 재확인이 필수다. 다음 실행은 9/6 09:00 launchd 트리거이며, 그 전에 03:00 CWI ingest·05:00 news-hook·09:00 analytics-weekly(W36)가 예정돼 있다.
+[2026-09-05 21:03:17] orchestrator 종료
+[2026-09-06 09:00:05] orchestrator 시작
+You've hit your session limit · resets 9:30am (Asia/Seoul)
+[2026-09-06 09:02:27] 세션 한도 감지 — 1953s 대기 후 1회 재시도

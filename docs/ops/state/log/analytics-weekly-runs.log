@@ -121,3 +121,14 @@ Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/badu
 - **특이사항** — `/api/stats`가 HTTP 401을 반환해 지난주와 마찬가지로 DB 직접 조회 기준으로 작성했음을 리포트에 명기. 세션 테이블은 누적 2건으로 집계됨(출력 그대로 인용).
 - **기록** — `report-job-status.sh analytics-weekly ok` 마커 기록, `log/2026-08-30.md`에 한 줄 추가. 다음 실행은 다음 일요일 launchd.
 [2026-08-30 09:01:19] analytics-weekly 종료
+[2026-09-06 09:00:05] analytics-weekly 시작
+You've hit your session limit · resets 9:30am (Asia/Seoul)
+[2026-09-06 09:01:43] 세션 한도 감지 — 1997s 대기 후 1회 재시도
+이번 주 리포트는 이미 작성돼 있어 idempotent 스킵으로 종료했다.
+
+- **2026-W36 리포트 존재 확인.** `docs/ops/state/reports/2026-W36.md`가 오늘 09:00 실행에서 생성됐고, 상태 파일도 ok(방문 122건, 게임 70건, 보류 승인 2건)로 기록돼 있다.
+- **이번 세션은 재시도 기동.** 09:00 실행이 리포트·상태·로그를 모두 마친 뒤 세션 한도 문구가 감지돼 session-retry 래퍼가 09:35에 다시 띄운 것이다. 실제 누락은 없다.
+- **로그만 추가.** `docs/ops/state/log/2026-09-06.md`에 idempotent 스킵 한 줄을 남겼다. 리포트와 상태 파일은 건드리지 않았다.
+
+다음 실행은 다음 일요일 launchd다.
+[2026-09-06 09:35:44] analytics-weekly 종료
