@@ -97,6 +97,10 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   // Drives the heatmap overlay on Board for both estimate AND scoring sheets.
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [aiResigned, setAiResigned] = useState(false);
+  // 다른 탭이 같은 대국을 열어 서버가 이 소켓을 교체한 상태. 재연결은
+  // 사용자가 "이 탭에서 이어두기"를 눌러 wsEpoch를 올릴 때만 한다.
+  const [replaced, setReplaced] = useState(false);
+  const [wsEpoch, setWsEpoch] = useState(0);
   const [pendingLeave, setPendingLeave] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
   // Preferred kifu dialog size — persisted so the user's choice sticks
@@ -145,13 +149,21 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
 
   // B — 망설임 프롬프트. 사용자 차례에서 30초 장고 시 대국당 1회 노출.
   useEffect(() => {
-    if (!ready || g.gameOver || g.aiThinking || hesitationShown.current) return;
+    // 코치마크가 떠 있는 동안은 대기 — 두 안내가 동시에 쌓이지 않게 한다.
+    if (
+      !ready ||
+      g.gameOver ||
+      g.aiThinking ||
+      hintCoachmark ||
+      hesitationShown.current
+    )
+      return;
     const id = setTimeout(() => {
       setHintHesitation(true);
       hesitationShown.current = true;
     }, 30_000);
     return () => clearTimeout(id);
-  }, [ready, g.gameOver, g.aiThinking, g.moveCount]);
+  }, [ready, g.gameOver, g.aiThinking, g.moveCount, hintCoachmark]);
 
   useEffect(() => {
     loadMeta();
@@ -236,6 +248,15 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
         g.set({ gameOver: true, result: msg.result, aiThinking: false });
         if (msg.reason === "ai_resigned") setAiResigned(true);
       } else if (msg.type === "error") {
+        if (msg.code === "SESSION_REPLACED") {
+          // lib/ws.ts already stopped the retry loop. Freeze the board and
+          // offer a manual takeover instead of fighting the other tab.
+          setReplaced(true);
+          setReady(false);
+          g.set({ aiThinking: false });
+          toast.error(t("errors.SESSION_REPLACED"));
+          return;
+        }
         if (preOptimisticBoard.current !== null) {
           g.set({ board: preOptimisticBoard.current });
           preOptimisticBoard.current = null;
@@ -276,7 +297,14 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
       expectedMoveCount.current = 0;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
+  }, [gameId, wsEpoch]);
+
+  const takeOverGame = () => {
+    setReplaced(false);
+    // Bumping the epoch re-runs the WS effect: the old (already closed)
+    // socket is dropped and a fresh one evicts the other tab once.
+    setWsEpoch((e) => e + 1);
+  };
 
   const sendMove = (x: number, y: number) => {
     if (!ready || g.gameOver || g.aiThinking) return;
@@ -357,8 +385,15 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   const resign = async () => {
     setConfirmResign(false);
     try {
-      await api(`/api/games/${gameId}/resign`, { method: "POST" });
-      g.set({ gameOver: true });
+      const summary = await api<{ result: string | null }>(
+        `/api/games/${gameId}/resign`,
+        { method: "POST" },
+      );
+      // The server records "W+R"/"B+R"; mirror it locally so the result
+      // line isn't blank (the game_over WS event only fires for AI-driven
+      // endings). Fall back to the user's colour if the body lacks it.
+      const fallback = meta?.user_color === "white" ? "B+R" : "W+R";
+      g.set({ gameOver: true, result: summary.result ?? fallback });
     } catch {
       toast.error(t("errors.validation"));
     }
@@ -498,6 +533,25 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
           }
         />
 
+        {replaced && (
+          <div
+            role="alert"
+            className="border border-oxblood bg-paper-deep px-3 py-2 flex flex-wrap items-center gap-3 font-sans text-sm"
+          >
+            <span className="text-ink leading-relaxed">
+              {t("game.wsReplaced.message")}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto shrink-0"
+              onClick={takeOverGame}
+            >
+              {t("game.wsReplaced.action")}
+            </Button>
+          </div>
+        )}
+
         {hintCoachmark && !g.gameOver && (
           <HintNudge
             message={t("game.hintCoachmark")}
@@ -522,7 +576,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
           onHint={hintMe}
           onScoreRequest={requestScoring}
           onEstimate={requestEstimate}
-          disabled={g.gameOver || g.aiThinking}
+          disabled={g.gameOver || g.aiThinking || replaced}
           undosRemaining={Math.max(0, UNDO_LIMIT - g.undoCount)}
           scoringAvailable={g.endgamePhase && !g.gameOver}
           hintLoading={hintLoading}

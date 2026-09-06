@@ -234,7 +234,7 @@ Set `KATAGO_MOCK=true` in `.env` and rebuild. The mock adapter plays determinist
 Pass `BADUK_API_PORT` / `BADUK_WEB_PORT` to `start.sh` or `e2e/scripts/start-stack.sh` to bind alt ports.
 
 **"SESSION_REPLACED" error**
-You opened the same game in another tab or window. The backend enforces a single WebSocket per game to keep state consistent.
+You opened the same game in another tab or window. The backend enforces a single WebSocket per game to keep state consistent. The evicted tab stops reconnecting and shows a "Resume here" button; press it to take the game back into that tab (which evicts the other one).
 
 **KataGo CPU usage / slow response**
 Higher ranks (5d/7d) use more visits (256/512) and take longer per move. For CPU-only hardware, use 18k–3k for responsive play.

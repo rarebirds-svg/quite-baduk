@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import delete as _sa_delete
 from sqlalchemy import select
 
-from app.core.sgf.import_sgf import InvalidProSgf, parse_pro_sgf
+from app.core.sgf.import_sgf import InvalidProSgf, decode_sgf_bytes, parse_pro_sgf
 from app.deps import AdminSession, DbSession
 from app.models import ProGame
 
@@ -50,7 +50,7 @@ async def upload_pro_games(
     failed: list[str] = []
     seen: set[str] = set()
     for f in files:
-        raw = (await f.read()).decode("utf-8", errors="replace")
+        raw = decode_sgf_bytes(await f.read())
         try:
             parsed = parse_pro_sgf(raw)
         except InvalidProSgf:

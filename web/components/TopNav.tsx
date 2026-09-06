@@ -121,7 +121,7 @@ export default function TopNav() {
 
           <button
             onClick={() => setLocale(locale === "ko" ? "en" : "ko")}
-            aria-label="Toggle language"
+            aria-label={t("nav.toggleLanguage")}
             className="flex h-9 w-9 shrink-0 items-center justify-center border border-ink-faint font-mono text-[10px] font-semibold uppercase tracking-label text-ink-mute hover:bg-paper-deep"
           >
             {locale === "ko" ? "EN" : "KO"}
@@ -129,7 +129,7 @@ export default function TopNav() {
 
           <button
             onClick={() => setTheme(nextTheme)}
-            aria-label={`Theme: ${theme}`}
+            aria-label={t("nav.toggleTheme")}
             className="flex h-9 w-9 shrink-0 items-center justify-center border border-ink-faint text-ink-mute hover:bg-paper-deep hover:text-ink"
           >
             <ThemeIcon size={16} strokeWidth={1.5} />

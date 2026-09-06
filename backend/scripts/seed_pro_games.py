@@ -20,7 +20,7 @@ from pathlib import Path
 import structlog
 from sqlalchemy import select
 
-from app.core.sgf.import_sgf import InvalidProSgf, parse_pro_sgf
+from app.core.sgf.import_sgf import InvalidProSgf, decode_sgf_bytes, parse_pro_sgf
 from app.db import AsyncSessionLocal
 from app.models import ProGame
 
@@ -50,9 +50,7 @@ async def seed() -> None:
             inserted = skipped = failed = updated = 0
             for path in sgf_files:
                 try:
-                    parsed = parse_pro_sgf(
-                        path.read_text(encoding="utf-8", errors="replace")
-                    )
+                    parsed = parse_pro_sgf(decode_sgf_bytes(path.read_bytes()))
                 except (InvalidProSgf, OSError) as e:
                     failed += 1
                     log.warning(
