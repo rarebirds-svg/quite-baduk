@@ -11,6 +11,7 @@
 - 조치: 화이트리스트 외(DB 마이그레이션 🟡, 재기동만으로 복구 불가) → 에스컬레이션. 09:00 `kind: alert` 즉시 경보 발송(exit 0, once_key `prod_migration_0020`). AP-20260907-01 등재 + am 다이제스트 카드 동봉. prod DB 사본 드라이런(`0019→0020` 0.44초, integrity ok, FK 위반 0)으로 절차 안전성 사전 검증.
 - 결과: 사람 승인 대기. 승인 회신 시 절차 실행 후 `.err` 트레이스백 0·`/api/spectate` 200·착수 재개로 닫는다.
 - 재발 방지 후보(사람 판단): (1) 헬스체크 러닝북에 `alembic_version` vs `migrations/versions` 최신 revision 비교 단계 추가 — 이번처럼 `/api/health` 200인 반쪽 장애를 잡는다. (2) `backend/deploy/run_local_prod.sh` 기동 시 `alembic upgrade head` 자동 실행(🟡, 기동 경로 변경). (3) 5xx 카운트를 watchdog 신호에 추가.
+- **9/7 21:00 재확인 — 지속 21시간, 승인 미회신 12시간.** `alembic_version` `0019` 유지, `/api/spectate` 500 재현. 09:00 이후 `.err` 신규 트레이스백 14건(`sessions.account_id` SELECT 10·INSERT 2·`games.account_id` 2), `.log` 500 14건 — `GET /api/session` 10(실사용자 IP 3개)·**`POST /api/session` 2**·`/api/spectate` 2(프로브). **영향 정정** — `POST /api/session`도 `table sessions has no column named account_id`로 500이라 세션 없는 신규 방문자도 대국 착수 경로에 못 들어간다(오전의 "신규 방문 정상"은 세션 발급 전 화면까지만 해당). 12h 착수 0수, `visit_hits` +8. watchdog 6회 전부 "OK"(사각지대 유지). 재경보는 once_key(`prod_migration_0020`) 일 1회 억제로 생략, pm 다이제스트 ❌ + 승인 카드 4건으로 재통보.
 
 ### 2026-05-23 — prod web :3000 다운 (실 장애)
 - 감지: 사용자가 inkbaduk.com 502 Bad gateway 스크린샷 보고. `com.baduk.web` PID `-` / exit 127.

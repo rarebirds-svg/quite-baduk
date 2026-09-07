@@ -2036,3 +2036,14 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 - **승인 대기 2건 유지.** PR #83(84시간째·6회 재확인)·#86(36시간째·3회 재확인) 모두 CI 통과, 묶어서 머지 후 backend 재기동 1회 권장. pm 다이제스트에 승인 카드 2건 동봉해 발송 성공(마커 21:02). 기록은 `docs/ops/state/log/2026-09-06.md`와 대시보드에 남겨 커밋 55e944c로 main에 push했다. 다음 실행은 9/7 09:00 launchd 트리거다.
 [2026-09-06 21:03:12] orchestrator 종료
 [2026-09-07 09:00:04] orchestrator 시작
+사이클을 마쳤습니다. 요약입니다.
+
+**prod 반쪽 장애를 발견해 에스컬레이션했습니다 (OPS-20260907-01).** 9/7 00:06 사람 배포에서 `alembic upgrade head`가 빠져 DB는 0019인데 코드(#93 구글 계정 연동)는 `games.account_id`를 읽습니다. 세션 보유 재방문자의 `/api/session`과 관전 목록 `/api/spectate`가 500이고, 배포 이후 착수 0건입니다. `/api/health`는 200이라 watchdog은 못 잡았고 bug-scan의 트레이스백 12건·5xx 12건 델타로 발굴했습니다. DB 마이그레이션은 🟡라 자율 실행하지 않았고, 즉시 경보와 am 다이제스트를 모두 발송 성공했습니다.
+
+- **AP-20260907-01(긴급)** — `alembic upgrade head` + api 재기동. prod DB 사본 드라이런으로 0.44초·integrity ok를 검증해 카드에 실었습니다.
+- **AP-20260907-02** — dev-cycle이 올린 PR #95(#87 ingest 락 픽스) 머지. 재기동 불필요.
+- **AP-20260903-01·AP-20260905-01** — PR #83·#86, 각각 96시간·48시간째. 복구 재기동과 묶어 1회 처리를 권장했습니다.
+
+나머지는 정상입니다. 백업 63회 연속 ok, 잡 4/4 ok, PR 3건 CI 그린, 미분류 이슈 0건. 기록은 대시보드·incidents·pending-approvals·일일 로그에 남겨 `16d9e0f`로 main에 push했고, 재발 방지용으로 "매 사이클 alembic_version 비교" 메모리를 저장했습니다. 다음 실행은 21:00 launchd 트리거이며, 승인 회신이 오면 절차 실행 후 트레이스백 0·`/api/spectate` 200으로 인시던트를 닫습니다.
+[2026-09-07 09:07:30] orchestrator 종료
+[2026-09-07 21:00:02] orchestrator 시작
