@@ -1,19 +1,19 @@
 # 운영 대시보드
 
-- 갱신: 2026-09-06 21:00
+- 갱신: 2026-09-07 09:00
 
 ## 스택 상태
 
 | 스택 | 상태 | 마지막 확인 |
 |---|---|---|
-| prod | 정상 — backend·web 200 OK, db OK, 디스크 6%, plist drift 없음, **Claude 인증 D-26**. `.log` 최근 3천줄 **5xx 0건**(200 2822 / 204 67 / 401 49 / 201 46 / 404 16, 3만줄로 넓혀도 0). **신규 대국 13건(#432~444)** 9/6 11:24~16:49 KST(13로 11·19로 1·9로 1), 종료 7건(기권 6 + **#444 계가 완주 B+42.5, 119수**), 접속 IP 2개. 최근 12h 착수 679수·24h 1,522수, 마지막 수 9/6 16:49 KST. `visit_hits` **435**(+6/12h). **`.err` 신규 트레이스백 0건**(+126줄 전부 WS INFO) — `database is locked`·UNIQUE 재발 없음. web `.err` `Failed to find Server Action` 89건(+1, 옛 id) — 사용자 영향 없음.<br>(이전) 9/6 09:35 정상 — 신규 대국 19건(#413~431), `database is locked` 1건(03:16 game #427, 주간 ingest 락 60초 → 이슈 #87), 5xx 0건.<br>(이전) 9/5 21:00 정상 — 신규 대국 7건(#406~412), 5xx 0건, web Server Action 84건. | 2026-09-06 21:00 |
-| staging | 중단 (정책상 정상) | 2026-09-06 21:00 |
+| prod | **❌ 반쪽 장애 — OPS-20260907-01 (에스컬레이션, AP-20260907-01 승인 대기).** `/api/health` 200·web 200·디스크 7%·plist drift 없음·**Claude 인증 D-25**로 헬스체크 항목은 전부 통과하지만, 9/7 00:06 사람 배포(#89~#93 pull·재빌드·재기동)에서 `alembic upgrade head`가 빠져 `alembic_version`=`0019`, 코드는 `0020_accounts`의 `games.account_id`·`sessions.account_id`를 읽는다. `.err` 신규 트레이스백 **12건**(`no such column`), `.log` 최근 3천줄 **5xx 12건**(`/api/spectate` 10·`/api/session` 2), 직접 프로브 `/api/spectate` 500 재현. **00:06 이후 착수 0건·WS 0건** — 세션 보유 재방문자는 이어보기·대국 불가, 관전 목록 불가. 신규 방문·일일 도전·프로 기보는 정상. 09:00 즉시 경보 발송 성공. 사본 드라이런 0.44초·integrity ok로 절차 검증 완료. 9/6 밤 신규 대국 9건(#445~453, 마지막 수 23:18 KST), active 잔류 6건, `visit_hits` **461**(+26/12h). web `.err` Server Action 89건(+0).<br>(이전) 9/6 21:00 정상 — 신규 대국 13건(#432~444), 5xx 0건, 트레이스백 0건, Claude 인증 D-26.<br>(이전) 9/6 09:35 정상 — 신규 대국 19건(#413~431), `database is locked` 1건(주간 ingest 락 → 이슈 #87). | 2026-09-07 09:00 |
+| staging | 중단 (정책상 정상) | 2026-09-07 09:00 |
 
 ## 백업 상태
 
 | 항목 | 값 |
 |---|---|
-| 최신 백업 | **2026-09-06T04:00** (baduk-20260906T040002.db.gz, 4,318,240B, +192,972B = 주간 ingest +200건 정합) — 신선, integrity_check ok·테이블 10 = **62회 연속** 통과(9/6 21:00 재검증, am과 동일 파일), daily 14 / weekly 8 / monthly 4 (9/6 09:35 검증, weekly 복사 + daily 8/23·weekly 7/12 보존 정리).<br>(이전) 9/5 검증 60회 연속 (baduk-20260905T040002.db.gz, 4,125,268B).
+| 최신 백업 | **2026-09-07T04:00** (baduk-20260907T040004.db.gz, 4,365,754B, +47,514B) — 신선, integrity_check ok·테이블 10 = **63회 연속** 통과(9/7 09:00), daily 14 / weekly 8 / monthly 4. 이 백업이 AP-20260907-01 마이그레이션 직전 상태(`0019`)의 복원점이다.<br>(이전) 9/6 04:00 baduk-20260906T040002.db.gz 4,318,240B, 62회 연속.<br>(이전) 9/5 검증 60회 연속 (baduk-20260905T040002.db.gz, 4,125,268B).
 | daily / weekly / monthly | **14 / 8 / 3** (8/16 09:00 실측). 8/16 04:00 생성과 함께 daily 8/2분·weekly 6/21분이 보존 정리돼 개수 유지. |
 
 ## 콘텐츠 인덱스
@@ -42,15 +42,15 @@
 
 | 항목 | 값 |
 |---|---|
-| 열린 이슈 | **(9/6 21:00) 3건 — 미분류 0건, 변동 없음.** #87은 다음 dev-cycle(9/7 04:30) 대상.<br>(이전) **(9/6 09:35) 3건 — 미분류 0건.** **[#87](https://github.com/rarebirds-svg/quite-baduk/issues/87) `bug` 신규** — 주간 CWI ingest 단일 트랜잭션이 쓰기 락 60초 보유 → 진행 중 대국 착수 `database is locked`(game 427 실측). 다음 dev-cycle 대상. [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — PR #83, 머지 대기(AP-20260903-01). [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84) `bug` — PR #86, 머지 대기(AP-20260905-01).<br>(이전) **(9/5 21:00) 2건** — 둘 다 PR 대기.
-| 열린 PR | **(9/6 21:00) 2건 — 주의 PR 0건.** #83·#86 CI 4잡 SUCCESS 유지(`mergeable` 이번 조회 UNKNOWN = GitHub 캐시 미계산, main 유입은 ops 문서뿐). #83은 9/10 04:46에 7일 정체 전환 예정. AP-20260903-01 84시간째·AP-20260905-01 36시간째.<br>(이전) **(9/6 09:35) 2건 — 주의 PR 0건.** [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83)(#81 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN, 생성 4일째 — AP-20260903-01 72시간째. [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86)(#84 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN — AP-20260905-01 24시간째. main CI 최근 3런 success. 둘 다 `game_service.py`를 고치나 독립 브랜치·`merge-tree` 충돌 0, #83 → #86 순차 머지 가능.<br>(이전) **(9/5 21:00) 2건** — 동일.
+| 열린 이슈 | **(9/7 09:00) 3건 — 미분류 0건.** #87 → **PR [#95](https://github.com/rarebirds-svg/quite-baduk/pull/95)**(9/7 04:30 dev-cycle, AP-20260907-02 등재). #81 → PR #83, #84 → PR #86 머지 대기. 오늘 장애(OPS-20260907-01)는 배포 절차 결손이라 이슈화하지 않음.<br>(이전) (9/6 21:00) 3건 — #87은 다음 dev-cycle 대상.<br>(이전) **(9/6 09:35) 3건 — 미분류 0건.** **[#87](https://github.com/rarebirds-svg/quite-baduk/issues/87) `bug` 신규** — 주간 CWI ingest 단일 트랜잭션이 쓰기 락 60초 보유 → 진행 중 대국 착수 `database is locked`(game 427 실측). 다음 dev-cycle 대상. [#81](https://github.com/rarebirds-svg/quite-baduk/issues/81) `bug` — PR #83, 머지 대기(AP-20260903-01). [#84](https://github.com/rarebirds-svg/quite-baduk/issues/84) `bug` — PR #86, 머지 대기(AP-20260905-01).<br>(이전) **(9/5 21:00) 2건** — 둘 다 PR 대기.
+| 열린 PR | **(9/7 09:00) 3건 — 주의 PR 0건.** [#95](https://github.com/rarebirds-svg/quite-baduk/pull/95)(#87 픽스, ingest 스크립트+테스트) CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN`, #83·#86과 `merge-tree` 충돌 0. #83·#86 CI SUCCESS 유지(`mergeable` UNKNOWN = 캐시). #83은 9/10 04:46 7일 정체 전환 예정. main CI 최근 3런 success(#92~#94).<br>(이전) **(9/6 21:00) 2건 — 주의 PR 0건.** #83·#86 CI 4잡 SUCCESS 유지(`mergeable` 이번 조회 UNKNOWN = GitHub 캐시 미계산, main 유입은 ops 문서뿐). #83은 9/10 04:46에 7일 정체 전환 예정. AP-20260903-01 84시간째·AP-20260905-01 36시간째.<br>(이전) **(9/6 09:35) 2건 — 주의 PR 0건.** [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83)(#81 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN, 생성 4일째 — AP-20260903-01 72시간째. [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86)(#84 픽스) CI 4잡 SUCCESS·MERGEABLE·CLEAN — AP-20260905-01 24시간째. main CI 최근 3런 success. 둘 다 `game_service.py`를 고치나 독립 브랜치·`merge-tree` 충돌 0, #83 → #86 순차 머지 가능.<br>(이전) **(9/5 21:00) 2건** — 동일.
 | CI e2e 상태 | **(7/25 12:00) PR #66 런에서 e2e 잡 SUCCESS 확인** — #59 머지 이후 회복 상태 유지. `[[ci-e2e-disabled]]`의 "main 만성 RED" 서술은 현재 사실과 다르므로 갱신 대상. e2e 잡은 활성(`if:` 조건 없음). |
 | SQLite locked 판정 | **(9/6 21:00) 재발 0건** — 오늘 낮 대국 13건·679수 동안 `database is locked`·UNIQUE 0건. 재발 조건은 일요일 03시대 ingest 창뿐(#87).<br>**(9/6 09:35) 재발 1건 — 36일 무재발 종료. 단 #69(genmove 중 락)와 다른 새 원인.** 9/6 03:16 KST game #427 착수가 `database is locked`(line 226235~226396). 동시 쓰기 주체는 03:00 주간 CWI ingest(200건 단일 트랜잭션, `pro_games.created_at` 18:16:34~18:17:34 UTC = 락 60초) > busy_timeout 30s. 이슈 #87. 일요일 03:16 전후 외에는 재발 조건 없음. UNIQUE(#81)는 9/2 이후 재발 없음(오늘 새벽 1,119수 동안 0건).<br>(이전) **(9/5 21:00) 재발 0건 36일째.**
 | 미병합 브랜치 | **(7/24 18:00 정정) 로컬 미push 브랜치는 0건이다.** `git for-each-ref --format='%(upstream:short)'` 실측 — 로컬 13개 중 12개가 origin 추적 브랜치를 갖고, 나머지 1개는 워크트리용 `worktree-feat+glossary-media-phase1`(5/26)뿐이다. 7/24 02:00 dev-cycle 로그의 "미push 6개"(`feat/format-game-result` 등)와 아래 "로컬 전용 2건" 서술은 **모두 오탐** — 해당 브랜치들은 전부 origin에 존재한다. `[[dev-cycle-unpushed-branches]]` 대응 조치 불필요. 남은 것은 push 여부가 아니라 **정리(삭제) 여부**이며 이는 사람 재량.<br>**(이전 기록 7/14 18:30 · 7/17 18:30)** 원격 `feat/last-seen-at-debounce`·`fix/issue-39`는 **오탐** — PR #30·#45가 **squash merge**돼 원본 커밋이 main 조상이 아닐 뿐, 내용은 main에 반영됨(`git grep` 확인). 사람 판단 불필요. → 판정은 `--no-merged`가 아니라 PR 상태+`git grep <ref>`로. 원격 브랜치 잔여물 삭제는 사람 재량.<br>**superseded(폐기 가능) 4건** — `fix/sqlite-busy-timeout`·`fix/auto-resign-respect-score-margin`·`fix/scoring-gate-too-strict`·`fix/issue-12`: 수정 내용이 다른 커밋으로 main에 이미 반영됨.<br>**실제 사람 판단 대기 = 로컬 전용 2건**: `feat/format-game-result`(main에 `formatResult` 부재), `feat/i18n-ja-zh`(main 로케일 ko·en만) — PR 생성 또는 폐기. 둘 다 **최종 커밋 4/30 = 2.5개월 경과**, feature 경로라 dev-cycle 자율 범위 밖 → 오케스트레이터는 자율 push하지 않고 보고만 유지(정책 L16 보수 처리). |
 
 ## 보류 승인
 
-`state/pending-approvals.md` 참조 — **대기 2건 (9/6 21:00 기준).** **AP-20260903-01**(84시간째·재확인 6회) — PR #83(#81 place_move 픽스) 머지 + backend 재기동. **AP-20260905-01**(36시간째·재확인 3회) — PR #86(#84 undo_move·계가 신청 픽스) 머지 + backend 재기동. 둘 다 CI 4잡 SUCCESS·MERGEABLE·CLEAN·마이그레이션 없음·웹 재빌드 불필요이며 같은 파일을 고치되 충돌 0 실측 — **#83 → #86 순서로 함께 머지하고 재기동 1회**를 권장. 오늘 낮 대국 13건(마지막 수 9/6 16:49 KST, active 잔류 6건) — 실행 시 진행 중 대국 재확인 필수.<br>(이전) 대기 2건 (9/6 09:35, AP-20260903-01 72시간째·AP-20260905-01 24시간째).
+`state/pending-approvals.md` 참조 — **대기 4건 (9/7 09:00 기준).** **AP-20260907-01 ⚠️ 긴급** — prod 마이그레이션 `0020_accounts` 적용(`alembic upgrade head`) + api 재기동, OPS-20260907-01 복구. 사본 드라이런 0.44초·integrity ok. **AP-20260907-02**(신규) — PR #95(#87 ingest 락 픽스) 머지, 재기동 불필요·9/13 ingest부터 발효. **AP-20260903-01**(96시간째·7회)·**AP-20260905-01**(48시간째·4회) — PR #83·#86, 장애 복구 재기동과 묶어 1회 처리 권장(순서: 마이그레이션 → #83 → #86 → #95 머지·pull → api 재기동 1회).<br>(이전 9/6 21:00) **대기 2건.** **AP-20260903-01**(84시간째·재확인 6회) — PR #83(#81 place_move 픽스) 머지 + backend 재기동. **AP-20260905-01**(36시간째·재확인 3회) — PR #86(#84 undo_move·계가 신청 픽스) 머지 + backend 재기동. 둘 다 CI 4잡 SUCCESS·MERGEABLE·CLEAN·마이그레이션 없음·웹 재빌드 불필요이며 같은 파일을 고치되 충돌 0 실측 — **#83 → #86 순서로 함께 머지하고 재기동 1회**를 권장. 오늘 낮 대국 13건(마지막 수 9/6 16:49 KST, active 잔류 6건) — 실행 시 진행 중 대국 재확인 필수.<br>(이전) 대기 2건 (9/6 09:35, AP-20260903-01 72시간째·AP-20260905-01 24시간째).
 
 - **AP-20260802-01 (8/2 12:00 신규 등재, 18:00 기준 6시간 무응답)** — 머지된 4커밋의 prod 배포(🟡). `git pull --ff-only` + `web` 재빌드 + `ops/stack.sh restart prod`.<br>**미배포의 대가가 이번 사이클에도 실측됐다** — `orchestrator-runs.log` **18:00:05** 항목에 #71이 고칠 `Write(...)` deny 무실효 경고 2건이 또 출력됐다(머지 후 19시간). 즉 prod DB·KataGo 모델 가드레일은 아직 실효가 없다.<br>**단계별 발효 범위** — 1단계 `git pull`만으로 #71(가드레일)·#72(watchdog 성공마커, 크래시 루프 사각지대)가 **재기동 없이** 즉시 발효한다. #66(spectate 원자적 UPDATE)은 backend 재기동, #73(용어집 다이어그램)은 웹 재빌드가 필요하다.<br>충돌 없음 실측(유입 9파일 ∩ 로컬 미커밋 = 공집합), 4커밋 전부 머지 시점 CI 4잡 SUCCESS. 진행 중 대국 0건이라 재기동 리스크 낮음. 중복 제안은 만들지 않았다.
 
@@ -64,7 +64,9 @@ AP-20260716-01(#55)·AP-20260717-01(#57)은 7/21 19:54 KST 사람 승인·머지
 
 `state/incidents.md` 참조.
 
-**신규 — OPS-20260904-01 (2026-09-03 21:03 ~ 09-04 21:00, 해소)**: OAuth 만료(`OAuth session expired and could not be refreshed`)로 04:30 dev-cycle·09:00 오케스트레이터가 시작 직후 비정상 종료 — am 다이제스트 미발송, #84 dev-cycle 유실, 24h 감시 공백. prod 무사고(사후 검증 200·백업 정상·5xx 0·트레이스백 0). 18:06 사람 재로그인으로 복구, 21:00 사이클 정상 완주. OPS-20260728-01과 같은 유형의 **재발** — OAuth 갱신 실패는 session-retry 범위 밖이라 자동 복구 수단 없음. dev-cycle 1회 재트리거(화이트리스트).
+**신규 — OPS-20260907-01 (2026-09-07 00:06 ~ , 진행 중 · 에스컬레이션)**: 사람 배포에서 `alembic upgrade head` 누락 → `no such column: games.account_id`로 `/api/session`·`/api/spectate` 500, 착수 0건. `/api/health` 200이라 watchdog 무감지 — bug-scan(트레이스백·5xx 델타)이 잡았다. 09:00 즉시 경보 + AP-20260907-01. 재발 방지 후보 3건은 incidents.md 참조(헬스체크에 `alembic_version` 비교 추가 등).
+
+**OPS-20260904-01 (2026-09-03 21:03 ~ 09-04 21:00, 해소)**: OAuth 만료(`OAuth session expired and could not be refreshed`)로 04:30 dev-cycle·09:00 오케스트레이터가 시작 직후 비정상 종료 — am 다이제스트 미발송, #84 dev-cycle 유실, 24h 감시 공백. prod 무사고(사후 검증 200·백업 정상·5xx 0·트레이스백 0). 18:06 사람 재로그인으로 복구, 21:00 사이클 정상 완주. OPS-20260728-01과 같은 유형의 **재발** — OAuth 갱신 실패는 session-retry 범위 밖이라 자동 복구 수단 없음. dev-cycle 1회 재트리거(화이트리스트).
 
 **OPS-20260830-01 (2026-08-30 09:03 ~ 23:31, 해소)**: 09:00 사이클이 작업 완주 후 세션 한도로 비정상 종료(성공 마커 없음 → WD stale 경보 7건), 20:59 사람 재부팅로 21:00 트리거 미발화(prod는 launchd 자동 복구, 중단 약 6분). 23:31 수동 실행 사이클이 성공 종료해 해소. 재발 방지 2건이 승인 대기(AP-20260830-01/02).
 

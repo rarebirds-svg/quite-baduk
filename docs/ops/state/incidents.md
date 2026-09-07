@@ -4,6 +4,14 @@
 
 ## 이력
 
+### OPS-20260907-01 — prod backend 마이그레이션 0020 미적용 (2026-09-07 00:06 ~ , 진행 중 · 에스컬레이션)
+- 감지: 9/7 09:00 오케스트레이터 bug-scan. `.err` 신규 2,104줄 중 트레이스백 12건 `sqlite3.OperationalError: no such column: games.account_id`(10)·`sessions.account_id`(2). `.log` 최근 3천줄 5xx 12건(`GET /api/spectate` 10·`GET /api/session` 2, 실사용자 IP 2개). 직접 프로브 `GET /api/spectate` → 500 재현. `/api/health`는 `{"status":"ok","db":true}` 200이라 **watchdog·헬스 프로브는 무감지**(09:00 watchdog "OK").
+- 원인: 9/7 00:06 사람 배포 — `git pull --ff-only`(9/6 밤 머지된 #89~#93 5커밋, reflog 00:06:41) → 웹 재빌드(BUILD_ID 00:07) → api(00:06:42)·web(00:07:04) 재기동. `docs/ops/runbooks/deploy.md`의 `alembic upgrade head` 단계가 빠져 #93(구글 계정 연동)이 추가한 `backend/migrations/versions/0020_accounts.py`가 미적용. `alembic_version` = `0019`, ORM은 `games.account_id`·`sessions.account_id`를 SELECT.
+- 영향: 00:06 이후 착수 0건·WS 접속 0건(직전 12시간 679수·대국 9건과 대비). 세션 쿠키 보유 재방문자는 `/api/session` 500으로 이어보기·신규 대국 불가, 관전 목록(`/api/spectate`) 500. 세션 없는 신규 방문·일일 도전·프로 기보·sitemap은 정상. 데이터 손상 없음(읽기 실패만).
+- 조치: 화이트리스트 외(DB 마이그레이션 🟡, 재기동만으로 복구 불가) → 에스컬레이션. 09:00 `kind: alert` 즉시 경보 발송(exit 0, once_key `prod_migration_0020`). AP-20260907-01 등재 + am 다이제스트 카드 동봉. prod DB 사본 드라이런(`0019→0020` 0.44초, integrity ok, FK 위반 0)으로 절차 안전성 사전 검증.
+- 결과: 사람 승인 대기. 승인 회신 시 절차 실행 후 `.err` 트레이스백 0·`/api/spectate` 200·착수 재개로 닫는다.
+- 재발 방지 후보(사람 판단): (1) 헬스체크 러닝북에 `alembic_version` vs `migrations/versions` 최신 revision 비교 단계 추가 — 이번처럼 `/api/health` 200인 반쪽 장애를 잡는다. (2) `backend/deploy/run_local_prod.sh` 기동 시 `alembic upgrade head` 자동 실행(🟡, 기동 경로 변경). (3) 5xx 카운트를 watchdog 신호에 추가.
+
 ### 2026-05-23 — prod web :3000 다운 (실 장애)
 - 감지: 사용자가 inkbaduk.com 502 Bad gateway 스크린샷 보고. `com.baduk.web` PID `-` / exit 127.
 - 진단: `web/node_modules` 비어 있음(23 00:58 변경). `next: command not found`로 launchd가 재시작 포기.

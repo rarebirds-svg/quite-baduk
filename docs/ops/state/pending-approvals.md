@@ -5,6 +5,28 @@
 
 ## 대기 중
 
+### AP-20260907-01 ⚠️ 긴급 — prod 장애 복구
+- 액션: prod DB 마이그레이션 `0020_accounts` 적용(🟡 DB 마이그레이션) + `com.baduk.api` 재기동 — 9/7 00:06 사람 배포(#89~#93 pull·웹 재빌드·재기동)에서 `alembic upgrade head`가 빠져 코드(#93 구글 계정 연동)는 `games.account_id`·`sessions.account_id`를 읽는데 DB는 `0019`에 머문 상태.
+- 근거: 09:00 헬스체크 실측 — `.err` 신규 트레이스백 12건(`no such column: games.account_id` 10 + `sessions.account_id` 2), `.log` 최근 3천줄 **5xx 12건**(`GET /api/spectate` 10·`GET /api/session` 2, 실사용자 IP 2개). 직접 프로브 `GET /api/spectate` → 500 재현. `/api/health`는 200이라 watchdog·헬스 프로브는 못 잡는다. **00:06 이후 착수 0건·WS 접속 0건**(직전 12시간 679수와 대비). 세션 쿠키가 있는 재방문자는 `/api/session` 500으로 이어보기·대국이 불가하고, 관전 목록도 500. 신규 방문(세션 없음)·일일 도전·프로 기보 열람은 정상.
+- 영향: `accounts` 테이블 생성 + `sessions`/`games`에 `account_id`(nullable, FK SET NULL, index) 추가. SQLite batch 모드라 두 테이블을 재생성한다. **prod DB 사본으로 드라이런 완료(09:03)** — `0019 → 0020` 0.44초, integrity_check ok, foreign_key_check 위반 0, 행 수 보존. 백업은 9/7 04:00분(`baduk-20260907T040004.db.gz`, integrity ok)이 있다. `GOOGLE_CLIENT_ID`·`SECRET`은 `~/.baduk.env`에 없어 `/api/auth/providers`가 `{"google":false}` = 구글 연동은 꺼진 채 나머지가 동작하는 옵트인 설계이므로 env 추가는 이 건의 범위 밖(원하면 별도).
+- 실행 절차:
+  1. `source .venv311/bin/activate && alembic upgrade head` (재생성 중 쓰기 락 1초 미만. 진행 중 대국은 이미 착수 불가 상태라 재확인 불필요)
+  2. `sqlite3 data/baduk.db "select version_num from alembic_version;"` → `0020` 확인
+  3. `launchctl kickstart -k gui/501/com.baduk.api` (ORM 메타데이터 캐시 갱신 겸)
+  4. `curl -fs http://localhost:8000/api/spectate | head -c 100` → 200 JSON 확인, `curl -fs http://localhost:8000/api/health` 200
+  5. 회신 시 오케스트레이터가 `.err` 신규 트레이스백 0·`/api/spectate` 200·착수 재개를 재검증해 OPS-20260907-01을 닫는다
+- 상태: 대기 (9/7 09:00 등재, 09:00 `kind: alert` 즉시 경보 발송 성공)
+
+### AP-20260907-02
+- 액션: PR [#95](https://github.com/rarebirds-svg/quite-baduk/pull/95) 머지(🟡) — 이슈 #87(주간 CWI ingest 단일 트랜잭션이 쓰기 락 60초 보유 → 진행 중 대국 `database is locked`) 픽스.
+- 근거: 9/7 04:30 dev-cycle이 생성한 PR(`fix/issue-87` 145afdd + 26ddff7). 루프 안 `db.add` 뒤 중복 검사 select의 autoflush INSERT가 첫 건부터 쓰기 락을 잡은 채 HTTP fetch를 약 60초 계속한 것이 원인. 루프에서는 fetch·파싱·중복 검사만 하고 `pending`에 모은 뒤 루프 뒤 `add_all`+`commit` 1회로 INSERT를 몰았다. 파일 DB에서 SGF 요청 시점마다 별도 커넥션이 INSERT를 시도하는 회귀 테스트로 red→green 확인(15회 플레이크 0). 598 passed·81.51%·ruff·mypy 통과. Fable 리뷰 승인, Codex 쿼터 소진(10/2 리셋)이라 Opus 4.8 폴백 승인. CI 4잡(backend·frontend·e2e·app-shell-build) 전부 SUCCESS, `MERGEABLE`·`CLEAN`. Opus 정보 항목 2건(SELECT~commit 창 확대·`seed_pro_games` 동일 패턴)은 PR 코멘트에 사람 판단용으로 기록.
+- 영향: 변경은 `backend/scripts/ingest_cwi_weekly.py` + 테스트 1(+88/-4) — 마이그레이션 없음, 웹 재빌드·**backend 재기동 불필요**(스크립트는 launchd 잡이 매번 새 프로세스로 실행). prod 트리 `git pull`만으로 다음 일요일 9/13 03:00 ingest부터 적용. #83·#86과 `git merge-tree` 충돌 0 실측.
+- 실행 절차:
+  1. `gh pr merge 95 --squash --delete-branch`
+  2. `git -C /Users/daegong/projects/baduk pull --ff-only` (재기동 없음)
+  3. 9/13 03:16 전후 `.err`에 `database is locked` 부재로 발효 확인(오케스트레이터 9/13 09:00 사이클)
+- 상태: 대기 (9/7 09:00 등재)
+
 ### AP-20260903-01
 - 액션: PR [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83) 머지(🟡) + prod 반영 — 이슈 #81(place_move 중복 착수 UNIQUE 위반) 픽스.
 - 근거: 9/3 04:30 dev-cycle이 생성한 PR. WS 재접속 시 stale `game` 행의 move_count로 move_number를 계산해 중복 INSERT되는 레이스를 game_lock 안 `db.refresh(game)`로 원인 제거. code-reviewer(fable)가 잡은 후속 회귀(락 안 refresh가 미커밋 loss_streak를 폐기 → AI 자동 기권 불능)도 3490f28로 함께 수정. 회귀 테스트 3건 추가(수정 전 실패 확인), 585 passed·ruff·mypy·커버리지 82%. CI 4잡(backend·frontend·e2e·app-shell-build) 전부 SUCCESS, `MERGEABLE`.
@@ -21,6 +43,7 @@
 - **9/5 21:00 재확인 (60시간째 · 재확인 4회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 오늘 신규 대국 7건(#406~412, 마지막 수 14:35 KST)으로 대국 활동이 재개됐으니 절차 3의 진행 중 대국 재확인 필수. #86과 묶음 권장 유지.
 - **9/6 09:35 재확인 (72시간째 · 재확인 5회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 오늘 새벽 신규 대국 19건(#413~431, 마지막 수 04:32 KST)이라 절차 3의 진행 중 대국 재확인 필수. #86과 묶음 권장 유지. 참고 — 새로 발굴된 #87(주간 ingest 락 60초 보유)은 별개 원인이며 이 PR 범위 밖.
 - **9/6 21:00 재확인 (84시간째 · 재확인 6회)** — CI 4잡 SUCCESS 유지(`mergeable` 이번 조회 UNKNOWN = GitHub 캐시 미계산, main 유입은 ops 문서 커밋뿐이라 실질 변화 없음), 차단 요소 없음. 오늘 낮 신규 대국 13건(#432~444, 마지막 수 16:49 KST, active 잔류 6건)이라 절차 3의 진행 중 대국 재확인 필수. #86과 묶음 권장 유지.
+- **9/7 09:00 재확인 (96시간째 · 재확인 7회)** — CI 4잡 SUCCESS 유지(`mergeable` UNKNOWN = 캐시 미계산, origin/main 신규 유입은 9/6 밤 #89~#94 6커밋), 차단 요소 없음. **주의 — prod가 AP-20260907-01(마이그레이션 0020 미적용) 장애 중**이라 이 PR 재기동은 그 복구와 묶어 1회로 처리 권장(순서: 마이그레이션 → #83 → #86 머지·pull → 재기동). 9/6 밤 신규 대국 9건(#445~453, 마지막 수 23:18 KST, active 6건)이나 00:06 이후 착수 자체가 불가한 상태.
 
 ### AP-20260905-01
 - 액션: PR [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86) 머지(🟡) + prod 반영 — 이슈 #84(undo_move·score_by_request도 stale 연결의 move_count로 커밋, #81과 동일 레이스 잔존) 픽스.
@@ -36,6 +59,7 @@
 - **9/5 21:00 재확인 (12시간째 · 재확인 1회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 오늘 신규 대국 7건(마지막 수 14:35 KST)이라 절차 4의 진행 중 대국 재확인 필수.
 - **9/6 09:35 재확인 (24시간째 · 재확인 2회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN` 유지, 차단 요소 없음. 오늘 새벽 신규 대국 19건(마지막 수 04:32 KST)이라 절차 4의 진행 중 대국 재확인 필수.
 - **9/6 21:00 재확인 (36시간째 · 재확인 3회)** — CI 4잡 SUCCESS 유지(`mergeable` UNKNOWN은 캐시 미계산), 차단 요소 없음. 오늘 낮 신규 대국 13건(마지막 수 16:49 KST)이라 절차 4의 진행 중 대국 재확인 필수.
+- **9/7 09:00 재확인 (48시간째 · 재확인 4회)** — CI 4잡 SUCCESS 유지, 차단 요소 없음. AP-20260907-01 복구 재기동과 묶음 권장(위 #83 항목 참조).
 
 ## 처리 완료 — 최근
 

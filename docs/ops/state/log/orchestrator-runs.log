@@ -2029,3 +2029,10 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 기록은 `docs/ops/state/log/2026-09-06.md`와 대시보드에 남겼고 커밋 2cee030으로 main에 push했습니다. 다음 실행은 21:00 launchd 트리거입니다.
 [2026-09-06 09:41:02] orchestrator 종료
 [2026-09-06 21:00:05] orchestrator 시작
+9/6 pm 사이클을 마쳤다.
+
+- **prod 정상.** api·web 200, 디스크 6%, plist drift 없음, Claude 인증 D-26. 백업 04:00분 복원 드릴 62회 연속 통과. 배포 갭 0, 잡 4/4 ok. 신규 트레이스백 0건이며 오전에 잡힌 `database is locked`(#87)은 오늘 낮 대국 13건·679수 동안 재발하지 않았다.
+- **활동.** 신규 대국 13건(#432~444), 그중 #444는 119수 계가 완주(B+42.5)로 끝났다. 마지막 수 16:49 KST, active 잔류 6건. web `Failed to find Server Action`은 89건(+1, 옛 빌드 id)으로 기준선 유형.
+- **승인 대기 2건 유지.** PR #83(84시간째·6회 재확인)·#86(36시간째·3회 재확인) 모두 CI 통과, 묶어서 머지 후 backend 재기동 1회 권장. pm 다이제스트에 승인 카드 2건 동봉해 발송 성공(마커 21:02). 기록은 `docs/ops/state/log/2026-09-06.md`와 대시보드에 남겨 커밋 55e944c로 main에 push했다. 다음 실행은 9/7 09:00 launchd 트리거다.
+[2026-09-06 21:03:12] orchestrator 종료
+[2026-09-07 09:00:04] orchestrator 시작
