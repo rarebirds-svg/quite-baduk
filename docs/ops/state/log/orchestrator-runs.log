@@ -2047,3 +2047,23 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 나머지는 정상입니다. 백업 63회 연속 ok, 잡 4/4 ok, PR 3건 CI 그린, 미분류 이슈 0건. 기록은 대시보드·incidents·pending-approvals·일일 로그에 남겨 `16d9e0f`로 main에 push했고, 재발 방지용으로 "매 사이클 alembic_version 비교" 메모리를 저장했습니다. 다음 실행은 21:00 launchd 트리거이며, 승인 회신이 오면 절차 실행 후 트레이스백 0·`/api/spectate` 200으로 인시던트를 닫습니다.
 [2026-09-07 09:07:30] orchestrator 종료
 [2026-09-07 21:00:02] orchestrator 시작
+9/7 pm 사이클을 마쳤다. prod 반쪽 장애(OPS-20260907-01)는 21시간째 지속 중이고, 승인 4건은 전부 미회신 상태다.
+
+**장애 현황**
+- `alembic_version`은 여전히 `0019`이고 head는 `0020_accounts`다. `/api/spectate` 500이 재현된다.
+- 오전 이후 트레이스백 14건, 500 응답 14건이 더 쌓였다. 실사용자 IP 3개가 `GET /api/session`에서 막혔다.
+- `POST /api/session`도 500이라 신규 방문자까지 대국 착수가 불가하다. 오전의 "신규 방문 정상" 판정을 정정했다.
+- 00:06 배포 이후 착수 0건이 21시간째다. 화이트리스트 해당 없음이라 자동 조치는 하지 않았다.
+
+**나머지 점검**
+- 헬스 프로브·디스크 7%·plist drift 없음·Claude 인증 D-25는 정상이다. 백업 복원 드릴은 64회 연속 ok다.
+- 잡 4/4 ok, 미분류 이슈 0건, 열린 PR 3건 CI 그린이다.
+- main CI 최신 런 실패는 문서 커밋에 대한 e2e `review.spec.ts` 타임아웃이라 플레이크로 판정했다. 이번 push 런에서 재확인한다.
+
+**보고·기록**
+- 재경보는 once_key 일 1회 억제로 생략됐다. pm 다이제스트(service ❌)와 승인 카드 4건은 발송 성공했고 마커가 생성됐다.
+- 대시보드·incidents·pending-approvals·일일 로그를 갱신해 `9b58ffe`로 main에 push했다.
+
+다음 실행은 9/8 09:00 launchd 트리거다. 승인 회신이 오면 마이그레이션 → #83 → #86 → #95 순으로 처리하고 트레이스백 0·`/api/spectate` 200·착수 재개로 인시던트를 닫는다.
+[2026-09-07 21:04:58] orchestrator 종료
+[2026-09-08 09:00:04] orchestrator 시작

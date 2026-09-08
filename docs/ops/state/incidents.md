@@ -12,6 +12,7 @@
 - 결과: 사람 승인 대기. 승인 회신 시 절차 실행 후 `.err` 트레이스백 0·`/api/spectate` 200·착수 재개로 닫는다.
 - 재발 방지 후보(사람 판단): (1) 헬스체크 러닝북에 `alembic_version` vs `migrations/versions` 최신 revision 비교 단계 추가 — 이번처럼 `/api/health` 200인 반쪽 장애를 잡는다. (2) `backend/deploy/run_local_prod.sh` 기동 시 `alembic upgrade head` 자동 실행(🟡, 기동 경로 변경). (3) 5xx 카운트를 watchdog 신호에 추가.
 - **9/7 21:00 재확인 — 지속 21시간, 승인 미회신 12시간.** `alembic_version` `0019` 유지, `/api/spectate` 500 재현. 09:00 이후 `.err` 신규 트레이스백 14건(`sessions.account_id` SELECT 10·INSERT 2·`games.account_id` 2), `.log` 500 14건 — `GET /api/session` 10(실사용자 IP 3개)·**`POST /api/session` 2**·`/api/spectate` 2(프로브). **영향 정정** — `POST /api/session`도 `table sessions has no column named account_id`로 500이라 세션 없는 신규 방문자도 대국 착수 경로에 못 들어간다(오전의 "신규 방문 정상"은 세션 발급 전 화면까지만 해당). 12h 착수 0수, `visit_hits` +8. watchdog 6회 전부 "OK"(사각지대 유지). 재경보는 once_key(`prod_migration_0020`) 일 1회 억제로 생략, pm 다이제스트 ❌ + 승인 카드 4건으로 재통보.
+- **9/8 09:00 재확인 — 지속 33시간, 승인 미회신 24시간.** `alembic_version` `0019` 유지, `/api/spectate` 500 재현. 21:00 이후 `.err` 신규 트레이스백 1건(09:00 자체 프로브)·`.log` 500 1건(같은 프로브) — 실사용자 500 0건은 회복이 아니라 **밤 12시간 동안 세션 보유 실사용자 요청이 0건**이었다는 뜻(`visit_hits` 469 +0). 착수 0건 33시간째(마지막 수 9/6 23:18 KST). 날짜 전환으로 once_key 억제 해제 → `kind: alert` 재발송. 절차·드라이런·복원점(9/8 04:00 백업 integrity ok) 변동 없음.
 
 ### 2026-05-23 — prod web :3000 다운 (실 장애)
 - 감지: 사용자가 inkbaduk.com 502 Bad gateway 스크린샷 보고. `com.baduk.web` PID `-` / exit 127.
