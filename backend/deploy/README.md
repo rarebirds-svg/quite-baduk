@@ -37,6 +37,11 @@ Cloudflare Tunnel, with daily encrypted backups to R2.
 launchctl kickstart -k gui/$(id -u)/com.baduk.api
 ```
 
+`run_local_prod.sh` runs `alembic upgrade head` before starting uvicorn, so a
+restart after `git pull` also applies any new migration. If you ever need to
+check by hand, `GET /api/health` reports `migrations: {current, head, pending}`
+and turns `status` to `degraded` while a migration is pending.
+
 ## Cloudflare Tunnel
 
 The Mac mini exposes nothing inbound; cloudflared talks outbound to
