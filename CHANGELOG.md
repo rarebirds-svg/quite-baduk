@@ -24,6 +24,7 @@
 - 구글 간편 계정 연동(옵트인) — 닉네임 세션은 그대로 두고 `GET /api/auth/google/start` → 콜백에서 세션과 그 대국들을 `accounts` 행에 귀속한다. 다른 기기·7일 만료 뒤에는 첫 화면 "Google로 이어하기"로 새 세션을 만들면 예전 대국이 그대로 보인다(소유권 판정 `app/ownership.py`: 세션 일치 OR 계정 일치). 설정 › 계정 연동에서 연동·해제. `GOOGLE_CLIENT_ID`/`SECRET`이 비어 있으면 기능 전체가 꺼진다. 마이그레이션 0020 (`accounts`, `sessions.account_id`, `games.account_id`).
 
 ### Fixed
+- 마이그레이션 누락 장애(OPS-20260907-01) 재발 방지 — `deploy/run_local_prod.sh`가 uvicorn 기동 전 `alembic upgrade head`를 실행하고, `GET /api/health`가 `migrations: {current, head, pending}`를 노출하며 누락 시 `status: degraded`로 내려간다. 기동 시에도 `schema.migrations_pending` 에러 로그를 남긴다 (`app/schema_status.py`).
 - 같은 대국을 두 탭에서 열면 두 탭이 서로의 WebSocket을 1.5초마다 밀어내던 핑퐁 차단 — `SESSION_REPLACED`를 받은 탭은 재연결을 멈추고 "이 탭에서 이어두기" 버튼으로만 다시 붙는다. 오해를 부르던 "세션이 종료됐습니다" 문구도 연결 교체 안내로 교체.
 - 사용자 기권 후 결과 줄이 `결과:`로 비던 문제 — 기권 응답의 `result`(`W+R`/`B+R`)를 화면에 반영.
 - 첫 대국 힌트 코치마크와 30초 장고 프롬프트가 동시에 쌓이던 문제 — 코치마크가 닫힌 뒤에만 장고 타이머를 돌린다.
