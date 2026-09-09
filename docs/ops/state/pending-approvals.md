@@ -5,21 +5,6 @@
 
 ## 대기 중
 
-### AP-20260907-01 ⚠️ 긴급 — prod 장애 복구
-- 액션: prod DB 마이그레이션 `0020_accounts` 적용(🟡 DB 마이그레이션) + `com.baduk.api` 재기동 — 9/7 00:06 사람 배포(#89~#93 pull·웹 재빌드·재기동)에서 `alembic upgrade head`가 빠져 코드(#93 구글 계정 연동)는 `games.account_id`·`sessions.account_id`를 읽는데 DB는 `0019`에 머문 상태.
-- 근거: 09:00 헬스체크 실측 — `.err` 신규 트레이스백 12건(`no such column: games.account_id` 10 + `sessions.account_id` 2), `.log` 최근 3천줄 **5xx 12건**(`GET /api/spectate` 10·`GET /api/session` 2, 실사용자 IP 2개). 직접 프로브 `GET /api/spectate` → 500 재현. `/api/health`는 200이라 watchdog·헬스 프로브는 못 잡는다. **00:06 이후 착수 0건·WS 접속 0건**(직전 12시간 679수와 대비). 세션 쿠키가 있는 재방문자는 `/api/session` 500으로 이어보기·대국이 불가하고, 관전 목록도 500. 신규 방문(세션 없음)·일일 도전·프로 기보 열람은 정상.
-- 영향: `accounts` 테이블 생성 + `sessions`/`games`에 `account_id`(nullable, FK SET NULL, index) 추가. SQLite batch 모드라 두 테이블을 재생성한다. **prod DB 사본으로 드라이런 완료(09:03)** — `0019 → 0020` 0.44초, integrity_check ok, foreign_key_check 위반 0, 행 수 보존. 백업은 9/7 04:00분(`baduk-20260907T040004.db.gz`, integrity ok)이 있다. `GOOGLE_CLIENT_ID`·`SECRET`은 `~/.baduk.env`에 없어 `/api/auth/providers`가 `{"google":false}` = 구글 연동은 꺼진 채 나머지가 동작하는 옵트인 설계이므로 env 추가는 이 건의 범위 밖(원하면 별도).
-- 실행 절차:
-  1. `source .venv311/bin/activate && alembic upgrade head` (재생성 중 쓰기 락 1초 미만. 진행 중 대국은 이미 착수 불가 상태라 재확인 불필요)
-  2. `sqlite3 data/baduk.db "select version_num from alembic_version;"` → `0020` 확인
-  3. `launchctl kickstart -k gui/501/com.baduk.api` (ORM 메타데이터 캐시 갱신 겸)
-  4. `curl -fs http://localhost:8000/api/spectate | head -c 100` → 200 JSON 확인, `curl -fs http://localhost:8000/api/health` 200
-  5. 회신 시 오케스트레이터가 `.err` 신규 트레이스백 0·`/api/spectate` 200·착수 재개를 재검증해 OPS-20260907-01을 닫는다
-- 상태: 대기 (9/7 09:00 등재, 09:00 `kind: alert` 즉시 경보 발송 성공)
-- **9/7 21:00 재확인 (12시간째 · 재확인 1회)** — **미실행.** `alembic_version` `0019` 유지, `GET /api/spectate` 500 재현. 09:00 이후 실사용자 500 12건 — `GET /api/session` 10(IP 3개) + **`POST /api/session` 2(`table sessions has no column named account_id` = 세션 신규 생성도 실패)**. 오전의 "세션 없는 신규 방문은 정상" 판정은 **정정** — 신규 방문자도 세션 발급 단계에서 막히므로 대국 착수 경로가 전면 불가다. 착수 0건 21시간째(마지막 수 9/6 23:18 KST). 절차·드라이런 결과 변동 없음, 복원점 9/7 04:00 백업 유효(64회 연속 integrity ok). 진행 중 대국 재확인 불필요(착수 자체 불가). 신규 경보는 once_key 일 1회 억제로 생략, pm 다이제스트 ❌ + 이 카드로 재통보.
-- **9/8 09:00 재확인 (24시간째 · 재확인 2회)** — **미실행.** `alembic_version` `0019` 유지, `GET /api/spectate` 500 재현. 21:00 이후 실사용자 500 0건이나 이는 회복이 아니라 밤 12시간 동안 세션 보유 실사용자 요청이 0건(`visit_hits` +0)이었기 때문. 착수 0건 33시간째. 날짜 전환으로 `kind: alert` 재발송. 절차·드라이런 변동 없음, 복원점 9/8 04:00 백업(65회 연속 integrity ok, 사본 `alembic_version` 0019) 유효.
-- **9/8 21:00 재확인 (36시간째 · 재확인 3회)** — **미실행.** `alembic_version` `0019` 유지, `GET /api/spectate` 500 재현. 09:00 이후 실사용자 500 13건(IP 3개) — `GET /api/session` 7 + `POST /api/session` 6, 한 IP는 재시도가 429 11회로 레이트리밋까지 도달. `visit_hits` +7이 전부 세션 단계에서 막힘. 착수 0건 46시간째. 절차·드라이런 변동 없음, 복원점 9/8 04:00 백업(66회 연속 integrity ok) 유효 — 9/9 04:00 백업이 다음 복원점이 된다.
-
 ### AP-20260907-02
 - 액션: PR [#95](https://github.com/rarebirds-svg/quite-baduk/pull/95) 머지(🟡) — 이슈 #87(주간 CWI ingest 단일 트랜잭션이 쓰기 락 60초 보유 → 진행 중 대국 `database is locked`) 픽스.
 - 근거: 9/7 04:30 dev-cycle이 생성한 PR(`fix/issue-87` 145afdd + 26ddff7). 루프 안 `db.add` 뒤 중복 검사 select의 autoflush INSERT가 첫 건부터 쓰기 락을 잡은 채 HTTP fetch를 약 60초 계속한 것이 원인. 루프에서는 fetch·파싱·중복 검사만 하고 `pending`에 모은 뒤 루프 뒤 `add_all`+`commit` 1회로 INSERT를 몰았다. 파일 DB에서 SGF 요청 시점마다 별도 커넥션이 INSERT를 시도하는 회귀 테스트로 red→green 확인(15회 플레이크 0). 598 passed·81.51%·ruff·mypy 통과. Fable 리뷰 승인, Codex 쿼터 소진(10/2 리셋)이라 Opus 4.8 폴백 승인. CI 4잡(backend·frontend·e2e·app-shell-build) 전부 SUCCESS, `MERGEABLE`·`CLEAN`. Opus 정보 항목 2건(SELECT~commit 창 확대·`seed_pro_games` 동일 패턴)은 PR 코멘트에 사람 판단용으로 기록.
@@ -32,6 +17,7 @@
 - **9/7 21:00 재확인 (12시간째 · 재확인 1회)** — CI 4잡 SUCCESS 유지(`mergeable` UNKNOWN = 캐시 미계산), 차단 요소 없음. 발효 마감은 9/13 03:00 ingest 전 머지·pull. AP-20260907-01 복구와 같은 회차에 처리 권장(재기동 불필요).
 - **9/8 09:00 재확인 (24시간째 · 재확인 2회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN`, 차단 요소 없음. 발효 마감 9/13 03:00 ingest 전 머지·pull. AP-20260907-01 복구와 같은 회차 처리 권장(재기동 불필요).
 - **9/8 21:00 재확인 (36시간째 · 재확인 3회)** — CI 4잡 SUCCESS 유지(`mergeable` UNKNOWN = 캐시 미계산), 차단 요소 없음. 발효 마감 9/13 03:00 ingest 전 머지·pull. AP-20260907-01 복구와 같은 회차 처리 권장(재기동 불필요).
+- **9/9 09:00 재확인 (48시간째 · 재확인 4회)** — CI 4잡 SUCCESS·`MERGEABLE`, 차단 요소 없음. AP-20260907-01은 사람이 9/8 23:55 별도로 처리해 묶음 전제가 사라졌으나 이 건은 재기동 불필요라 단독 머지·pull로 충분. 발효 마감 9/13 03:00 ingest 전.
 
 ### AP-20260903-01
 - 액션: PR [#83](https://github.com/rarebirds-svg/quite-baduk/pull/83) 머지(🟡) + prod 반영 — 이슈 #81(place_move 중복 착수 UNIQUE 위반) 픽스.
@@ -53,6 +39,7 @@
 - **9/7 21:00 재확인 (108시간째 · 재확인 8회)** — CI 4잡 SUCCESS 유지, 차단 요소 없음. 장애 복구 재기동과 묶음 권장 유지(순서: 마이그레이션 → #83 → #86 → #95 머지·pull → api 재기동 1회). 9/10 04:46 7일 정체 전환 예정. 착수 불가 상태라 절차 3 재확인은 현재 불필요.
 - **9/8 09:00 재확인 (120시간째 · 재확인 9회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN`, 차단 요소 없음. 9/10 04:46 7일 정체 전환 예정. 장애 복구 재기동과 묶음 권장 유지. 착수 불가 상태라 절차 3 재확인은 현재 불필요.
 - **9/8 21:00 재확인 (132시간째 · 재확인 10회)** — CI 4잡 SUCCESS 유지(`mergeable` UNKNOWN = 캐시 미계산), 차단 요소 없음. 9/10 04:46 7일 정체 전환 예정. 장애 복구 재기동과 묶음 권장 유지. 착수 불가 상태라 절차 3 재확인은 현재 불필요.
+- **9/9 09:00 재확인 (144시간째 · 재확인 11회)** — CI 4잡 SUCCESS·`MERGEABLE`, 차단 요소 없음. 내일 9/10 04:46 7일 정체 전환. prod 복구(9/8 23:55)로 **착수가 재개됐으므로 절차 3의 진행 중 대국 재확인이 다시 필수**(마지막 수 9/9 03:32 KST, 복구 후 대국 2건). #86과 묶어 재기동 1회 권장 유지.
 
 ### AP-20260905-01
 - 액션: PR [#86](https://github.com/rarebirds-svg/quite-baduk/pull/86) 머지(🟡) + prod 반영 — 이슈 #84(undo_move·score_by_request도 stale 연결의 move_count로 커밋, #81과 동일 레이스 잔존) 픽스.
@@ -72,8 +59,12 @@
 - **9/7 21:00 재확인 (60시간째 · 재확인 5회)** — CI 4잡 SUCCESS 유지, 차단 요소 없음. AP-20260907-01 복구 재기동과 묶음 권장 유지.
 - **9/8 09:00 재확인 (72시간째 · 재확인 6회)** — CI 4잡 SUCCESS·`MERGEABLE`·`CLEAN`, 차단 요소 없음. AP-20260907-01 복구 재기동과 묶음 권장 유지.
 - **9/8 21:00 재확인 (84시간째 · 재확인 7회)** — CI 4잡 SUCCESS 유지(`mergeable` UNKNOWN = 캐시 미계산), 차단 요소 없음. AP-20260907-01 복구 재기동과 묶음 권장 유지.
+- **9/9 09:00 재확인 (96시간째 · 재확인 8회)** — CI 4잡 SUCCESS·`MERGEABLE`, 차단 요소 없음. 착수 재개로 절차 4의 진행 중 대국 재확인 다시 필수. #83과 묶어 재기동 1회 권장 유지.
 
 ## 처리 완료 — 최근
+
+### AP-20260907-01 — 처리 완료(사람 직접 실행 · #96 배포, 2026-09-08 23:55 KST, 제안 후 약 39시간)
+- 승인 회신 없이 사람이 9/8 23:52 PR #96(기동 시 자동 `alembic upgrade head`·헬스에 리비전 노출) 머지 → 23:55 prod 트리 pull → `com.baduk.api` 재기동(기동 시 자동 upgrade 0019→0020) → web 재빌드·재기동으로 직접 처리. 오케스트레이터 9/9 09:00 검증 — `alembic_version` 0020, `/api/spectate` 200, 복구 후 트레이스백 0·500 0, 착수 재개(110수). OPS-20260907-01 해소. 원문은 `incidents.md` OPS-20260907-01 참조.
 
 ### AP-20260830-01 · AP-20260830-02 — 처리 완료(사람 승인 "진행해" · Claude 세션 실행, 2026-08-31 00:0x KST)
 
