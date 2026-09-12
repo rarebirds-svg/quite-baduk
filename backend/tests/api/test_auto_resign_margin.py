@@ -15,12 +15,13 @@ from __future__ import annotations
 import secrets
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.katago.analysis import AnalysisResult
 from app.core.katago.mock import MockKataGoAdapter
 from app.engine_pool import set_adapter
-from app.models import Session
+from app.models import Game, Session
 from app.services.game_service import create_game, place_move
 
 # 사용자가 두는 좌표. 목 어댑터는 스캔 순서상 위쪽 줄부터 집으므로
@@ -92,6 +93,34 @@ async def test_close_game_does_not_resign_despite_zero_winrate(
     assert game.status == "active", "2집차에서 기권하면 안 된다"
     # 집 차이 게이트에서 걸렸으므로 연속 카운트도 초기화된다.
     assert (game.loss_streak or 0) == 0
+
+
+@pytest.mark.asyncio
+async def test_loss_streak_accumulates_and_persists_across_rounds(
+    db_engine, db_session: AsyncSession
+) -> None:
+    """연속 열세 턴마다 loss_streak이 1씩 쌓이고 그 라운드에 DB에 남는다.
+
+    회귀 방지(#81 후속): place_move가 락 안에서 game을 refresh하는데,
+    streak 증가가 라운드의 배치 커밋 뒤 미커밋 상태로 남으면 다음 라운드의
+    refresh가 이를 폐기해 streak이 영원히 1에 고정된다 — 자동 기권 불능.
+    DB 확인은 반드시 별도 세션으로 한다 — 같은 세션의 select는 autoflush로
+    pending 증가를 흘려보내 회귀를 가린다.
+    """
+    s, game = await _game_past_min_moves(db_session, nickname="streakacc")
+
+    set_adapter(_LostButCloseAdapter(score_lead=30.0))
+    factory = async_sessionmaker(db_engine, expire_on_commit=False, class_=AsyncSession)
+    for expected, coord in enumerate(["B2", "C2", "D2"], start=1):
+        await place_move(db_session, game=game, session=s, coord=coord)
+        assert (game.loss_streak or 0) == expected
+        async with factory() as db_check:
+            persisted = (
+                await db_check.execute(
+                    select(Game.loss_streak).where(Game.id == game.id)
+                )
+            ).scalar_one()
+        assert persisted == expected, "streak 증가는 그 라운드에 커밋돼야 한다"
 
 
 @pytest.mark.asyncio
