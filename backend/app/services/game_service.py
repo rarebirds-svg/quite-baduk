@@ -156,6 +156,12 @@ async def create_game(
 
     adapter = await get_adapter(game.id)
     await adapter.start()
+    # Always wipe the subprocess board first. set_boardsize (= GTP `boardsize`)
+    # is documented to clear, but some KataGo builds leave the previous
+    # position untouched when the size matches — which surfaces as
+    # "illegal move" when placing handicap stones below if the slot's
+    # previous game left a stone on a star point (#97).
+    await adapter.clear_board()
     await adapter.set_boardsize(board_size)
     await adapter.set_komi(komi)
     cfg = rank_to_config(ai_rank, resolved_style, game.ai_player)
