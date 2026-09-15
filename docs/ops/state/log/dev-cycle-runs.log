@@ -918,3 +918,12 @@ CI 4잡(backend·frontend·app-shell-build·e2e) 전부 통과했다. 이 세션
 - **정리.** `.worktrees/dev-cycle`을 머지된 브랜치에서 `main`으로 detach했고, 미커밋 변경은 없었습니다.
 - **기록.** `docs/ops/state/log/2026-09-13.md`에 결과를 남기고 잡 상태를 `ok`로 보고했습니다. 코드 변경은 없으며, 로그 커밋은 관례대로 09:00 오케스트레이터에 맡깁니다.
 [2026-09-13 04:31:06] dev-cycle 종료
+[2026-09-14 04:30:02] dev-cycle 시작
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (Asia/Seoul)
+[2026-09-14 04:30:06] 비정상 종료
+[2026-09-14 04:30:06] dev-cycle 종료
+[2026-09-15 04:30:05] dev-cycle 시작
+**처리할 버그 없음(8일 연속).** 열린 이슈 0건, 열린 PR 0건, 워크트리는 `main`에 미커밋 변경 없이 정리된 상태다. 코드 변경 없이 `state/log/2026-09-15.md`에 기록하고 잡 상태를 `ok`로 보고했다.
+
+**9/14 하루 결손을 발견했다.** 어제 04:30 dev-cycle과 09:00·21:00 오케스트레이터 세 잡이 모두 월간 지출 한도(`monthly spend limit`)로 시작 직후 종료해 9/14 일일 로그·다이제스트·헬스체크 기록이 전부 없다. 세션 한도와 달리 재시도 헬퍼가 잡지 못하는 유형이라 오늘 로그에 명시했고, 09:00 오케스트레이터가 48시간 창으로 보강 점검하도록 남겼다. 이 실패 유형은 메모리에도 저장했다.
+[2026-09-15 04:31:22] dev-cycle 종료

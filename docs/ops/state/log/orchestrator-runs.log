@@ -2212,3 +2212,21 @@ You've hit your session limit · resets 11:30am (Asia/Seoul)
 - 21:00 pm 슬롯이 정상 실행되는지, 일요일 09:00 슬롯의 세션 한도 재발(analytics-weekly 병행) 추이를 볼 것.
 [2026-09-13 11:39:31] orchestrator 종료
 [2026-09-13 21:00:05] orchestrator 시작
+9/13 pm 사이클을 마쳤습니다.
+
+**결과 요약**
+- **전 항목 정상.** health 200(마이그레이션 0020 최신), web·공개 도메인 200, api 재기동 후 31시간 무사고, 디스크 8%, plist drift 없음, Claude 인증 D-19.
+- **백업·로그 정상.** 최신 백업 복원 드릴 ok, 티어 14/8/4. 오전 이후 `.err` 증가 0줄, 액세스 로그 +1,087줄에 5xx 0. 신규 버그 0건, 열린 PR·이슈·승인 대기 0건, 배포 갭 0.
+- **활동.** 오늘 착수 0수(마지막 대국은 9/12 22:28 KST), 방문 히트 +4. 일요일 저녁 저활동으로 이상 신호는 아닙니다.
+
+**한 일.** 대시보드와 `docs/ops/state/log/2026-09-13.md`를 갱신하고 pm 다이제스트를 발송했습니다(exit 0, 성공 마커 생성). 커밋 `e51a78c`를 main에 push했습니다. 다음 실행은 9/14 09:00 launchd 슬롯입니다.
+[2026-09-13 21:05:17] orchestrator 종료
+[2026-09-14 09:00:04] orchestrator 시작
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (Asia/Seoul)
+[2026-09-14 09:00:10] 비정상 종료
+[2026-09-14 09:00:10] orchestrator 종료
+[2026-09-14 21:00:03] orchestrator 시작
+You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from=cc_cli_limit_message · your weekly limit resets 1am (Asia/Seoul)
+[2026-09-14 21:00:09] 비정상 종료
+[2026-09-14 21:00:09] orchestrator 종료
+[2026-09-15 09:00:05] orchestrator 시작
