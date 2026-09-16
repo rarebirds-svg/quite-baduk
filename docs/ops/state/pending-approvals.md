@@ -5,6 +5,13 @@
 
 ## 대기 중
 
+### AP-20260916-01
+- 액션: PR [#98](https://github.com/rarebirds-svg/quite-baduk/pull/98) 머지 → prod `git pull --ff-only` → `com.baduk.api` 재기동 (🟡 `main` 머지 + prod 재기동)
+- 근거: 이슈 #97 — 치석 대국 생성 시 `create_game`이 `set_boardsize` 전에 `clear_board`를 호출하지 않아, 같은 크기 보드가 남아 있으면 KataGo가 치석 배치를 `illegal move`로 거부해 500이 난다(9/15 12:56 실사례, 사용자 재시도로 성공). 9/16 04:30 dev-cycle이 TDD로 수정해 PR 생성. CI 4잡(backend·frontend·app-shell-build·e2e) SUCCESS, `mergeStateStatus CLEAN`, `merge-tree` 충돌 0, 변경 파일 2개(`backend/app/services/game_service.py` + 회귀 테스트 1개), 마이그레이션 없음.
+- 영향: 백엔드 서비스 코드 1줄 추가라 재기동 전까지 라이브 미반영. 재기동 시 진행 중 대국의 WS가 끊기므로 `moves.played_at` 최근 착수 확인 후 실행(9/16 09:00 기준 마지막 착수 9/15 13:49 KST, 진행 중 0). 이슈 부수 사항(#480 0수 고아 `active` 행)은 범위 밖.
+- 실행 절차: (1) `gh pr checks 98` 재확인 → (2) `gh pr merge 98 --squash --delete-branch` → (3) `cd /Users/daegong/projects/baduk && git pull --ff-only` → (4) `sqlite3` `moves.played_at` 최근 5분 내 착수 없음 확인 → (5) `ops/stack.sh restart prod` 또는 `launchctl kickstart -k gui/$(id -u)/com.baduk.api` → (6) `/api/health` 200·`migrations.pending false` 확인 → (7) 13路 치석 대국 생성 1회 성공 확인(가능하면) → (8) `state/log/`에 기록.
+- 상태: 대기 (2026-09-16 09:00 등재, 신규)
+
 ## 처리 완료 — 최근
 
 ### AP-20260903-01 · AP-20260905-01 · AP-20260907-02 — 처리 완료(사람 승인 · Claude 세션 실행, 2026-09-12 13:41~13:47 KST)
