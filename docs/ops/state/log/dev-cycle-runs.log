@@ -957,3 +957,12 @@ You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from
 
 이슈에 적힌 부수 사항인 고아 `active` 행 정리(#480처럼 어댑터 실패 시 0수 대국이 남는 문제)는 이 PR에 넣지 않고 PR 본문에 명시했다. 필요하면 별도 이슈로 올리면 된다.
 [2026-09-16 04:35:39] dev-cycle 종료
+[2026-09-17 04:30:01] dev-cycle 시작
+**요약 (2026-09-17 04:30 dev-cycle)**
+
+- **#99 처리 완료, PR #100 생성.** `PRO_LIST_INITIAL_QUERY`·`PAGE_SIZE`를 `"use client"` 없는 `web/lib/proList.ts`로 분리해 서버 페이지의 `[object Object]` 질의를 없앴습니다. 구조 회귀 테스트가 수정 전 실패함을 확인했고, vitest 241개·tsc·lint 통과, 빌드된 서버 번들에서 fetch 인자가 실제 질의 문자열로 묶이는 것까지 확인했습니다. Fable 리뷰 approve, 지적 1건 반영. 이슈 코멘트와 `in-progress` 해제 완료. 머지와 web 재빌드·재기동은 사람 승인 대기(🟡).
+- **#97은 건너뜀.** PR #98이 이미 열려 있어 사람 머지 대기 상태입니다.
+- **Codex 교차 리뷰는 건너뜀.** 11분 넘게 MCP 인증 오류만 내고 본문이 없어 종료했습니다. 쿼터 소진(exit 3)이 아니라 `~/.codex` MCP 설정 문제로 보이며 메모리에 기록했습니다.
+
+부수 관찰로 오늘 02:00 content-draft 실행 흔적이 없어 로그에 남겼습니다. 잡 상태는 `ok`로 기록했고 09:00 다이제스트가 합산합니다.
+[2026-09-17 04:47:04] dev-cycle 종료

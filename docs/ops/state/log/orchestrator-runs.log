@@ -2265,3 +2265,16 @@ You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from
 다음은 사람 판단입니다. Telegram에서 `승인 AP-20260916-01`로 회신하면 다음 세션이 머지·pull·재기동을 한 회차로 발효합니다.
 [2026-09-16 09:04:16] orchestrator 종료
 [2026-09-16 21:00:03] orchestrator 시작
+9/16 pm 사이클을 마쳤다.
+
+**결과 요약**
+
+- **헬스·백업 전 항목 정상.** api·web·공개 도메인 200, 마이그레이션 pending 없음, 디스크 8%, plist drift 없음, Claude 인증 D-16. 백업은 오전과 동일한 9/16 04:00 파일이고 복원 드릴 78회 연속 통과.
+- **버그 스캔에서 신규 이슈 1건 등록.** 트레이스백·5xx는 0이지만, 액세스 로그의 `/api/spectate/pro?[object Object]` 요청을 추적해 원인을 확정했다. 서버 컴포넌트가 `"use client"` 모듈의 문자열 상수를 import해 클라이언트 참조 프록시로 직렬화되는 문제다. SSR 첫 화면이 명국선 대신 전체 기보를 싣고 클라이언트 재요청으로 덮여 8/16부터 잠복해 있었다. `#99`로 등록했고 내일 04:30 dev-cycle 대상이다.
+- **승인 대기 1건 유지.** AP-20260916-01(PR #98 머지 + api 재기동)은 12시간째 대기 중이며 CI·MERGEABLE 상태를 재확인했다. 오늘 착수 0, 진행 중 대국 0이라 재기동 위험은 낮다.
+- **배포 갭 0, 잡 4/4 ok.** pm 다이제스트 발송 성공(마커 생성), 상태 문서 커밋 `2e255c1` push 완료.
+
+다음 실행은 launchd가 9/17 09:00에 깨운다.
+ops/claude-headless.sh: line 54: 73352 Terminated: 15          ( sleep "$TIMEOUT_SECS" > /dev/null 2>&1; echo "[$(date '+%Y-%m-%d %H:%M:%S')] 타임아웃 ${TIMEOUT_SECS}s 초과 — claude(PGID ${claude_pid}) 그룹 강제 종료"; kill -- -"$claude_pid" 2> /dev/null || exit 0; sleep 15 > /dev/null 2>&1; kill -9 -- -"$claude_pid" 2> /dev/null || true )
+[2026-09-16 21:05:46] orchestrator 종료
+[2026-09-17 09:00:04] orchestrator 시작
