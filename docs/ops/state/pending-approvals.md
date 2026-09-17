@@ -10,14 +10,14 @@
 - 근거: 이슈 #97 — 치석 대국 생성 시 `create_game`이 `set_boardsize` 전에 `clear_board`를 호출하지 않아, 같은 크기 보드가 남아 있으면 KataGo가 치석 배치를 `illegal move`로 거부해 500이 난다(9/15 12:56 실사례, 사용자 재시도로 성공). 9/16 04:30 dev-cycle이 TDD로 수정해 PR 생성. CI 4잡(backend·frontend·app-shell-build·e2e) SUCCESS, `mergeStateStatus CLEAN`, `merge-tree` 충돌 0, 변경 파일 2개(`backend/app/services/game_service.py` + 회귀 테스트 1개), 마이그레이션 없음.
 - 영향: 백엔드 서비스 코드 1줄 추가라 재기동 전까지 라이브 미반영. 재기동 시 진행 중 대국의 WS가 끊기므로 `moves.played_at` 최근 착수 확인 후 실행(9/16 09:00 기준 마지막 착수 9/15 13:49 KST, 진행 중 0). 이슈 부수 사항(#480 0수 고아 `active` 행)은 범위 밖.
 - 실행 절차: (1) `gh pr checks 98` 재확인 → (2) `gh pr merge 98 --squash --delete-branch` → (3) `cd /Users/daegong/projects/baduk && git pull --ff-only` → (4) `sqlite3` `moves.played_at` 최근 5분 내 착수 없음 확인 → (5) `ops/stack.sh restart prod` 또는 `launchctl kickstart -k gui/$(id -u)/com.baduk.api` → (6) `/api/health` 200·`migrations.pending false` 확인 → (7) 13路 치석 대국 생성 1회 성공 확인(가능하면) → (8) `state/log/`에 기록.
-- 상태: 대기 (2026-09-16 09:00 등재, 9/16 21:00·9/17 09:00 재확인 — 24시간째 · 2회 재확인. PR #98 CI·`MERGEABLE`/`CLEAN` 재확인, 진행 중 대국 0 유지. AP-20260917-01과 한 회차로 묶어 발효 권장)
+- 상태: 대기 (2026-09-16 09:00 등재, 9/16 21:00·9/17 09:00·9/17 21:00 재확인 — 36시간째 · 3회 재확인. PR #98 CI·`MERGEABLE`/`CLEAN` 재확인. **9/17 21:00 기준 #493(13路)이 진행 중(마지막 수 21:00:51 KST)이라 재기동 전 절차 (4) 확인 필수.** AP-20260917-01과 한 회차로 묶어 발효 권장)
 
 ### AP-20260917-01
 - 액션: PR [#100](https://github.com/rarebirds-svg/quite-baduk/pull/100) 머지 → prod `git pull --ff-only` → `web` 재빌드(`npm run build`) → `com.baduk.web` 재기동 (🟡 `main` 머지 + prod 재기동)
 - 근거: 이슈 #99 — `/spectate/pro` 서버 컴포넌트가 `"use client"` 모듈 `ProGameList.tsx`의 문자열 상수를 import해 RSC 번들에서 클라이언트 참조 프록시로 직렬화되고, SSR fetch가 `/api/spectate/pro?[object Object]`로 나가 첫 화면·ISR 캐시·크롤러가 명국선(3974) 대신 전체 기보(4311)를 받는다(8/16 이후 누적 600회+, 9/17 09:00 델타 10회). 9/17 04:30 dev-cycle이 상수를 directive 없는 `web/lib/proList.ts`로 분리하고 구조 테스트 + SSR URL 검증을 추가해 PR 생성. CI 4잡(backend·frontend·app-shell-build·e2e) SUCCESS, `MERGEABLE`/`CLEAN`, `merge-tree` 충돌 0, 변경 파일 4개(`web/app/spectate/pro/page.tsx`·`web/components/ProGameList.tsx`·`web/lib/proList.ts`·`web/tests/spectate-pro-page.test.ts`), 백엔드·마이그레이션 변경 없음. PR #98과 파일 겹침 없음.
 - 영향: 프론트 전용 변경이라 web 재빌드·재기동 전까지 라이브 미반영(현 BUILD_ID 9/8 23:56). web 재기동은 대국 WS(백엔드)에 영향 없으나 페이지 로딩 중인 방문자에게 수 초 단절. 500·데이터 영향 없는 `prio:low` 건이라 AP-20260916-01(api 재기동)과 한 회차로 묶어 발효 권장.
 - 실행 절차: (1) `gh pr checks 100` 재확인 → (2) `gh pr merge 100 --squash --delete-branch` → (3) `cd /Users/daegong/projects/baduk && git pull --ff-only` → (4) `cd web && npm run build` 성공 확인 → (5) `launchctl kickstart -k gui/$(id -u)/com.baduk.web` → (6) `curl -s localhost:3000/spectate/pro` 200 + `.log`에 `/api/spectate/pro?collection=masterpiece…` 질의 등장·`[object%20Object]` 소멸 확인 → (7) `state/log/`에 기록.
-- 상태: 대기 (2026-09-17 09:00 등재 · 신규)
+- 상태: 대기 (2026-09-17 09:00 등재, 9/17 21:00 재확인 — 12시간째 · 1회 재확인. PR #100 CI 4잡 SUCCESS·`MERGEABLE`/`CLEAN` 재확인, 09:00 이후 `[object Object]` 질의 9회 추가 재현)
 
 ## 처리 완료 — 최근
 
