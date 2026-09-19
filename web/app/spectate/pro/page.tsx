@@ -1,11 +1,8 @@
 // 프로 기보 공개 인덱스 — 첫 화면 목록을 서버에서 받아 SSR로 싣고, 검색·페이징은 클라이언트가 이어받는다.
 import type { Metadata } from "next";
 
-import {
-  ProGameList,
-  PRO_LIST_INITIAL_QUERY,
-  type ProListResponse,
-} from "@/components/ProGameList";
+import { ProGameList, type ProListResponse } from "@/components/ProGameList";
+import { PRO_LIST_INITIAL_QUERY } from "@/lib/proList";
 
 import { ProIndexHeader } from "./_ProIndexHeader";
 

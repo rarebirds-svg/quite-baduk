@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { proGameHref } from "@/lib/routes";
 import { formatGameResult } from "@/lib/formatResult";
+import { PAGE_SIZE } from "@/lib/proList";
 
 interface ProRow {
   id: number;
@@ -44,16 +45,6 @@ const COLLECTION_LABEL: Record<Collection, string> = {
   world: "spectate.proWorld",
   recent: "spectate.proRecent",
 };
-const PAGE_SIZE = 50;
-
-// 서버가 미리 받아올 첫 화면 질의 — 아래 초기 state와 한 글자도 어긋나면 안 되므로
-// 같은 상수에서 만들어 둔다. 서버 프리페치와 초기 클라이언트 질의를 일치시킨다.
-export const PRO_LIST_INITIAL_QUERY = new URLSearchParams({
-  collection: "masterpiece",
-  sort: "recent",
-  limit: String(PAGE_SIZE),
-  offset: "0",
-}).toString();
 
 export function ProGameList({
   initialData = null,
