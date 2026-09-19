@@ -762,6 +762,8 @@ async def resign_game(db: AsyncSession, *, game: Game, session: Session) -> Game
     game.status = "resigned"
     game.winner = "ai"
     game.result = ("W+R" if game.user_color == "black" else "B+R")
+    import datetime as _dt
+    game.finished_at = _dt.datetime.now(_dt.UTC)
     state = get_cached_state(game.id) or await _replay_state(db, game)
     game.sgf_cache = build_sgf(state, result=game.result)
     await db.commit()

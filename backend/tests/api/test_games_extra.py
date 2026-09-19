@@ -104,3 +104,25 @@ async def test_sgf_404_for_unknown_game(client: AsyncClient) -> None:
     await _signup(client, "sgf_missing")
     r = await client.get("/api/games/88888/sgf")
     assert r.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_user_resign_records_finished_at(client: AsyncClient) -> None:
+    """#101 — 사용자 기권도 다른 종료 경로처럼 finished_at을 기록해야 한다."""
+    await _signup(client, "resign_finished_at")
+    r = await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+    )
+    assert r.status_code == 201
+    gid = r.json()["id"]
+
+    resigned = await client.post(f"/api/games/{gid}/resign")
+    assert resigned.status_code == 200
+    body = resigned.json()
+    assert body["status"] == "resigned"
+    assert body["finished_at"] is not None
+
+    # 재조회에서도 유지되어야 한다 (커밋 누락 방지).
+    fetched = (await client.get(f"/api/games/{gid}")).json()
+    assert fetched["finished_at"] is not None
