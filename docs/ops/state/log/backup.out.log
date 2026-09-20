@@ -494,3 +494,9 @@ daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260918T040005.db
 daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260919T040005.db.gz
 보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260905T040002.db.gz
 [2026-09-19 04:00:06] backup 완료
+[2026-09-20 04:00:05] backup 시작
+daily 백업 생성: /Users/daegong/baduk-backups/daily/baduk-20260920T040005.db.gz
+weekly 티어 복사: baduk-20260920T040005.db.gz
+보존 정리: /Users/daegong/baduk-backups/daily/baduk-20260906T040002.db.gz
+보존 정리: /Users/daegong/baduk-backups/weekly/baduk-20260726T040005.db.gz
+[2026-09-20 04:00:07] backup 완료

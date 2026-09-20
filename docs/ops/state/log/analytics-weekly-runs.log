@@ -137,3 +137,10 @@ You've hit your session limit · resets 9:30am (Asia/Seoul)
 
 잡 상태는 `ops/report-job-status.sh analytics-weekly ok`로 기록했고, `docs/ops/state/log/2026-09-13.md`에 한 줄을 남겼습니다. 커밋은 관례대로 09:00 오케스트레이터 사이클에 맡깁니다. 다음 실행은 다음 일요일 launchd입니다.
 [2026-09-13 09:01:09] analytics-weekly 종료
+[2026-09-20 09:00:03] analytics-weekly 시작
+2026-W38 주간 분석 리포트를 생성했다. 파일은 `docs/ops/state/reports/2026-W38.md`다.
+
+- **사용량·유입** 게임 33건(전주 42, −21%), 방문 88 hits(전주 129, −32%). 검색 유입은 구글 31·네이버 모바일 23으로 구글이 다시 앞섰고, 랜딩은 /spectate·/glossary·/ 순이다.
+- **콘텐츠·운영** 글로서리 35건(+1 chokchoksu), FAQ 14건(+1 choose-ai-rank). 보류 승인 2건(AP-20260916-01·AP-20260917-01), 이번 주 watchdog 항목 35건, OPS 신규 없음. `/api/stats`는 401이라 DB 직접 조회 기준으로 적었다.
+- **기록** 잡 상태 `analytics-weekly ok` 기록, `docs/ops/state/log/2026-09-20.md`에 한 줄 추가. 커밋은 관례대로 09:00 오케스트레이터가 묶는다.
+[2026-09-20 09:01:09] analytics-weekly 종료
