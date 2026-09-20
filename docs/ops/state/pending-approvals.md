@@ -5,6 +5,19 @@
 
 ## 대기 중
 
+### AP-20260920-02
+- 액션: prod DB 일회성 백필(🟡 prod DB 직접 쓰기) — `status='resigned'`이면서 `finished_at IS NULL`인 대국 **99건**에 `finished_at`을 채운다. 규칙은 마지막 수 시각(`moves.max(played_at)`), 수가 0건이면 `started_at`. SQL은 `ops/sql/2026-09-20-backfill-resigned-finished-at.sql`.
+- 근거: #101(사용자 기권 시 `finished_at` 미기록)은 #102로 발효돼 앞으로의 기권부터 채워지지만, 기존 99건은 NULL로 남아 `admin.py:765` 일별 종료 집계(`date(finished_at)`)에서 계속 빠진다. 사람 지시("백필 승인 건으로 올려줘", 9/20 23:1x)로 등재. 실측 — NULL 99건 전부 `resigned`(finished·active는 0건), 그중 0수 대국 6건(#53·#278~282, 6/8 4분 내 5건은 테스트 흔적). 이미 값이 있는 `resigned` 73건은 AI 기권 경로로 마지막 수 +7~10초가 들어가 있어, 백필값(마지막 수 정각)은 그보다 약 10초 이르다 — 일별 집계 용도엔 무영향.
+- 드라이런: `.backup` 스냅샷 사본에서 실행 → NULL 99→0, `finished_at < started_at` 0건, 0수 6건 `started_at` 채택 확인, 비대상(active·finished) 행 md5 동일, `integrity_check` ok.
+- 영향: DB 데이터만 변경, 코드·마이그레이션 없음 → **재기동 불필요**(SQLAlchemy가 매 요청 새로 읽음). UPDATE 99행은 밀리초 단위지만 쓰기 락을 잡으므로 진행 중 착수와 겹치지 않는 시각에 실행. 롤백은 직전 임시 백업 `.restore`.
+- 실행 절차:
+  1. `sqlite3 -readonly backend/data/baduk.db "select max(played_at), datetime('now') from moves;"` — 최근 5분 내 착수 없음 확인
+  2. `sqlite3 -readonly backend/data/baduk.db ".backup '$HOME/baduk-backups/adhoc-pre-backfill-$(date +%Y%m%d%H%M).db'"` — 임시 백업
+  3. `sqlite3 backend/data/baduk.db < ops/sql/2026-09-20-backfill-resigned-finished-at.sql`
+  4. 검증 — `select count(*) from games where status='resigned' and finished_at is null;` → 0 / `select count(*) from games where finished_at < started_at;` → 0 / `pragma integrity_check;` → ok
+  5. `docs/ops/state/log/YYYY-MM-DD.md`에 변경 건수·백업 파일명 기록
+- 상태: 대기 (2026-09-20 23:1x 등재)
+
 ## 처리 완료 — 최근
 
 ### AP-20260916-01 · AP-20260917-01 · AP-20260920-01 — 처리 완료(사람 승인 "3건 전부" · Claude 세션 실행, 2026-09-20 23:04~23:07 KST)
