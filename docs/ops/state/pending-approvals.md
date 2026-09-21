@@ -16,7 +16,7 @@
   3. `sqlite3 backend/data/baduk.db < ops/sql/2026-09-20-backfill-resigned-finished-at.sql`
   4. 검증 — `select count(*) from games where status='resigned' and finished_at is null;` → 0 / `select count(*) from games where finished_at < started_at;` → 0 / `pragma integrity_check;` → ok
   5. `docs/ops/state/log/YYYY-MM-DD.md`에 변경 건수·백업 파일명 기록
-- 상태: 대기 (2026-09-20 23:1x 등재)
+- 상태: 대기 (2026-09-20 23:1x 등재 · 9/21 09:00 1회 재확인 — 마지막 착수 9/20 21:11 KST 이후 12시간 무착수로 절차 (1) 충족, SQL 존재, 04:00 백업 신선)
 
 ## 처리 완료 — 최근
 

@@ -2380,3 +2380,14 @@ pm 다이제스트는 승인 카드 2장과 함께 발송됐고(exit 0, 마커 �
 **다음 실행은 launchd 21:00 슬롯이다.** 사람 판단 대기 항목은 승인 3건이며, 답신이 오면 telegram-protocol 절차로 처리된다.
 [2026-09-20 09:05:04] orchestrator 종료
 [2026-09-20 21:00:04] orchestrator 시작
+[2026-09-20 21:04:54] orchestrator(pm) 완료 — 헬스 정상, 대국 8판 진행 중 2판, AP 3건 대기, 다이제스트 발송
+[mcp-sdk] SEP-2352: stored OAuth credential has no 'issuer' stamp (pre-upgrade storage or provider not round-tripping the value). SEP-2352 isolation is inactive for this read; ensure your provider round-trips the issuer field.
+9/20 21:00 pm 사이클을 마쳤다. `b549a8c`로 커밋·push했고 pm 다이제스트는 발송 성공(마커 생성)이다.
+
+**헬스·백업** — api·web·공개 도메인 전부 200, 마이그레이션 pending 없음, 디스크 8%, drift 없음, Claude 인증 D-12. 백업은 09:00과 같은 파일을 재검증해 복원 드릴 86회 연속 통과다.
+
+**이상·버그 스캔** — 트레이스백 0, 500 0, 신규 버그 0, 미분류 이슈 0, 열린 PR 3건 모두 CI 통과·충돌 0. 낮 동안 세션 33이 13路 대국 8판(492수)을 뒀고 `.err` 증가분은 전부 WS 연결 로그였다. `[object Object]` 재현 9회는 #99 미반영 탓으로 누적 684이다.
+
+**승인 판단 변경** — 대국 #513·#514가 진행 중(마지막 착수 20:57 KST, 사이클 시작 3분 전)이라 09:00에 적었던 "재기동 적기"를 철회하고 승인 카드 3장(108·84·12시간째)에 "지금은 부적기, 심야·새벽 회차 권장"을 명시했다. 사람 판단 대기 항목은 이 3건이며 답신이 오면 telegram-protocol 절차로 처리된다. 다음 실행은 launchd 09:00 슬롯이다.
+[2026-09-20 21:05:05] orchestrator 종료
+[2026-09-21 09:00:05] orchestrator 시작
