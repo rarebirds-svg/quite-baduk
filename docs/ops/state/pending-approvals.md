@@ -5,6 +5,15 @@
 
 ## 대기 중
 
+### AP-20260925-01
+- 액션: PR [#104](https://github.com/rarebirds-svg/quite-baduk/pull/104) 머지(🟡 `main` 변경) — `backend/app/api/admin.py:336` 한 줄, 연결 세션 집합 comprehension에 `if sid is not None` 추가. #103 수정.
+- 근거: 9/25 09:04 `main` CI backend 잡이 docs 커밋 2건에서 `mypy app` 실패. 성공 런(9/24 21:03)과 실패 런의 `pip install` 결과 diff로 `sqlalchemy 2.0.54 → 2.1.0`(핀 `>=2.0`) 확인 — 2.1 스텁이 `Mapped[int | None]`을 `select()` 행 타입까지 전파해 `set[int]` 대입이 어긋남. 코드 변경 없이 CI만 빨개진 드리프트 케이스라 `main` 빨강을 방치하면 이후 PR의 CI 신호가 죽는다.
+- 검증: 로컬(SA 2.0.49·mypy 1.20.1) `mypy app`·`ruff check` 통과, `tests/api/test_admin*.py` 35 passed. PR CI — app-shell-build·frontend·**backend 잡 pass**(같은 fresh 설치 = SA 2.1.0에서 ruff·mypy·pytest·커버리지 통과, 즉 SA 2.1 런타임 호환도 확인), e2e는 21:2x 기준 진행 중(다음 사이클 pr-watch가 확정).
+- 영향: 동작 변화 없음 — `session_id` NULL 행은 어차피 연결 세션이 아님. **prod 무관**(prod venv SA 2.0.49, 재기동 이후 코드 변경 없음). 머지 후 `rev-list HEAD..origin/main`이 1이 되지만 재기동은 다음 실질 변경과 묶어도 무방(라이브 동작 동일).
+- 실행 절차: (1) `gh pr checks 104`로 4잡 그린 확인 → (2) `gh pr merge 104 --squash --delete-branch` → (3) `git pull --ff-only` → (4) 재기동은 선택(`launchctl kickstart -k gui/$(id -u)/com.baduk.api`), 건너뛰면 deploy 행 `warn` 1커밋 미반영으로 표시됨.
+- 후속 판단(사람): `sqlalchemy>=2.0,<2.1` 핀 추가 여부. 이번엔 pytest가 2.1에서 통과했으므로 핀 없이 가도 되나, 로컬 venv(2.0.49)와 CI(2.1.0)의 메이저 마이너 차이는 남는다.
+- 상태: 대기 (2026-09-25 21:2x 등재 · 신규)
+
 ### AP-20260920-02
 - 액션: prod DB 일회성 백필(🟡 prod DB 직접 쓰기) — `status='resigned'`이면서 `finished_at IS NULL`인 대국 **99건**에 `finished_at`을 채운다. 규칙은 마지막 수 시각(`moves.max(played_at)`), 수가 0건이면 `started_at`. SQL은 `ops/sql/2026-09-20-backfill-resigned-finished-at.sql`.
 - 근거: #101(사용자 기권 시 `finished_at` 미기록)은 #102로 발효돼 앞으로의 기권부터 채워지지만, 기존 99건은 NULL로 남아 `admin.py:765` 일별 종료 집계(`date(finished_at)`)에서 계속 빠진다. 사람 지시("백필 승인 건으로 올려줘", 9/20 23:1x)로 등재. 실측 — NULL 99건 전부 `resigned`(finished·active는 0건), 그중 0수 대국 6건(#53·#278~282, 6/8 4분 내 5건은 테스트 흔적). 이미 값이 있는 `resigned` 73건은 AI 기권 경로로 마지막 수 +7~10초가 들어가 있어, 백필값(마지막 수 정각)은 그보다 약 10초 이르다 — 일별 집계 용도엔 무영향.
@@ -16,7 +25,7 @@
   3. `sqlite3 backend/data/baduk.db < ops/sql/2026-09-20-backfill-resigned-finished-at.sql`
   4. 검증 — `select count(*) from games where status='resigned' and finished_at is null;` → 0 / `select count(*) from games where finished_at < started_at;` → 0 / `pragma integrity_check;` → ok
   5. `docs/ops/state/log/YYYY-MM-DD.md`에 변경 건수·백업 파일명 기록
-- 상태: 대기 (2026-09-20 23:1x 등재 · 9/21 09:00 1회 재확인 · 9/21 21:00 2회 재확인 · 9/22 09:00 3회 재확인 · 9/22 21:00 4회 재확인 · 9/23 09:00 5회 재확인 · 9/23 21:00 6회 재확인 · 9/24 09:00 7회 재확인 · 9/24 21:00 8회 재확인 · 9/25 09:00 9회 재확인 — 마지막 착수 9/20 21:11 KST 이후 108시간 무착수·WS 접속 0으로 절차 (1) 충족 지속, SQL 존재, 9/25 04:00 백업 신선·드릴 통과)
+- 상태: 대기 (2026-09-20 23:1x 등재 · 9/21 09:00 1회 재확인 · 9/21 21:00 2회 재확인 · 9/22 09:00 3회 재확인 · 9/22 21:00 4회 재확인 · 9/23 09:00 5회 재확인 · 9/23 21:00 6회 재확인 · 9/24 09:00 7회 재확인 · 9/24 21:00 8회 재확인 · 9/25 09:00 9회 재확인 · 9/25 21:00 10회 재확인(낮에 대국 8건·착수 408수 발생, 마지막 착수 9/25 14:17 KST 이후 6.7시간 무착수·WS 0으로 절차 (1) 다시 충족, 신규 기권 #522는 `finished_at` 기록됨 → 대상 99건 불변) — 마지막 착수 9/20 21:11 KST 이후 108시간 무착수·WS 접속 0으로 절차 (1) 충족 지속, SQL 존재, 9/25 04:00 백업 신선·드릴 통과)
 
 ## 처리 완료 — 최근
 
