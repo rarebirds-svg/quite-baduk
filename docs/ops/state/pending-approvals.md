@@ -8,7 +8,7 @@
 ### AP-20260925-01
 - 액션: PR [#104](https://github.com/rarebirds-svg/quite-baduk/pull/104) 머지(🟡 `main` 변경) — `backend/app/api/admin.py:336` 한 줄, 연결 세션 집합 comprehension에 `if sid is not None` 추가. #103 수정.
 - 근거: 9/25 09:04 `main` CI backend 잡이 docs 커밋 2건에서 `mypy app` 실패. 성공 런(9/24 21:03)과 실패 런의 `pip install` 결과 diff로 `sqlalchemy 2.0.54 → 2.1.0`(핀 `>=2.0`) 확인 — 2.1 스텁이 `Mapped[int | None]`을 `select()` 행 타입까지 전파해 `set[int]` 대입이 어긋남. 코드 변경 없이 CI만 빨개진 드리프트 케이스라 `main` 빨강을 방치하면 이후 PR의 CI 신호가 죽는다.
-- 검증: 로컬(SA 2.0.49·mypy 1.20.1) `mypy app`·`ruff check` 통과, `tests/api/test_admin*.py` 35 passed. PR CI — app-shell-build·frontend·**backend 잡 pass**(같은 fresh 설치 = SA 2.1.0에서 ruff·mypy·pytest·커버리지 통과, 즉 SA 2.1 런타임 호환도 확인), e2e는 21:2x 기준 진행 중(다음 사이클 pr-watch가 확정).
+- 검증: 로컬(SA 2.0.49·mypy 1.20.1) `mypy app`·`ruff check` 통과, `tests/api/test_admin*.py` 35 passed. PR CI **4잡 전부 pass**(21:2x 완료) — backend 잡 로그로 `sqlalchemy-2.1.0` 설치·**611 passed**·커버리지 82.09% 확정(SA 2.1 런타임 호환 확인), e2e pass 2m13s.
 - 영향: 동작 변화 없음 — `session_id` NULL 행은 어차피 연결 세션이 아님. **prod 무관**(prod venv SA 2.0.49, 재기동 이후 코드 변경 없음). 머지 후 `rev-list HEAD..origin/main`이 1이 되지만 재기동은 다음 실질 변경과 묶어도 무방(라이브 동작 동일).
 - 실행 절차: (1) `gh pr checks 104`로 4잡 그린 확인 → (2) `gh pr merge 104 --squash --delete-branch` → (3) `git pull --ff-only` → (4) 재기동은 선택(`launchctl kickstart -k gui/$(id -u)/com.baduk.api`), 건너뛰면 deploy 행 `warn` 1커밋 미반영으로 표시됨.
 - 후속 판단(사람): `sqlalchemy>=2.0,<2.1` 핀 추가 여부. 이번엔 pytest가 2.1에서 통과했으므로 핀 없이 가도 되나, 로컬 venv(2.0.49)와 CI(2.1.0)의 메이저 마이너 차이는 남는다.
