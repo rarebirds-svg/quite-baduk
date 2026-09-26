@@ -333,7 +333,7 @@ async def list_sessions(
             r = await db.execute(
                 select(Game.session_id).where(Game.id.in_(live_game_ids))
             )
-            connected_sids = {sid for (sid,) in r.all()}
+            connected_sids = {sid for (sid,) in r.all() if sid is not None}
 
     return [
         AdminSessionRow(
