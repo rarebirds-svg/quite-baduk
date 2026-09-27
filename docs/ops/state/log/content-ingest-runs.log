@@ -132,3 +132,12 @@ IndexNow → https://searchadvisor.naver.com/indexnow (200개 URL)
 
 HTTP 200
 [2026-09-20 03:19:12] content-ingest 종료
+[2026-09-27 03:00:03] content-ingest 시작
+2026-09-27 03:20:31 [info     ] cwi.ingest.capped              cap=200
+2026-09-27 03:20:31 [info     ] cwi.ingest.complete            duplicate=3766 error=0 fetched=3966 new=200
+CWI ingest 완료: fetched=3966 new=200 duplicate=3766 error=0
+[2026-09-27 03:20:31] IndexNow 제출 200건
+IndexNow → https://searchadvisor.naver.com/indexnow (200개 URL)
+
+HTTP 200
+[2026-09-27 03:20:32] content-ingest 종료
