@@ -1,7 +1,8 @@
 """Game lifecycle: create, move, undo, resign, finalize, replay."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
 
@@ -27,6 +28,7 @@ from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap
 from app.engine_pool import (
     adapter_owner,
     cache_state,
+    drop_adapter_owner,
     game_lock,
     get_adapter,
     get_cached_state,
@@ -228,6 +230,38 @@ async def _record_move(
     ))
 
 
+@dataclass
+class _AdapterRound:
+    """Round marker — ``touched`` flips once the adapter has been mutated."""
+    touched: bool = False
+
+
+@asynccontextmanager
+async def _adapter_round(game_id: int) -> AsyncIterator[_AdapterRound]:
+    """Drop this game's adapter ownership if the round raises after the
+    adapter was touched.
+
+    ``_sync_adapter`` plays the user's stone into the adapter before the AI
+    reply, the WS flush and the DB batch run. If any of those raise (client
+    dropped mid-round — the ``ws.py`` RuntimeError path swallows it quietly —
+    genmove timeout, AI_ILLEGAL_MOVE, DB lock), the stone stays in the
+    adapter's replay history but never reaches the rules state or the DB.
+    The next round would then take the fast path on a board KataGo thinks is
+    one stone ahead and get ``illegal move`` back (#105). Forgetting
+    ownership makes that round reseed from the real history instead.
+
+    Failures before the adapter is touched (user's own illegal move,
+    inactive game) keep ownership — nothing drifted, no reseed needed.
+    """
+    marker = _AdapterRound()
+    try:
+        yield marker
+    except BaseException:
+        if marker.touched:
+            drop_adapter_owner(game_id)
+        raise
+
+
 async def place_move(
     db: AsyncSession,
     *,
@@ -247,7 +281,7 @@ async def place_move(
     ai_side = WHITE if user_side == BLACK else BLACK
 
     # Lock per game
-    async with game_lock(game.id):
+    async with game_lock(game.id), _adapter_round(game.id) as adapter_round:
         # Re-read game + cached state INSIDE the lock. A concurrent place_move
         # from a replaced WS connection may commit moves while this one waits
         # on the lock; that connection's `game` row (loaded at WS accept, in a
@@ -287,6 +321,7 @@ async def place_move(
         # board can drift whenever the user switches between games or the
         # subprocess restarts; without this step KataGo may return a coord
         # that the rules engine rejects as AI_ILLEGAL_MOVE.
+        adapter_round.touched = True
         await _sync_adapter(game, state, new_state, coord)
 
         # Flush the user's move to the client before the AI starts thinking.

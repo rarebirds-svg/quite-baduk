@@ -127,6 +127,17 @@ async def release_game(game_id: int) -> None:
         _adapter_owners.pop(slot, None)
 
 
+def drop_adapter_owner(game_id: int) -> None:
+    """Forget that ``game_id`` owns its slot's GTP state so the next round
+    takes the reseed path. Used when a round fails after the user's stone
+    was already played into the adapter but before it reached the rules
+    state — the adapter history is then one stone ahead of the game and
+    the fast path would desync the board (#105)."""
+    slot = _slot_for(game_id)
+    if slot is not None and _adapter_owners.get(slot) == game_id:
+        _adapter_owners.pop(slot, None)
+
+
 @asynccontextmanager
 async def game_lock(game_id: int) -> AsyncIterator[None]:
     lock = _game_locks.setdefault(game_id, asyncio.Lock())
