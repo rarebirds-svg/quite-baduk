@@ -138,6 +138,18 @@ def drop_adapter_owner(game_id: int) -> None:
         _adapter_owners.pop(slot, None)
 
 
+def drop_slot_owner(game_id: int) -> None:
+    """Forget whoever owns the slot pinned to ``game_id`` — not only
+    ``game_id`` itself. Reseed paths call this right before their first
+    board-mutating command: the slot's board is about to be wiped, so the
+    previous owner (possibly another game sharing the slot) must stop being
+    trusted even if the reseed dies halfway. Ownership is re-recorded only
+    after the reseed completes (#108)."""
+    slot = _slot_for(game_id)
+    if slot is not None:
+        _adapter_owners.pop(slot, None)
+
+
 @asynccontextmanager
 async def game_lock(game_id: int) -> AsyncIterator[None]:
     lock = _game_locks.setdefault(game_id, asyncio.Lock())
