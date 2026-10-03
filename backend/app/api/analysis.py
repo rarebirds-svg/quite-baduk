@@ -10,7 +10,7 @@ from app.core.katago.strength import rank_to_config
 from app.core.rules.board import BLACK
 from app.core.rules.handicap import HANDICAP_TABLES
 from app.deps import CurrentSession, DbSession
-from app.engine_pool import get_adapter, set_adapter_owner
+from app.engine_pool import drop_slot_owner, get_adapter
 from app.models import AnalysisCache, Game, Session
 from app.ownership import owns
 from app.rate_limit import rate_limiter
@@ -68,6 +68,12 @@ async def analyze_game(
     state = await _replay_state_to(db, game, moveNum)
     adapter = await get_adapter(game.id)
     await adapter.start()
+    # The replay below leaves the adapter on a historical position, not the
+    # latest one, so the slot must have no owner afterwards — the next
+    # place_move then fully reseeds instead of taking the fast path. Drop it
+    # before the first mutation so a mid-replay failure can't leave a stale
+    # owner behind either (#108).
+    drop_slot_owner(game.id)
     await adapter.clear_board()
     await adapter.set_boardsize(game.board_size)
     await adapter.set_komi(game.komi)
@@ -84,10 +90,6 @@ async def analyze_game(
         if mv.coord is None:
             continue  # resign — no board change
         await adapter.play(mv.color, mv.coord)
-    # The adapter no longer reflects the latest game position; force the
-    # next place_move to fully reseed instead of attempting a fast-path
-    # incremental play() on top of this replayed state.
-    set_adapter_owner(None)
     result = await adapter.analyze(side=state.to_move, max_visits=100)
 
     response = AnalysisResponse(
