@@ -27,7 +27,7 @@ from app.client_ip import client_ip
 from app.core.rules.board import BLACK, WHITE
 from app.core.rules.engine import IllegalMoveError, Move, play
 from app.deps import OptionalSession
-from app.engine_pool import get_adapter
+from app.engine_pool import get_adapter, set_adapter_owner
 from app.rate_limit import rate_limiter
 from app.services.daily_challenge import (
     BOARD_SIZES,
@@ -166,6 +166,10 @@ async def grade_answer(
 
     adapter = await get_adapter(None)
     await adapter.start()
+    # The slot's board is about to be overwritten with the puzzle position.
+    # Drop ownership first so the game that held the slot reseeds instead of
+    # taking the fast path on top of a board that is no longer its own (#107).
+    set_adapter_owner(None)
     await adapter.clear_board()
     await adapter.set_boardsize(challenge.board_size)
     await adapter.set_komi(state.komi)

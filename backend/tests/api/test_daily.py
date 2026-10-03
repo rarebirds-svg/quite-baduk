@@ -2,15 +2,21 @@
 from __future__ import annotations
 
 import datetime as _dt
+import secrets
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.katago.mock import MockKataGoAdapter
+from app.engine_pool import is_adapter_owner, set_adapter
+from app.models import Session
 from app.services.daily_challenge import (
     CHALLENGES,
     daily_index,
     get_today,
 )
+from app.services.game_service import create_game, place_move
 
 
 def test_daily_index_is_deterministic_per_date() -> None:
@@ -492,3 +498,40 @@ async def test_answer_grades_non_today_challenge(client: AsyncClient) -> None:
     )
     assert r.status_code == 200
     assert r.json()["verdict"] in ("best", "ok", "weak", "miss", "illegal")
+
+
+@pytest.mark.asyncio
+async def test_answer_invalidates_slot_ownership_so_game_reseeds(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """채점은 슬롯 0 보드를 문제 포지션으로 덮어쓴다. 그 슬롯을 소유하던
+    대국이 fast path로 남의 보드 위에 착수하지 않도록 소유권이 폐기돼야
+    한다 (#107)."""
+    adapter = MockKataGoAdapter()
+    set_adapter(adapter)
+    s = Session(token=secrets.token_urlsafe(8), nickname="owner107", nickname_key="owner107")
+    db_session.add(s)
+    await db_session.commit()
+    await db_session.refresh(s)
+    game = await create_game(
+        db_session, session=s, ai_rank="5k", handicap=0, user_color="black", board_size=9
+    )
+    assert is_adapter_owner(game.id)
+
+    today = get_today()
+    used = {coord.upper() for _, coord in today.setup}
+    candidate = next(
+        c for c in ("A1", "B1", "C1", "D1", "F1", "H1", "J1") if c not in used
+    )
+    r = await client.post(
+        "/api/daily-challenge/answer",
+        json={"challenge_id": today.id, "coord": candidate},
+    )
+    assert r.status_code == 200
+    assert not is_adapter_owner(game.id)
+
+    # 다음 착수는 재시드 경로를 타 어댑터 기록이 실제 기보와 일치해야 한다.
+    result = await place_move(db_session, game=game, session=s, coord="E5")
+    expected = [(m.color, m.coord) for m in result.game_state.move_history]
+    assert adapter.move_history == expected
+    assert is_adapter_owner(game.id)
