@@ -5,15 +5,19 @@
 
 ## 대기 중
 
-### AP-20260929-01
-- 액션: PR [#106](https://github.com/rarebirds-svg/quite-baduk/pull/106) 머지(🟡 `main` 변경) + `com.baduk.api` 재기동(🟡 prod) — `fix/issue-105`(433a6d4, 9/29 04:30 dev-cycle 산출, `Closes #105`). `engine_pool.drop_adapter_owner` + `game_service._adapter_round` 컨텍스트로 라운드 도중 예외(WS 전송 실패 등)가 나면 KataGo 어댑터 소유권을 폐기해 다음 라운드가 전체 재시드(slow path)를 타게 한다.
-- 근거: #105(9/9 #461·9/28 #539 `katago_fast_path_rejected` 경고) 원인 규명 — `place_move`가 사용자 돌을 어댑터에 먼저 두고 WS 전송·genmove·DB 저장으로 가는데, 클라이언트 이탈 중 `send_json` 실패를 `ws.py:358`이 조용히 삼켜 돌이 어댑터에만 남고 DB엔 없음 → 재접속 후 재시도가 fast path로 한 수 앞선 보드에서 거부. 두 프로드 사례 모두 경고 직전 재접속 흐름(`/api/session`·`/api/games/{id}` 재조회) 실측.
-- 검증: TDD 회귀 테스트 2건(픽스 전 실패 확인), pytest **613 passed**, `ruff check .`·`mypy app` 로컬 클린. 리뷰 Fable 5.1 APPROVE + Opus 4.8 APPROVE(Codex 쿼터 소진 폴백). **PR CI는 backend FAIL·e2e SKIPPED** — 실패 원인은 `admin.py:336` mypy **1건 = #103 상속**(fresh 설치 SA 2.1.1·mypy 2.3.1), #106 변경분 오류 0. frontend·app-shell-build pass.
-- 영향: 런타임 동작 변경 — 라운드 실패 후 첫 수만 재시드 비용을 추가로 내고, 정상 라운드는 무변화. **발효에는 backend 재기동 필수.** 마이그레이션 없음. Opus 차집합 4건(`daily.py` 슬롯 0 소유권 미기록·재시드 중 예외 시 소유권 순서·소유권 미확인 analyze 경로·슬롯 단위 락 부재)은 PR 본문 "범위 밖" 절 참조 — 같은 버그 클래스, 사람 판단.
-- 실행 절차: (1) **PR #104 먼저 머지**(AP-20260925-01) → (2) `gh run rerun 36475044092 --failed`(pull_request CI는 merge ref 기준이라 #104 반영) → (3) `gh pr checks 106`로 4잡 그린 확인 → (4) `gh pr merge 106 --squash --delete-branch` → (5) `git pull --ff-only` → (6) `sqlite3 -readonly backend/data/baduk.db "select max(played_at), datetime('now') from moves;"`로 5분 무착수·WS 0 확인 후 `launchctl kickstart -k gui/$(id -u)/com.baduk.api` → (7) `/api/health` 200·`migrations.pending false` 확인. 로컬 `.worktrees/dev-cycle`이 `fix/issue-105`를 점유 중이라 로컬 브랜치 삭제는 안 됨(원격 삭제만, 무해).
-- 상태: 대기 (2026-09-29 09:00 등재 · 9/29 21:00 1회 재확인 · 9/30 09:00 2회 재확인 — PR #106 `MERGEABLE`/`UNSTABLE`·backend fail(#103 상속, main CI 17런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 밤사이 대국 #542 80수는 23:01 KST 이탈 후 10시간 무착수·WS 0으로 재기동 조건 충족 · **9/30 21:00 3회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend fail(#103 상속, main CI 18런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 낮 대국 4건(304수)은 18:03 KST #546 AI 기권으로 종료 후 3시간 무착수·WS 0으로 재기동 조건 충족, 승인 회신 없음 · **10/1 09:00 4회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 19런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 밤사이 대국 0건(#542 WS 재접속만)으로 9/30 18:03 KST 이후 15시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음 · **10/1 21:00 5회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 20런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 낮 대국 0건으로 9/30 18:03 KST 이후 27시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음 · **10/2 09:00 6회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 21런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 밤사이 대국 0건(#542 WS 재접속 8회·착수 0)으로 9/30 18:03 KST 이후 39시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음 · **10/2 21:00 7회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 23런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지(7일 정체 도달)라 절차 (1)부터 그대로 실행 가능, 낮 대국 0건·착수 0(데일리 퍼즐만)으로 9/30 18:03 KST 이후 51시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음)
-
 ## 처리 완료 — 최근
+
+### AP-20260929-01 — 처리 완료(사람 승인 "#106도 머지하고 api 재기동해줘" · Claude 세션 실행, 2026-10-03 13:12~13:17 KST)
+
+PR #106 발효. 다만 **재기동 조건을 어긴 실행**이라 아래 경과를 그대로 남긴다.
+
+- **카드 절차 (2)가 틀렸다.** `gh run rerun 36475044092 --failed`은 런 생성 시점(9/28, `headSha` 433a6d4)의 merge ref를 그대로 재실행하므로 오늘 머지한 #104가 반영되지 않는다. 33초 만에 같은 `admin.py:336` 오류로 재실패했다. 올바른 수단은 `gh pr update-branch 106`(base→head 머지, force 아님)으로 **새 merge ref를 만들어 CI를 재트리거**하는 것이다. 이후 신규 런 `37095777137`에서 4잡 전부 success. 재실행 전 실패 로그로 `admin.py:336` 단일 오류·#106 변경분 오류 0도 확인했다.
+- 머지·배포 — `ec9a99c` squash 머지 → `git pull --ff-only`, 배포 갭 0. 라이브에 `engine_pool.drop_adapter_owner`(130행)·`game_service._adapter_round`(240행)·`place_move`의 `async with game_lock(...), _adapter_round(...)`(284행) 반영 확인.
+- **재기동 — 조건 미충족 상태로 실행했다.** 직전 확인값이 마지막 착수 `04:16:20Z`(9초 전)·WS `connection open`이었는데, 확인과 `launchctl kickstart`를 같은 명령 블록에 둬서 조건으로 게이팅하지 못했다. 카드 절차 (6)의 "5분 무착수·WS 0"은 바로 이 상황을 막기 위한 가드였다.
+- **영향 실측 — 데이터 손실 없음.** 대국 547(active)은 `move_count` 115 = 실제 수 115로 정합하고, 마지막 라운드(114 W·115 B, 둘 다 `04:16:20`)가 쌍으로 완결·영속화된 뒤 재기동이 걸렸다. uvicorn이 graceful shutdown("Waiting for connections to close")을 거쳤고, 기동 후 같은 클라이언트(1.237.136.170)가 `WebSocket /api/ws/games/547`로 즉시 재접속했다. 트레이스백 0, 신규 `katago_fast_path_rejected` 0(기존 2건은 9/9 #461·9/28 #539 타임스탬프로 과거분 확정). 플레이어가 겪은 것은 대국 중 순간적인 WS 단절과 자동 재접속이다.
+- health 200 in 3s, `katago_alive` true, `migrations.pending` false. api 기동 13:16:34.
+- **재발 방지 메모** — 재기동 절차는 확인과 실행을 반드시 **분리된 호출**로 하거나, 무착수 조건을 만족하지 못하면 종료하는 가드 스크립트로 감쌀 것. 이번처럼 67시간 무활동이던 대국이 실행 직전에 재개될 수 있다.
+- Opus 차집합 4건(`daily.py` 슬롯 0 소유권 미기록·재시드 중 예외 시 소유권 순서·소유권 미확인 analyze 경로·슬롯 단위 락 부재)은 미결로 PR 본문 "범위 밖" 절에 남아 있다.
 
 ### AP-20260925-01 — 처리 완료(사람 승인 "#104 머지해줘" · Claude 세션 실행, 2026-10-03 13:0x KST)
 
