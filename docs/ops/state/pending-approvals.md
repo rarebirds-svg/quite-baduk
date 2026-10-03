@@ -5,29 +5,35 @@
 
 ## 대기 중
 
-### AP-20260925-01
-- 액션: PR [#104](https://github.com/rarebirds-svg/quite-baduk/pull/104) 머지(🟡 `main` 변경) — `backend/app/api/admin.py:336` 한 줄, 연결 세션 집합 comprehension에 `if sid is not None` 추가. #103 수정.
-- 근거: 9/25 09:04 `main` CI backend 잡이 docs 커밋 2건에서 `mypy app` 실패. 성공 런(9/24 21:03)과 실패 런의 `pip install` 결과 diff로 `sqlalchemy 2.0.54 → 2.1.0`(핀 `>=2.0`) 확인 — 2.1 스텁이 `Mapped[int | None]`을 `select()` 행 타입까지 전파해 `set[int]` 대입이 어긋남. 코드 변경 없이 CI만 빨개진 드리프트 케이스라 `main` 빨강을 방치하면 이후 PR의 CI 신호가 죽는다.
-- 검증: 로컬(SA 2.0.49·mypy 1.20.1) `mypy app`·`ruff check` 통과, `tests/api/test_admin*.py` 35 passed. PR CI **4잡 전부 pass**(21:2x 완료) — backend 잡 로그로 `sqlalchemy-2.1.0` 설치·**611 passed**·커버리지 82.09% 확정(SA 2.1 런타임 호환 확인), e2e pass 2m13s.
-- 영향: 동작 변화 없음 — `session_id` NULL 행은 어차피 연결 세션이 아님. **prod 무관**(prod venv SA 2.0.49, 재기동 이후 코드 변경 없음). 머지 후 `rev-list HEAD..origin/main`이 1이 되지만 재기동은 다음 실질 변경과 묶어도 무방(라이브 동작 동일).
-- 실행 절차: (1) `gh pr checks 104`로 4잡 그린 확인 → (2) `gh pr merge 104 --squash --delete-branch` → (3) `git pull --ff-only` → (4) 재기동은 선택(`launchctl kickstart -k gui/$(id -u)/com.baduk.api`), 건너뛰면 deploy 행 `warn` 1커밋 미반영으로 표시됨.
-- 후속 판단(사람): `sqlalchemy>=2.0,<2.1` 핀 추가 여부. 이번엔 pytest가 2.1에서 통과했으므로 핀 없이 가도 되나, 로컬 venv(2.0.49)와 CI(2.1.0)의 메이저 마이너 차이는 남는다.
-- 상태: 대기 (2026-09-25 21:2x 등재 · 9/26 09:00 1회 재확인 · 9/26 21:00 2회 재확인 · 9/27 09:00 3회 재확인 · 9/27 21:00 4회 재확인 · 9/28 09:00 5회 재확인 · **9/28 21:00 6회 재확인** — PR #104 `MERGEABLE`/`CLEAN`·CI 4잡 pass 유지(생성 72시간), `main` CI는 마지막 성공 9/24 21:03 KST 이후 **13런 연속** 같은 mypy 오류(9/28 09:03 `e441db6` 추가), 승인 회신 없음)
-
-### AP-20260920-02
-- 액션: prod DB 일회성 백필(🟡 prod DB 직접 쓰기) — `status='resigned'`이면서 `finished_at IS NULL`인 대국 **99건**에 `finished_at`을 채운다. 규칙은 마지막 수 시각(`moves.max(played_at)`), 수가 0건이면 `started_at`. SQL은 `ops/sql/2026-09-20-backfill-resigned-finished-at.sql`.
-- 근거: #101(사용자 기권 시 `finished_at` 미기록)은 #102로 발효돼 앞으로의 기권부터 채워지지만, 기존 99건은 NULL로 남아 `admin.py:765` 일별 종료 집계(`date(finished_at)`)에서 계속 빠진다. 사람 지시("백필 승인 건으로 올려줘", 9/20 23:1x)로 등재. 실측 — NULL 99건 전부 `resigned`(finished·active는 0건), 그중 0수 대국 6건(#53·#278~282, 6/8 4분 내 5건은 테스트 흔적). 이미 값이 있는 `resigned` 73건은 AI 기권 경로로 마지막 수 +7~10초가 들어가 있어, 백필값(마지막 수 정각)은 그보다 약 10초 이르다 — 일별 집계 용도엔 무영향.
-- 드라이런: `.backup` 스냅샷 사본에서 실행 → NULL 99→0, `finished_at < started_at` 0건, 0수 6건 `started_at` 채택 확인, 비대상(active·finished) 행 md5 동일, `integrity_check` ok.
-- 영향: DB 데이터만 변경, 코드·마이그레이션 없음 → **재기동 불필요**(SQLAlchemy가 매 요청 새로 읽음). UPDATE 99행은 밀리초 단위지만 쓰기 락을 잡으므로 진행 중 착수와 겹치지 않는 시각에 실행. 롤백은 직전 임시 백업 `.restore`.
-- 실행 절차:
-  1. `sqlite3 -readonly backend/data/baduk.db "select max(played_at), datetime('now') from moves;"` — 최근 5분 내 착수 없음 확인
-  2. `sqlite3 -readonly backend/data/baduk.db ".backup '$HOME/baduk-backups/adhoc-pre-backfill-$(date +%Y%m%d%H%M).db'"` — 임시 백업
-  3. `sqlite3 backend/data/baduk.db < ops/sql/2026-09-20-backfill-resigned-finished-at.sql`
-  4. 검증 — `select count(*) from games where status='resigned' and finished_at is null;` → 0 / `select count(*) from games where finished_at < started_at;` → 0 / `pragma integrity_check;` → ok
-  5. `docs/ops/state/log/YYYY-MM-DD.md`에 변경 건수·백업 파일명 기록
-- 상태: 대기 (2026-09-20 23:1x 등재 · 9/21 09:00 1회 재확인 · 9/21 21:00 2회 재확인 · 9/22 09:00 3회 재확인 · 9/22 21:00 4회 재확인 · 9/23 09:00 5회 재확인 · 9/23 21:00 6회 재확인 · 9/24 09:00 7회 재확인 · 9/24 21:00 8회 재확인 · 9/25 09:00 9회 재확인 · 9/25 21:00 10회 재확인(낮에 대국 8건·착수 408수 발생, 마지막 착수 9/25 14:17 KST 이후 6.7시간 무착수·WS 0으로 절차 (1) 다시 충족, 신규 기권 #522는 `finished_at` 기록됨 → 대상 99건 불변) · **9/26 09:00 11회 재확인 — 절차 (1) 미충족**: 대국 #523이 08:47 KST 시작해 09:01:03 KST까지 96수 진행 중(WS open, KataGo 슬롯 2 가동). 승인이 오더라도 #523 종료·5분 무착수 확인 후 실행. 대상 99건 불변, SQL 존재, 9/26 04:00 백업 신선·드릴 통과 · **9/26 21:00 12회 재확인 — 절차 (1) 다시 충족**: #523은 09:22 KST 210수로 종료, 낮 동안 대국 7건(#524~#530, 199수) 더 발생했으나 마지막 착수 17:01:51 KST 이후 4시간 무착수·WS 접속 0. 신규 기권 #527·#528은 `finished_at` 기록됨(#102 발효) → 대상 99건 불변 · **9/27 09:00 13회 재확인 — 절차 (1) 충족 지속**: 밤사이 대국 #531(9路 30수, 02:17~02:26 KST) 1건 발생 후 6.5시간 무착수·WS closed·KataGo 유휴. 03:00 주간 ingest도 무사고. 대상 99건 불변, SQL 존재, 9/27 04:00 백업 신선·드릴 통과. **9/27 21:00 14회 재확인 — 절차 (1) 충족**: 낮 동안 대국 6건(#532~#537, 464수, 3명) 발생했으나 마지막 착수 20:04:28 KST 이후 56분 무착수·WS 6건 전부 closed·KataGo 유휴. 사용자 기권 #536·#537은 `finished_at` 기록됨(#102 발효) → 대상 99건 불변, SQL 존재, 9/27 04:00 백업 신선·드릴 통과. **9/28 09:00 15회 재확인 — 절차 (1) 충족**: 밤사이 대국 0건, 마지막 착수 9/27 20:04:28 KST 이후 13시간 무착수·WS 접속 0·KataGo 유휴. 대상 99건 불변, SQL 존재, 9/28 04:00 백업 신선·드릴 통과. **9/28 21:00 16회 재확인 — 절차 (1) 충족**: 낮 대국 2건(#538·#539, 219수, 1명) 발생했으나 마지막 착수 19:27:13 KST 이후 1.5시간 무착수·WS 전부 closed·KataGo 유휴. AI 기권 #538·계가 #539 모두 `finished_at` 기록됨 → 대상 99건 불변, SQL 존재, 9/28 04:00 백업 신선·드릴 통과. 승인 회신 시 (1) 재확인 후 즉시 실행 가능 — 마지막 착수 9/20 21:11 KST 이후 108시간 무착수·WS 접속 0으로 절차 (1) 충족 지속, SQL 존재, 9/25 04:00 백업 신선·드릴 통과)
+### AP-20260929-01
+- 액션: PR [#106](https://github.com/rarebirds-svg/quite-baduk/pull/106) 머지(🟡 `main` 변경) + `com.baduk.api` 재기동(🟡 prod) — `fix/issue-105`(433a6d4, 9/29 04:30 dev-cycle 산출, `Closes #105`). `engine_pool.drop_adapter_owner` + `game_service._adapter_round` 컨텍스트로 라운드 도중 예외(WS 전송 실패 등)가 나면 KataGo 어댑터 소유권을 폐기해 다음 라운드가 전체 재시드(slow path)를 타게 한다.
+- 근거: #105(9/9 #461·9/28 #539 `katago_fast_path_rejected` 경고) 원인 규명 — `place_move`가 사용자 돌을 어댑터에 먼저 두고 WS 전송·genmove·DB 저장으로 가는데, 클라이언트 이탈 중 `send_json` 실패를 `ws.py:358`이 조용히 삼켜 돌이 어댑터에만 남고 DB엔 없음 → 재접속 후 재시도가 fast path로 한 수 앞선 보드에서 거부. 두 프로드 사례 모두 경고 직전 재접속 흐름(`/api/session`·`/api/games/{id}` 재조회) 실측.
+- 검증: TDD 회귀 테스트 2건(픽스 전 실패 확인), pytest **613 passed**, `ruff check .`·`mypy app` 로컬 클린. 리뷰 Fable 5.1 APPROVE + Opus 4.8 APPROVE(Codex 쿼터 소진 폴백). **PR CI는 backend FAIL·e2e SKIPPED** — 실패 원인은 `admin.py:336` mypy **1건 = #103 상속**(fresh 설치 SA 2.1.1·mypy 2.3.1), #106 변경분 오류 0. frontend·app-shell-build pass.
+- 영향: 런타임 동작 변경 — 라운드 실패 후 첫 수만 재시드 비용을 추가로 내고, 정상 라운드는 무변화. **발효에는 backend 재기동 필수.** 마이그레이션 없음. Opus 차집합 4건(`daily.py` 슬롯 0 소유권 미기록·재시드 중 예외 시 소유권 순서·소유권 미확인 analyze 경로·슬롯 단위 락 부재)은 PR 본문 "범위 밖" 절 참조 — 같은 버그 클래스, 사람 판단.
+- 실행 절차: (1) **PR #104 먼저 머지**(AP-20260925-01) → (2) `gh run rerun 36475044092 --failed`(pull_request CI는 merge ref 기준이라 #104 반영) → (3) `gh pr checks 106`로 4잡 그린 확인 → (4) `gh pr merge 106 --squash --delete-branch` → (5) `git pull --ff-only` → (6) `sqlite3 -readonly backend/data/baduk.db "select max(played_at), datetime('now') from moves;"`로 5분 무착수·WS 0 확인 후 `launchctl kickstart -k gui/$(id -u)/com.baduk.api` → (7) `/api/health` 200·`migrations.pending false` 확인. 로컬 `.worktrees/dev-cycle`이 `fix/issue-105`를 점유 중이라 로컬 브랜치 삭제는 안 됨(원격 삭제만, 무해).
+- 상태: 대기 (2026-09-29 09:00 등재 · 9/29 21:00 1회 재확인 · 9/30 09:00 2회 재확인 — PR #106 `MERGEABLE`/`UNSTABLE`·backend fail(#103 상속, main CI 17런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 밤사이 대국 #542 80수는 23:01 KST 이탈 후 10시간 무착수·WS 0으로 재기동 조건 충족 · **9/30 21:00 3회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend fail(#103 상속, main CI 18런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 낮 대국 4건(304수)은 18:03 KST #546 AI 기권으로 종료 후 3시간 무착수·WS 0으로 재기동 조건 충족, 승인 회신 없음 · **10/1 09:00 4회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 19런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 밤사이 대국 0건(#542 WS 재접속만)으로 9/30 18:03 KST 이후 15시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음 · **10/1 21:00 5회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 20런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 낮 대국 0건으로 9/30 18:03 KST 이후 27시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음 · **10/2 09:00 6회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 21런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지라 절차 (1)부터 그대로 실행 가능, 밤사이 대국 0건(#542 WS 재접속 8회·착수 0)으로 9/30 18:03 KST 이후 39시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음 · **10/2 21:00 7회 재확인** — PR #106 `MERGEABLE`/`UNSTABLE`·backend FAILURE(#103 상속, main CI 23런 연속)·코멘트 0 불변, PR #104 `CLEAN` 유지(7일 정체 도달)라 절차 (1)부터 그대로 실행 가능, 낮 대국 0건·착수 0(데일리 퍼즐만)으로 9/30 18:03 KST 이후 51시간 무착수·WS 0·KataGo 유휴 = 재기동 조건 충족, 승인 회신 없음)
 
 ## 처리 완료 — 최근
+
+### AP-20260925-01 — 처리 완료(사람 승인 "#104 머지해줘" · Claude 세션 실행, 2026-10-03 13:0x KST)
+
+`main` CI 빨강이 해소됐다. 등재 후 약 8일·9회 재확인 만의 처리다.
+
+- 머지 전 원인 재확인 — `main` 최근 3런(`13c24a2`·`c9b31d1`·`b5424b3`) 전부 backend 잡 실패였고, 실패 로그에서 `app/api/admin.py:336: error: Set comprehension has incompatible type Set[int | None]; expected Set[int]  [misc]` + `Found 1 error in 1 file`을 확정했다. 카드의 진단과 일치하며 다른 실패는 섞여 있지 않았다.
+- 실행 — `gh pr merge 104 --squash --delete-branch`(`ea8f136`) → `git pull --ff-only`. 라이브 336행에 `if sid is not None` 반영 확인, 배포 갭 0.
+- 검증 — 머지 커밋 `ea8f136`의 `main` CI **4잡 전부 success**(backend·frontend·e2e·app-shell-build). 3런 연속 빨강이 끊겼다.
+- 재기동 — 하지 않았다. 카드대로 동작 변화가 없고(`session_id` NULL 행은 연결 세션이 아님) prod venv는 SA 2.0.49라 애초에 이 타입 오류가 나지 않는다. 다음 실질 변경(AP-20260929-01 / PR #106)과 묶어 1회로 처리하면 된다.
+- 후속 판단 미결 — `sqlalchemy>=2.0,<2.1` 핀 추가 여부는 그대로 남는다. 이번엔 CI가 2.1에서 611 passed로 통과했으나 로컬 venv(2.0.49)와 CI(2.1.0)의 차이는 유지된다.
+
+### AP-20260920-02 — 처리 완료(사람 승인 · Claude 세션 실행, 2026-10-03 12:50~12:51 KST)
+
+기권 대국 `finished_at` NULL 99건 백필 완료. 286시간·24회 재확인 만의 해소다.
+
+- 실행 전 재실측 — 대상 99건 불변(`resigned` 99 / 그 외 status의 NULL 0 / 0수 6건), 마지막 착수 9/30 09:03 UTC로 **67시간 무활동**·WS 연결 종료 상태라 실행 창 충족.
+- 임시 백업 — `adhoc-pre-backfill-202610031250.db`(18M, `integrity_check` ok, 백필 전 상태 99건 보존). 롤백은 이 파일 `.restore`.
+- 실행 — `ops/sql/2026-09-20-backfill-resigned-finished-at.sql`, exit 0.
+- 검증 — `resigned`+NULL **99 → 0**, `finished_at < started_at` 0건, 0수 6건(#53·#278~282) 전부 `started_at` 채택, `pragma integrity_check` ok. `admin.py:765` 일별 종료 집계에 9/25·9/26·9/27·9/28·9/30 기권 대국이 새로 잡힌다.
+- 재기동 없음(데이터만 변경). 백필값은 마지막 수 정각이라 AI 기권 경로의 기존 값(마지막 수 +7~10초)보다 약 10초 이르다 — 일별 집계엔 무영향.
 
 ### AP-20260916-01 · AP-20260917-01 · AP-20260920-01 — 처리 완료(사람 승인 "3건 전부" · Claude 세션 실행, 2026-09-20 23:04~23:07 KST)
 
