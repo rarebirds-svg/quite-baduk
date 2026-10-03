@@ -336,3 +336,19 @@ FAQ `daily-puzzle`(일일 챌린지 이용 방법)을 초안·QA·라이브 게�
 
 남은 미작성 시드는 글로서리 30건, FAQ 12건입니다.
 [2026-09-30 02:08:35] content-draft 종료
+[2026-10-03 02:00:01] content-draft 시작
+Failed to authenticate: OAuth session expired and could not be refreshed
+[2026-10-03 02:00:03] 인증 만료 감지 — 보류 (재로그인 후 watchdog가 1회 재트리거)
+[2026-10-03 02:00:03] 비정상 종료
+[2026-10-03 02:00:03] content-draft 종료
+[2026-10-03 22:30:00] 인증 회복 — watchdog 재트리거
+[2026-10-03 22:30:00] content-draft 시작
+Permission allow rule (.claude/settings.json): Bash(curl -s -o /dev/null *http://localhost:*) mixes * with the trailing :* prefix syntax, so it is matched as a literal prefix (the * is not expanded) and will likely never match. Replace that * with the exact value you mean.
+글로서리 `gibo`(기보)를 게시했고 `main` push까지 끝났습니다(34553da). https://inkbaduk.com/glossary/gibo 가 200으로 응답합니다.
+
+- **선택 근거**: 게시 비율이 glossary 27/57, faq 12/24로 glossary가 더 뒤처져 있었고, 미작성 후보 중 알파벳 첫 항목이 `gibo`였습니다.
+- **QA**: korean-copy-qa가 게시를 막을 문제는 없다고 판정했고, 지적 사항(용어 표기 통일, 내부링크 3개 추가, 과장 표현 완화)은 반영했습니다.
+- **기록**: IndexNow 통보는 HTTP 200이었고, 잡 상태(`ok`)와 `state/log/2026-10-03.md` 한 줄을 남겼습니다.
+
+이번 실행은 예정된 02:00이 아니라 22:31에 돌았고, 로그에도 22:31로 적었습니다.
+[2026-10-03 22:31:22] content-draft 종료

@@ -1069,3 +1069,19 @@ You've hit your monthly spend limit · raise it at claude.ai/settings/usage?from
 - **기록.** 미push feature 브랜치 없음(로컬 전용 fix/* 6종은 모두 squash 머지 완료분), dev-cycle 워크트리 클린을 확인했고, `docs/ops/state/log/2026-10-02.md`에 결과를 남긴 뒤 잡 상태를 `ok`로 기록했습니다. 로그 커밋은 관례대로 09:00 오케스트레이터가 맡습니다.
 - **다음 사람 조치.** PR #104 머지 → #106 CI 재실행 → #106 머지·api 재기동, 그리고 오늘 23:41 만료 전 Claude 재로그인이 필요합니다. 재로그인이 없으면 10/3 02:00 content-draft와 04:30 이 잡부터 인증 실패로 죽습니다.
 [2026-10-02 04:31:40] dev-cycle 종료
+[2026-10-03 04:30:04] dev-cycle 시작
+Failed to authenticate: OAuth session expired and could not be refreshed
+[2026-10-03 04:30:08] 인증 만료 감지 — 보류 (재로그인 후 watchdog가 1회 재트리거)
+[2026-10-03 04:30:08] 비정상 종료
+[2026-10-03 04:30:08] dev-cycle 종료
+[2026-10-03 22:30:00] 인증 회복 — watchdog 재트리거
+[2026-10-03 22:30:00] dev-cycle 시작
+Permission allow rule (.claude/settings.json): Bash(curl -s -o /dev/null *http://localhost:*) mixes * with the trailing :* prefix syntax, so it is matched as a literal prefix (the * is not expanded) and will likely never match. Replace that * with the exact value you mean.
+이번 사이클은 이슈 #107을 처리해 PR #111까지 올렸고, 머지는 사람 승인 대기(🟡)입니다.
+
+- **수정**: 일일 문제 채점(`backend/app/api/daily.py`)이 슬롯 0 보드를 덮어쓰기 전에 `set_adapter_owner(None)`으로 소유권을 폐기하도록 했습니다. 이제 그 슬롯을 쓰던 대국은 다음 수에서 재시드합니다.
+- **검증**: 재현 테스트가 수정 전 실패, 수정 후 통과했습니다. pytest 614 passed, `ruff check .`와 `mypy app`도 통과했습니다. 2줄짜리 선례(`analysis.py`) 답습 수정이라 별도 에이전트 리뷰는 돌리지 않았습니다.
+- **마무리**: `fix/issue-107`(f84f92c) push, [PR #111](https://github.com/rarebirds-svg/quite-baduk/pull/111) 생성, 이슈 코멘트와 `in-progress` 해제, 일일 로그 기록, `report-job-status.sh dev-cycle ok` 보고까지 끝냈습니다.
+
+채점 경로가 게임 락 없이 슬롯을 쓰는 문제는 이번 PR로 해소되지 않으며 #110 소관으로 남겼습니다.
+[2026-10-03 22:31:48] dev-cycle 종료
