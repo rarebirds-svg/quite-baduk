@@ -37,7 +37,6 @@
       "Bash(git push -u origin test/*)",
       "Bash(curl -s http://localhost:3000/*)",
       "Bash(curl -s http://localhost:8000/*)",
-      "Bash(curl -s -o /dev/null *http://localhost:*)",
       "Bash(lsof -i :*)",
       "Bash(chmod +x *)",
       "Bash(mkdir -p *)",
