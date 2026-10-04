@@ -29,6 +29,7 @@ from app.engine_pool import (
     adapter_owner,
     cache_state,
     drop_adapter_owner,
+    drop_slot_owner,
     game_lock,
     get_adapter,
     get_cached_state,
@@ -163,6 +164,7 @@ async def create_game(
     # position untouched when the size matches — which surfaces as
     # "illegal move" when placing handicap stones below if the slot's
     # previous game left a stone on a star point (#97).
+    drop_slot_owner(game.id)  # 보드를 지우기 전에 옛 소유자를 폐기 (#108)
     await adapter.clear_board()
     await adapter.set_boardsize(board_size)
     await adapter.set_komi(komi)
@@ -989,6 +991,7 @@ async def _reseed_adapter(game: Game, state: GameState) -> None:
     # position untouched when the size matches — which surfaces as
     # "illegal move" during the replay below since the stones from a prior
     # game are still on the board.
+    drop_slot_owner(game.id)  # 보드를 지우기 전에 옛 소유자를 폐기 (#108)
     await adapter.clear_board()
     await adapter.set_boardsize(game.board_size)
     await adapter.set_komi(game.komi)
