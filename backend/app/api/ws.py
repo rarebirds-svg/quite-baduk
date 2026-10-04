@@ -168,7 +168,9 @@ async def ws_game(
         try:
             from app.core.rules.board import BLACK as _BLACK
             from app.engine_pool import get_adapter
+            from app.services.game_service import ensure_slot_owner
 
+            await ensure_slot_owner(game, state)
             adapter = await get_adapter(game.id)
             await adapter.start()
             analysis = await adapter.analyze(side=state.to_move, max_visits=32)
