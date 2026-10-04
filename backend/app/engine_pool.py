@@ -54,6 +54,29 @@ def set_pool(pool: KataGoPool) -> None:
     _adapter_owners.clear()
 
 
+def reset_pool_state() -> None:
+    """Test-only: drop every process-global engine singleton.
+
+    ``_pool`` (via :class:`KataGoPool._lock`) and ``_game_locks`` hold
+    ``asyncio.Lock`` objects, and pytest-asyncio gives each test its own event
+    loop. A lock built in one test's loop is therefore awaited in the next
+    test's loop; if it was left locked — a mid-test exception plus loop
+    teardown — that await never returns and never raises, so the suite simply
+    stops (a 6h CI job cancellation, PR #112). ``_states``/``_adapter_owners``
+    are keyed by game id, which restarts at 1 for every test's fresh temp DB,
+    so stale entries would also be read as belonging to the new test's games.
+
+    Clearing all four between tests keeps each test's locks and state inside
+    its own loop. test_games.py / test_ws_flow.py clear a subset by hand; this
+    is the same thing applied to every test.
+    """
+    global _pool
+    _pool = None
+    _game_locks.clear()
+    _states.clear()
+    _adapter_owners.clear()
+
+
 def set_adapter(adapter: KataGoAdapter) -> None:
     """Backwards-compatible single-adapter override used by existing
     tests. Builds a 1-slot pool around the supplied adapter so every

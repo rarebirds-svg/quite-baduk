@@ -2,13 +2,33 @@ from __future__ import annotations
 
 import os
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import app.models  # noqa: F401  # ensure all ORM tables register before create_all
 from app.db import Base
-from app.engine_pool import set_adapter
+from app.engine_pool import reset_pool_state, set_adapter
+
+
+@pytest.fixture(autouse=True)
+def _isolate_engine_pool():
+    """매 테스트 전후로 엔진 풀 전역 상태와 WS 연결 레지스트리를 비운다.
+
+    프로세스-글로벌 ``asyncio.Lock``이 테스트마다 새로 만들어지는 이벤트 루프를
+    넘나들면, 한 번 잠긴 채 남은 락이 다음 테스트를 영구히 멈춘다(에러도 안 난다).
+    game_id는 테스트별 temp DB에서 1부터 다시 시작하므로 상태 캐시도 같은 id로
+    오인된다. autouse라 ``client``를 쓰지 않는 테스트에도 적용된다.
+    """
+    def _wipe() -> None:
+        reset_pool_state()
+        from app.api import ws as ws_mod
+        ws_mod._connections.clear()
+
+    _wipe()
+    yield
+    _wipe()
 
 
 @pytest_asyncio.fixture

@@ -24,6 +24,7 @@ dev = [
   "pytest>=8",
   "pytest-asyncio>=0.23",
   "pytest-cov>=4.1",
+  "pytest-timeout>=2.3",
   "ruff>=0.4",
   "mypy>=1.10",
   "bandit>=1.7",
@@ -53,3 +54,8 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+# 한 테스트가 이 시간을 넘기면 실패시킨다. 교착(특히 테스트 간에 재사용되는
+# 프로세스-글로벌 asyncio.Lock)이 CI 잡 한도 6시간을 통째로 태우는 것을 막고,
+# 멈춘 지점의 트레이스백을 남긴다. 최장 테스트가 1초대라 120초는 넉넉하다.
+# method는 기본값(POSIX=signal)을 쓴다 — 멈춘 테스트만 실패하고 나머지는 계속 돈다.
+timeout = 120
