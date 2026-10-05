@@ -696,6 +696,7 @@ async def score_by_request(
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
     state = get_cached_state(game.id) or await _replay_state(db, game)
+    await ensure_slot_owner(game, state)
     adapter = await get_adapter(game.id)
     await adapter.start()
 
@@ -771,6 +772,7 @@ async def estimate_score(
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
     state = get_cached_state(game.id) or await _replay_state(db, game)
+    await ensure_slot_owner(game, state)
     adapter = await get_adapter(game.id)
     await adapter.start()
 
@@ -895,13 +897,12 @@ def _dead_stones_from_ownership(
     return dead
 
 
-async def _infer_dead_stones(
-    state: GameState, *, game_id: int | None = None
-) -> set[tuple[int, int]]:
+async def _infer_dead_stones(game: Game, state: GameState) -> set[tuple[int, int]]:
     """Run a fresh KataGo analysis and return dead stones. Returns empty on
     any analysis failure."""
     try:
-        adapter = await get_adapter(game_id)
+        await ensure_slot_owner(game, state)
+        adapter = await get_adapter(game.id)
         await adapter.start()
         analysis = await adapter.analyze(side=state.to_move, max_visits=200)
     except Exception:
@@ -914,7 +915,7 @@ async def _finalize_game(db: AsyncSession, game: Game, state: GameState) -> None
     # scoring can reflect obviously-captured groups that both players passed
     # over without physically removing. We use a strong threshold so live
     # groups are never demoted — any false positive would hand opponent points.
-    dead_stones = await _infer_dead_stones(state, game_id=game.id)
+    dead_stones = await _infer_dead_stones(game, state)
     result = score_engine(state, dead_stones=dead_stones)
     margin = result.margin
     prefix = "B+" if result.winner == BLACK else "W+"
@@ -1052,15 +1053,23 @@ async def _sync_adapter(
     await _reseed_adapter(game, new_state)
 
 
+async def ensure_slot_owner(game: Game, state: GameState) -> None:
+    """Reseed the shared slot when ``game`` no longer owns it (#109).
+
+    The adapter's internal board can drift from this game's rules state
+    (another game interleaved, the subprocess restarted, or an undo just
+    reset ownership). Every path that reads the slot board via
+    ``adapter.analyze`` calls this first so the result reflects the actual
+    position and not ghost stones from a different game.
+    """
+    if adapter_owner(game.id) != game.id:
+        await _reseed_adapter(game, state)
+
+
 async def hint(
     game: Game, state: GameState, side: str, max_visits: int = 50
 ) -> list[Any]:
-    # The shared adapter's internal board can drift from this game's rules
-    # state (another game interleaved, the subprocess restarted, or an undo
-    # just reset ownership). Reseed when we don't own it so hints reflect
-    # the actual position and not a stale one from a different game.
-    if adapter_owner(game.id) != game.id:
-        await _reseed_adapter(game, state)
+    await ensure_slot_owner(game, state)
     adapter = await get_adapter(game.id)
     await adapter.start()
     analysis = await adapter.analyze(side=side, max_visits=max_visits)
