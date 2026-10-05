@@ -5,9 +5,70 @@
 
 ## 대기 중
 
-(없음)
-
 ## 처리 완료 — 최근
+
+### AP-20260929-01 — 처리 완료(사람 승인 "#106도 머지하고 api 재기동해줘" · Claude 세션 실행, 2026-10-03 13:12~13:17 KST)
+
+PR #106 발효. 다만 **재기동 조건을 어긴 실행**이라 아래 경과를 그대로 남긴다.
+
+- **카드 절차 (2)가 틀렸다.** `gh run rerun 36475044092 --failed`은 런 생성 시점(9/28, `headSha` 433a6d4)의 merge ref를 그대로 재실행하므로 오늘 머지한 #104가 반영되지 않는다. 33초 만에 같은 `admin.py:336` 오류로 재실패했다. 올바른 수단은 `gh pr update-branch 106`(base→head 머지, force 아님)으로 **새 merge ref를 만들어 CI를 재트리거**하는 것이다. 이후 신규 런 `37095777137`에서 4잡 전부 success. 재실행 전 실패 로그로 `admin.py:336` 단일 오류·#106 변경분 오류 0도 확인했다.
+- 머지·배포 — `ec9a99c` squash 머지 → `git pull --ff-only`, 배포 갭 0. 라이브에 `engine_pool.drop_adapter_owner`(130행)·`game_service._adapter_round`(240행)·`place_move`의 `async with game_lock(...), _adapter_round(...)`(284행) 반영 확인.
+- **재기동 — 조건 미충족 상태로 실행했다.** 직전 확인값이 마지막 착수 `04:16:20Z`(9초 전)·WS `connection open`이었는데, 확인과 `launchctl kickstart`를 같은 명령 블록에 둬서 조건으로 게이팅하지 못했다. 카드 절차 (6)의 "5분 무착수·WS 0"은 바로 이 상황을 막기 위한 가드였다.
+- **영향 실측 — 데이터 손실 없음.** 대국 547(active)은 `move_count` 115 = 실제 수 115로 정합하고, 마지막 라운드(114 W·115 B, 둘 다 `04:16:20`)가 쌍으로 완결·영속화된 뒤 재기동이 걸렸다. uvicorn이 graceful shutdown("Waiting for connections to close")을 거쳤고, 기동 후 같은 클라이언트(1.237.136.170)가 `WebSocket /api/ws/games/547`로 즉시 재접속했다. 트레이스백 0, 신규 `katago_fast_path_rejected` 0(기존 2건은 9/9 #461·9/28 #539 타임스탬프로 과거분 확정). 플레이어가 겪은 것은 대국 중 순간적인 WS 단절과 자동 재접속이다.
+- health 200 in 3s, `katago_alive` true, `migrations.pending` false. api 기동 13:16:34.
+- **재발 방지 메모** — 재기동 절차는 확인과 실행을 반드시 **분리된 호출**로 하거나, 무착수 조건을 만족하지 못하면 종료하는 가드 스크립트로 감쌀 것. 이번처럼 67시간 무활동이던 대국이 실행 직전에 재개될 수 있다.
+- Opus 차집합 4건(`daily.py` 슬롯 0 소유권 미기록·재시드 중 예외 시 소유권 순서·소유권 미확인 analyze 경로·슬롯 단위 락 부재)은 미결로 PR 본문 "범위 밖" 절에 남아 있다.
+
+### AP-20260925-01 — 처리 완료(사람 승인 "#104 머지해줘" · Claude 세션 실행, 2026-10-03 13:0x KST)
+
+`main` CI 빨강이 해소됐다. 등재 후 약 8일·9회 재확인 만의 처리다.
+
+- 머지 전 원인 재확인 — `main` 최근 3런(`13c24a2`·`c9b31d1`·`b5424b3`) 전부 backend 잡 실패였고, 실패 로그에서 `app/api/admin.py:336: error: Set comprehension has incompatible type Set[int | None]; expected Set[int]  [misc]` + `Found 1 error in 1 file`을 확정했다. 카드의 진단과 일치하며 다른 실패는 섞여 있지 않았다.
+- 실행 — `gh pr merge 104 --squash --delete-branch`(`ea8f136`) → `git pull --ff-only`. 라이브 336행에 `if sid is not None` 반영 확인, 배포 갭 0.
+- 검증 — 머지 커밋 `ea8f136`의 `main` CI **4잡 전부 success**(backend·frontend·e2e·app-shell-build). 3런 연속 빨강이 끊겼다.
+- 재기동 — 하지 않았다. 카드대로 동작 변화가 없고(`session_id` NULL 행은 연결 세션이 아님) prod venv는 SA 2.0.49라 애초에 이 타입 오류가 나지 않는다. 다음 실질 변경(AP-20260929-01 / PR #106)과 묶어 1회로 처리하면 된다.
+- 후속 판단 미결 — `sqlalchemy>=2.0,<2.1` 핀 추가 여부는 그대로 남는다. 이번엔 CI가 2.1에서 611 passed로 통과했으나 로컬 venv(2.0.49)와 CI(2.1.0)의 차이는 유지된다.
+
+### AP-20260920-02 — 처리 완료(사람 승인 · Claude 세션 실행, 2026-10-03 12:50~12:51 KST)
+
+기권 대국 `finished_at` NULL 99건 백필 완료. 286시간·24회 재확인 만의 해소다.
+
+- 실행 전 재실측 — 대상 99건 불변(`resigned` 99 / 그 외 status의 NULL 0 / 0수 6건), 마지막 착수 9/30 09:03 UTC로 **67시간 무활동**·WS 연결 종료 상태라 실행 창 충족.
+- 임시 백업 — `adhoc-pre-backfill-202610031250.db`(18M, `integrity_check` ok, 백필 전 상태 99건 보존). 롤백은 이 파일 `.restore`.
+- 실행 — `ops/sql/2026-09-20-backfill-resigned-finished-at.sql`, exit 0.
+- 검증 — `resigned`+NULL **99 → 0**, `finished_at < started_at` 0건, 0수 6건(#53·#278~282) 전부 `started_at` 채택, `pragma integrity_check` ok. `admin.py:765` 일별 종료 집계에 9/25·9/26·9/27·9/28·9/30 기권 대국이 새로 잡힌다.
+- 재기동 없음(데이터만 변경). 백필값은 마지막 수 정각이라 AI 기권 경로의 기존 값(마지막 수 +7~10초)보다 약 10초 이르다 — 일별 집계엔 무영향.
+
+### AP-20260916-01 · AP-20260917-01 · AP-20260920-01 — 처리 완료(사람 승인 "3건 전부" · Claude 세션 실행, 2026-09-20 23:04~23:07 KST)
+
+세 건을 한 회차로 발효했다. api 재기동 1회, web 재빌드·재기동 1회.
+
+- **백엔드 2건** — #98(`480313c`, 치석 대국 전 `clear_board`) → #102(`2cb6a7c`, 기권 `finished_at`) squash 머지 → pull → `com.baduk.api` kickstart 23:05:28. health 200 in 4s, `katago_alive` true, `migrations.pending` false. 재기동 시점은 마지막 착수 21:11 KST 이후 2시간 무활동·WS 접속 0 상태.
+- **프론트 1건** — #100(`c8b7930`, spectate SSR 상수 분리) squash 머지 → pull → `npm run build` 성공(BUILD_ID `kqVKJKFn…` → `SexzBOHA…`) → `com.baduk.web` kickstart 23:06:25, 1s 내 200.
+- **#99 발효 검증** — 재기동 후 `/spectate/pro` SSR이 백엔드에 보낸 질의가 `collection=masterpiece&sort=recent&limit=50&offset=0`로 정상. 액세스 로그의 `?[object%20Object]` 잔존 2건은 외부 IP(20.83.175.149·135.119.239.132)의 클라이언트 직접 호출 = **옛 번들 캐시 클라이언트**이며 SSR 경로 회귀 아님. 캐시 만료와 함께 자연 소멸 예상 — 21:00 사이클은 외부 IP 건을 SSR 회귀로 오판하지 말 것.
+- 발효 확인 포인트 — #101은 다음 사용자 기권 대국의 `finished_at` NOT NULL. #97은 같은 크기 치석 대국 연속 생성 시 `illegal move` 부재. 기존 99건 `finished_at` NULL 백필은 범위 밖(별도 판단).
+
+### AP-20260903-01 · AP-20260905-01 · AP-20260907-02 — 처리 완료(사람 승인 · Claude 세션 실행, 2026-09-12 13:41~13:47 KST)
+
+세 건을 한 회차로 묶어 발효했다. 재기동은 1회.
+
+- **#83·#86은 사람이 13:41 GitHub에서 직접 머지**(rarebirds-svg, squash). 세션은 그 3분 뒤 상태를 확인하고 잔여 절차(pull·재기동)를 이어받았다.
+- **#95는 세션이 머지**(13:46, squash, CI 4잡 pass 재확인). 발효 마감 9/13 03:00 ingest 약 13시간 전에 pull 완료 — 내일 03:00 실행부터 적용된다. 로컬 브랜치 `fix/issue-87`은 dev-cycle 워크트리가 점유 중이라 삭제 안 됨(원격은 삭제됨, 무해).
+- **pull** — 라이브 `fb82cd9` → `c0d8d05`, 배포 갭 0.
+- **재기동** — 대국 467이 WS 접속 중·마지막 수 13:33(12분 전)이었으나 사람 판단으로 즉시 재기동. `launchctl kickstart -k` 후 3초 만에 health 200(`katago_alive` true, `migrations.pending` false). 클라이언트는 같은 IP로 즉시 자동 재접속(`[accepted]`·`connection open`), 트레이스백 0.
+- 발효 확인 포인트 — #81·#84 레이스는 재발 부재로만 확인 가능(`.err`의 IntegrityError·stale move_count 흔적 0 유지). #87은 9/13 03:16 전후 `database is locked` 부재(09:00 사이클이 판정).
+
+### AP-20260907-01 — 처리 완료(사람 직접 실행 · #96 배포, 2026-09-08 23:55 KST, 제안 후 약 39시간)
+- 승인 회신 없이 사람이 9/8 23:52 PR #96(기동 시 자동 `alembic upgrade head`·헬스에 리비전 노출) 머지 → 23:55 prod 트리 pull → `com.baduk.api` 재기동(기동 시 자동 upgrade 0019→0020) → web 재빌드·재기동으로 직접 처리. 오케스트레이터 9/9 09:00 검증 — `alembic_version` 0020, `/api/spectate` 200, 복구 후 트레이스백 0·500 0, 착수 재개(110수). OPS-20260907-01 해소. 원문은 `incidents.md` OPS-20260907-01 참조.
+
+### AP-20260830-01 · AP-20260830-02 — 처리 완료(사람 승인 "진행해" · Claude 세션 실행, 2026-08-31 00:0x KST)
+
+충돌하던 두 가드를 **재시도(바깥) · 타임아웃(안쪽)** 순서로 합성해 함께 발효했다. 반대 순서면 재시도 대기가 타임아웃에 잡아먹혀 재시도가 무력화된다.
+
+- **AP-20260830-02 먼저** — `e30ab8c`+`84ab2d5`를 `main`에 push(`faa8752..84ab2d5`).
+- **AP-20260830-01은 리베이스 대신 머지로** — force push가 정책상 차단돼 PR 브랜치에 `origin/main`을 머지하고 충돌 5건(래퍼 전체)을 합성 방향으로 해소했다. `db90cf2` push → CI 4종(backend·frontend·e2e·app-shell-build) 통과 → draft 해제 후 `--merge`로 머지(`76e75ee`), 라이브 트리 ff 배포까지 완료. 배포 갭 0.
+- **합성 검증 추가** — 두 가드가 겹치는 경로는 기존 테스트 어느 쪽도 덮지 않아 `ops/tests/test-guard-composition.sh`(9케이스)를 새로 넣었다. 최악 소요 8h(1h + 대기 6h + 1h) < 최소 슬롯 간격 12h도 함께 고정.
+- **PR 근거문 정정** — `claude-headless.sh` 헤더가 "09:00이 행에 걸려 21:00 슬롯을 막았다"고 적었으나 실측과 다르다. 09:00은 09:03:42에 종료 마커를 남기고 끝났고(행 아님), 21:00 누락은 20:59:17 재부팅 탓이다(OPS-20260830-01). 타임아웃 가드는 실제 사고 대응이 아니라 **아직 겪지 않은 행에 대한 예방책**이라고 주석을 고쳤다.
 
 ### AP-20260816-01 — 처리 완료(사람 지시 "배포까지 진행" · Claude 세션 실행, 2026-08-17 오전 KST)
 

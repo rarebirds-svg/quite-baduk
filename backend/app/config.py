@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # Nickname-session auth. Sliding expiry — every request refreshes
     # ``last_seen_at`` (and the cookie), so a session only dies after 90
     # consecutive days without a visit.
-    session_ttl_sec: int = 7_776_000  # 90 days
+    session_ttl_sec: int = 604_800  # 7 days
     session_purge_interval_sec: int = 3600
     # When unset, cookie_secure is True in production and False otherwise.
     # Explicit `COOKIE_SECURE=true|false` always wins.
@@ -49,6 +49,24 @@ class Settings(BaseSettings):
     # Google Search Console API. 미설정 시 GSC 연동은 꺼진 상태로 동작.
     gsc_property_url: str = ""          # env: GSC_PROPERTY_URL (예: sc-domain:inkbaduk.com)
     gsc_service_account_json: str = ""  # env: GSC_SERVICE_ACCOUNT_JSON (키 파일 경로)
+
+    # 구글 간편 계정 연동(옵트인). client_id/secret이 비어 있으면 기능 전체가 꺼진다.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    # 구글 콘솔에 등록한 콜백 URL. 비우면 public_base_url + /api/auth/google/callback.
+    google_redirect_uri: str = ""
+    # 사용자에게 보이는 사이트 주소(예: https://inkbaduk.com). 로그인 뒤 돌아올 곳.
+    public_base_url: str = ""
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def google_redirect(self) -> str:
+        if self.google_redirect_uri:
+            return self.google_redirect_uri
+        return f"{self.public_base_url.rstrip('/')}/api/auth/google/callback"
 
     @property
     def is_production(self) -> bool:

@@ -57,6 +57,23 @@ log show --predicate 'subsystem == "com.apple.xpc.launchd" AND eventMessage CONT
 판정: `sleep` 값이 0이 아니거나, 7일 log에서 예상되는 trigger 시각의 entry가
 빠져 있으면 `state/incidents.md`에 sleep-related로 기록하고 사람에게 보고.
 
+### 6. Claude 인증
+
+```bash
+ops/check-claude-auth.sh
+```
+출력 한 줄 예시.
+- `ok: Claude 인증 D-29 (만료 10-04 08:47)` — 정상.
+- `warn: Claude 인증 D-2 (만료 09-06 08:47)` — 만료까지 D-3 이내.
+- `fail: Claude 인증 만료 (09-04 04:12) — claude /login 필요` — 만료됨.
+- `warn: Claude 인증 확인 불가 (자격증명 명령 실패)` — 판정 불가 (그 밖에 `자격증명 응답 없음` · `JSON 파싱 실패` · `만료 필드 없음`).
+
+판정: 종료코드 0(ok) · 2(warn) · 1(fail). `fail`이면 장애 기록.
+
+복구: 터미널에서 `claude` → `/login` → `/exit` 실행. 이후 `claude auth status`로 `loggedIn: true` 확인.
+재로그인 후 refresh 토큰은 약 30일 유효하며, 만료 시 헤드리스 잡은 `session-retry.sh`가 보류 마커를 남기고
+watchdog(`ops/check-auth-recovery.sh`)이 인증 회복을 감지한 뒤 1회 자동 재트리거한다.
+
 ## 결과 처리
 
 1. 결과를 `state/log/YYYY-MM-DD.md`에 추가한다 (시각·항목별 OK/실패).

@@ -66,6 +66,13 @@ export interface OpenGameWSOptions {
    * its session state and route the user back to the login screen.
    */
   onAuthLost?: () => void;
+  /**
+   * Fired when the server evicted this socket because the same game was
+   * opened elsewhere (SESSION_REPLACED). The retry loop stops so the two
+   * tabs don't keep evicting each other; the caller decides whether to
+   * take the game back (by opening a fresh socket) or leave.
+   */
+  onReplaced?: () => void;
 }
 
 export function openGameWS(
@@ -112,9 +119,23 @@ export function openGameWS(
   const handlers = () => {
     ws.onopen = () => flushPending();
     ws.onmessage = (ev) => {
+      let msg: WSMessage;
       try {
-        onMessage(JSON.parse(ev.data));
-      } catch {}
+        msg = JSON.parse(ev.data);
+      } catch {
+        return;
+      }
+      if (msg.type === "error" && msg.code === "SESSION_REPLACED") {
+        // Another tab took this game. Reconnecting here would evict that
+        // tab, whose own reconnect would evict us again — an endless
+        // ping-pong. Stop retrying; the server closes this socket next.
+        closed = true;
+        pending.length = 0;
+        onMessage(msg);
+        options.onReplaced?.();
+        return;
+      }
+      onMessage(msg);
     };
     ws.onclose = () => {
       if (closed) return;

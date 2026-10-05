@@ -7,12 +7,13 @@ import asyncio
 import secrets
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.katago.mock import MockKataGoAdapter
 from app.core.katago.pool import KataGoPool
 from app.engine_pool import get_pool, set_pool
-from app.models import Session
+from app.models import Game, Session
 from app.services.game_service import create_game, place_move
 
 
@@ -92,13 +93,19 @@ async def test_concurrent_moves_do_not_corrupt_state(
             user_color="black", board_size=9,
         )
 
-    async def _move(game, sess, coord):  # type: ignore[no-untyped-def]
+    async def _move(game_id, sess, coord):  # type: ignore[no-untyped-def]
+        # 실제 WS 핸들러처럼 각 연결이 자기 세션으로 game 행을 로드한다 —
+        # place_move는 락 안에서 db.refresh(game)를 수행하므로(#81) 넘기는
+        # game 객체는 그 세션에 attach돼 있어야 한다.
         async with factory() as db:
+            game = (
+                await db.execute(select(Game).where(Game.id == game_id))
+            ).scalar_one()
             return await place_move(db, game=game, session=sess, coord=coord)
 
     r1, r2 = await asyncio.gather(
-        _move(g1, s1, "D4"),
-        _move(g2, s2, "E5"),
+        _move(g1.id, s1, "D4"),
+        _move(g2.id, s2, "E5"),
     )
     assert r1.game_state.board.size == 9
     assert r2.game_state.board.size == 9

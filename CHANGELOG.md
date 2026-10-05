@@ -11,6 +11,25 @@
   - 착수 햅틱: 착수 성공 시 Capacitor Haptics로 짧은 진동 피드백.
   - 앱 셸 환경에서 후원 링크 숨김 (`IS_APP_SHELL` 감지).
 - CI 잡 `app-shell-build` 추가: `npm ci` + `bash scripts/build-app.sh` — 정적 export 가능 여부를 PR마다 검증.
+- 착수 확인(2단계) 옵션 — 설정 › 착수 방식 (자동 / 한 번에 착수 / 확인 후 착수). 자동은 터치 기기(`pointer: coarse`)에서만 확인 단계를 두며, 가착수는 반투명 돌로 표시되고 같은 자리 재탭 또는 착수 버튼으로 확정한다 (`store/movePrefStore.ts`, `components/MoveConfirmToggle.tsx`).
+- 착수음 토글을 대국 사이드바와 설정 화면에 노출 (`components/SoundToggle.tsx`) — 기존엔 복기 모달에만 있었다.
+- 레전드 기사 인트로 카드 (`components/PersonaIntro.tsx`) — 첫 수 전에 기사 이름·국기·전성기·한 줄 소개를 보여준다.
+- 비활성 계가 버튼에 툴팁 — 종반 감지 전에는 언제 열리는지 안내한다.
+- 전적·기보 일괄 백업 — `GET /api/games/export`가 세션의 모든 대국을 SGF 파일 + `games.json` 요약으로 묶은 zip을 내려준다. 전적 화면 "모든 대국" 옆 버튼으로 노출. 닉네임 세션이 7일 뒤 사라져도 기보를 스스로 보관할 수 있다.
+- 급수 문답이 판 크기도 함께 추천·적용 — "처음이에요"·"규칙은 알아요"·"작은 판 위주"는 9×9, 나머지는 19×19 (`components/RankAdvisor.tsx`의 `ADVISOR_PRESETS`).
+- 상단 GNB에 용어사전(md 이상)·FAQ(닉네임 메뉴) 링크 추가 — 푸터에만 있던 입문·검색 유입 자산을 위로 올렸다. 앱 셸에서는 웹 전용 라우트라 숨긴다.
+- 홈 랜딩 "오늘의 한 수" 프리뷰 카드 (`components/editorial/DailyPreviewCard.tsx`) — 오늘 문제의 판·차례·주제·난이도를 보여주고 `/daily`로 보낸다.
+- 대국 종료 후 결과 공유 (`components/ResultShare.tsx`) — 1200×630 결과 카드 PNG 저장(모바일은 공유 시트, `lib/resultCard.ts`), 10수 이상 대국은 관전 링크 복사·기기 공유·X 공유.
+- 레전드 기사 한마디 (`lib/personaComment.ts`) — AI 착수 직후 첫 수·따냄·우세·열세·주기(20수) 트리거에 맞춰 기사별 카피(19인 × 5트리거 × 2줄, ko/en `game.personaLines`)를 상대 캡션에 8초간 띄운다. 최소 8수 간격, 같은 트리거 연속 반복 금지. 설정 › 기사 인트로·코멘트로 인트로 카드와 함께 끌 수 있다.
+- 구글 간편 계정 연동(옵트인) — 닉네임 세션은 그대로 두고 `GET /api/auth/google/start` → 콜백에서 세션과 그 대국들을 `accounts` 행에 귀속한다. 다른 기기·7일 만료 뒤에는 첫 화면 "Google로 이어하기"로 새 세션을 만들면 예전 대국이 그대로 보인다(소유권 판정 `app/ownership.py`: 세션 일치 OR 계정 일치). 설정 › 계정 연동에서 연동·해제. `GOOGLE_CLIENT_ID`/`SECRET`이 비어 있으면 기능 전체가 꺼진다. 마이그레이션 0020 (`accounts`, `sessions.account_id`, `games.account_id`).
+
+### Fixed
+- 마이그레이션 누락 장애(OPS-20260907-01) 재발 방지 — `deploy/run_local_prod.sh`가 uvicorn 기동 전 `alembic upgrade head`를 실행하고, `GET /api/health`가 `migrations: {current, head, pending}`를 노출하며 누락 시 `status: degraded`로 내려간다. 기동 시에도 `schema.migrations_pending` 에러 로그를 남긴다 (`app/schema_status.py`).
+- 같은 대국을 두 탭에서 열면 두 탭이 서로의 WebSocket을 1.5초마다 밀어내던 핑퐁 차단 — `SESSION_REPLACED`를 받은 탭은 재연결을 멈추고 "이 탭에서 이어두기" 버튼으로만 다시 붙는다. 오해를 부르던 "세션이 종료됐습니다" 문구도 연결 교체 안내로 교체.
+- 사용자 기권 후 결과 줄이 `결과:`로 비던 문제 — 기권 응답의 `result`(`W+R`/`B+R`)를 화면에 반영.
+- 첫 대국 힌트 코치마크와 30초 장고 프롬프트가 동시에 쌓이던 문제 — 코치마크가 닫힌 뒤에만 장고 타이머를 돌린다.
+- 상단 테마·언어 토글의 접근성 이름이 `Theme: undefined`/영문 하드코딩이던 문제 — i18n 라벨로 교체.
+- 프로 기보 기사명 인코딩 깨짐(`åœ‹æ ¾è ¡`) — `parse_pro_sgf`가 CA[] 없는 SGF를 ISO-8859-1로 읽던 sgfmill 기본값을 UTF-8로 고정하고, 주간 CWI 인제스트·시드·관리자 업로드가 HTTP 헤더 charset 대신 바이트를 직접 디코드(`decode_sgf_bytes`). 기적재 행은 `python -m scripts.repair_pro_mojibake`(`--dry-run` 지원)로 복구.
 
 ## [0.3.0] - 2026-06-06
 

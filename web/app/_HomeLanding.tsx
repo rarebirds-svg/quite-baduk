@@ -5,10 +5,12 @@ import { useT } from "@/lib/i18n";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
 import { BoardPreview } from "@/components/editorial/BoardPreview";
 import { NewsHook } from "@/components/editorial/NewsHook";
+import type { NewsHookData } from "@/lib/newsHook";
 import { ClusterLinks } from "@/components/editorial/ClusterLinks";
 import QuickStartForm from "@/components/QuickStartForm";
+import { DailyPreviewCard } from "@/components/editorial/DailyPreviewCard";
 
-export default function HomeLanding() {
+export default function HomeLanding({ newsHook }: { newsHook: NewsHookData | null }) {
   const t = useT();
 
   // Hero copy is fixed — one message repeated across visits so it can be
@@ -66,7 +68,7 @@ export default function HomeLanding() {
           {subtitle}
         </p>
         <BoardPreview />
-        <NewsHook />
+        <NewsHook data={newsHook} />
       </section>
 
       <RuleDivider weight="strong" />
@@ -81,6 +83,9 @@ export default function HomeLanding() {
           {t("home.footerNote")}
         </p>
       </section>
+
+      {/* 오늘의 한 수 — 대국을 시작하지 않아도 매일 들러 한 문제 풀고 가는 루틴. */}
+      <DailyPreviewCard className="mt-14 md:mt-16" />
 
       {/* Value props — editorial 3-column lede */}
       <section className="mt-20 md:mt-24">

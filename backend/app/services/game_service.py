@@ -1,7 +1,8 @@
 """Game lifecycle: create, move, undo, resign, finalize, replay."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
 
@@ -27,6 +28,8 @@ from app.core.rules.handicap import HANDICAP_TABLES, apply_handicap
 from app.engine_pool import (
     adapter_owner,
     cache_state,
+    drop_adapter_owner,
+    drop_slot_owner,
     game_lock,
     get_adapter,
     get_cached_state,
@@ -35,6 +38,7 @@ from app.engine_pool import (
 )
 from app.models import Game, Session
 from app.models import Move as MoveRow
+from app.ownership import owns
 
 log = structlog.get_logger()
 
@@ -136,6 +140,7 @@ async def create_game(
 
     game = Game(
         session_id=session.id,
+        account_id=session.account_id,
         user_nickname=session.nickname,
         user_rank=user_rank,
         user_country=session.country,
@@ -154,6 +159,13 @@ async def create_game(
 
     adapter = await get_adapter(game.id)
     await adapter.start()
+    # Always wipe the subprocess board first. set_boardsize (= GTP `boardsize`)
+    # is documented to clear, but some KataGo builds leave the previous
+    # position untouched when the size matches — which surfaces as
+    # "illegal move" when placing handicap stones below if the slot's
+    # previous game left a stone on a star point (#97).
+    drop_slot_owner(game.id)  # 보드를 지우기 전에 옛 소유자를 폐기 (#108)
+    await adapter.clear_board()
     await adapter.set_boardsize(board_size)
     await adapter.set_komi(komi)
     cfg = rank_to_config(ai_rank, resolved_style, game.ai_player)
@@ -220,6 +232,38 @@ async def _record_move(
     ))
 
 
+@dataclass
+class _AdapterRound:
+    """Round marker — ``touched`` flips once the adapter has been mutated."""
+    touched: bool = False
+
+
+@asynccontextmanager
+async def _adapter_round(game_id: int) -> AsyncIterator[_AdapterRound]:
+    """Drop this game's adapter ownership if the round raises after the
+    adapter was touched.
+
+    ``_sync_adapter`` plays the user's stone into the adapter before the AI
+    reply, the WS flush and the DB batch run. If any of those raise (client
+    dropped mid-round — the ``ws.py`` RuntimeError path swallows it quietly —
+    genmove timeout, AI_ILLEGAL_MOVE, DB lock), the stone stays in the
+    adapter's replay history but never reaches the rules state or the DB.
+    The next round would then take the fast path on a board KataGo thinks is
+    one stone ahead and get ``illegal move`` back (#105). Forgetting
+    ownership makes that round reseed from the real history instead.
+
+    Failures before the adapter is touched (user's own illegal move,
+    inactive game) keep ownership — nothing drifted, no reseed needed.
+    """
+    marker = _AdapterRound()
+    try:
+        yield marker
+    except BaseException:
+        if marker.touched:
+            drop_adapter_owner(game_id)
+        raise
+
+
 async def place_move(
     db: AsyncSession,
     *,
@@ -229,22 +273,32 @@ async def place_move(
     on_user_applied: Callable[[GameState, int], Awaitable[None]] | None = None,
     on_user_winrate: Callable[[float, float | None], Awaitable[None]] | None = None,
 ) -> MoveResult:
-    if game.session_id != session.id:
-        raise GameError("FORBIDDEN", "game.session_id != session.id")
+    if not owns(game, session):
+        raise GameError("FORBIDDEN", "not owner (session/account)")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
-
-    state = get_cached_state(game.id)
-    if state is None:
-        state = await _replay_state(db, game)
-        cache_state(game.id, state)
 
     adapter = await get_adapter(game.id)
     user_side = BLACK if game.user_color == "black" else WHITE
     ai_side = WHITE if user_side == BLACK else BLACK
 
     # Lock per game
-    async with game_lock(game.id):
+    async with game_lock(game.id), _adapter_round(game.id) as adapter_round:
+        # Re-read game + cached state INSIDE the lock. A concurrent place_move
+        # from a replaced WS connection may commit moves while this one waits
+        # on the lock; that connection's `game` row (loaded at WS accept, in a
+        # different DB session) is then stale, and computing move_number from
+        # its move_count inserts a duplicate (game_id, move_number) —
+        # IntegrityError, unhandled 5xx (#81). refresh() is a plain SELECT:
+        # nothing is dirty yet, so no autoflush, and no SQLite write lock.
+        await db.refresh(game)
+        if game.status != "active":
+            raise GameError("GAME_NOT_ACTIVE", game.status)
+        state = get_cached_state(game.id)
+        if state is None:
+            state = await _replay_state(db, game)
+            cache_state(game.id, state)
+
         # Validate + apply the user move in memory. All DB writes for this
         # round are deferred to a single batch AFTER the KataGo genmove/analyze
         # below, so the SQLite write lock is never held across the multi-second
@@ -269,6 +323,7 @@ async def place_move(
         # board can drift whenever the user switches between games or the
         # subprocess restarts; without this step KataGo may return a coord
         # that the rules engine rejects as AI_ILLEGAL_MOVE.
+        adapter_round.touched = True
         await _sync_adapter(game, state, new_state, coord)
 
         # Flush the user's move to the client before the AI starts thinking.
@@ -396,7 +451,7 @@ async def place_move(
                     new_state, analysis.ownership
                 )
 
-                # AI auto-resign — three guards to prevent premature
+                # AI auto-resign — four guards to prevent premature
                 # resigns from noisy 32-visit winrate reads (especially
                 # on 9x9 where a single capture can swing 20%+):
                 #
@@ -406,7 +461,14 @@ async def place_move(
                 #   2. Two-stage eval: the 32-visit shallow read serves as
                 #      a *trigger* (< 0.3%), not a decision. A deeper
                 #      200-visit re-analysis must agree (< 0.1%).
-                #   3. Loss-streak: the deep-confirmed sub-0.1% condition
+                #   3. Score-margin gate: even at sub-0.1% winrate, the
+                #      deep read's score lead against the AI must be
+                #      >= RESIGN_MIN_MARGIN points. A 2-point endgame loss
+                #      really is sub-0.1%, but humans play those out — the
+                #      user can still misplay the endgame. This confines
+                #      the resign to positions that are actually hopeless,
+                #      which is what guard 4 below already assumed.
+                #   4. Loss-streak: the deep-confirmed sub-0.1% condition
                 #      must hold for seven consecutive AI turns. The bar is
                 #      deliberately high — the UX preference is "play to
                 #      the end" rather than concede on a noisy read. The
@@ -429,6 +491,10 @@ async def place_move(
                 )
                 shallow_resign_threshold = 0.0015 if is_handicap else 0.003
                 deep_resign_threshold = 0.0005 if is_handicap else 0.001
+                # Minimum deficit, in points, before a lost position counts
+                # toward the streak. Flat across handicaps — "don't resign a
+                # close game" holds regardless of how the game started.
+                RESIGN_MIN_MARGIN = 10.0
                 is_normal_ai_move = (
                     ai_move is not None
                     and ai_move.lower() not in ("pass", "resign")
@@ -444,18 +510,35 @@ async def place_move(
                             side=new_state.to_move, max_visits=200
                         )
                         deep_ai_wr = 1.0 - float(deep.winrate)
+                        # analyze() reports from new_state.to_move's
+                        # perspective — the user, since the AI just moved.
+                        # A positive lead is the user's, i.e. the AI's
+                        # deficit. Free piggyback: deep was already run.
+                        ai_losing_margin = float(deep.score_lead)
                     except Exception:
                         deep_ai_wr = 1.0
-                    deep_confirms_loss = deep_ai_wr < deep_resign_threshold
+                        ai_losing_margin = 0.0
+                    deep_confirms_loss = (
+                        deep_ai_wr < deep_resign_threshold
+                        and ai_losing_margin >= RESIGN_MIN_MARGIN
+                    )
 
                 if deep_confirms_loss:
                     game.loss_streak = (game.loss_streak or 0) + 1
+                    # Persist immediately: the round's batch commit already
+                    # ran, and the next round's in-lock refresh (#81) discards
+                    # pending changes — an uncommitted increment would reset
+                    # the streak to its DB value every round and the resign
+                    # threshold would never be reached. No engine call runs
+                    # after this point in the round, so the write is brief.
+                    await db.commit()
                 elif is_normal_ai_move:
                     # Reset streak on any AI turn that isn't confirming a
                     # crushing loss. Streak only reflects consecutive
                     # deep-confirmed losing ply.
                     if game.loss_streak:
                         game.loss_streak = 0
+                        await db.commit()
 
                 RESIGN_STREAK_THRESHOLD = 12 if is_handicap else 7
                 if game.loss_streak >= RESIGN_STREAK_THRESHOLD:
@@ -549,7 +632,7 @@ UNDO_LIMIT = 3
 
 
 async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: int = 2) -> GameState:
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
@@ -559,6 +642,19 @@ async def undo_move(db: AsyncSession, *, game: Game, session: Session, steps: in
         raise GameError("UNDO_LIMIT_EXCEEDED", f"max {UNDO_LIMIT} undos per game")
 
     async with game_lock(game.id):
+        # Re-read the game row INSIDE the lock (same race as #81): a replaced
+        # WS connection holds a stale `game` loaded in its own DB session, so
+        # move_count/status/undo_count may be behind what the other
+        # connection committed. Decrementing the stale move_count would
+        # persist a wrong (even negative) value and re-open the UNIQUE
+        # (game_id, move_number) collision on the next place_move (#84).
+        # refresh() is a plain SELECT — nothing is dirty yet.
+        await db.refresh(game)
+        if game.status != "active":
+            raise GameError("GAME_NOT_ACTIVE", game.status)
+        if game.undo_count >= UNDO_LIMIT:
+            raise GameError("UNDO_LIMIT_EXCEEDED", f"max {UNDO_LIMIT} undos per game")
+
         # Delete the last N moves outright. Marking is_undone=True is
         # tempting for audit purposes, but the moves table has a
         # UNIQUE(game_id, move_number) constraint — a ghost row would
@@ -594,12 +690,13 @@ async def score_by_request(
     """Finalize the game "계가 신청" style — auto dead-stone, Korean territory
     scoring, full per-side breakdown. Rejects if the position isn't in the
     yose/dame-fill phase yet, so a user can't short-circuit an unsettled game."""
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
     state = get_cached_state(game.id) or await _replay_state(db, game)
+    await ensure_slot_owner(game, state)
     adapter = await get_adapter(game.id)
     await adapter.start()
 
@@ -617,6 +714,12 @@ async def score_by_request(
         )
 
     async with game_lock(game.id):
+        # Re-check status on the fresh row (#84): a stale connection must not
+        # overwrite a result another connection already committed.
+        await db.refresh(game)
+        if game.status != "active":
+            raise GameError("GAME_NOT_ACTIVE", game.status)
+
         dead_stones = _dead_stones_from_ownership(state, analysis.ownership)
         result = score_engine(state, dead_stones=dead_stones)
         margin = result.margin
@@ -663,12 +766,13 @@ async def estimate_score(
     finalizing the game. Distinct from score_by_request — no endgame
     gating, no DB mutation. The caller can keep playing afterward.
     """
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
 
     state = get_cached_state(game.id) or await _replay_state(db, game)
+    await ensure_slot_owner(game, state)
     adapter = await get_adapter(game.id)
     await adapter.start()
 
@@ -696,13 +800,15 @@ async def estimate_score(
 
 
 async def resign_game(db: AsyncSession, *, game: Game, session: Session) -> Game:
-    if game.session_id != session.id:
+    if not owns(game, session):
         raise GameError("FORBIDDEN")
     if game.status != "active":
         raise GameError("GAME_NOT_ACTIVE", game.status)
     game.status = "resigned"
     game.winner = "ai"
     game.result = ("W+R" if game.user_color == "black" else "B+R")
+    import datetime as _dt
+    game.finished_at = _dt.datetime.now(_dt.UTC)
     state = get_cached_state(game.id) or await _replay_state(db, game)
     game.sgf_cache = build_sgf(state, result=game.result)
     await db.commit()
@@ -791,13 +897,12 @@ def _dead_stones_from_ownership(
     return dead
 
 
-async def _infer_dead_stones(
-    state: GameState, *, game_id: int | None = None
-) -> set[tuple[int, int]]:
+async def _infer_dead_stones(game: Game, state: GameState) -> set[tuple[int, int]]:
     """Run a fresh KataGo analysis and return dead stones. Returns empty on
     any analysis failure."""
     try:
-        adapter = await get_adapter(game_id)
+        await ensure_slot_owner(game, state)
+        adapter = await get_adapter(game.id)
         await adapter.start()
         analysis = await adapter.analyze(side=state.to_move, max_visits=200)
     except Exception:
@@ -810,7 +915,7 @@ async def _finalize_game(db: AsyncSession, game: Game, state: GameState) -> None
     # scoring can reflect obviously-captured groups that both players passed
     # over without physically removing. We use a strong threshold so live
     # groups are never demoted — any false positive would hand opponent points.
-    dead_stones = await _infer_dead_stones(state, game_id=game.id)
+    dead_stones = await _infer_dead_stones(game, state)
     result = score_engine(state, dead_stones=dead_stones)
     margin = result.margin
     prefix = "B+" if result.winner == BLACK else "W+"
@@ -887,6 +992,7 @@ async def _reseed_adapter(game: Game, state: GameState) -> None:
     # position untouched when the size matches — which surfaces as
     # "illegal move" during the replay below since the stones from a prior
     # game are still on the board.
+    drop_slot_owner(game.id)  # 보드를 지우기 전에 옛 소유자를 폐기 (#108)
     await adapter.clear_board()
     await adapter.set_boardsize(game.board_size)
     await adapter.set_komi(game.komi)
@@ -947,15 +1053,23 @@ async def _sync_adapter(
     await _reseed_adapter(game, new_state)
 
 
+async def ensure_slot_owner(game: Game, state: GameState) -> None:
+    """Reseed the shared slot when ``game`` no longer owns it (#109).
+
+    The adapter's internal board can drift from this game's rules state
+    (another game interleaved, the subprocess restarted, or an undo just
+    reset ownership). Every path that reads the slot board via
+    ``adapter.analyze`` calls this first so the result reflects the actual
+    position and not ghost stones from a different game.
+    """
+    if adapter_owner(game.id) != game.id:
+        await _reseed_adapter(game, state)
+
+
 async def hint(
     game: Game, state: GameState, side: str, max_visits: int = 50
 ) -> list[Any]:
-    # The shared adapter's internal board can drift from this game's rules
-    # state (another game interleaved, the subprocess restarted, or an undo
-    # just reset ownership). Reseed when we don't own it so hints reflect
-    # the actual position and not a stale one from a different game.
-    if adapter_owner(game.id) != game.id:
-        await _reseed_adapter(game, state)
+    await ensure_slot_owner(game, state)
     adapter = await get_adapter(game.id)
     await adapter.start()
     analysis = await adapter.analyze(side=side, max_visits=max_visits)

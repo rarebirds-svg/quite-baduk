@@ -26,10 +26,13 @@ export default function ShareButtons({
   title,
   url,
   className,
+  label,
 }: {
   title?: string;
   url?: string;
   className?: string;
+  /** 줄 머리 라벨. 기본은 콘텐츠용 "이 글 공유". */
+  label?: string;
 }) {
   const t = useT();
   // SSR/CSR 마크업을 맞추기 위해 window 의존 값은 마운트 후에 채운다.
@@ -102,7 +105,7 @@ export default function ShareButtons({
   return (
     <div className={cn("not-prose flex flex-wrap items-center gap-2", className)}>
       <span className="font-mono text-[11px] uppercase tracking-label text-ink-faint">
-        {t("share.label")}
+        {label ?? t("share.label")}
       </span>
 
       <Button variant="outline" size="sm" onClick={copy}>

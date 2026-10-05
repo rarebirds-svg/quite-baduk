@@ -114,3 +114,53 @@ Permission deny rule (.claude/settings.json): Write(/Users/daegong/projects/badu
 - 상태 파일에 `analytics-weekly ok` 기록, `docs/ops/state/log/2026-08-23.md`에 한 줄 로그 추가.
 - 참고. `/api/stats`가 HTTP 에러(curl exit 22)로 응답하지 않아(W33의 401과 같은 인증 변경 추정) 세션·게임 수치는 전부 DB 직접 조회로 인용했습니다.
 [2026-08-23 09:01:30] analytics-weekly 종료
+[2026-08-30 09:00:06] analytics-weekly 시작
+2026-W35 주간 분석 리포트 작성 완료.
+
+- **리포트 생성** — `docs/ops/state/reports/2026-W35.md`. 이번 주 게임 6건(전주 17건, −65%) / 누적 361건, 방문 67 hits(전주와 동일 — search 42·direct 23·internal 2), 최대 유입은 네이버 모바일 검색 → 글로서리. 글로서리 31건(+2), FAQ 12건, 보류 승인 0건.
+- **특이사항** — `/api/stats`가 HTTP 401을 반환해 지난주와 마찬가지로 DB 직접 조회 기준으로 작성했음을 리포트에 명기. 세션 테이블은 누적 2건으로 집계됨(출력 그대로 인용).
+- **기록** — `report-job-status.sh analytics-weekly ok` 마커 기록, `log/2026-08-30.md`에 한 줄 추가. 다음 실행은 다음 일요일 launchd.
+[2026-08-30 09:01:19] analytics-weekly 종료
+[2026-09-06 09:00:05] analytics-weekly 시작
+You've hit your session limit · resets 9:30am (Asia/Seoul)
+[2026-09-06 09:01:43] 세션 한도 감지 — 1997s 대기 후 1회 재시도
+이번 주 리포트는 이미 작성돼 있어 idempotent 스킵으로 종료했다.
+
+- **2026-W36 리포트 존재 확인.** `docs/ops/state/reports/2026-W36.md`가 오늘 09:00 실행에서 생성됐고, 상태 파일도 ok(방문 122건, 게임 70건, 보류 승인 2건)로 기록돼 있다.
+- **이번 세션은 재시도 기동.** 09:00 실행이 리포트·상태·로그를 모두 마친 뒤 세션 한도 문구가 감지돼 session-retry 래퍼가 09:35에 다시 띄운 것이다. 실제 누락은 없다.
+- **로그만 추가.** `docs/ops/state/log/2026-09-06.md`에 idempotent 스킵 한 줄을 남겼다. 리포트와 상태 파일은 건드리지 않았다.
+
+다음 실행은 다음 일요일 launchd다.
+[2026-09-06 09:35:44] analytics-weekly 종료
+[2026-09-13 09:00:04] analytics-weekly 시작
+2026-W37 주간 분석 리포트를 `docs/ops/state/reports/2026-W37.md`에 생성했습니다. 방문 129 hits(전주 122, +7), 게임 42건(전주 70, −28), 세션 6건(누적 8), 글로서리 34건(+2 chimip-sakgam·chaksu-geumji), FAQ 13건, 보류 승인 0건이며 모든 숫자는 명령 출력을 그대로 인용했습니다. `/api/stats`는 401 `no_session`을 반환해 전주와 같이 DB 직접 조회로 대체했습니다.
+
+잡 상태는 `ops/report-job-status.sh analytics-weekly ok`로 기록했고, `docs/ops/state/log/2026-09-13.md`에 한 줄을 남겼습니다. 커밋은 관례대로 09:00 오케스트레이터 사이클에 맡깁니다. 다음 실행은 다음 일요일 launchd입니다.
+[2026-09-13 09:01:09] analytics-weekly 종료
+[2026-09-20 09:00:03] analytics-weekly 시작
+2026-W38 주간 분석 리포트를 생성했다. 파일은 `docs/ops/state/reports/2026-W38.md`다.
+
+- **사용량·유입** 게임 33건(전주 42, −21%), 방문 88 hits(전주 129, −32%). 검색 유입은 구글 31·네이버 모바일 23으로 구글이 다시 앞섰고, 랜딩은 /spectate·/glossary·/ 순이다.
+- **콘텐츠·운영** 글로서리 35건(+1 chokchoksu), FAQ 14건(+1 choose-ai-rank). 보류 승인 2건(AP-20260916-01·AP-20260917-01), 이번 주 watchdog 항목 35건, OPS 신규 없음. `/api/stats`는 401이라 DB 직접 조회 기준으로 적었다.
+- **기록** 잡 상태 `analytics-weekly ok` 기록, `docs/ops/state/log/2026-09-20.md`에 한 줄 추가. 커밋은 관례대로 09:00 오케스트레이터가 묶는다.
+[2026-09-20 09:01:09] analytics-weekly 종료
+[2026-09-27 09:00:02] analytics-weekly 시작
+2026-W39 주간 분석 리포트를 생성했습니다.
+
+- **리포트 파일** `docs/ops/state/reports/2026-W39.md`를 새로 작성했습니다. 모든 숫자는 sqlite3·awk·ls 출력을 그대로 인용했습니다.
+- **핵심 수치**는 다음과 같습니다.
+
+| 항목 | 이번 주 | 전주 |
+|---|---|---|
+| 게임 | 25건 (누적 531) | 33건 |
+| 방문 hits | 46 (search 34 · direct 12) | 88 |
+| 순방문자 | search 20 · direct 5 | search 28 · direct 14 |
+| 글로서리 / FAQ | 37 (+2 두 눈·급소) / 14 | 35 / 14 |
+| 보류 승인 | 2건 (AP-20260925-01 · AP-20260920-02) | 2건 |
+| 신규 incident | 0건 | 35건 |
+
+- **유입 특징**은 구글 referrer가 31에서 6으로 줄어 네이버 모바일(23)이 1위로 복귀했고, 검색 유입은 /glossary(17)에 가장 많이 떨어졌습니다.
+- **잡 상태**를 `analytics-weekly` ok로 기록했고, `docs/ops/state/log/2026-09-27.md`에 한 줄을 추가했습니다.
+
+참고 사항 두 가지입니다. `/api/stats`는 전주와 같이 HTTP 401 `no_session`을 반환해 DB 직접 조회로 대체했습니다. health의 `katago_alive`는 false였으나 유휴 시 재spawn 방식이라 정상으로 기록했습니다. 커밋은 지침에 없어 하지 않았고, 일요일 09:00 다이제스트 사이클이 state 파일과 함께 처리하면 됩니다.
+[2026-09-27 09:01:22] analytics-weekly 종료

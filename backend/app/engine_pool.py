@@ -54,6 +54,29 @@ def set_pool(pool: KataGoPool) -> None:
     _adapter_owners.clear()
 
 
+def reset_pool_state() -> None:
+    """Test-only: drop every process-global engine singleton.
+
+    ``_pool`` (via :class:`KataGoPool._lock`) and ``_game_locks`` hold
+    ``asyncio.Lock`` objects, and pytest-asyncio gives each test its own event
+    loop. A lock built in one test's loop is therefore awaited in the next
+    test's loop; if it was left locked — a mid-test exception plus loop
+    teardown — that await never returns and never raises, so the suite simply
+    stops (a 6h CI job cancellation, PR #112). ``_states``/``_adapter_owners``
+    are keyed by game id, which restarts at 1 for every test's fresh temp DB,
+    so stale entries would also be read as belonging to the new test's games.
+
+    Clearing all four between tests keeps each test's locks and state inside
+    its own loop. test_games.py / test_ws_flow.py clear a subset by hand; this
+    is the same thing applied to every test.
+    """
+    global _pool
+    _pool = None
+    _game_locks.clear()
+    _states.clear()
+    _adapter_owners.clear()
+
+
 def set_adapter(adapter: KataGoAdapter) -> None:
     """Backwards-compatible single-adapter override used by existing
     tests. Builds a 1-slot pool around the supplied adapter so every
@@ -124,6 +147,29 @@ async def release_game(game_id: int) -> None:
     _game_locks.pop(game_id, None)
     _states.pop(game_id, None)
     if slot is not None and _adapter_owners.get(slot) == game_id:
+        _adapter_owners.pop(slot, None)
+
+
+def drop_adapter_owner(game_id: int) -> None:
+    """Forget that ``game_id`` owns its slot's GTP state so the next round
+    takes the reseed path. Used when a round fails after the user's stone
+    was already played into the adapter but before it reached the rules
+    state — the adapter history is then one stone ahead of the game and
+    the fast path would desync the board (#105)."""
+    slot = _slot_for(game_id)
+    if slot is not None and _adapter_owners.get(slot) == game_id:
+        _adapter_owners.pop(slot, None)
+
+
+def drop_slot_owner(game_id: int) -> None:
+    """Forget whoever owns the slot pinned to ``game_id`` — not only
+    ``game_id`` itself. Reseed paths call this right before their first
+    board-mutating command: the slot's board is about to be wiped, so the
+    previous owner (possibly another game sharing the slot) must stop being
+    trusted even if the reseed dies halfway. Ownership is re-recorded only
+    after the reseed completes (#108)."""
+    slot = _slot_for(game_id)
+    if slot is not None:
         _adapter_owners.pop(slot, None)
 
 

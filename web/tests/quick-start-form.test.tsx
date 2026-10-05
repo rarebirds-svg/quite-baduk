@@ -48,7 +48,19 @@ describe("QuickStartForm — 세션 없음", () => {
     fireEvent.click(screen.getByRole("button", { name: PLAY_NOW }));
 
     await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/game/play/42"));
-    expect(quickStartMock).toHaveBeenCalledWith("돌하나");
+    expect(quickStartMock).toHaveBeenCalledWith("돌하나", { board_size: 9, ai_rank: "9k" });
+  });
+
+  it("판 크기를 바꾸면 그 값으로 대국을 만든다", async () => {
+    quickStartMock.mockResolvedValueOnce(43);
+    render(<QuickStartForm />);
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "돌하나" } });
+    fireEvent.click(screen.getByRole("radio", { name: "19×19" }));
+    fireEvent.click(screen.getByRole("button", { name: PLAY_NOW }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/game/play/43"));
+    expect(quickStartMock).toHaveBeenCalledWith("돌하나", { board_size: 19, ai_rank: "9k" });
   });
 
   it("실패하면 에러 문구와 /game/new 폴백 링크를 보여준다", async () => {

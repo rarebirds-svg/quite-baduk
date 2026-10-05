@@ -11,6 +11,8 @@ from app.db import enable_wal
 from app.errors import register_handlers
 from app.middleware.security_headers import SecurityHeadersMiddleware
 
+log = structlog.get_logger()
+
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
@@ -28,6 +30,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     from app import last_seen_cache
     from app.db import AsyncSessionLocal
     last_seen_cache.start_flusher(AsyncSessionLocal)
+
+    # 스키마가 코드보다 뒤처졌으면 기동 로그에 크게 남긴다. 헬스도 degraded로 내려간다.
+    from app.schema_status import migration_status
+    async with AsyncSessionLocal() as db:
+        mig = await migration_status(db)
+    if mig["pending"]:
+        log.error(
+            "schema.migrations_pending — run `alembic upgrade head`",
+            current=mig["current"],
+            head=mig["head"],
+        )
 
     from app.engine_pool import get_pool
     pool = get_pool()
@@ -75,6 +88,7 @@ def create_app() -> FastAPI:
     from app.api import admin_search as admin_search_router
     from app.api import analysis as analysis_router
     from app.api import analytics as analytics_router
+    from app.api import auth_google as auth_google_router
     from app.api import daily as daily_router
     from app.api import games as games_router
     from app.api import health as health_router
@@ -85,6 +99,7 @@ def create_app() -> FastAPI:
     from app.api import ws as ws_router
 
     app.include_router(session_router.router)
+    app.include_router(auth_google_router.router)
     app.include_router(games_router.router)
     app.include_router(analysis_router.router)
     app.include_router(analytics_router.router)

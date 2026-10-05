@@ -138,6 +138,56 @@ async def test_sgf_download(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
+async def test_export_zip_bundles_sgf_and_summary(client: AsyncClient) -> None:
+    import io
+    import json
+    import zipfile
+
+    await _signup(client)
+    ids = []
+    for _ in range(2):
+        r = await client.post(
+            "/api/games",
+            json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+        )
+        ids.append(r.json()["id"])
+    await client.post(f"/api/games/{ids[0]}/resign")  # 하나는 종료, 하나는 진행 중
+
+    r = await client.get("/api/games/export")
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"
+    assert "inkbaduk_games_" in r.headers["content-disposition"]
+
+    zf = zipfile.ZipFile(io.BytesIO(r.content))
+    names = zf.namelist()
+    sgfs = [n for n in names if n.endswith(".sgf")]
+    assert len(sgfs) == 2
+    assert all(f"game{i}_" in "".join(sgfs) for i in ids)
+    assert all("GM[1]" in zf.read(n).decode("utf-8") for n in sgfs)
+    summary = json.loads(zf.read("games.json"))
+    assert {row["id"] for row in summary} == set(ids)
+    assert all(row["sgf"] in sgfs for row in summary)
+
+
+@pytest.mark.asyncio
+async def test_export_is_scoped_to_own_session(client: AsyncClient) -> None:
+    import io
+    import zipfile
+
+    await _signup(client)
+    await client.post(
+        "/api/games",
+        json={"ai_rank": "5k", "handicap": 0, "user_color": "black"},
+    )
+    await client.post("/api/session/end")
+    await _signup(client, email="other@example.com")
+    r = await client.get("/api/games/export")
+    assert r.status_code == 200
+    zf = zipfile.ZipFile(io.BytesIO(r.content))
+    assert [n for n in zf.namelist() if n.endswith(".sgf")] == []
+
+
+@pytest.mark.asyncio
 async def test_hint(client: AsyncClient) -> None:
     await _signup(client)
     r = await client.post(

@@ -9,6 +9,11 @@ import { setSessionToken } from "@/lib/sessionToken";
 import RankPicker, { RANKS, type Rank } from "@/components/RankPicker";
 import BoardBgSwitcher from "@/components/BoardBgSwitcher";
 import AnalysisDensityToggle from "@/components/AnalysisDensityToggle";
+import MoveConfirmToggle from "@/components/MoveConfirmToggle";
+import SoundToggle from "@/components/SoundToggle";
+import PersonaCommentToggle from "@/components/PersonaCommentToggle";
+import AccountLink from "@/components/AccountLink";
+import { Suspense } from "react";
 
 export default function SettingsPage() {
   const t = useT();
@@ -66,6 +71,19 @@ export default function SettingsPage() {
         <AnalysisDensityToggle />
         <span className="text-xs text-ink-mute">{t("settings.analysisViewHint")}</span>
       </div>
+      <div className="flex flex-col gap-1">
+        <MoveConfirmToggle />
+        <span className="text-xs text-ink-mute">{t("settings.moveConfirmHint")}</span>
+      </div>
+      <SoundToggle />
+      <div className="flex flex-col gap-1">
+        <PersonaCommentToggle />
+        <span className="text-xs text-ink-mute">{t("settings.personaCommentaryHint")}</span>
+      </div>
+      {/* useSearchParams를 쓰는 자식은 Suspense 경계가 필요하다(Next 14 정적 렌더). */}
+      <Suspense fallback={null}>
+        <AccountLink className="mt-2" />
+      </Suspense>
       <div className="pt-6 border-t border-ink-faint">
         <button
           onClick={endSession}

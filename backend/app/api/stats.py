@@ -8,6 +8,7 @@ from sqlalchemy import case, func, select
 
 from app.deps import CurrentSession, DbSession
 from app.models import Game
+from app.ownership import owned_games_clause
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
@@ -20,7 +21,7 @@ async def stats(
     """Per-session summary statistics for the history page dashboard."""
     # Only decisively finished games contribute to win/loss stats.
     finished_filter = (
-        Game.session_id == sess.id,
+        owned_games_clause(sess),
         Game.status.in_(["finished", "resigned"]),
     )
 

@@ -260,3 +260,95 @@ Status recorded. Summary of this cycle:
 - **QA·게시** — korean-copy-qa 리뷰에서 사실 오류 없음 판정, 명확성 수정 1건(집 차이 계산 문장)을 반영한 뒤 `web/content/glossary/banjip.md`로 게시하고 커밋 `a874088`을 main에 push했습니다. IndexNow 통보 HTTP 200.
 - **기록** — `report-job-status.sh content-draft ok` 기록, `docs/ops/state/log/2026-08-26.md`에 한 줄 로그 남김.
 [2026-08-26 02:03:11] content-draft 종료
+[2026-08-29 02:00:03] content-draft 시작
+콘텐츠 초안 사이클 완료입니다.
+
+- **선정**: 게시 비율이 더 뒤처진 글로서리(20/57 ≈ 0.35 vs FAQ 9/24 ≈ 0.38)에서 미작성 후보 알파벳 첫 항목인 `beollim`(벌림)을 선택했습니다.
+- **QA·게시**: korean-copy-qa가 사실관계("일립이전 이립삼전")·용어·문체 모두 통과 판정했고, 유일한 지적인 seoTitle 구분자(`|` → `—`)를 반영한 뒤 `web/content/glossary/beollim.md`로 게시해 main에 커밋·push(49971b9)했습니다.
+- **후처리**: IndexNow 통보 성공(HTTP 200), `report-job-status.sh` ok 기록, `state/log/2026-08-29.md`에 한 줄 기록을 남겼습니다.
+[2026-08-29 02:03:08] content-draft 종료
+[2026-09-02 02:00:01] content-draft 시작
+You've hit your session limit · resets 4:20am (Asia/Seoul)
+[2026-09-02 02:00:07] 세션 한도 감지 — 8693s 대기 후 1회 재시도
+사이클 완료 요약입니다.
+
+- **선택**. 게시 비율이 더 뒤처진 글로서리(21/57=36.8% vs FAQ 37.5%)에서 알파벳 순 첫 미작성 후보 `bokgi`(복기)를 선택했습니다.
+- **초안·QA**. 3단락 초안 작성 후 korean-copy-qa 통과. 제안받은 문장 다듬기, `seoTitle`·`related` frontmatter, 승률 글로서리·복기 FAQ 내부 링크를 반영했습니다.
+- **게시**. `web/content/glossary/bokgi.md`로 이동해 커밋 `0606b0f`로 main push 완료, IndexNow 통보 200, 상태 파일·운영 로그 기록까지 마쳤습니다.
+[2026-09-02 04:28:48] content-draft 종료
+[2026-09-05 02:00:01] content-draft 시작
+콘텐츠 초안 사이클을 마쳤다.
+
+- **선택**: FAQ 게시 비율(9/24)이 글로서리(22/57)보다 낮아 FAQ를 골랐고, 미작성 후보 알파벳 첫 항목인 `baduk-vs-omok`(바둑과 오목은 어떻게 다른가요?)을 작성했다.
+- **QA·게시**: korean-copy-qa가 사실 오류와 깨진 내부링크 없음을 확인했고, seoTitle 대시·"9로 판" 표기·문장 2곳 지적을 반영했다. `web/content/faq/baduk-vs-omok.md` 한 파일만 커밋해 main에 push했다(1fc0f48). IndexNow 통보와 라이브 URL 모두 200이다.
+- **기록**: `ops/report-job-status.sh`로 잡 상태 ok를 남기고 `docs/ops/state/log/2026-09-05.md`에 한 줄 기록했다. 작업 트리에 미리 있던 state 로그 변경은 건드리지 않았다.
+[2026-09-05 02:04:34] content-draft 종료
+[2026-09-09 02:00:02] content-draft 시작
+콘텐츠 초안 사이클을 마쳤습니다.
+
+- **선택** glossary `chaksu-geumji`(착수금지). 게시 비율 glossary 22/57(0.386)이 faq 10/24(0.417)보다 낮아 glossary를 골랐고, 미작성 후보 알파벳 첫 항목이었습니다.
+- **QA·게시** korean-copy-qa 검수에서 치명 사항 0건, 수정 권장 5건을 전부 반영했습니다. 관련 슬러그 4개 실존을 확인한 뒤 해당 파일만 커밋해 main에 push했습니다(b0e7630). IndexNow 제출과 라이브 페이지 모두 200을 확인했습니다.
+- **기록** 잡 상태를 `content-draft ok`로 남기고 `docs/ops/state/log/2026-09-09.md`에 한 줄을 적었습니다. 상태·로그 파일은 관례대로 커밋하지 않고 작업트리에 두었습니다.
+[2026-09-09 02:05:18] content-draft 종료
+[2026-09-12 02:00:02] content-draft 시작
+글로서리 `chimip-sakgam`(침입·삭감) 게시를 완료했습니다.
+
+- **선택** 글로서리 게시 비율이 0.403으로 FAQ 0.416보다 낮아 글로서리를 골랐고, 미작성 후보 34개 중 알파벳 첫 항목이 침입·삭감이었습니다. 게시 파일이 없음을 확인한 뒤 진행했습니다.
+- **QA** korean-copy-qa가 치명 문제 0건으로 통과시켰고, 정밀성 제안 2건(삭감 위치 표현, 두터움 쌓는 주체 명시)을 본문에 반영했습니다.
+- **게시** 커밋 aa658e9를 main에 push했고, 라이브 URL 200과 IndexNow 응답 200을 확인했습니다. 잡 상태 파일과 일일 로그 `2026-09-12.md`에 기록을 남겼습니다. state 로그 변경분은 규칙대로 스테이징하지 않았습니다.
+[2026-09-12 02:03:10] content-draft 종료
+[2026-09-16 02:00:01] content-draft 시작
+콘텐츠 초안 사이클을 마쳤습니다.
+
+**게시 결과.** FAQ `choose-ai-rank`(내 실력에 맞는 AI 급수는 어떻게 고르나요?)를 `web/content/faq/`에 게시하고 main에 push했습니다(커밋 `eb90a0e`). IndexNow 통보와 라이브 URL 모두 200이며, 잡 상태는 `ok`로 기록했습니다.
+
+**선택 근거와 QA.** FAQ 게시 비율(10/24)이 글로서리(24/57)보다 낮아 FAQ를 골랐고, 미작성 후보 중 알파벳 첫 항목이었습니다. korean-copy-qa는 필수 수정 없이 선택 개선만 냈고, 그중 문장 호응·예시 완곡화·중복 축약·상호 링크 3건을 반영했습니다. 시드 힌트의 "질문 두 개 급수 추천 퀴즈"는 실제 코드에 없어 본문에서 뺐습니다.
+
+**후속 검토 거리.** QA가 기존 게시본 `ai-strength-levels.md`의 "입문부터" 문구가 실제 선택지(9급~9단)와 어긋날 수 있다고 지적했습니다. 규칙상 기존 항목은 손대지 않았으니 사람이 판단할 항목으로 오늘 로그(`docs/ops/state/log/2026-09-16.md`)에 남겼습니다. 로그 파일은 규칙대로 커밋하지 않고 작업 트리에 두었습니다.
+[2026-09-16 02:05:00] content-draft 종료
+[2026-09-19 02:00:02] content-draft 시작
+글로서리 `chokchoksu`(촉촉수)를 게시했다. 글로서리 게시 비율(24/57)이 FAQ(11/24)보다 낮아 글로서리를 골랐고, 알파벳순 첫 미작성 후보가 촉촉수였다.
+
+korean-copy-qa가 축 진행 방향이 기게시 `chuk.md`의 "직선"과 어긋난다는 사실 오류 1건과 문체 제안 2건을 냈고 모두 반영했다. 시드가 명시한 "연단수" 별칭은 유지했다.
+
+커밋 253c7d1로 main push 완료, IndexNow 200, 라이브 페이지 200 확인. 잡 상태 파일과 9/19 일지에 기록을 남겼다.
+[2026-09-19 02:03:31] content-draft 종료
+[2026-09-23 02:00:02] content-draft 시작
+사이클 완료. 요약은 다음과 같다.
+
+- **게시**: 글로서리 `du-nun`(두 눈)을 작성해 main에 게시했다. 커밋 `c7da2a3`, push 완료, 라이브 200 응답과 정정 문장 렌더까지 확인했고 IndexNow 통보도 200을 받았다.
+- **선택 근거**: 글로서리 게시 비율 25/57이 FAQ 11/24보다 낮아 글로서리를 골랐고, 미작성 후보 알파벳 첫 항목이 `du-nun`이었다.
+- **QA 반영**: korean-copy-qa가 지적한 4건을 모두 반영했다. 핵심은 사실 오류 1건으로, 두 눈에 착수할 수 없는 이유를 "단수가 안 된다"에서 "자충이라 규칙상 착수 금지"로 정정했다. 잡 상태 `ok`와 일일 로그(`state/log/2026-09-23.md`) 기록을 남겼으며, state 파일들은 지침대로 커밋하지 않았다.
+[2026-09-23 02:05:08] content-draft 종료
+[2026-09-26 02:00:02] content-draft 시작
+글로서리 `geupso`(급소) 항목을 게시했습니다.
+
+- **선택** — 글로서리 26/57(0.456)이 FAQ 11/24(0.458)보다 뒤처져 글로서리를 택했고, 미작성 후보 알파벳 첫 항목 `geupso`를 골랐습니다. 첫 계산에서 sed가 슬러그 앞 공백을 남겨 "게시 0건"으로 나왔는데, 재계산으로 잡았습니다.
+- **QA·게시** — korean-copy-qa 판정은 "소수정 후 게시 가능"이었습니다. 조사 오류 1건과 단정 어조 완화 1건을 반영했고 사실 오류 지적은 없었습니다. 덮어쓰기 가드 통과 후 해당 파일만 커밋해 `main`에 push했습니다(72cf2b4). IndexNow 200, 라이브 `/glossary/geupso` 200 확인.
+- **기록** — 잡 상태 `ok` 기록, `docs/ops/state/log/2026-09-26.md`에 한 줄 남겼습니다. 상태 파일과 로그는 관례대로 커밋하지 않고 작업트리에 두었습니다(오케스트레이터가 묶음 커밋).
+[2026-09-26 02:04:52] content-draft 종료
+[2026-09-30 02:00:02] content-draft 시작
+FAQ `daily-puzzle`(일일 챌린지 이용 방법)을 초안·QA·라이브 게시까지 마쳤습니다.
+
+- **선택** 게시 비율이 FAQ(11/24)가 글로서리(27/57)보다 낮아 FAQ를 골랐고, 미작성 후보 13건 중 알파벳 첫 항목 `daily-puzzle`을 택했습니다. 기존 파일·초안 부재를 확인했습니다.
+- **본문** 코드 실측 사실(문제 483개, 9·13·19줄, 유형 7종·난이도 3단계, 로그인 불필요, KataGo 4단계 채점, 풀이 기록 미저장)로 4단락을 썼습니다. korean-copy-qa는 "게시 가능, 필수 수정 0"이었고 권고 2건을 반영했습니다.
+- **게시** 커밋 `0c00ab8`을 main에 push했고, 라이브 페이지와 IndexNow 통보 모두 200입니다. 잡 상태 `ok`와 오늘 로그(`state/log/2026-09-30.md`)를 기록했습니다. 상태·로그 파일은 규칙대로 커밋하지 않고 작업 트리에 남겼습니다.
+
+남은 미작성 시드는 글로서리 30건, FAQ 12건입니다.
+[2026-09-30 02:08:35] content-draft 종료
+[2026-10-03 02:00:01] content-draft 시작
+Failed to authenticate: OAuth session expired and could not be refreshed
+[2026-10-03 02:00:03] 인증 만료 감지 — 보류 (재로그인 후 watchdog가 1회 재트리거)
+[2026-10-03 02:00:03] 비정상 종료
+[2026-10-03 02:00:03] content-draft 종료
+[2026-10-03 22:30:00] 인증 회복 — watchdog 재트리거
+[2026-10-03 22:30:00] content-draft 시작
+Permission allow rule (.claude/settings.json): Bash(curl -s -o /dev/null *http://localhost:*) mixes * with the trailing :* prefix syntax, so it is matched as a literal prefix (the * is not expanded) and will likely never match. Replace that * with the exact value you mean.
+글로서리 `gibo`(기보)를 게시했고 `main` push까지 끝났습니다(34553da). https://inkbaduk.com/glossary/gibo 가 200으로 응답합니다.
+
+- **선택 근거**: 게시 비율이 glossary 27/57, faq 12/24로 glossary가 더 뒤처져 있었고, 미작성 후보 중 알파벳 첫 항목이 `gibo`였습니다.
+- **QA**: korean-copy-qa가 게시를 막을 문제는 없다고 판정했고, 지적 사항(용어 표기 통일, 내부링크 3개 추가, 과장 표현 완화)은 반영했습니다.
+- **기록**: IndexNow 통보는 HTTP 200이었고, 잡 상태(`ok`)와 `state/log/2026-10-03.md` 한 줄을 남겼습니다.
+
+이번 실행은 예정된 02:00이 아니라 22:31에 돌았고, 로그에도 22:31로 적었습니다.
+[2026-10-03 22:31:22] content-draft 종료

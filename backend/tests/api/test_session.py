@@ -11,10 +11,10 @@ async def test_create_session_sets_cookie_and_returns_public_info(client: AsyncC
     assert r.status_code == 201, r.text
     body = r.json()
     assert body["nickname"] == "alice"
-    # Session cookie present, and persisted for 90 days.
+    # Session cookie present, and persisted for 7 days.
     cookies = {c.name for c in client.cookies.jar}
     assert "baduk_session" in cookies
-    assert "Max-Age=7776000" in r.headers["set-cookie"]
+    assert "Max-Age=604800" in r.headers["set-cookie"]
 
 
 @pytest.mark.asyncio
@@ -27,13 +27,13 @@ async def test_get_session_after_create(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_get_session_reissues_sliding_cookie(client: AsyncClient) -> None:
-    """방문할 때마다 쿠키가 재발급되어 90일 만료가 앞으로 밀린다."""
+    """방문할 때마다 쿠키가 재발급되어 7일 만료가 앞으로 밀린다."""
     await client.post("/api/session", json={"nickname": "slider"})
     r = await client.get("/api/session")
     assert r.status_code == 200
     set_cookie = r.headers["set-cookie"]
     assert "baduk_session=" in set_cookie
-    assert "Max-Age=7776000" in set_cookie
+    assert "Max-Age=604800" in set_cookie
 
 
 @pytest.mark.asyncio

@@ -1,3 +1,4 @@
+from app.models.account import Account
 from app.models.analysis_cache import AnalysisCache
 from app.models.analytics_salt import AnalyticsSalt
 from app.models.game import Game
@@ -9,6 +10,7 @@ from app.models.session_history import SessionHistory
 from app.models.visit_hit import VisitHit
 
 __all__ = [
+    "Account",
     "Session",
     "Game",
     "Move",

@@ -24,6 +24,18 @@ import { playStoneClick } from "@/lib/soundfx";
 import { IS_APP_SHELL } from "@/lib/appShell";
 import { PlayerCaption } from "@/components/editorial/PlayerCaption";
 import { HintNudge } from "@/components/HintNudge";
+import { PersonaIntro } from "@/components/PersonaIntro";
+import SoundToggle from "@/components/SoundToggle";
+import { ResultShare } from "@/components/ResultShare";
+import { useMovePref, resolveMoveConfirm } from "@/store/movePrefStore";
+import { usePersonaPref } from "@/store/personaPrefStore";
+import {
+  decideTrigger,
+  initialCommentaryState,
+  markShown,
+  pickPersonaLine,
+} from "@/lib/personaComment";
+import type { PlayerId } from "@/components/PlayerPicker";
 import { StatFigure } from "@/components/editorial/StatFigure";
 import { DataBlock } from "@/components/editorial/DataBlock";
 import { RuleDivider } from "@/components/editorial/RuleDivider";
@@ -97,6 +109,35 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
   // Drives the heatmap overlay on Board for both estimate AND scoring sheets.
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [aiResigned, setAiResigned] = useState(false);
+  // 다른 탭이 같은 대국을 열어 서버가 이 소켓을 교체한 상태. 재연결은
+  // 사용자가 "이 탭에서 이어두기"를 눌러 wsEpoch를 올릴 때만 한다.
+  const [replaced, setReplaced] = useState(false);
+  const [wsEpoch, setWsEpoch] = useState(0);
+  // 착수 확인(2단계) — 터치 기기 기본. 첫 탭은 가착수, 같은 자리 재탭·확인
+  // 버튼이 실제 착수. persist rehydrate 이후에만 선호값을 읽는다.
+  const moveConfirmPref = useMovePref((s) => s.moveConfirm);
+  const [confirmMode, setConfirmMode] = useState(false);
+  useEffect(() => setConfirmMode(resolveMoveConfirm(moveConfirmPref)), [moveConfirmPref]);
+  const [pendingMove, setPendingMove] = useState<{ x: number; y: number } | null>(null);
+  // 기사 페르소나 인트로 — 첫 수 전까지만, 닫으면 그 대국에선 다시 안 뜬다.
+  const [introDismissed, setIntroDismissed] = useState(false);
+  // 기사 페르소나 한마디 — AI 착수 직후 상황(첫 수·따냄·우세·열세·주기)에 맞춰
+  // 상대 캡션 자리에 잠깐 띄운다. persist rehydrate 뒤에만 선호값을 반영한다.
+  const personaPref = usePersonaPref((s) => s.commentary);
+  const [personaOn, setPersonaOn] = useState(true);
+  useEffect(() => setPersonaOn(personaPref), [personaPref]);
+  const [personaLine, setPersonaLine] = useState<string | null>(null);
+  const personaState = useRef(initialCommentaryState());
+  const personaTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const metaRef = useRef<GameMeta | null>(null);
+  useEffect(() => {
+    metaRef.current = meta;
+  }, [meta]);
+  const showPersonaLine = (line: string) => {
+    if (personaTimer.current) clearTimeout(personaTimer.current);
+    setPersonaLine(line);
+    personaTimer.current = setTimeout(() => setPersonaLine(null), 8_000);
+  };
   const [pendingLeave, setPendingLeave] = useState(false);
   const [kifuOpen, setKifuOpen] = useState(false);
   // Preferred kifu dialog size — persisted so the user's choice sticks
@@ -145,13 +186,21 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
 
   // B — 망설임 프롬프트. 사용자 차례에서 30초 장고 시 대국당 1회 노출.
   useEffect(() => {
-    if (!ready || g.gameOver || g.aiThinking || hesitationShown.current) return;
+    // 코치마크가 떠 있는 동안은 대기 — 두 안내가 동시에 쌓이지 않게 한다.
+    if (
+      !ready ||
+      g.gameOver ||
+      g.aiThinking ||
+      hintCoachmark ||
+      hesitationShown.current
+    )
+      return;
     const id = setTimeout(() => {
       setHintHesitation(true);
       hesitationShown.current = true;
     }, 30_000);
     return () => clearTimeout(id);
-  }, [ready, g.gameOver, g.aiThinking, g.moveCount]);
+  }, [ready, g.gameOver, g.aiThinking, g.moveCount, hintCoachmark]);
 
   useEffect(() => {
     loadMeta();
@@ -223,6 +272,34 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
           toast(t("game.aiPassed"));
         }
         g.set({ lastAiMove: msg.coord, aiThinking: false });
+        // 페르소나 한마디 — 클로저의 g는 오래된 스냅샷이므로 store에서 직접 읽는다.
+        const m = metaRef.current;
+        if (m?.ai_player && c !== "resign") {
+          const live = useGameStore.getState();
+          const aiWinrate =
+            typeof live.winrateBlack === "number"
+              ? m.user_color === "black"
+                ? 1 - live.winrateBlack
+                : live.winrateBlack
+              : null;
+          const trigger = decideTrigger(
+            {
+              moveCount: Math.max(live.moveCount, expectedMoveCount.current),
+              capturedByAi: msg.captures ?? 0,
+              aiWinrate,
+            },
+            personaState.current,
+          );
+          const line = trigger ? pickPersonaLine(t, m.ai_player, trigger) : null;
+          if (trigger && line) {
+            personaState.current = markShown(
+              personaState.current,
+              Math.max(live.moveCount, expectedMoveCount.current),
+              trigger,
+            );
+            showPersonaLine(line);
+          }
+        }
       } else if (msg.type === "score_result") {
         setScoringDetail(msg);
       } else if (msg.type === "estimate_result") {
@@ -236,6 +313,15 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
         g.set({ gameOver: true, result: msg.result, aiThinking: false });
         if (msg.reason === "ai_resigned") setAiResigned(true);
       } else if (msg.type === "error") {
+        if (msg.code === "SESSION_REPLACED") {
+          // lib/ws.ts already stopped the retry loop. Freeze the board and
+          // offer a manual takeover instead of fighting the other tab.
+          setReplaced(true);
+          setReady(false);
+          g.set({ aiThinking: false });
+          toast.error(t("errors.SESSION_REPLACED"));
+          return;
+        }
         if (preOptimisticBoard.current !== null) {
           g.set({ board: preOptimisticBoard.current });
           preOptimisticBoard.current = null;
@@ -274,9 +360,24 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
       setEstimateLoading(false);
       setShowHeatmap(false);
       expectedMoveCount.current = 0;
+      personaState.current = initialCommentaryState();
+      if (personaTimer.current) clearTimeout(personaTimer.current);
+      setPersonaLine(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
+  }, [gameId, wsEpoch]);
+
+  // 상대 수가 오거나 대국이 끝나면 가착수는 의미를 잃는다.
+  useEffect(() => {
+    setPendingMove(null);
+  }, [g.moveCount, g.gameOver, g.aiThinking]);
+
+  const takeOverGame = () => {
+    setReplaced(false);
+    // Bumping the epoch re-runs the WS effect: the old (already closed)
+    // socket is dropped and a fresh one evicts the other tab once.
+    setWsEpoch((e) => e + 1);
+  };
 
   const sendMove = (x: number, y: number) => {
     if (!ready || g.gameOver || g.aiThinking) return;
@@ -312,6 +413,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
     setHint([]);
     setHintWinrate(null);
     playStoneClick();
+    setPendingMove(null);
     wsRef.current?.send({ type: "move", coord });
     if (IS_APP_SHELL) {
       import("@capacitor/haptics")
@@ -354,11 +456,36 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
     setEstimateLoading(true);
     wsRef.current?.send({ type: "estimate_request" });
   };
+  const handleBoardClick = (x: number, y: number) => {
+    if (!confirmMode) {
+      sendMove(x, y);
+      return;
+    }
+    if (!ready || g.gameOver || g.aiThinking) return;
+    if (g.board[y * g.boardSize + x] !== ".") {
+      toast.error(t("errors.OCCUPIED"));
+      return;
+    }
+    // 같은 자리를 다시 누르면 확정, 다른 자리면 가착수를 옮긴다.
+    if (pendingMove && pendingMove.x === x && pendingMove.y === y) {
+      sendMove(x, y);
+      return;
+    }
+    setPendingMove({ x, y });
+  };
+
   const resign = async () => {
     setConfirmResign(false);
     try {
-      await api(`/api/games/${gameId}/resign`, { method: "POST" });
-      g.set({ gameOver: true });
+      const summary = await api<{ result: string | null }>(
+        `/api/games/${gameId}/resign`,
+        { method: "POST" },
+      );
+      // The server records "W+R"/"B+R"; mirror it locally so the result
+      // line isn't blank (the game_over WS event only fires for AI-driven
+      // endings). Fall back to the user's colour if the body lacks it.
+      const fallback = meta?.user_color === "white" ? "B+R" : "W+R";
+      g.set({ gameOver: true, result: summary.result ?? fallback });
     } catch {
       toast.error(t("errors.validation"));
     }
@@ -471,20 +598,55 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
               ? `${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`
               : t("game.aiRank")
           }
-          subtitle={g.aiThinking ? t("game.thinking") : ""}
+          subtitle={
+            g.aiThinking
+              ? t("game.thinking")
+              : personaOn && personaLine
+                ? `“${personaLine}”`
+                : ""
+          }
         />
+        {personaOn && meta?.ai_player && ready && g.moveCount === 0 && !g.gameOver && !introDismissed && (
+          <PersonaIntro
+            playerId={meta.ai_player as PlayerId}
+            rankLabel={`${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`}
+            onDismiss={() => setIntroDismissed(true)}
+          />
+        )}
         <Board
           size={g.boardSize}
           board={g.board}
           lastMove={
             lastMoveXy ? { x: lastMoveXy[0], y: lastMoveXy[1] } : null
           }
-          onClick={sendMove}
+          onClick={handleBoardClick}
           disabled={!ready || g.aiThinking || g.gameOver}
           overlay={overlay}
           territoryMarkers={territoryMarkers}
           ownership={heatmapOwnership}
+          pendingMove={confirmMode ? pendingMove : null}
+          pendingColor={g.toMove === "W" ? "W" : "B"}
         />
+        {confirmMode && pendingMove && !g.gameOver && !g.aiThinking && (
+          <div
+            role="status"
+            className="flex flex-wrap items-center gap-3 border border-ink bg-paper-deep px-3 py-2 font-sans text-sm"
+          >
+            <span className="text-ink">
+              {t("game.moveConfirm.prompt", {
+                coord: xyToGtp(pendingMove.x, pendingMove.y, g.boardSize),
+              })}
+            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setPendingMove(null)}>
+                {t("game.cancel")}
+              </Button>
+              <Button size="sm" onClick={() => sendMove(pendingMove.x, pendingMove.y)}>
+                {t("game.moveConfirm.confirm")}
+              </Button>
+            </div>
+          </div>
+        )}
         <PlayerCaption
           color={meta?.user_color === "white" ? "white" : "black"}
           name={nickname ?? t("game.you")}
@@ -497,6 +659,25 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
               : ""
           }
         />
+
+        {replaced && (
+          <div
+            role="alert"
+            className="border border-oxblood bg-paper-deep px-3 py-2 flex flex-wrap items-center gap-3 font-sans text-sm"
+          >
+            <span className="text-ink leading-relaxed">
+              {t("game.wsReplaced.message")}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto shrink-0"
+              onClick={takeOverGame}
+            >
+              {t("game.wsReplaced.action")}
+            </Button>
+          </div>
+        )}
 
         {hintCoachmark && !g.gameOver && (
           <HintNudge
@@ -522,7 +703,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
           onHint={hintMe}
           onScoreRequest={requestScoring}
           onEstimate={requestEstimate}
-          disabled={g.gameOver || g.aiThinking}
+          disabled={g.gameOver || g.aiThinking || replaced}
           undosRemaining={Math.max(0, UNDO_LIMIT - g.undoCount)}
           scoringAvailable={g.endgamePhase && !g.gameOver}
           hintLoading={hintLoading}
@@ -541,6 +722,25 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
                 {t("game.viewKifu")}
               </button>
             </div>
+            <ResultShare
+              gameId={gameId}
+              size={g.boardSize}
+              board={g.board}
+              moveCount={g.moveCount}
+              title={t("game.share.cardTitle", {
+                nickname: nickname ?? t("game.you"),
+                opponent: meta?.ai_player
+                  ? t(`game.players.${meta.ai_player}.name`)
+                  : t("game.share.vsFallback"),
+              })}
+              subtitle={
+                meta
+                  ? `${g.boardSize}×${g.boardSize} · ${formatRank(meta.ai_rank, locale)} · ${t(`game.aiStyleName.${meta.ai_style}`)}`
+                  : `${g.boardSize}×${g.boardSize}`
+              }
+              resultText={formatGameResult(g.result, locale)}
+              lastMove={lastMoveXy ? { x: lastMoveXy[0], y: lastMoveXy[1] } : null}
+            />
           </>
         )}
       </div>
@@ -583,6 +783,7 @@ export default function GamePlayScreen({ gameId }: { gameId: number }) {
         />
         <RuleDivider label={t("settings.boardBg")} />
         <BoardBgSwitcher compact />
+        <SoundToggle />
       </aside>
 
       <Dialog open={confirmPass} onOpenChange={setConfirmPass}>

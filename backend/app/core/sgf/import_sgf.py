@@ -1,7 +1,9 @@
 # SGF 파싱·정제·메타 추출 — 프로 기보를 본선 수순만 남긴 정제 SGF로 변환한다.
 from __future__ import annotations
 
+import codecs
 import hashlib
+import re
 from dataclasses import dataclass
 from datetime import date
 
@@ -10,6 +12,45 @@ from sgfmill import sgf
 # GTP 열 문자 — 'I'를 건너뛴다.
 _GTP_COLS = "ABCDEFGHJKLMNOPQRST"
 _VALID_SIZES = {9, 13, 19}
+
+# 루트 노드의 CA[] — 원본 바이트의 선언 인코딩. ASCII 범위만 보면 되므로
+# 디코드 전 바이트 상태에서 찾는다.
+_CA_RE = re.compile(rb"CA\[([A-Za-z0-9_\-]+)\]")
+
+
+def decode_sgf_bytes(data: bytes) -> str:
+    """SGF 바이트를 문자열로 디코드한다.
+
+    우선순위: CA[] 선언 인코딩 → UTF-8(strict) → ISO-8859-1(무손실 폴백).
+    HTTP Content-Type charset은 믿지 않는다 — 옛 아카이브 서버가 UTF-8 파일에
+    iso-8859-1을 붙여 보내는 일이 흔해 기사명이 'åœ‹æ ¾'처럼 깨진다.
+    """
+    m = _CA_RE.search(data)
+    if m:
+        name = m.group(1).decode("ascii")
+        try:
+            codecs.lookup(name)
+            return data.decode(name)
+        except (LookupError, UnicodeDecodeError):
+            pass
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        return data.decode("latin-1")
+
+
+def repair_mojibake(text: str) -> str | None:
+    """UTF-8 바이트를 ISO-8859-1로 잘못 읽어 생긴 깨짐('åœ‹' 등)을 되돌린다.
+
+    복구 결과가 원문과 다를 때만 문자열을 돌려주고, 깨짐이 아니면(라틴-1로
+    재인코딩할 수 없는 한글·한자가 이미 있거나, 재디코드가 실패하거나,
+    아무 변화가 없으면) None을 돌려준다.
+    """
+    try:
+        fixed = text.encode("latin-1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return None
+    return fixed if fixed != text else None
 
 
 class InvalidProSgf(ValueError):
@@ -89,8 +130,13 @@ def _build_clean_sgf(
 def parse_pro_sgf(sgf_text: str) -> ParsedProGame:
     """SGF 텍스트를 파싱해 정제·메타·수순을 담은 ParsedProGame을 반환.
     적재 불가능한 입력은 InvalidProSgf를 던진다."""
+    # 입력은 이미 str이므로 UTF-8로 재인코딩해 넘긴다. override_encoding이
+    # 없으면 sgfmill은 CA[]가 없는 파일을 ISO-8859-1로 읽어 비ASCII
+    # 기사명을 전부 깨뜨린다.
     try:
-        game = sgf.Sgf_game.from_bytes(sgf_text.encode("utf-8"))
+        game = sgf.Sgf_game.from_bytes(
+            sgf_text.encode("utf-8"), override_encoding="utf-8"
+        )
     except ValueError as e:
         raise InvalidProSgf(f"SGF 파싱 실패: {e}") from e
 

@@ -147,7 +147,12 @@ export default function NewGamePage() {
               <RankPicker value={rank} onChange={setRank} />
             </div>
           </div>
-          <RankAdvisor onSelect={setRank} />
+          <RankAdvisor
+            onSelect={(r, size) => {
+              setRank(r);
+              setBoardSize(size);
+            }}
+          />
         </section>
 
         <section className="flex items-center justify-between gap-4 py-3">

@@ -23,7 +23,12 @@ import structlog
 from sqlalchemy import select
 
 from app.core.pro.classify import classify_collection
-from app.core.sgf.import_sgf import InvalidProSgf, ParsedProGame, parse_pro_sgf
+from app.core.sgf.import_sgf import (
+    InvalidProSgf,
+    ParsedProGame,
+    decode_sgf_bytes,
+    parse_pro_sgf,
+)
 from app.db import AsyncSessionLocal
 from app.models import ProGame
 
@@ -183,14 +188,21 @@ async def main_async() -> dict[str, int]:
             http, CWI_INDEX_URL, max_depth=MAX_DEPTH, max_pages=MAX_PAGES
         )
         capped = False
-        added: list[ProGame] = []
+        # 루프 안에서는 fetch·파싱·중복 검사만 하고 INSERT는 하지 않는다. 루프 중에
+        # db.add를 하면 다음 중복 검사 select가 autoflush로 INSERT를 실행해 쓰기 락을
+        # 잡은 채 이후 네트워크 I/O(수십 초)를 계속하고, 그 창에 들어온 진행 중 대국의
+        # 착수가 busy_timeout을 넘겨 "database is locked"로 실패한다 (#87).
+        pending: list[ProGame] = []
+        seen_hashes: set[str] = set()
         async with AsyncSessionLocal() as db:
             for url in links:
                 summary["fetched"] += 1
                 try:
                     sgf_resp = await http.get(url)
                     sgf_resp.raise_for_status()
-                    sgf_text = sgf_resp.text
+                    # 헤더 charset 대신 바이트를 직접 디코드 — 아카이브 서버의
+                    # 잘못된 charset 선언으로 기사명이 깨지던 원인.
+                    sgf_text = decode_sgf_bytes(sgf_resp.content)
                 except Exception as exc:
                     log.warning("cwi.sgf.fetch_failed", url=url, err=str(exc))
                     summary["error"] += 1
@@ -203,6 +215,9 @@ async def main_async() -> dict[str, int]:
                     summary["error"] += 1
                     continue
 
+                if parsed.content_hash in seen_hashes:
+                    summary["duplicate"] += 1
+                    continue
                 existing = await db.execute(
                     select(ProGame.id).where(ProGame.content_hash == parsed.content_hash)
                 )
@@ -214,16 +229,19 @@ async def main_async() -> dict[str, int]:
                 if pro is None:
                     summary["error"] += 1
                     continue
-                db.add(pro)
-                added.append(pro)
+                seen_hashes.add(parsed.content_hash)
+                pending.append(pro)
                 summary["new"] += 1
                 if summary["new"] >= MAX_NEW_PER_RUN:
                     capped = True
                     log.info("cwi.ingest.capped", cap=MAX_NEW_PER_RUN)
                     break
 
+            # 네트워크 I/O가 끝난 뒤 INSERT+commit을 짧은 트랜잭션 하나로 몰아 쓰기 락
+            # 보유 시간을 밀리초 수준으로 줄인다.
+            db.add_all(pending)
             await db.commit()
-            write_new_urls([pro.id for pro in added if pro.id is not None])
+            write_new_urls([pro.id for pro in pending if pro.id is not None])
 
     if not capped:
         save_index_hash(html)
