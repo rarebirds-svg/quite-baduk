@@ -8,6 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import app.models  # noqa: F401  # ensure all ORM tables register before create_all
+from app import last_seen_cache
 from app.db import Base
 from app.engine_pool import reset_pool_state, set_adapter
 
@@ -29,6 +30,19 @@ def _isolate_engine_pool():
     _wipe()
     yield
     _wipe()
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _reset_last_seen_cache():
+    # session_id is a fresh-DB autoincrement PK, so it collides across tests
+    # (e.g. id=1) — a leftover cache entry from one test can silently
+    # overwrite another test's last_seen_at during flush_all(). Reset around
+    # every test regardless of which fixtures it uses.
+    await last_seen_cache.stop_flusher()
+    last_seen_cache._cache.clear()
+    yield
+    await last_seen_cache.stop_flusher()
+    last_seen_cache._cache.clear()
 
 
 @pytest_asyncio.fixture
