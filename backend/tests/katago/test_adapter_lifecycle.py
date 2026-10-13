@@ -74,3 +74,18 @@ async def test_start_is_noop_when_subprocess_already_alive() -> None:
 
     mock_spawn.assert_not_awaited()
     mock_replay.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_start_waits_for_command_lock() -> None:
+    """start() must not respawn/replay while analyze/send holds the lock (#116)."""
+    import asyncio
+
+    adapter = KataGoAdapter()
+    with patch.object(adapter, "_ensure_alive", new=AsyncMock()) as mock_alive:
+        async with adapter._lock:
+            task = asyncio.create_task(adapter.start())
+            await asyncio.sleep(0.01)
+            mock_alive.assert_not_awaited()
+        await task
+    mock_alive.assert_awaited_once()
