@@ -130,7 +130,12 @@ export default function ProGameScreen({
   return (
     <div className="space-y-4">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
-        <Hero title={t("spectate.tabPro")} subtitle="" />
+        {/* 기보마다 고유한 H1 — 검색엔진이 중복 페이지로 오인하지 않게 대국자명을 제목으로 쓴다. */}
+        <Hero
+          size="compact"
+          title={`${localizePlayer(game.black_player, locale)} vs ${localizePlayer(game.white_player, locale)}`}
+          subtitle=""
+        />
         <Link
           href="/spectate/pro"
           className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"

@@ -39,16 +39,23 @@ beforeEach(() => {
 describe("ProGameScreen", () => {
   it("initialGame이 있으면 fetch 없이 즉시 렌더한다", () => {
     render(<ProGameScreen gameId={7} initialGame={game} />);
-    expect(screen.getByText(/Blackstone Test/)).toBeInTheDocument();
-    expect(screen.getByText(/Whitestone Test/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Blackstone Test/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Whitestone Test/).length).toBeGreaterThan(0);
     expect(apiMock).not.toHaveBeenCalled();
+  });
+
+  it("H1이 대국자명으로 기보마다 고유하다", () => {
+    render(<ProGameScreen gameId={7} initialGame={game} />);
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Blackstone Test vs Whitestone Test" }),
+    ).toBeInTheDocument();
   });
 
   it("initialGame이 없으면 기존대로 클라이언트 fetch로 로드한다", async () => {
     apiMock.mockResolvedValueOnce(game);
     render(<ProGameScreen gameId={7} />);
     await waitFor(() =>
-      expect(screen.getByText(/Blackstone Test/)).toBeInTheDocument(),
+      expect(screen.getAllByText(/Blackstone Test/).length).toBeGreaterThan(0),
     );
     expect(apiMock).toHaveBeenCalledWith("/api/spectate/pro/7");
   });
