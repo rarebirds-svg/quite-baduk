@@ -39,8 +39,8 @@
       "date": "Played on {date}.",
       "moves": "The game lasted {n} moves.",
       "result": "Result: {result}.",
-      "rulesEven": "{size} board, komi {komi}.",
-      "rulesHandicap": "{size} board, {n}-stone handicap, komi {komi}."
+      "rulesEven": "Played on a {size} board with komi {komi}.",
+      "rulesHandicap": "Played on a {size} board with a {n}-stone handicap and komi {komi}."
     },
     "proBackToList": "Pro records",
     "proPrev": "Prev",

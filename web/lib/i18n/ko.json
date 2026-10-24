@@ -39,8 +39,8 @@
       "date": "대국일은 {date}입니다.",
       "moves": "총 {n}수로 진행되었습니다.",
       "result": "결과는 {result}입니다.",
-      "rulesEven": "{size}로 바둑판, 덤 {komi}집.",
-      "rulesHandicap": "{size}로 바둑판, {n}점 접바둑, 덤 {komi}집."
+      "rulesEven": "{size}로 바둑판에서 덤 {komi}집으로 두었습니다.",
+      "rulesHandicap": "{size}로 바둑판에서 {n}점 접바둑, 덤 {komi}집으로 두었습니다."
     },
     "proBackToList": "프로 기보 목록",
     "proPrev": "이전",

@@ -48,7 +48,7 @@ describe("proSeo", () => {
     expect(proGameSummary(base, "ko")).toBe(
       "제10회 춘란배 결승 제3국에서 열린 흑 이세돌 9단, 백 구리 9단의 대국입니다. " +
         "대국일은 2015-03-01입니다. 총 187수로 진행되었습니다. " +
-        "결과는 흑 불계승입니다. 19로 바둑판, 덤 6.5집.",
+        "결과는 흑 불계승입니다. 19로 바둑판에서 덤 6.5집으로 두었습니다.",
     );
   });
 
@@ -57,18 +57,18 @@ describe("proSeo", () => {
       { id: 3, black_player: "Nobody Known", white_player: "Gu Li", board_size: 19, handicap: 0, komi: 6.5 },
       "ko",
     );
-    expect(s).toBe("흑 Nobody Known, 백 구리의 대국입니다. 19로 바둑판, 덤 6.5집.");
+    expect(s).toBe("흑 Nobody Known, 백 구리의 대국입니다. 19로 바둑판에서 덤 6.5집으로 두었습니다.");
   });
 
   it("요약은 접바둑 치수와 판 크기를 밝힌다", () => {
     const s = proGameSummary({ ...base, board_size: 9, handicap: 2, komi: 0.5 }, "ko");
-    expect(s).toContain("9로 바둑판, 2점 접바둑, 덤 0.5집.");
+    expect(s).toContain("9로 바둑판에서 2점 접바둑, 덤 0.5집으로 두었습니다.");
   });
 
   it("요약은 영어 로케일도 지원한다", () => {
     const s = proGameSummary({ ...base, event: null, round: null }, "en");
     expect(s).toContain("Lee Sedol");
     expect(s).toContain("Played on 2015-03-01.");
-    expect(s).toContain("19×19 board, komi 6.5.");
+    expect(s).toContain("Played on a 19×19 board with komi 6.5.");
   });
 });
