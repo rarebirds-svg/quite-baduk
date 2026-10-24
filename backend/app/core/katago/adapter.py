@@ -156,8 +156,13 @@ class KataGoAdapter:
         leave KataGo on a blank board even though the adapter's own history
         has progressed, which would make later ``play``/``genmove`` return
         coords illegal against the rules engine.
+
+        Takes the command lock: respawn + replay read stdout, and doing that
+        outside the lock raced with an in-flight ``analyze``/``send`` reader
+        (``readuntil() called while another coroutine is already waiting``, #116).
         """
-        await self._ensure_alive()
+        async with self._lock:
+            await self._ensure_alive()
 
     async def stop(self) -> None:
         async with self._lock:
