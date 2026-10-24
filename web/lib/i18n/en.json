@@ -33,6 +33,15 @@
     "proSearch": "Search player or event",
     "proEmpty": "No pro records yet.",
     "proNotFound": "Pro record not found.",
+    "proSummary": {
+      "intro": "{black} plays Black against {white} as White.",
+      "introEvent": "A game from {event}, with {black} playing Black and {white} playing White.",
+      "date": "Played on {date}.",
+      "moves": "The game lasted {n} moves.",
+      "result": "Result: {result}.",
+      "rulesEven": "Played on a {size} board with komi {komi}.",
+      "rulesHandicap": "Played on a {size} board with a {n}-stone handicap and komi {komi}."
+    },
     "proBackToList": "Pro records",
     "proPrev": "Prev",
     "proNext": "Next",
