@@ -51,6 +51,13 @@ describe("ProGameScreen", () => {
     ).toBeInTheDocument();
   });
 
+  it("사실 요약 본문 문단을 렌더한다", () => {
+    render(<ProGameScreen gameId={7} initialGame={game} />);
+    const summary = screen.getByTestId("pro-summary");
+    expect(summary).toHaveTextContent("Blackstone Test");
+    expect(summary).toHaveTextContent("2012-10-01");
+  });
+
   it("initialGame이 없으면 기존대로 클라이언트 fetch로 로드한다", async () => {
     apiMock.mockResolvedValueOnce(game);
     render(<ProGameScreen gameId={7} />);
