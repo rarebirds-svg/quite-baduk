@@ -18,7 +18,7 @@ async def _signup(client, nickname):
 async def test_list_search_queries(client):
     from app.db import AsyncSessionLocal  # 픽스처가 패치한 세션팩토리를 실행 시점에 참조
 
-    # 조회 창(days=90)에 항상 들도록 오늘 기준 상대 날짜를 쓴다(고정 날짜는 시간이 지나면 창을 벗어난다).
+    # 조회 창(days=90)에 항상 들도록 오늘 기준 상대 날짜를 쓴다.
     day = date.today() - timedelta(days=7)
     async with AsyncSessionLocal() as db:
         db.add(SearchQuery(source="google", query="바둑 사활", page="/g/s",
