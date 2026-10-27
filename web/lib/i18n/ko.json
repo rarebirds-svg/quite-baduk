@@ -33,6 +33,15 @@
     "proSearch": "기사·기전 검색",
     "proEmpty": "등록된 프로 기보가 없습니다.",
     "proNotFound": "프로 기보를 찾을 수 없습니다.",
+    "proSummary": {
+      "intro": "흑 {black}, 백 {white}의 대국입니다.",
+      "introEvent": "{event}에서 열린 흑 {black}, 백 {white}의 대국입니다.",
+      "date": "대국일은 {date}입니다.",
+      "moves": "총 {n}수로 진행되었습니다.",
+      "result": "결과는 {result}입니다.",
+      "rulesEven": "{size}로 바둑판에서 덤 {komi}집으로 두었습니다.",
+      "rulesHandicap": "{size}로 바둑판에서 {n}점 접바둑, 덤 {komi}집으로 두었습니다."
+    },
     "proBackToList": "프로 기보 목록",
     "proPrev": "이전",
     "proNext": "다음",

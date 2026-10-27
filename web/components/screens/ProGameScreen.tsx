@@ -7,6 +7,7 @@ import { api, ApiError } from "@/lib/api";
 import { useT, useLocale } from "@/lib/i18n";
 import { formatProEvent } from "@/lib/proEvent";
 import { localizePlayer, localizeRank } from "@/lib/proLocale";
+import { proGameSummary } from "@/lib/proSeo";
 import { gtpToXy, replay, type ReplayMove } from "@/lib/board";
 import { Button } from "@/components/ui/button";
 import { Hero } from "@/components/editorial/Hero";
@@ -130,7 +131,12 @@ export default function ProGameScreen({
   return (
     <div className="space-y-4">
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
-        <Hero title={t("spectate.tabPro")} subtitle="" />
+        {/* 기보마다 고유한 H1 — 검색엔진이 중복 페이지로 오인하지 않게 대국자명을 제목으로 쓴다. */}
+        <Hero
+          size="compact"
+          title={`${localizePlayer(game.black_player, locale)} vs ${localizePlayer(game.white_player, locale)}`}
+          subtitle=""
+        />
         <Link
           href="/spectate/pro"
           className="font-sans text-xs font-semibold uppercase tracking-label text-oxblood hover:underline"
@@ -232,6 +238,11 @@ export default function ProGameScreen({
           {t("review.last")}
         </Button>
       </div>
+
+      {/* 검색엔진과 스크린리더가 읽을 사실 요약 — 기보 데이터에서 그대로 조립한다. */}
+      <p data-testid="pro-summary" className="font-sans text-sm text-ink-mute">
+        {proGameSummary(game, locale)}
+      </p>
     </div>
   );
 }
