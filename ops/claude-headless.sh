@@ -23,6 +23,17 @@ PROMPT_FILE="${1:?usage: claude-headless.sh <prompt-file> [timeout-secs]}"
 TIMEOUT_SECS="${2:-${CLAUDE_TIMEOUT_SECS:-3600}}"
 CLAUDE_BIN="${CLAUDE_BIN:-/opt/homebrew/bin/claude}"   # 테스트가 가짜 바이너리로 덮어쓴다
 
+# 장기 토큰(claude setup-token, 1년)이 저장돼 있으면 그것으로 인증한다. 키체인의 /login
+# 토큰은 약 30일마다 만료돼 헤드리스 잡이 통째로 멈췄다(7/28·9/4·10/3·11/2 네 차례).
+# 공식 우선순위상 ANTHROPIC_API_KEY·ANTHROPIC_AUTH_TOKEN이 있으면 토큰을 이기므로,
+# 토큰 파일을 쓰기로 한 경우엔 둘을 비워 토큰이 확실히 쓰이게 한다. 값은 출력하지 않는다.
+TOKEN_FILE="${CLAUDE_TOKEN_FILE:-$HOME/.config/inkbaduk/claude-oauth-token}"
+if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && [ -s "$TOKEN_FILE" ]; then
+  CLAUDE_CODE_OAUTH_TOKEN=$(tr -d '[:space:]' < "$TOKEN_FILE")
+  export CLAUDE_CODE_OAUTH_TOKEN
+  unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
+fi
+
 if [ ! -f "$PROMPT_FILE" ]; then
   echo "claude-headless.sh: 프롬프트 파일 없음 — $PROMPT_FILE" >&2
   exit 2

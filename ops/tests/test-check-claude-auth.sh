@@ -16,7 +16,8 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 # now 픽스처: 2026-09-04 12:00:00 KST → epoch
-NOW=$(date -j -f "%Y-%m-%d %H:%M:%S" "2026-09-04 12:00:00" +%s)
+NOW=$(date -j -f "%Y-%m-%d %H:%M:%S" "2026-09-04 12:00:00" +%s 2>/dev/null \
+  || date -d "2026-09-04 12:00:00" +%s)
 TOKEN="sk-ant-fixture-DO-NOT-PRINT"
 
 write_cred() {  # write_cred <refreshTokenExpiresAt(ms)>
@@ -28,7 +29,8 @@ out=""; rc=0
 run() {  # run [자격증명 명령] — 기본은 픽스처 파일 cat
   local cmd="${1:-cat $tmp/cred.json}"
   rc=0
-  out=$(NOW="$NOW" CLAUDE_CREDENTIALS_CMD="$cmd" bash "$TARGET" 2>/dev/null) || rc=$?
+  out=$(NOW="$NOW" CLAUDE_TOKEN_FILE="$tmp/no-token" CLAUDE_CREDENTIALS_CMD="$cmd" \
+    bash "$TARGET" 2>/dev/null) || rc=$?
 }
 
 prefix() { echo "$out" | head -1 | cut -d: -f1; }
@@ -88,9 +90,49 @@ SHIM
 chmod +x "$tmp/bin/security"
 write_cred $(( (NOW + 10 * 86400 + 43200) * 1000 ))
 rc=0
-out=$(NOW="$NOW" PATH="$tmp/bin:$PATH" bash "$TARGET" 2>/dev/null) || rc=$?
+out=$(NOW="$NOW" CLAUDE_TOKEN_FILE="$tmp/no-token" PATH="$tmp/bin:$PATH" \
+  bash "$TARGET" 2>/dev/null) || rc=$?
 check "종료코드 0" 0 "$rc"
 check "접두 ok" "ok" "$(prefix)"
+
+# --- 장기 토큰 파일(claude setup-token) 모드 ---
+# 파일 저장 시각을 NOW 기준 N일 전으로 맞춘다. touch -d/-t 차이를 피해 python으로 설정.
+put_token() {  # put_token <저장 후 경과 일수> [권한]
+  printf '%s\n' "$TOKEN" > "$tmp/token"
+  chmod "${2:-600}" "$tmp/token"
+  python3 -c 'import os,sys; t=int(sys.argv[2]); os.utime(sys.argv[1], (t, t))' \
+    "$tmp/token" $(( NOW - $1 * 86400 ))
+}
+run_token() {  # 키체인 명령은 실패하도록 둬서 토큰 분기만 타는지 확인한다
+  rc=0
+  out=$(NOW="$NOW" CLAUDE_TOKEN_FILE="$tmp/token" CLAUDE_CREDENTIALS_CMD=false \
+    bash "$TARGET" 2>/dev/null) || rc=$?
+}
+
+echo "8) 장기 토큰 저장 10일 경과 → ok D-355, 키체인 무시"
+put_token 10
+run_token
+check "종료코드 0" 0 "$rc"
+check "장기 토큰 표기" 1 "$(echo "$out" | grep -c '^ok: Claude 장기 토큰 D-355')"
+check "토큰 미노출" 0 "$(echo "$out" | grep -c "$TOKEN")"
+
+echo "9) 장기 토큰 355일 경과 (14일 이내) → warn 재발급 권장"
+put_token 355
+run_token
+check "종료코드 2" 2 "$rc"
+check "재발급 권장 문구" 1 "$(echo "$out" | grep -c 'claude setup-token 재발급 권장')"
+
+echo "10) 장기 토큰 366일 경과 → fail"
+put_token 366
+run_token
+check "종료코드 1" 1 "$rc"
+check "재발급 필요 문구" 1 "$(echo "$out" | grep -c 'claude setup-token 재발급 필요')"
+
+echo "11) 토큰 파일 권한 644 → warn chmod"
+put_token 10 644
+run_token
+check "종료코드 2" 2 "$rc"
+check "chmod 안내" 1 "$(echo "$out" | grep -c 'chmod 600')"
 
 echo ""
 echo "통과 $pass / 실패 $fail"
