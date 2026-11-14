@@ -70,9 +70,39 @@ ops/check-claude-auth.sh
 
 판정: 종료코드 0(ok) · 2(warn) · 1(fail). `fail`이면 장애 기록.
 
-복구: 터미널에서 `claude` → `/login` → `/exit` 실행. 이후 `claude auth status`로 `loggedIn: true` 확인.
+장기 토큰 모드(아래 설정 후)에서는 출력이 이렇게 바뀐다.
+- `ok: Claude 장기 토큰 D-355 (만료 추정 10-28 21:30)` — 정상.
+- `warn: Claude 장기 토큰 D-12 (만료 추정 ...) — claude setup-token 재발급 권장` — 만료 14일 이내.
+- `fail: Claude 장기 토큰 만료 추정 (...) — claude setup-token 재발급 필요` — 만료.
+- `warn: Claude 장기 토큰 파일 권한 644 — chmod 600 필요` — 파일 권한이 넓음.
+
+복구(키체인 /login 모드): 터미널에서 `claude` → `/login` → `/exit` 실행. 이후 `claude auth status`로 `loggedIn: true` 확인.
 재로그인 후 refresh 토큰은 약 30일 유효하며, 만료 시 헤드리스 잡은 `session-retry.sh`가 보류 마커를 남기고
 watchdog(`ops/check-auth-recovery.sh`)이 인증 회복을 감지한 뒤 1회 자동 재트리거한다.
+
+#### 장기 토큰 설정 (권장 — 30일마다 반복되던 만료 제거)
+
+`/login` 토큰은 약 30일마다 만료돼 7/28·9/4·10/3·11/2 네 차례 헤드리스 잡 전체가 멈췄다.
+`claude setup-token`은 1년 유효 토큰을 발급한다(Pro·Max·Team·Enterprise 구독 필요, 모델 호출 전용 —
+claude.ai 커넥터·Remote Control에는 못 쓴다. 로컬 MCP·플러그인은 동작).
+`ops/claude-headless.sh`는 아래 파일이 있으면 그 값을 `CLAUDE_CODE_OAUTH_TOKEN`으로 넘기고,
+`ops/check-claude-auth.sh`는 파일 저장 시각 + 365일로 만료를 추정해 14일 전부터 경고한다.
+
+```bash
+claude setup-token                              # 브라우저 인증 후 토큰이 터미널에 출력된다(저장되지 않음)
+mkdir -p ~/.config/inkbaduk && chmod 700 ~/.config/inkbaduk
+pbpaste > ~/.config/inkbaduk/claude-oauth-token # 출력된 토큰을 복사한 뒤 실행
+chmod 600 ~/.config/inkbaduk/claude-oauth-token
+bash ops/check-claude-auth.sh                   # ok: Claude 장기 토큰 D-364 ... 확인
+```
+
+주의
+- 파일은 토큰 원문(bearer 자격증명)이다. 권한 600 유지, 리포·백업 경로에 두지 않는다.
+- 재발급 시에는 같은 파일을 덮어쓴다 — 저장 시각이 곧 만료 추정 기준이다.
+- 토큰을 쓰기로 했으면 러너가 `ANTHROPIC_API_KEY`·`ANTHROPIC_AUTH_TOKEN`을 비운다(공식 우선순위상 이 둘이 토큰을 이긴다).
+- 같은 Mac의 다른 프로젝트(popory) 잡은 이 러너를 쓰지 않으므로, 그쪽 러너에도 같은 환경변수 주입이 필요하다.
+- 첫 적용 직후 잡 하나를 수동 트리거해(`launchctl kickstart gui/$(id -u)/com.inkbaduk.dev-cycle`) 인증 성공을 확인한다.
+  실패하면 파일을 지우면 즉시 키체인 `/login` 경로로 돌아간다.
 
 ## 결과 처리
 

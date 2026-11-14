@@ -65,6 +65,23 @@ fake=$(make_fake noop.sh 'exit 0')
 CLAUDE_BIN="$fake" bash "$TARGET" "$FIX/없는파일.md" 5 >/dev/null 2>&1; rc=$?
 check "프롬프트 파일 없음 rc" 2 "$rc"
 
+# 5) 장기 토큰 파일 → CLAUDE_CODE_OAUTH_TOKEN 주입, API 키는 비움 (값은 출력하지 않는다)
+printf 'fixture-token-XYZ\n' > "$FIX/token"; chmod 600 "$FIX/token"
+fake=$(make_fake env.sh '[ "$CLAUDE_CODE_OAUTH_TOKEN" = "fixture-token-XYZ" ] && echo TOKEN_SET; [ -z "${ANTHROPIC_API_KEY:-}" ] && echo NO_API_KEY')
+out=$(CLAUDE_BIN="$fake" CLAUDE_TOKEN_FILE="$FIX/token" ANTHROPIC_API_KEY=dummy bash "$TARGET" "$FIX/prompt.md" 5 2>&1)
+echo "$out" | grep -q TOKEN_SET && got=yes || got=no
+check "토큰 파일 → CLAUDE_CODE_OAUTH_TOKEN" yes "$got"
+echo "$out" | grep -q NO_API_KEY && got=yes || got=no
+check "토큰 사용 시 ANTHROPIC_API_KEY 비움" yes "$got"
+echo "$out" | grep -q "fixture-token-XYZ" && got=yes || got=no
+check "토큰 값 미노출" no "$got"
+
+# 6) 토큰 파일 없음 → 주입 안 함(키체인 /login 경로 그대로)
+fake=$(make_fake env2.sh '[ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && echo NO_TOKEN')
+out=$(env -u CLAUDE_CODE_OAUTH_TOKEN CLAUDE_BIN="$fake" CLAUDE_TOKEN_FILE="$FIX/none" bash "$TARGET" "$FIX/prompt.md" 5 2>&1)
+echo "$out" | grep -q NO_TOKEN && got=yes || got=no
+check "토큰 파일 없으면 주입 안 함" yes "$got"
+
 echo
 echo "결과: pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]
