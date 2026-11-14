@@ -40,6 +40,7 @@
      이 행은 `state/jobs/*.json`을 쓰는 네 잡(`dev-cycle`·`content-draft`·`analytics-weekly`·`news-hook`)만
      보고하며, **신선도는 watchdog의 책임이고 이 행의 책임이 아니다** — 합산은 `at`을 일부러
      무시하므로 `fail`은 해당 잡이 다음에 실행될 때까지 다이제스트에 남는다.
+     래퍼 단계에서 죽은 실행(claude 기동 전 사망·한도·타임아웃)도 래퍼가 `fail`(summary `래퍼 비정상 종료 — …`)로 남기므로, 이 summary면 원인은 `state/log/<잡>-runs.log`에서 확인한다.
    - `deploy` — `git rev-list --count HEAD..origin/main`과 **라이브 반영 여부**를 함께 본다.
      머지와 배포는 다르다 — 카운트 0이어도 프로세스가 옛 빌드를 물고 있을 수 있다.
      미반영이 있으면 `warn`. 예) `2커밋 미반영 72h`
