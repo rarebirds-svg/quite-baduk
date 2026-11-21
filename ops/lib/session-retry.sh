@@ -53,7 +53,7 @@ run_claude_with_session_retry() {
         mkdir -p "$marker_dir"
         [ -f "$marker" ] || date +%s > "$marker"
         echo "[$(date '+%Y-%m-%d %H:%M:%S')] 인증 만료 감지 — 보류 (재로그인 후 watchdog가 1회 재트리거)" >> "$runlog"
-        notify_once claude-auth "⛔ Claude 인증 만료 — 헤드리스 잡 보류 중. 터미널에서 claude → /login 후 다음 watchdog(1h)이 자동 재트리거." || true
+        notify_once claude-auth "⛔ Claude 인증 만료 — 헤드리스 잡 보류 중. 터미널에서 claude → /login(장기 토큰 사용 시 claude setup-token 재발급) 후 다음 watchdog(1h)이 자동 재트리거." || true
         return "$rc"
       fi
     fi
