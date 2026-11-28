@@ -15,9 +15,13 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] content-draft 시작" >> "$RUNLOG"
 # 타임아웃 가드(ops/claude-headless.sh)로 1회 실행하고, 세션 한도로 죽으면
 # 리셋 시각 이후 1회 재시도한다(ops/lib/session-retry.sh). 재시도가 바깥,
 # 타임아웃이 안쪽 — 순서를 뒤집으면 재시도 대기가 타임아웃에 잡아먹힌다.
+# 비정상 종료인데 이번 실행 중 상태 보고가 없었으면 job json에 fail을 대신 남긴다(ops/lib/job-status-fallback.sh).
 . ops/lib/session-retry.sh
+. ops/lib/job-status-fallback.sh
+START_EPOCH=$(date +%s)
 run_claude_with_session_retry "$RUNLOG" \
   ops/claude-headless.sh docs/ops/content-draft-prompt.md \
-  || echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
+  || { echo "[$(date '+%Y-%m-%d %H:%M:%S')] 비정상 종료" >> "$RUNLOG"
+       report_fail_if_unreported content-draft "$START_EPOCH"; }
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] content-draft 종료" >> "$RUNLOG"
