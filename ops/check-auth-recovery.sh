@@ -43,7 +43,7 @@ echo "$auth_out"
 
 if [ "$auth_rc" -eq 1 ]; then
   # 만료. session-retry.sh와 같은 키라 하루 1회로 합쳐진다. 재트리거는 하지 않는다.
-  notify_once claude-auth "⛔ Claude 인증 만료 — 헤드리스 잡 보류 중. 터미널에서 claude → /login 후 다음 watchdog(1h)이 자동 재트리거." \
+  notify_once claude-auth "⛔ Claude 인증 만료 — 헤드리스 잡 보류 중. 터미널에서 claude → /login(장기 토큰 사용 시 claude setup-token 재발급) 후 다음 watchdog(1h)이 자동 재트리거." \
     || echo "check-auth-recovery: 만료 알림 발송 실패" >&2
   exit 0
 fi
