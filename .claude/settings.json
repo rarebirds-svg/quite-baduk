@@ -44,8 +44,10 @@
       "Bash(lsof -i :*)",
       "Bash(chmod +x *)",
       "Bash(mkdir -p *)",
-      "Bash(scripts/ai/codex-review.sh*)",
-      "Bash(scripts/ai/gemini-analyze.sh*)"
+      "Bash(~/projects/scripts/ai/codex-review.sh*)",
+      "Bash(/Users/daegong/projects/scripts/ai/codex-review.sh*)",
+      "Bash(~/projects/scripts/ai/gemini-analyze.sh*)",
+      "Bash(/Users/daegong/projects/scripts/ai/gemini-analyze.sh*)"
     ],
     "deny": [
       "Bash(git push --force*)",
