@@ -56,7 +56,10 @@ jobs:
         working-directory: web
 
   e2e:
-    runs-on: ubuntu-latest
+    # ubuntu-latest가 ubuntu-26.04로 바뀐 뒤 Playwright 1.59가 그 OS용 chromium·의존성을
+    # 설치하지 못한다("does not support chromium on ubuntu26.04-x64"). Playwright가
+    # 26.04를 지원할 때까지 직전까지 통과하던 24.04에 고정한다.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     needs: [backend, frontend]
     steps:
